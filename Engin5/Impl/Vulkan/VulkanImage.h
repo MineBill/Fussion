@@ -1,0 +1,38 @@
+﻿#pragma once
+#include "Engin5/Renderer/Image.h"
+#include "VulkanDevice.h"
+
+#include "volk.h"
+#include "VulkanSampler.h"
+
+namespace Engin5
+{
+    class VulkanImageView;
+    VkFormat ImageFormatToVulkan(ImageFormat format);
+    VkSampleCountFlagBits SampleCountToVulkan(s32 count);
+    VkImageUsageFlags ImageUsageToVulkan(ImageUsageFlags flags);
+    VkImageLayout ImageLayoutToVulkan(ImageLayout layout);
+
+    class VulkanImage: public Image
+    {
+    public:
+        VulkanImage(VulkanDevice* device, ImageSpecification spec);
+        VulkanImage(VulkanDevice* device, VkImage existing_image, ImageSpecification spec);
+
+        void Destroy() override;
+
+        ImageSpecification const& GetSpec() const override { return Specification; }
+        void SetData(std::span<s8>) override;
+        void* GetRawHandle() override { return Handle; }
+
+        Ref<VulkanImageView> View{};
+        Ref<VulkanSampler> Sampler{};
+        ImageSpecification Specification;
+
+        VmaAllocation Allocation;
+        VkImage Handle{};
+
+    private:
+        bool m_DestroyHandle{false};
+    };
+}

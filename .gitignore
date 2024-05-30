@@ -1,0 +1,21 @@
+# Directories
+.vs/
+.idea/
+.xmake/
+.vscode/
+vsxmake2022/
+Binaries/
+build/
+
+
+# Files
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+*.log
+Makefile
+imgui.ini
+
+# Exclude
+!Vendor/Binaries
