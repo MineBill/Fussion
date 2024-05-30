@@ -19,21 +19,25 @@ package("glfw")
 package_end()
 add_requires("glfw")
 
-package("glm")
-    add_deps("cmake")
-    set_sourcedir(path.join(os.scriptdir(), "Vendor/glm/glm"))
-    on_install(function (package)
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
-        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        import("package.tools.cmake").install(package, configs)
-    end)
-package_end()
-add_requires("glm")
+-- package("glm")
+--     add_deps("cmake")
+--     set_sourcedir(path.join(os.scriptdir(), "Vendor/glm/glm"))
+--     on_install(function (package)
+--         local configs = {}
+--         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
+--         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+--         import("package.tools.cmake").install(package, configs)
+--     end)
+-- package_end()
+-- add_requires("glm")
+target "glm"
+    set_kind "headeronly"
+    add_includedirs("Vendor/glm", {public = true})
+target_end()
 
 package("VMA")
     add_deps("cmake")
-    set_sourcedir(path.join(os.scriptdir(), "Vendor/VulkanMemoryAllocator"))
+    set_sourcedir(path.join(os.scriptdir(), "Vendor/VulkanMemoryAllocator-3.1.0"))
     on_install(function (package)
         local configs = {}
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
@@ -46,9 +50,14 @@ add_requires("VMA")
 target "magic_enum"
     set_kind "headeronly"
     add_includedirs("Vendor/magic_enum/include", {public = true})
+target_end()
 
 -- target "imgui"
 --     set_kind "static"
 --     add_includedirs("Engin5/Vendor/imgui", {public = true})
 --     add_files("Engin5/Vendor/imgui/*.cpp")
 --     add_headerfiles("Engin5/Vendor/imgui/*.h")
+
+if is_plat("linux") then
+    add_requires("spirv-cross")
+end

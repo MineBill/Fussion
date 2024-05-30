@@ -118,9 +118,11 @@ namespace Engin5
     Ref<Image> VulkanDevice::CreateImage(ImageSpecification spec)
     {
         auto image = MakeRef<VulkanImage>(this, spec);
-        std::ranges::for_each(m_ImageCallbacks, [this, image](ImageCreationCallback const& cb){
+
+        for (const auto& cb : m_ImageCallbacks) {
             cb(image, true);
-        });
+        }
+
         return image;
     }
 
@@ -450,9 +452,9 @@ namespace Engin5
 
     void VulkanDevice::DestroyImage(Ref<Image> const& image)
     {
-        std::ranges::for_each(m_ImageCallbacks, [this, image](ImageCreationCallback const& cb){
+        for (const auto& cb : m_ImageCallbacks) {
             cb(image, false);
-        });
+        }
         image->Destroy();
     }
 

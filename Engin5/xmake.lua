@@ -17,9 +17,9 @@ target("Engin5")
     add_includedirs("Source", {public = true})
     add_includedirs("Impl", {public = true})
 
-    add_packages("glm", {public = true})
     add_packages("glfw", "VMA")
     add_deps("magic_enum")
+    add_deps("glm", {public = true})
 
     set_pcxxheader("Source/e5pch.h")
 
@@ -49,7 +49,6 @@ target("Engin5")
         add_defines("OS_LINUX", {public = true})
         add_links("shaderc_shared")
 
-        add_requires("spirv-cross")
         add_packages("spirv-cross")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")

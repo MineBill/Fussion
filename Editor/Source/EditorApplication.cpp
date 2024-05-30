@@ -129,13 +129,13 @@ void EditorApplication::OnUpdate(f32 delta)
         }
 
         auto new_size = ImGui::GetContentRegionAvail();
-        if (m_ViewportSize != new_size) {
-            Device::Instance()->WaitIdle();
-            m_FrameBuffer->Resize(new_size);
-        }
+        // if (m_ViewportSize != new_size) {
+        //     Device::Instance()->WaitIdle();
+        //     m_FrameBuffer->Resize(new_size);
+        // }
         m_ViewportSize = new_size;
-        auto set = m_Layer->Sets[transmute(u64, m_FrameBuffer->GetColorAttachment(0)->GetRawHandle())];
-        ImGui::Image(set, m_ViewportSize);
+        // auto set = m_Layer->Sets[transmute(u64, m_FrameBuffer->GetColorAttachment(0)->GetRawHandle())];
+        // ImGui::Image(set, m_ViewportSize);
     }
     ImGui::End();
 
