@@ -9,7 +9,7 @@ package("glfw")
         table.insert(configs, "-DGLFW_BUILD_EXAMPLES=OFF")
         table.insert(configs, "-DGLFW_BUILD_DOCS=OFF")
         if is_plat("linux") then
-            -- For linux, default to X11, Wayland is very broken with imgui windows.
+            -- For linux, default to X11, Wayland(Waycrap) is very broken with imgui windows.
             -- Also, RenderDoc doesn't like Wayland.
             table.insert(configs, "-DGLFW_BUILD_X11=ON")
             table.insert(configs, "-DGLFW_BUILD_WAYLAND=OFF")

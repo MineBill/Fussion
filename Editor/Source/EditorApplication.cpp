@@ -128,6 +128,11 @@ void EditorApplication::OnUpdate(f32 delta)
         if (ImGui::DragFloat("FOV", &m_FOV)) {
         }
 
+        static Vector2 pos{};
+        if (ImGui::DragFloat2("Position", &pos[0])) {
+            m_Window->SetPosition(pos);
+        }
+
         auto new_size = ImGui::GetContentRegionAvail();
         // if (m_ViewportSize != new_size) {
         //     Device::Instance()->WaitIdle();

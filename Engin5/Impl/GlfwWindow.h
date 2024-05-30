@@ -18,6 +18,8 @@ namespace Engin5
         u32 GetHeight() const override;
         u32 GetWidth() const override;
 
+        void SetPosition(Vector2 position) const override;
+
         void* NativeHandle() const override;
 
     private:

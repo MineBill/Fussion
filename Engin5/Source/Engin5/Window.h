@@ -38,6 +38,8 @@ namespace Engin5
 
         virtual void* NativeHandle() const = 0;
 
+        virtual void SetPosition(Vector2 position) const = 0;
+
         virtual u32 GetWidth() const = 0;
         virtual u32 GetHeight() const = 0;
     };

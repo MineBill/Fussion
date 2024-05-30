@@ -173,6 +173,11 @@ namespace Engin5
         return m_Window;
     }
 
+    void GlfwWindow::SetPosition(Vector2 position) const
+    {
+        glfwSetWindowPos(m_Window, cast(s32, position.x), cast(s32, position.y));
+    }
+
     KeyboardKey GlfwKeyToEngin5(int key)
     {
         switch (key) {
