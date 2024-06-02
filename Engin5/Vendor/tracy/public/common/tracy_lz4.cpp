@@ -128,11 +128,11 @@
 #endif  /* _MSC_VER */
 
 #ifndef LZ4_FORCE_INLINE
-#  if defined (_MSC_VER) && !defined (__clang__)    /* MSVC */
+#  ifdef _MSC_VER    /* Visual Studio */
 #    define LZ4_FORCE_INLINE static __forceinline
 #  else
 #    if defined (__cplusplus) || defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L   /* C99 */
-#      if defined (__GNUC__) || defined (__clang__)
+#      ifdef __GNUC__
 #        define LZ4_FORCE_INLINE static inline __attribute__((always_inline))
 #      else
 #        define LZ4_FORCE_INLINE static inline

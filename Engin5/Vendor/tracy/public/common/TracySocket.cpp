@@ -21,9 +21,6 @@
 #    pragma warning(disable:4267)
 #  endif
 #  define poll WSAPoll
-#  ifdef _MSC_VER
-#    pragma comment(lib, "ws2_32.lib")
-#  endif
 #else
 #  include <arpa/inet.h>
 #  include <sys/socket.h>

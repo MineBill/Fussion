@@ -3,7 +3,7 @@
 
 #include "WindowPosition.hpp"
 
-#include "profiler/TracyStorage.hpp"
+#include "../../server/TracyStorage.hpp"
 
 
 WindowPosition::WindowPosition()

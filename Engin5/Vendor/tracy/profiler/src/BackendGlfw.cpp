@@ -13,8 +13,7 @@
 #include <stdlib.h>
 #include <thread>
 
-#include "profiler/TracyConfig.hpp"
-#include "profiler/TracyImGui.hpp"
+#include "../../server/TracyImGui.hpp"
 
 #include "Backend.hpp"
 #include "RunQueue.hpp"
@@ -25,9 +24,6 @@ static std::function<void()> s_redraw;
 static RunQueue* s_mainThreadTasks;
 static WindowPosition* s_winPos;
 static bool s_iconified;
-
-extern tracy::Config s_config;
-
 
 static void glfw_error_callback( int error, const char* description )
 {
@@ -64,7 +60,7 @@ static void glfw_window_iconify_callback( GLFWwindow*, int iconified )
 }
 
 
-Backend::Backend( const char* title, const std::function<void()>& redraw, const std::function<void(float)>& scaleChanged, const std::function<int(void)>& isBusy, RunQueue* mainThreadTasks )
+Backend::Backend( const char* title, const std::function<void()>& redraw, RunQueue* mainThreadTasks )
 {
     glfwSetErrorCallback( glfw_error_callback );
     if( !glfwInit() ) exit( 1 );
@@ -150,7 +146,10 @@ void Backend::Run()
         {
             glfwPollEvents();
             s_redraw();
-            if( s_config.focusLostLimit && !glfwGetWindowAttrib( s_window, GLFW_FOCUSED ) ) std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+            if( !glfwGetWindowAttrib( s_window, GLFW_FOCUSED ) )
+            {
+                std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+            }
             s_mainThreadTasks->Run();
         }
     }

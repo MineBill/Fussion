@@ -61,9 +61,7 @@ namespace tracy
     Operation(vkResetQueryPool)
 
 #define LoadVkDeviceExtensionSymbols(Operation) \
-    Operation(vkGetCalibratedTimestampsEXT)
-
-#define LoadVkInstanceExtensionSymbols(Operation) \
+    Operation(vkGetCalibratedTimestampsEXT) \
     Operation(vkGetPhysicalDeviceCalibrateableTimeDomainsEXT)
 
 #define LoadVkInstanceCoreSymbols(Operation) \
@@ -74,7 +72,6 @@ struct VkSymbolTable
 #define MAKE_PFN(name) PFN_##name name;
     LoadVkDeviceCoreSymbols(MAKE_PFN)
     LoadVkDeviceExtensionSymbols(MAKE_PFN)
-    LoadVkInstanceExtensionSymbols(MAKE_PFN)
     LoadVkInstanceCoreSymbols(MAKE_PFN)
 #undef MAKE_PFN
 };
@@ -218,9 +215,7 @@ public:
 
         WriteInitialItem( physdev, tcpu, tgpu );
 
-        // We need the buffer to be twice as large for availability values
-        size_t resSize = sizeof( int64_t ) * m_queryCount * 2;
-        m_res = (int64_t*)tracy_malloc( resSize );
+        m_res = (int64_t*)tracy_malloc( sizeof( int64_t ) * m_queryCount );
     }
 #endif
 
@@ -285,22 +280,17 @@ public:
         }
 
 
-        VK_FUNCTION_WRAPPER( vkGetQueryPoolResults( m_device, m_query, wrappedTail, cnt, sizeof( int64_t ) * m_queryCount * 2, m_res, sizeof( int64_t ) * 2, VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WITH_AVAILABILITY_BIT ) );
+        if( VK_FUNCTION_WRAPPER( vkGetQueryPoolResults( m_device, m_query, wrappedTail, cnt, sizeof( int64_t ) * m_queryCount, m_res, sizeof( int64_t ), VK_QUERY_RESULT_64_BIT ) == VK_NOT_READY ) )
+        {
+            m_oldCnt = cnt;
+            return;
+        }
 
         for( unsigned int idx=0; idx<cnt; idx++ )
         {
-            int64_t avail = m_res[idx * 2 + 1];
-            if( avail == 0 )
-            {
-                m_oldCnt = cnt - idx;
-                cnt = idx;
-
-                break;
-            }
-
             auto item = Profiler::QueueSerial();
             MemWrite( &item->hdr.type, QueueType::GpuTime );
-            MemWrite( &item->gpuTime.gpuTime, m_res[idx * 2] );
+            MemWrite( &item->gpuTime.gpuTime, m_res[idx] );
             MemWrite( &item->gpuTime.queryId, uint16_t( wrappedTail + idx ) );
             MemWrite( &item->gpuTime.context, m_context );
             Profiler::QueueSerialFinish();
@@ -330,6 +320,7 @@ public:
         m_tail += cnt;
     }
 
+private:
     tracy_force_inline unsigned int NextQueryId()
     {
         const uint64_t id = m_head.fetch_add(1, std::memory_order_relaxed);
@@ -341,12 +332,6 @@ public:
         return m_context;
     }
 
-    tracy_force_inline VkQueryPool GetQueryPool() const
-    {
-         return m_query;
-    }
-
-private:
     tracy_force_inline void Calibrate( VkDevice device, int64_t& tCpu, int64_t& tGpu )
     {
         assert( m_timeDomain != VK_TIME_DOMAIN_DEVICE_EXT );
@@ -472,7 +457,6 @@ private:
 
         LoadVkDeviceCoreSymbols( VK_LOAD_DEVICE_SYMBOL )
         LoadVkDeviceExtensionSymbols( VK_LOAD_DEVICE_SYMBOL )
-        LoadVkInstanceExtensionSymbols( VK_LOAD_INSTANCE_SYMBOL )
         LoadVkInstanceCoreSymbols( VK_LOAD_INSTANCE_SYMBOL )
 #undef VK_GET_DEVICE_SYMBOL
 #undef VK_LOAD_DEVICE_SYMBOL
@@ -488,9 +472,7 @@ private:
     VkSymbolTable m_symbols;
 #endif
     uint64_t m_deviation;
-#ifdef _WIN32
     int64_t m_qpcToNs;
-#endif
     int64_t m_prevCalibration;
     uint8_t m_context;
 

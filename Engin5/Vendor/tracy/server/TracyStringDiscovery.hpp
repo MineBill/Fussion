@@ -53,11 +53,8 @@ public:
             if( pit == m_pending.end() )
             {
                 T item = Create( name );
-                if( item )
-                {
-                    m_pending.emplace( name, item );
-                    Query( name );
-                }
+                m_pending.emplace( name, item );
+                Query( name );
                 return item;
             }
             else

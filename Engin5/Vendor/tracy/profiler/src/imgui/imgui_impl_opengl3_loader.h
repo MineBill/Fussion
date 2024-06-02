@@ -18,7 +18,7 @@
 // WILL NOT BE USING OUR LOADER, AND INSTEAD EXPECT ANOTHER/YOUR LOADER TO BE AVAILABLE IN THE COMPILATION UNIT.
 //
 // Regenerate with:
-//   python3 gl3w_gen.py --output ../imgui/backends/imgui_impl_opengl3_loader.h --ref ../imgui/backends/imgui_impl_opengl3.cpp ./extra_symbols.txt
+//   python gl3w_gen.py --output ../imgui/backends/imgui_impl_opengl3_loader.h --ref ../imgui/backends/imgui_impl_opengl3.cpp ./extra_symbols.txt
 //
 // More info:
 //   https://github.com/dearimgui/gl3w_stripped
@@ -154,8 +154,6 @@ typedef khronos_uint8_t GLubyte;
 #define GL_ONE                            1
 #define GL_SRC_ALPHA                      0x0302
 #define GL_ONE_MINUS_SRC_ALPHA            0x0303
-#define GL_FRONT                          0x0404
-#define GL_BACK                           0x0405
 #define GL_FRONT_AND_BACK                 0x0408
 #define GL_POLYGON_MODE                   0x0B40
 #define GL_CULL_FACE                      0x0B44
@@ -166,7 +164,6 @@ typedef khronos_uint8_t GLubyte;
 #define GL_SCISSOR_BOX                    0x0C10
 #define GL_SCISSOR_TEST                   0x0C11
 #define GL_UNPACK_ROW_LENGTH              0x0CF2
-#define GL_PACK_ALIGNMENT                 0x0D05
 #define GL_TEXTURE_2D                     0x0DE1
 #define GL_UNSIGNED_BYTE                  0x1401
 #define GL_UNSIGNED_SHORT                 0x1403
@@ -193,9 +190,7 @@ typedef void (APIENTRYP PFNGLCLEARPROC) (GLbitfield mask);
 typedef void (APIENTRYP PFNGLCLEARCOLORPROC) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 typedef void (APIENTRYP PFNGLDISABLEPROC) (GLenum cap);
 typedef void (APIENTRYP PFNGLENABLEPROC) (GLenum cap);
-typedef void (APIENTRYP PFNGLFLUSHPROC) (void);
 typedef void (APIENTRYP PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
-typedef void (APIENTRYP PFNGLREADPIXELSPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
 typedef GLenum (APIENTRYP PFNGLGETERRORPROC) (void);
 typedef void (APIENTRYP PFNGLGETINTEGERVPROC) (GLenum pname, GLint *data);
 typedef const GLubyte *(APIENTRYP PFNGLGETSTRINGPROC) (GLenum name);
@@ -210,9 +205,7 @@ GLAPI void APIENTRY glClear (GLbitfield mask);
 GLAPI void APIENTRY glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 GLAPI void APIENTRY glDisable (GLenum cap);
 GLAPI void APIENTRY glEnable (GLenum cap);
-GLAPI void APIENTRY glFlush (void);
 GLAPI void APIENTRY glPixelStorei (GLenum pname, GLint param);
-GLAPI void APIENTRY glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
 GLAPI GLenum APIENTRY glGetError (void);
 GLAPI void APIENTRY glGetIntegerv (GLenum pname, GLint *data);
 GLAPI const GLubyte *APIENTRY glGetString (GLenum name);
@@ -360,7 +353,6 @@ typedef khronos_uint16_t GLhalf;
 #define GL_MAJOR_VERSION                  0x821B
 #define GL_MINOR_VERSION                  0x821C
 #define GL_NUM_EXTENSIONS                 0x821D
-#define GL_FRAMEBUFFER_SRGB               0x8DB9
 #define GL_VERTEX_ARRAY_BINDING           0x85B5
 typedef void (APIENTRYP PFNGLGETBOOLEANI_VPROC) (GLenum target, GLuint index, GLboolean *data);
 typedef void (APIENTRYP PFNGLGETINTEGERI_VPROC) (GLenum target, GLuint index, GLint *data);
@@ -384,8 +376,6 @@ GLAPI void APIENTRY glGenVertexArrays (GLsizei n, GLuint *arrays);
 typedef struct __GLsync *GLsync;
 typedef khronos_uint64_t GLuint64;
 typedef khronos_int64_t GLint64;
-#define GL_CONTEXT_COMPATIBILITY_PROFILE_BIT 0x00000002
-#define GL_CONTEXT_PROFILE_MASK           0x9126
 typedef void (APIENTRYP PFNGLDRAWELEMENTSBASEVERTEXPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex);
 typedef void (APIENTRYP PFNGLGETINTEGER64I_VPROC) (GLenum target, GLuint index, GLint64 *data);
 #ifdef GL_GLEXT_PROTOTYPES
@@ -476,8 +466,8 @@ GL3W_API int imgl3wIsSupported(int major, int minor);
 GL3W_API GL3WglProc imgl3wGetProcAddress(const char *proc);
 
 /* gl3w internal state */
-union ImGL3WProcs {
-    GL3WglProc ptr[60];
+union GL3WProcs {
+    GL3WglProc ptr[58];
     struct {
         PFNGLACTIVETEXTUREPROC            ActiveTexture;
         PFNGLATTACHSHADERPROC             AttachShader;
@@ -508,7 +498,6 @@ union ImGL3WProcs {
         PFNGLDRAWELEMENTSBASEVERTEXPROC   DrawElementsBaseVertex;
         PFNGLENABLEPROC                   Enable;
         PFNGLENABLEVERTEXATTRIBARRAYPROC  EnableVertexAttribArray;
-        PFNGLFLUSHPROC                    Flush;
         PFNGLGENBUFFERSPROC               GenBuffers;
         PFNGLGENTEXTURESPROC              GenTextures;
         PFNGLGENVERTEXARRAYSPROC          GenVertexArrays;
@@ -529,7 +518,6 @@ union ImGL3WProcs {
         PFNGLLINKPROGRAMPROC              LinkProgram;
         PFNGLPIXELSTOREIPROC              PixelStorei;
         PFNGLPOLYGONMODEPROC              PolygonMode;
-        PFNGLREADPIXELSPROC               ReadPixels;
         PFNGLSCISSORPROC                  Scissor;
         PFNGLSHADERSOURCEPROC             ShaderSource;
         PFNGLTEXIMAGE2DPROC               TexImage2D;
@@ -542,7 +530,7 @@ union ImGL3WProcs {
     } gl;
 };
 
-GL3W_API extern union ImGL3WProcs imgl3wProcs;
+GL3W_API extern union GL3WProcs imgl3wProcs;
 
 /* OpenGL functions */
 #define glActiveTexture                   imgl3wProcs.gl.ActiveTexture
@@ -574,7 +562,6 @@ GL3W_API extern union ImGL3WProcs imgl3wProcs;
 #define glDrawElementsBaseVertex          imgl3wProcs.gl.DrawElementsBaseVertex
 #define glEnable                          imgl3wProcs.gl.Enable
 #define glEnableVertexAttribArray         imgl3wProcs.gl.EnableVertexAttribArray
-#define glFlush                           imgl3wProcs.gl.Flush
 #define glGenBuffers                      imgl3wProcs.gl.GenBuffers
 #define glGenTextures                     imgl3wProcs.gl.GenTextures
 #define glGenVertexArrays                 imgl3wProcs.gl.GenVertexArrays
@@ -595,7 +582,6 @@ GL3W_API extern union ImGL3WProcs imgl3wProcs;
 #define glLinkProgram                     imgl3wProcs.gl.LinkProgram
 #define glPixelStorei                     imgl3wProcs.gl.PixelStorei
 #define glPolygonMode                     imgl3wProcs.gl.PolygonMode
-#define glReadPixels                      imgl3wProcs.gl.ReadPixels
 #define glScissor                         imgl3wProcs.gl.Scissor
 #define glShaderSource                    imgl3wProcs.gl.ShaderSource
 #define glTexImage2D                      imgl3wProcs.gl.TexImage2D
@@ -619,7 +605,7 @@ extern "C" {
 
 #include <stdlib.h>
 
-#define GL3W_ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
+#define ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
 
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -677,12 +663,7 @@ static GL3WglProc (*glx_get_proc_address)(const GLubyte *);
 
 static int open_libgl(void)
 {
-    // While most systems use libGL.so.1, NetBSD seems to use that libGL.so.3. See https://github.com/ocornut/imgui/issues/6983
-    libgl = dlopen("libGL.so", RTLD_LAZY | RTLD_LOCAL);
-    if (!libgl)
-        libgl = dlopen("libGL.so.1", RTLD_LAZY | RTLD_LOCAL);
-    if (!libgl)
-        libgl = dlopen("libGL.so.3", RTLD_LAZY | RTLD_LOCAL);
+    libgl = dlopen("libGL.so.1", RTLD_LAZY | RTLD_LOCAL);
     if (!libgl)
         return GL3W_ERROR_LIBRARY_OPEN;
     *(void **)(&glx_get_proc_address) = dlsym(libgl, "glXGetProcAddressARB");
@@ -778,7 +759,6 @@ static const char *proc_names[] = {
     "glDrawElementsBaseVertex",
     "glEnable",
     "glEnableVertexAttribArray",
-    "glFlush",
     "glGenBuffers",
     "glGenTextures",
     "glGenVertexArrays",
@@ -799,7 +779,6 @@ static const char *proc_names[] = {
     "glLinkProgram",
     "glPixelStorei",
     "glPolygonMode",
-    "glReadPixels",
     "glScissor",
     "glShaderSource",
     "glTexImage2D",
@@ -811,12 +790,12 @@ static const char *proc_names[] = {
     "glViewport",
 };
 
-GL3W_API union ImGL3WProcs imgl3wProcs;
+GL3W_API union GL3WProcs imgl3wProcs;
 
 static void load_procs(GL3WGetProcAddressProc proc)
 {
     size_t i;
-    for (i = 0; i < GL3W_ARRAY_SIZE(proc_names); i++)
+    for (i = 0; i < ARRAY_SIZE(proc_names); i++)
         imgl3wProcs.ptr[i] = proc(proc_names[i]);
 }
 

@@ -3,7 +3,6 @@
 #include <atomic>
 #include <chrono>
 #include <inttypes.h>
-#define IMGUI_DEFINE_MATH_OPERATORS 1
 #include <imgui.h>
 #include <mutex>
 #include <stdint.h>
@@ -30,24 +29,23 @@
 
 #include "../../public/common/TracyProtocol.hpp"
 #include "../../public/common/TracyVersion.hpp"
-#include "profiler/TracyBadVersion.hpp"
-#include "profiler/TracyConfig.hpp"
-#include "profiler/TracyFileselector.hpp"
-#include "profiler/TracyImGui.hpp"
-#include "profiler/TracyMouse.hpp"
-#include "profiler/TracyProtoHistory.hpp"
-#include "profiler/TracyStorage.hpp"
-#include "profiler/TracyTexture.hpp"
-#include "profiler/TracyView.hpp"
-#include "profiler/TracyWeb.hpp"
-#include "profiler/IconsFontAwesome6.h"
 #include "../../server/tracy_pdqsort.h"
 #include "../../server/tracy_robin_hood.h"
+#include "../../server/TracyBadVersion.hpp"
+#include "../../server/TracyConfig.hpp"
 #include "../../server/TracyFileHeader.hpp"
 #include "../../server/TracyFileRead.hpp"
+#include "../../server/TracyFileselector.hpp"
+#include "../../server/TracyImGui.hpp"
+#include "../../server/TracyMouse.hpp"
 #include "../../server/TracyPrint.hpp"
-#include "../../server/TracySysUtil.hpp"
+#include "../../server/TracyProtoHistory.hpp"
+#include "../../server/TracyStorage.hpp"
+#include "../../server/TracyTexture.hpp"
+#include "../../server/TracyView.hpp"
+#include "../../server/TracyWeb.hpp"
 #include "../../server/TracyWorker.hpp"
+#include "../../server/IconsFontAwesome6.h"
 
 #include "icon.hpp"
 #include "zigzag01.hpp"
@@ -97,11 +95,6 @@ static ConnectionHistory* connHist;
 static std::atomic<ViewShutdown> viewShutdown { ViewShutdown::False };
 static double animTime = 0;
 static float dpiScale = 1.f;
-static bool dpiScaleOverriddenFromEnv = false;
-static float userScale = 1.f;
-static float prevScale = 1.f;
-static int dpiChanged = 0;
-static bool dpiFirstSetup = true;
 static Filters* filt;
 static RunQueue mainThreadTasks;
 static uint32_t updateVersion = 0;
@@ -117,8 +110,7 @@ void* zigzagTex;
 static Backend* bptr;
 static bool s_customTitle = false;
 static bool s_isElevated = false;
-static size_t s_totalMem = tracy::GetPhysicalMemorySize();
-tracy::Config s_config;
+static tracy::Config s_config;
 
 static void SetWindowTitleCallback( const char* title )
 {
@@ -140,25 +132,9 @@ static void RunOnMainThread( const std::function<void()>& cb, bool forceDelay = 
     mainThreadTasks.Queue( cb, forceDelay );
 }
 
-static void ScaleWindow(ImGuiWindow* window, float scale)
+static void SetupDPIScale( float scale, ImFont*& cb_fixedWidth, ImFont*& cb_bigFont, ImFont*& cb_smallFont )
 {
-    ImVec2 origin = window->Viewport->Pos;
-    window->Pos = ImFloor((window->Pos - origin) * scale + origin);
-    window->Size = ImTrunc(window->Size * scale);
-    window->SizeFull = ImTrunc(window->SizeFull * scale);
-    window->ContentSize = ImTrunc(window->ContentSize * scale);
-}
-
-static void SetupDPIScale()
-{
-    auto scale = dpiScale * userScale;
-
-    if( !dpiFirstSetup && prevScale == scale ) return;
-    dpiFirstSetup = false;
-    dpiChanged = 2;
-
-    LoadFonts( scale );
-    if( view ) view->UpdateFont( s_fixedWidth, s_smallFont, s_bigFont );
+    LoadFonts( scale, cb_fixedWidth, cb_bigFont, cb_smallFont );
 
 #ifdef __APPLE__
     // No need to upscale the style on macOS, but we need to downscale the fonts.
@@ -185,24 +161,11 @@ static void SetupDPIScale()
     stbir_resize_uint8( iconPx, iconX, iconY, 0, scaleIcon, ty, ty, 0, 4 );
     tracy::UpdateTextureRGBA( iconTex, scaleIcon, ty, ty );
     delete[] scaleIcon;
-
-    const auto ratio = scale / prevScale;
-    prevScale = scale;
-    auto ctx = ImGui::GetCurrentContext();
-    for( auto& w : ctx->Windows ) ScaleWindow( w, ratio );
 }
 
-static void SetupScaleCallback( float scale )
+static void SetupScaleCallback( float scale, ImFont*& cb_fixedWidth, ImFont*& cb_bigFont, ImFont*& cb_smallFont )
 {
-    userScale = scale;
-    RunOnMainThread( []{ SetupDPIScale(); }, true );
-}
-
-static int IsBusy()
-{
-    if( loadThread.joinable() ) return 2;
-    if( view && !view->IsBackgroundDone() ) return 1;
-    return 0;
+    RunOnMainThread( [scale, &cb_fixedWidth, &cb_bigFont, &cb_smallFont] { SetupDPIScale( scale * dpiScale, cb_fixedWidth, cb_bigFont, cb_smallFont ); }, true );
 }
 
 static void LoadConfig()
@@ -213,10 +176,7 @@ static void LoadConfig()
 
     int v;
     if( ini_sget( ini, "core", "threadedRendering", "%d", &v ) ) s_config.threadedRendering = v;
-    if( ini_sget( ini, "core", "focusLostLimit", "%d", &v ) ) s_config.focusLostLimit = v;
     if( ini_sget( ini, "timeline", "targetFps", "%d", &v ) && v >= 1 && v < 10000 ) s_config.targetFps = v;
-    if( ini_sget( ini, "memory", "limit", "%d", &v ) ) s_config.memoryLimit = v;
-    if( ini_sget( ini, "memory", "percent", "%d", &v ) && v >= 1 && v < 1000 ) s_config.memoryLimitPercent = v;
 
     ini_free( ini );
 }
@@ -229,26 +189,12 @@ static bool SaveConfig()
 
     fprintf( f, "[core]\n" );
     fprintf( f, "threadedRendering = %i\n", (int)s_config.threadedRendering );
-    fprintf( f, "focusLostLimit = %i\n", (int)s_config.focusLostLimit );
 
     fprintf( f, "\n[timeline]\n" );
     fprintf( f, "targetFps = %i\n", s_config.targetFps );
 
-    fprintf( f, "\n[memory]\n" );
-    fprintf( f, "limit = %i\n", (int)s_config.memoryLimit );
-    fprintf( f, "percent = %i\n", s_config.memoryLimitPercent );
-
     fclose( f );
     return true;
-}
-
-static void ScaleChanged( float scale )
-{
-    if ( dpiScaleOverriddenFromEnv ) return;
-    if ( dpiScale == scale ) return;
-
-    dpiScale = scale;
-    SetupDPIScale();
 }
 
 int main( int argc, char** argv )
@@ -271,25 +217,7 @@ int main( int argc, char** argv )
             printf( "      %s -a address [-p port]\n", argv[0] );
             exit( 0 );
         }
-        try
-        {
-            initFileOpen = std::unique_ptr<tracy::FileRead>( tracy::FileRead::Open( argv[1] ) );
-        }
-        catch( const tracy::UnsupportedVersion& e )
-        {
-            fprintf( stderr, "The file you are trying to open is from the future version.\n" );
-            exit( 1 );
-        }
-        catch( const tracy::NotTracyDump& e )
-        {
-            fprintf( stderr, "The file you are trying to open is not a tracy dump.\n" );
-            exit( 1 );
-        }
-        catch( const tracy::LegacyVersion& e )
-        {
-            fprintf( stderr, "The file you are trying to open is from a legacy version.\n" );
-            exit( 1 );
-        }
+        initFileOpen = std::unique_ptr<tracy::FileRead>( tracy::FileRead::Open( argv[1] ) );
         if( !initFileOpen )
         {
             fprintf( stderr, "Cannot open trace file: %s\n", argv[1] );
@@ -351,7 +279,7 @@ int main( int argc, char** argv )
     LoadConfig();
 
     ImGuiTracyContext imguiContext;
-    Backend backend( title, DrawContents, ScaleChanged, IsBusy, &mainThreadTasks );
+    Backend backend( title, DrawContents, &mainThreadTasks );
     tracy::InitTexture();
     iconTex = tracy::MakeTexture();
     zigzagTex = tracy::MakeTexture( true );
@@ -364,14 +292,10 @@ int main( int argc, char** argv )
     if( envDpiScale )
     {
         const auto cnv = atof( envDpiScale );
-        if( cnv != 0 )
-        {
-            dpiScale = cnv;
-            dpiScaleOverriddenFromEnv = true;
-        }
+        if( cnv != 0 ) dpiScale = cnv;
     }
 
-    SetupDPIScale();
+    SetupDPIScale( dpiScale, s_fixedWidth, s_bigFont, s_smallFont );
 
     tracy::UpdateTextureRGBAMips( zigzagTex, (void**)zigzagPx, zigzagX, zigzagY, 6 );
     for( auto& v : zigzagPx ) free( v );
@@ -552,15 +476,6 @@ static void UpdateBroadcastClients()
     }
 }
 
-static void TextComment( const char* str )
-{
-    ImGui::SameLine();
-    ImGui::PushFont( s_smallFont );
-    ImGui::AlignTextToFramePadding();
-    tracy::TextDisabledUnformatted( str );
-    ImGui::PopFont();
-}
-
 static void DrawContents()
 {
     static bool reconnect = false;
@@ -631,13 +546,10 @@ static void DrawContents()
         ImGui::PushFont( s_bigFont );
         tracy::TextCentered( buf );
         ImGui::PopFont();
-        if( dpiChanged == 0 )
+        ImGui::SameLine( ImGui::GetWindowContentRegionMax().x - ImGui::CalcTextSize( ICON_FA_WRENCH ).x - ImGui::GetStyle().FramePadding.x * 2 );
+        if( ImGui::Button( ICON_FA_WRENCH ) )
         {
-            ImGui::SameLine( ImGui::GetWindowContentRegionMax().x - ImGui::CalcTextSize( ICON_FA_WRENCH ).x - ImGui::GetStyle().FramePadding.x * 2 );
-            if( ImGui::Button( ICON_FA_WRENCH ) )
-            {
-                ImGui::OpenPopup( "About Tracy" );
-            }
+            ImGui::OpenPopup( "About Tracy" );
         }
         bool keepOpenAbout = true;
         if( ImGui::BeginPopupModal( "About Tracy", &keepOpenAbout, ImGuiWindowFlags_AlwaysAutoResize ) )
@@ -653,12 +565,11 @@ static void DrawContents()
             ImGui::TextUnformatted( "Created by Bartosz Taudul" );
             ImGui::SameLine();
             tracy::TextDisabledUnformatted( "<wolf@nereid.pl>" );
-            tracy::TextDisabledUnformatted( "Additional authors listed in git history." );
+            tracy::TextDisabledUnformatted( "Additional authors listed in AUTHORS file and in git history." );
             ImGui::Separator();
             if( ImGui::TreeNode( ICON_FA_TOOLBOX " Global settings" ) )
             {
                 ImGui::PushStyleVar( ImGuiStyleVar_FramePadding, ImVec2( 0, 0 ) );
-
                 ImGui::TextUnformatted( "Threaded rendering" );
                 ImGui::Indent();
                 if( ImGui::RadioButton( "Enabled", s_config.threadedRendering ) ) { s_config.threadedRendering = true; SaveConfig(); }
@@ -670,38 +581,11 @@ static void DrawContents()
                 ImGui::Unindent();
 
                 ImGui::Spacing();
-                if( ImGui::Checkbox( "Reduce render rate when focus is lost", &s_config.focusLostLimit ) ) SaveConfig();
-
-                ImGui::Spacing();
                 ImGui::TextUnformatted( "Target FPS" );
                 ImGui::SameLine();
                 int tmp = s_config.targetFps;
                 ImGui::SetNextItemWidth( 90 * dpiScale );
                 if( ImGui::InputInt( "##targetfps", &tmp ) ) { s_config.targetFps = std::clamp( tmp, 1, 9999 ); SaveConfig(); }
-
-                if( s_totalMem == 0 )
-                {
-                    ImGui::BeginDisabled();
-                    s_config.memoryLimit = false;
-                }
-
-                ImGui::Spacing();
-                if( ImGui::Checkbox( "Memory limit", &s_config.memoryLimit ) ) SaveConfig();
-                ImGui::SameLine();
-                tracy::DrawHelpMarker( "When enabled, profiler will stop recording data when memory usage exceeds the specified percentage of available memory. Values greater than 100% will rely on swap. You need to make sure that memory is actually available." );
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth( 70 * dpiScale );
-                if( ImGui::InputInt( "##memorylimit", &s_config.memoryLimitPercent ) ) { s_config.memoryLimitPercent = std::clamp( s_config.memoryLimitPercent, 1, 999 ); SaveConfig(); }
-                ImGui::SameLine();
-                ImGui::TextUnformatted( "%" );
-                if( s_totalMem != 0 )
-                {
-                    ImGui::SameLine();
-                    ImGui::TextDisabled( "(%s)", tracy::MemSizeToString( s_totalMem * s_config.memoryLimitPercent / 100 ) );
-                }
-
-                if( s_totalMem == 0 ) ImGui::EndDisabled();
-
                 ImGui::PopStyleVar();
                 ImGui::TreePop();
             }
@@ -736,46 +620,34 @@ static void DrawContents()
                 tracy::OpenWebpage( "https://github.com/wolfpld/tracy" );
             }
             ImGui::Separator();
-            if( ImGui::Selectable( ICON_FA_VIDEO " An Introduction to Tracy Profiler in C++ - Marcos Slomp - CppCon 2023" ) )
-            {
-                tracy::OpenWebpage( "https://youtu.be/ghXk3Bk5F2U?t=37" );
-            }
-            ImGui::Separator();
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.8" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=30wpRpHTTag" );
             }
-            TextComment( "2022-03-28" );
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.7" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=_hU7vw00MZ4" );
             }
-            TextComment( "2020-06-11" );
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.6" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=uJkrFgriuOo" );
             }
-            TextComment( "2019-11-17" );
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.5" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=P6E7qLMmzTQ" );
             }
-            TextComment( "2019-08-10" );
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.4" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=eAkgkaO8B9o" );
             }
-            TextComment( "2018-10-09" );
             if( ImGui::Selectable( ICON_FA_VIDEO " New features in v0.3" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=3SXpDpDh2Uo" );
             }
-            TextComment( "2018-07-03" );
             if( ImGui::Selectable( ICON_FA_VIDEO " Overview of v0.2" ) )
             {
                 tracy::OpenWebpage( "https://www.youtube.com/watch?v=fB5B46lbapc" );
             }
-            TextComment( "2018-03-25" );
             ImGui::EndPopup();
         }
         ImGui::SameLine();
@@ -868,12 +740,6 @@ static void DrawContents()
                 view = std::make_unique<tracy::View>( RunOnMainThread, addr, port, s_fixedWidth, s_smallFont, s_bigFont, SetWindowTitleCallback, SetupScaleCallback, AttentionCallback, s_config );
             }
         }
-        if( s_config.memoryLimit )
-        {
-            ImGui::SameLine();
-            tracy::TextColoredUnformatted( 0xFF00FFFF, ICON_FA_TRIANGLE_EXCLAMATION );
-            tracy::TooltipIfHovered( "Memory limit is active" );
-        }
         ImGui::SameLine( 0, ImGui::GetTextLineHeight() * 2 );
 
 #ifndef TRACY_NO_FILESELECTOR
@@ -900,11 +766,6 @@ static void DrawContents()
                                 badVer.state = tracy::BadVersionState::LegacyVersion;
                                 badVer.version = e.version;
                             }
-                            catch( const tracy::LoadFailure& e )
-                            {
-                                badVer.state = tracy::BadVersionState::LoadFailure;
-                                badVer.msg = e.msg;
-                            }
                         } );
                     }
                 }
@@ -918,13 +779,13 @@ static void DrawContents()
                 }
             } );
         }
-#endif
 
         if( badVer.state != tracy::BadVersionState::Ok )
         {
             if( loadThread.joinable() ) { loadThread.join(); }
             tracy::BadVersion( badVer, s_bigFont );
         }
+#endif
 
         if( !clients.empty() )
         {
@@ -1219,5 +1080,4 @@ static void DrawContents()
     }
 
     bptr->EndFrame();
-    if( dpiChanged > 0 ) dpiChanged--;
 }
