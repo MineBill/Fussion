@@ -6,7 +6,7 @@
 vsxmake2022/
 Binaries/
 build/
-
+cmake-build-debug/
 
 # Files
 *.vcxproj
@@ -16,6 +16,7 @@ build/
 *.log
 Makefile
 imgui.ini
+/CMakeLists.txt
 
 # Exclude
 !Vendor/Binaries
