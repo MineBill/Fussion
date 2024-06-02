@@ -17,7 +17,7 @@ public:
     virtual ~LogSink() = default;
     virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
 protected:
-    Log* m_Logger;
+    class Log* m_Logger;
 };
 
 class Log {

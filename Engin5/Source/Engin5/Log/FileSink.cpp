@@ -3,6 +3,26 @@
 
 #include "Engin5/Core/Core.h"
 
+// @todo Remove this and stop using *_s functions.
+#if defined(OS_LINUX)
+#include <cerrno>
+int fopen_s(FILE **f, const char *name, const char *mode) {
+    int ret = 0;
+    assert(f);
+    *f = fopen(name, mode);
+    if (!*f)
+        ret = errno;
+    return ret;
+}
+
+template<typename... Args>
+int fprintf_s(FILE* stream, const char* fmt, Args... args)
+{
+    return fprintf(stream, fmt, args...);
+}
+
+#endif
+
 namespace Engin5
 {
     FileSink::~FileSink()
