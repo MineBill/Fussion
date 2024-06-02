@@ -33,6 +33,26 @@ void ViewportWindow::OnDraw()
             const auto set = ImGuiLayer::This()->ImageToVkSet[transmute(u64, image->GetRenderHandle<VkImage>())];
             ImGui::Image(set, m_Size);
         }
+
+        ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+        ImGuiWindowFlags window_flags =
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoDocking |
+                ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoFocusOnAppearing |
+                ImGuiWindowFlags_NoNav;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
+        defer (ImGui::PopStyleVar());
+        if (ImGui::Begin("Example: Simple overlay", nullptr, window_flags)) {
+            const ImGuiIO& io = ImGui::GetIO();
+            ImGui::Text("Simple overlay\n" "(right-click to change position)");
+            ImGui::Separator();
+            auto pos = EditorApplication::Instance()->GetCamera().GetPosition();
+            ImGui::Text("Mouse Position: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+        }
+        ImGui::End();
     }
     ImGui::End();
 }

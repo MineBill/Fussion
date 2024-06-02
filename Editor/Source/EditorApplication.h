@@ -15,6 +15,8 @@ public:
 
     void Resize(Vector2 size);
 
+    EditorCamera& GetCamera() { return m_Camera; }
+
     static EditorApplication* Instance() { return s_EditorInstance; }
 
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
