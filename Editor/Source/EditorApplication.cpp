@@ -10,174 +10,115 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <tracy/Tracy.hpp>
 
+#include "Engin5/Events/ApplicationEvents.h"
+#include "Engin5/Log/FileSink.h"
 #include "Engin5/OS/FileSystem.h"
-#include "Engin5/Renderer/ShaderCompiler.h"
+#include "Layers/EditorLayer.h"
+
+EditorApplication* EditorApplication::s_EditorInstance;
 
 void EditorApplication::OnStart()
 {
+    ZoneScoped;
     using namespace Engin5;
-    m_Layer = MakePtr<ImGuiLayer>();
-    PushLayer(m_Layer.get());
+
+    s_EditorInstance = this;
+    Log::DefaultLogger()->RegisterSink(FileSink::Create("Pepegas.log"));
+    LOG_DEBUGF("Current path is: {}", std::filesystem::current_path().string());
+
+    s_EditorInstance = this;
+    m_ImGuiLayer = MakePtr<ImGuiLayer>();
+    m_ImGuiLayer->Init();
+
+    m_ImGuiLayer->OnDisable();
+
+    m_SceneRenderer.Init();
+    m_Camera.Resize(m_Window->GetSize());
+
+    PushLayer(m_ImGuiLayer.get());
+    PushLayer(m_EditorLayer = new EditorLayer());
 
     Application::OnStart();
 
-    auto aspect = cast(f32, m_Window->GetWidth()) / cast(f32, m_Window->GetHeight());
-    m_Perspective = glm::perspective(glm::radians(50.0f), aspect, 0.1f, 1000.0f);
-
-    m_GlobalData = MakePtr<UniformBuffer<GlobalData>>();
-    m_GlobalData->GetData().Perspective = m_Perspective;
-    // m_GlobalData->GetData().View = glm::translate(glm::mat4(1.0f), Vector3(1, 0, -2));
-    m_GlobalData->GetData().View = glm::mat4(1.0f);
-
-    const auto data = FileSystem::ReadEntireFile("Assets/triangle.shader");
-    auto [stages, metadata] = ShaderCompiler::Compile(data);
-
-    m_TriangleShader = Device::Instance()->CreateShader(Renderer::GetInstance()->GetMainRenderPass(), stages, metadata);
-
-    const auto pool_spec = ResourcePoolSpecification::Default(100);
-    m_ResourcePool = Device::Instance()->CreateResourcePool(pool_spec);
-
-    std::vector resource_usages = {
-        ResourceUsage{
-            .Label = "awd",
-            .Type = ResourceType::UniformBuffer,
-            .Count = 1,
-            .Stages = ShaderType::Vertex | ShaderType::Fragment,
-        },
-    };
-    auto layout = Device::Instance()->CreateResourceLayout(resource_usages);
-    auto result = m_ResourcePool->Allocate(layout);
-    if (result.IsError()) {
-        LOG_ERRORF("Error while allocating resource: {}", magic_enum::enum_name(result.Error()));
-        return;
-    }
-
-    m_GlobalResource = result.TakeValue();
-
-    const auto scene_rp_spec = RenderPassSpecification {
-        .Label = "Scene RenderPass",
-        .Attachments = {
-            RenderPassAttachment {
-                .Label = "Color Attachment",
-                .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                .StoreOp = RenderPassAttachmentStoreOp::Store,
-                .Format = ImageFormat::B8G8R8A8_UNORM,
-                .FinalLayout = ImageLayout::ColorAttachmentOptimal,
-                .ClearColor = {0.2f, 0.6f, 0.15f, 1.0f},
-            },
-            RenderPassAttachment {
-                .Label = "Depth Attachment",
-                .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                .Format = ImageFormat::D32_SFLOAT,
-                .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
-                .ClearDepth = 1.f,
-            }
-        },
-        .SubPasses = {
-            RenderPassSubPass {
-                .ColorAttachments = {
-                    {
-                        .Attachment = 0,
-                        .Layout = ImageLayout::ColorAttachmentOptimal,
-                    }
-                },
-                .DepthStencilAttachment = RenderPassAttachmentRef {
-                    .Attachment = 1,
-                    .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-                }
-            },
-        }
-    };
-
-    m_SceneRenderPass = Device::Instance()->CreateRenderPass(scene_rp_spec);
-
-    auto fb_spec = FrameBufferSpecification {
-        .Width = 400,
-        .Height = 400,
-        .Attachments = {
-                FrameBufferAttachmentInfo {
-                        .Format = ImageFormat::B8G8R8A8_UNORM,
-                        .Usage = ImageUsage::Sampled | ImageUsage::ColorAttachment,
-                },
-                FrameBufferAttachmentInfo {
-                        .Format = ImageFormat::D32_SFLOAT,
-                        .Usage = ImageUsage::Sampled | ImageUsage::DepthStencilAttachment,
-                }
-        }
-    };
-    m_FrameBuffer = Device::Instance()->CreateFrameBuffer(m_SceneRenderPass, fb_spec);
+    // auto aspect = cast(f32, m_Window->GetWidth()) / cast(f32, m_Window->GetHeight());
+    // m_Perspective = glm::perspective(glm::radians(50.0f), aspect, 0.1f, 1000.0f);
 }
 
-bool operator==(const Vector2& vec, const Vector2& rhs)
+void EditorApplication::OnUpdate(const f32 delta)
 {
-    return vec.x == rhs.x && vec.y == rhs.y;
-}
-
-void EditorApplication::OnUpdate(f32 delta)
-{
+    ZoneScoped;
     using namespace Engin5;
-    m_Layer->Begin();
 
-    auto forward = Input::GetAxis(KeyboardKey::W, KeyboardKey::S);
-    auto strafe = Input::GetAxis(KeyboardKey::A, KeyboardKey::D);
-    m_GlobalData->GetData().View = glm::translate(m_GlobalData->GetData().View, Vector3(strafe, 0, forward) * 0.001f);
+    m_ImGuiLayer->Begin();
 
-    ImGui::ShowDemoWindow();
-    if (ImGui::Begin("Settings")) {
-        if (ImGui::DragFloat("FOV", &m_FOV)) {
-        }
-
-        static Vector2 pos{};
-        if (ImGui::DragFloat2("Position", &pos[0])) {
-            m_Window->SetPosition(pos);
-        }
-
-        auto new_size = ImGui::GetContentRegionAvail();
-        // if (m_ViewportSize != new_size) {
-        //     Device::Instance()->WaitIdle();
-        //     m_FrameBuffer->Resize(new_size);
-        // }
-        m_ViewportSize = new_size;
-        // auto set = m_Layer->Sets[transmute(u64, m_FrameBuffer->GetColorAttachment(0)->GetRawHandle())];
-        // ImGui::Image(set, m_ViewportSize);
-    }
-    ImGui::End();
-
-    // const auto aspect = cast(f32, m_Window->GetWidth()) / cast(f32, m_Window->GetHeight());
-    const auto aspect = m_ViewportSize.x / m_ViewportSize.y;
-    m_Perspective = glm::perspective(glm::radians(m_FOV), aspect, 0.1f, 1000.0f);
-    m_GlobalData->GetData().Perspective = m_Perspective;
-    m_GlobalData->Flush();
-
+    m_Camera.SetFocus(m_EditorLayer->GetViewport().IsFocused());
+    m_Camera.OnUpdate(delta);
+    // Update the layers.
     Application::OnUpdate(delta);
+
+    // auto forward = Input::GetAxis(KeyboardKey::W, KeyboardKey::S);
+    // auto strafe = Input::GetAxis(KeyboardKey::A, KeyboardKey::D);
+    // m_GlobalData->GetData().View = glm::translate(m_GlobalData->GetData().View, Vector3(strafe, 0, forward) * 0.001f);
+    //
+    //
+    // // const auto aspect = cast(f32, m_Window->GetWidth()) / cast(f32, m_Window->GetHeight());
+    // const auto aspect = m_ViewportSize.x / m_ViewportSize.y;
+    // m_Perspective = glm::perspective(glm::radians(m_FOV), aspect, 0.1f, 1000.0f);
+    // m_GlobalData->GetData().Perspective = m_Perspective;
+    // m_GlobalData->Flush();
+
     auto [cmd, image] = Renderer::Begin();
     if (cmd == nullptr) {
+        m_ImGuiLayer->End(cmd);
         return;
     }
 
     cmd->Begin();
     auto window_size = Vector2{cast(f32, m_Window->GetWidth()), cast(f32, m_Window->GetHeight())};
 
-    cmd->BeginRenderPass(m_SceneRenderPass, m_FrameBuffer);
-        cmd->SetViewport({m_ViewportSize.x, -m_ViewportSize.y});
-        cmd->SetScissor({0, 0, m_ViewportSize.x, m_ViewportSize.y});
-        cmd->UseShader(m_TriangleShader);
-        cmd->BindResource(m_GlobalResource, m_TriangleShader, 0);
-        cmd->BindUniformBuffer(m_GlobalData->GetBuffer(), m_GlobalResource, 0);
-        cmd->Draw(3, 1);
-    cmd->EndRenderPass(Renderer::GetInstance()->GetUIRenderPass());
+    m_SceneRenderer.Render(cmd, {
+        .Camera = RenderCamera {
+            .Perspective = m_Camera.GetPerspective(),
+            .View = m_Camera.GetView(),
+            .Position = m_Camera.GetPosition(),
+        }
+    });
 
     const auto main = Renderer::GetInstance()->GetMainRenderPass();
     cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
     cmd->SetViewport({window_size.x, -window_size.y});
     cmd->SetScissor({0, 0, window_size.x, window_size.y});
 
-    m_Layer->End(cmd);
+    m_ImGuiLayer->End(cmd);
 
     cmd->EndRenderPass(main);
 
     cmd->End();
 
     Renderer::End(cmd);
+}
+
+void EditorApplication::OnEvent(Engin5::Event& event)
+{
+    using namespace Engin5;
+    EventDispatcher dispatcher(event);
+
+    dispatcher.Dispatch<WindowResized>([](WindowResized &resized) -> bool {
+        (void)resized;
+        // const Vector2 size = {cast(f32, resized.Width), cast(f32, resized.Height)};
+        // m_Camera.Resize(size);
+        // m_SceneRenderer.Resize(size);
+        return false;
+    });
+    m_Camera.HandleEvent(event);
+    Application::OnEvent(event);
+}
+
+void EditorApplication::Resize(Vector2 size)
+{
+    ZoneScoped;
+    m_Camera.Resize(size);
+    m_SceneRenderer.Resize(size);
 }

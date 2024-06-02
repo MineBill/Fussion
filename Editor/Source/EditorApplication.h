@@ -1,36 +1,33 @@
 ﻿#pragma once
-#include "EditorRenderer.h"
+#include "EditorCamera.h"
+#include "SceneRenderer.h"
 #include "Engin5/Core/Application.h"
 #include "Engin5/Renderer/UniformBuffer.h"
 #include "Layers/ImGuiLayer.h"
 
-struct GlobalData
-{
-    glm::mat4 Perspective{};
-    glm::mat4 View{};
-};
-
+class EditorLayer;
 class EditorApplication: public Engin5::Application
 {
 public:
     void OnStart() override;
     void OnUpdate(f32 delta) override;
+    void OnEvent(Engin5::Event&) override;
 
+    void Resize(Vector2 size);
+
+    static EditorApplication* Instance() { return s_EditorInstance; }
+
+    SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 private:
-    Ptr<ImGuiLayer> m_Layer;
-    Ref<Engin5::Shader> m_TriangleShader{};
-    Ref<Engin5::ResourcePool> m_ResourcePool{};
+    static EditorApplication* s_EditorInstance;
+    Ptr<ImGuiLayer> m_ImGuiLayer;
 
-    Ref<Engin5::RenderPass> m_SceneRenderPass{};
-    Ref<Engin5::FrameBuffer> m_FrameBuffer{};
-
-    Ref<Engin5::Resource> m_GlobalResource{};
-    Ptr<Engin5::UniformBuffer<GlobalData>> m_GlobalData;
-
-    EditorRenderer m_SceneRenderer{};
-    f32 m_FOV{};
+    EditorCamera m_Camera;
+    SceneRenderer m_SceneRenderer{};
+    f32 m_FOV{50.0f};
     glm::mat4 m_Perspective{};
     glm::mat4 m_View{};
 
-    Vector2 m_ViewportSize{};
+    Vector2 m_ViewportSize{10, 10};
+    EditorLayer* m_EditorLayer{};
 };

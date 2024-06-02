@@ -10,11 +10,14 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 #include <magic_enum/magic_enum.hpp>
+#include <tracy/Tracy.hpp>
 
 #include "Engin5/Renderer/Renderer.h"
 
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanImageView.h"
+
+ImGuiLayer* ImGuiLayer::s_Instance;
 
 static inline const char* string_VkResult(VkResult input_value) {
     switch (input_value) {
@@ -117,10 +120,21 @@ static inline const char* string_VkResult(VkResult input_value) {
     }
 }
 
-void ImGuiLayer::OnStart()
+ImGuiLayer::ImGuiLayer()
 {
+    if (s_Instance != nullptr) {
+        LOG_FATAL("Multiple instances of ImGuiLayer detected. Cannot proceed.");
+        PANIC();
+    }
+
+    s_Instance = this;
+}
+
+void ImGuiLayer::Init()
+{
+    ZoneScoped;
     using namespace Engin5;
-    LOG_DEBUGF("ImGuiLayer OnStart()");
+    LOG_DEBUGF("Initializing ImGui layer.");
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -172,7 +186,6 @@ void ImGuiLayer::OnStart()
         return vkGetInstanceProcAddr(cast(VulkanDevice*, device)->Instance->Instance, function_name);
     }, device.get());
     ImGui_ImplVulkan_Init(&info);
-
     Device::Instance()->RegisterImageCallback([this](Ref<Image> const& image, bool create) {
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
@@ -194,23 +207,40 @@ void ImGuiLayer::OnStart()
                 }
                 break;
                 }
-                Sets[transmute(u64, vk_image->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
+
+                ImageToVkSet[transmute(u64, vk_image->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
                     vk_image->Sampler->GetRenderHandle<VkSampler>(),
                     vk_image->View->GetRenderHandle<VkImageView>(), layout);
 
             } else {
                 auto handle = transmute(u64, image->GetRawHandle());
-                if (Sets.contains(handle))
-                    ImGui_ImplVulkan_RemoveTexture(Sets[handle]);
+                if (ImageToVkSet.contains(handle))
+                    ImGui_ImplVulkan_RemoveTexture(ImageToVkSet[handle]);
             }
         }
     });
 }
 
-void ImGuiLayer::OnUpdate()
+void ImGuiLayer::OnStart()
 {
-    Layer::OnUpdate();
+}
 
+void ImGuiLayer::OnUpdate(const f32 delta)
+{
+    (void)delta;
+}
+
+void ImGuiLayer::Begin()
+{
+    ZoneScoped;
+    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplVulkan_NewFrame();
+    ImGui::NewFrame();
+}
+
+void ImGuiLayer::End(const Ref<Engin5::CommandBuffer>& cmd)
+{
+    ZoneScoped;
     ImGui::Render();
     auto io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -219,16 +249,7 @@ void ImGuiLayer::OnUpdate()
         ImGui::RenderPlatformWindowsDefault();
         // ImGui::SetCurrentContext(ctx);
     }
-}
-
-void ImGuiLayer::Begin()
-{
-    ImGui_ImplGlfw_NewFrame();
-    ImGui_ImplVulkan_NewFrame();
-    ImGui::NewFrame();
-}
-
-void ImGuiLayer::End(Ref<Engin5::CommandBuffer> cmd)
-{
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetRenderHandle<VkCommandBuffer>());
+    if (cmd != nullptr) {
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetRenderHandle<VkCommandBuffer>());
+    }
 }

@@ -7,7 +7,8 @@ namespace Engin5
 {
     enum class WindowFlag
     {
-        Resizable,
+        Resizable = 1 << 0,
+        Centered = 1 << 1,
     };
 
     DECLARE_FLAGS(WindowFlag, WindowFlags)
@@ -21,10 +22,23 @@ namespace Engin5
         WindowFlags Flags{};
     };
 
+    enum class MouseMode
+    {
+        Unlocked,
+        Locked,
+        Confined,
+    };
+
     class Window
     {
     public:
         virtual ~Window() = default;
+        Vector2 GetSize() const
+        {
+            return {cast(f32, GetWidth()), cast(f32, GetHeight())};
+        }
+
+        virtual void SetMouseMode(MouseMode mode) const = 0;
 
         static Window* Create(const WindowOptions& options);
 

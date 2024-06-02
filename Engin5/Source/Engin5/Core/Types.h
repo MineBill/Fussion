@@ -27,6 +27,11 @@ using Vector2 = glm::vec2;
 using Vector3 = glm::vec3;
 using Vector4 = glm::vec4;
 
+using Quaternion = glm::quat;
+
+using Mat3 = glm::mat3;
+using Mat4 = glm::mat4;
+
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 

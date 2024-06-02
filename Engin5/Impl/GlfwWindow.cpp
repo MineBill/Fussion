@@ -32,6 +32,15 @@ namespace Engin5
 
         m_Window = glfwCreateWindow(options.InitialWidth, options.InitialHeight, options.InitialTitle.c_str(), nullptr, nullptr);
 
+        if (options.Flags.Test(WindowFlag::Centered)) {
+            auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+            SetPosition({
+                cast(f32, mode->width) / 2.0 - cast(f32, options.InitialWidth) / 2.0,
+                cast(f32, mode->height) / 2.0 - cast(f32, options.InitialHeight) / 2.0
+            });
+        }
+
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
@@ -152,6 +161,21 @@ namespace Engin5
     void GlfwWindow::OnEvent(const EventFnType callback)
     {
         m_EventCallback = callback;
+    }
+
+    void GlfwWindow::SetMouseMode(MouseMode mode) const
+    {
+        switch(mode) {
+        case MouseMode::Unlocked: {
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        } break;
+        case MouseMode::Locked: {
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        } break;
+        case MouseMode::Confined: {
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        } break;
+        }
     }
 
     u32 GlfwWindow::GetHeight() const

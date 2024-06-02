@@ -8,11 +8,19 @@
 class ImGuiLayer: public Engin5::Layer
 {
 public:
+    ImGuiLayer();
+
+    static ImGuiLayer* This() { return s_Instance; }
+
+    void Init();
     void OnStart() override;
-    void OnUpdate() override;
+    void OnUpdate(f32) override;
 
     void Begin();
-    void End(Ref<Engin5::CommandBuffer> cmd);
+    void End(const Ref<Engin5::CommandBuffer>&);
 
-    std::map<u64, VkDescriptorSet> Sets;
+    // @Todo The VkDescriptorSet could be changed to void*.
+    std::map<u64, VkDescriptorSet> ImageToVkSet;
+private:
+    static ImGuiLayer* s_Instance;
 };

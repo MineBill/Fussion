@@ -118,8 +118,9 @@ namespace Engin5
 
         m_UIRenderPass = device->CreateRenderPass(ui_rp_spec);
 
+        auto window = Application::Instance()->GetWindow();
         const auto swapchain_spec = SwapChainSpecification {
-            .Size = {400, 400},
+            .Size = {cast(f32, window->GetWidth()), cast(f32, window->GetHeight())},
             .PresentMode = VideoPresentMode::Immediate,
             .Format = ImageFormat::B8G8R8A8_UNORM,
         };

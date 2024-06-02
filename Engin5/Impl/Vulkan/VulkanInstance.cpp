@@ -1,7 +1,7 @@
 ﻿#include "e5pch.h"
 #include "VulkanInstance.h"
 #include "Common.h"
-#include "Engin5/Log.h"
+#include "Engin5/Log/Log.h"
 #include "Engin5/Core/Types.h"
 #include "Engin5/Core/Core.h"
 

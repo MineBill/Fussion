@@ -2,6 +2,7 @@
 #include "Keys.h"
 #include "Engin5/Events/Event.h"
 #include "Engin5/Core/Types.h"
+#include "Engin5/Events/MouseEvents.h"
 
 namespace Engin5
 {
@@ -23,6 +24,11 @@ namespace Engin5
         static bool IsKeyPressed(KeyboardKey key);
         static bool IsKeyReleased(KeyboardKey key);
         static f32 GetAxis(KeyboardKey positive, KeyboardKey negative);
+
+        static bool IsMouseButtonDown(MouseButton button);
+        static bool IsMouseButtonUp(MouseButton button);
+        static bool IsMouseButtonPressed(MouseButton button);
+        static bool IsMouseButtonReleased(MouseButton button);
 
         template<typename... K>
         static bool IsAnyKeyDown(const KeyboardKey key, K... keys)

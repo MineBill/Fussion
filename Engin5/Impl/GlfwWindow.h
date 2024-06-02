@@ -15,6 +15,8 @@ namespace Engin5
         void SetTitle(const std::string& title) override;
         void OnEvent(EventFnType callback) override;
 
+        void SetMouseMode(MouseMode mode) const override;
+
         u32 GetHeight() const override;
         u32 GetWidth() const override;
 

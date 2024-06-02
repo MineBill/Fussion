@@ -14,13 +14,21 @@ struct VertexOutput {
 const vec3 triangle[] = vec3[](
     vec3( 0.0,  0.5, 0.0),
     vec3( 0.5, -0.5, 0.0),
-    vec3(-0.5, -0.5, 0.0)
+    vec3(-0.5, -0.5, 0.0),
+
+    vec3(-0.5, -0.5, 0.0),
+    vec3( 0.5, -0.5, 0.0),
+    vec3( 0.0,  0.5, 0.0)
 );
 
 const vec3 colors[] = vec3[](
     vec3( 1.0,  0.0, 0.0),
     vec3( 0.0, 1.0, 0.0),
-    vec3(0.0, 0.0, 1.0)
+    vec3(0.0, 0.0, 1.0),
+
+    vec3(0.0, 1.0, 1.0),
+    vec3( 0.0, 1.0, 0.0),
+    vec3( 1.0,  0.0, 1.0)
 );
 
 layout (location = 0) out VertexOutput Out;

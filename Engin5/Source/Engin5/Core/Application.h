@@ -9,6 +9,7 @@ namespace Engin5
     class Application
     {
     public:
+        virtual ~Application() = default;
 
         virtual void OnStart()
         {
@@ -17,12 +18,13 @@ namespace Engin5
             }
         }
 
-        virtual void OnUpdate(f32)
+        virtual void OnUpdate(const f32 delta)
         {
             for (const auto& layer : m_Layers) {
-                layer->OnUpdate();
+                layer->OnUpdate(delta);
             }
         }
+
         virtual void OnEvent(Event&) {}
 
         Window const* GetWindow() const { return m_Window.get(); }

@@ -1,6 +1,11 @@
 target "Editor"
     set_kind("binary")
     set_languages("c++20")
+	set_rundir("$(projectdir)/Editor")
+
+    add_includedirs (
+        "Source"
+    )
 
     add_files (
         "Source/**.cpp"

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Types.h"
 #include "Engin5/Events/Event.h"
 
 namespace Engin5
@@ -13,7 +14,7 @@ namespace Engin5
         virtual void OnEnable() {}
         virtual void OnDisable() {}
 
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(f32) {}
         virtual void OnEvent(Event&) {}
     };
 }

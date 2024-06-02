@@ -1,5 +1,5 @@
 #pragma once
-#include "Engin5/Log.h"
+#include "Engin5/Log/Log.h"
 #include <source_location>
 
 #if defined(_MSC_VER)

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Engin5/Core/Types.h"
 #include <source_location>
 
 enum class LogLevel {
@@ -9,6 +10,16 @@ enum class LogLevel {
     Fatal,
 };
 
+class LogSink
+{
+    friend class Log;
+public:
+    virtual ~LogSink() = default;
+    virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
+protected:
+    Log* m_Logger;
+};
+
 class Log {
     LogLevel m_Priority{};
 public:
@@ -17,7 +28,14 @@ public:
     static Log* DefaultLogger();
 
     void SetLogLevel(LogLevel level);
-    void Write(LogLevel level, std::string_view message, std::source_location loc = std::source_location::current());
+    void Write(LogLevel level, std::string_view message, const std::source_location& loc = std::source_location::current()) const;
+
+    void RegisterSink(Ref<LogSink> const& sink);
+
+    LogLevel GetPriority() const { return m_Priority; }
+
+private:
+    std::vector<Ref<LogSink>> m_Sinks{};
 };
 
 #define LOG_FATAL(message) Log::DefaultLogger()->Write(LogLevel::Fatal, message)

@@ -1,6 +1,10 @@
 ﻿#include "e5pch.h"
 #include "Application.h"
+
+#include <tracy/Tracy.hpp>
+
 #include "Engin5/Input/Input.h"
+#include "Engin5/OS/Clock.h"
 #include "Engin5/Renderer/Renderer.h"
 
 namespace Engin5
@@ -12,9 +16,15 @@ namespace Engin5
         s_Instance = this;
         // Setup the engine
 
-        const WindowOptions options {};
+        const WindowOptions options {
+            .InitialTitle = "Window",
+            .InitialWidth = 1366,
+            .InitialHeight = 768,
+            .Flags = WindowFlag::Centered,
+        };
         m_Window.reset(Window::Create(options));
         m_Window->OnEvent([this](Event& event) -> bool {
+            ZoneScoped;
             OnEvent(event);
             Input::OnEvent(event);
             for (const auto& layer : m_Layers) {
@@ -33,11 +43,14 @@ namespace Engin5
 
         OnStart();
 
+        Clock clock;
         while (!m_Window->ShouldClose()) {
+            const auto delta = cast(f32, clock.Reset()) / 1000.0f;
             m_Window->Update();
-            OnUpdate(0.0);
+            OnUpdate(delta);
 
             Input::Flush();
+            FrameMark;
         }
     }
 
