@@ -58,6 +58,22 @@ target_end()
 --     add_files("Engin5/Vendor/imgui/*.cpp")
 --     add_headerfiles("Engin5/Vendor/imgui/*.h")
 
+target "Reflect"
+    set_kind("static")
+    set_languages("c++17")
+
+    add_files("Engin5/Vendor/Reflect/Reflect/src/**.cpp")
+    add_headerfiles("Engin5/Vendor/Reflect/Reflect/inc/**.h")
+    add_includedirs("Engin5/Vendor/Reflect/Reflect/inc", {public = true})
+    add_defines("REFLECT_TYPE_INFO_ENABLED", {public = true})
+
+    set_policy("build.fence", true)
+
+    if is_plat("windows") then
+        set_runtimes("MDd")
+    end
+target_end()
+
 if is_plat("linux") then
     add_requires("spirv-cross")
 end
