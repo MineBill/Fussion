@@ -10,7 +10,7 @@
 
 namespace Reflect::CodeGeneration
 {
-	void CG_CPP_Legacy::Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_Legacy::Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		WriteMemberProperties(data, file, additionalOptions);
@@ -18,7 +18,7 @@ namespace Reflect::CodeGeneration
 		WriteMemberGet(data, file, additionalOptions);
 	}
 
-	void CG_CPP_Legacy::WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_Legacy::WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		auto getMemberProps = [](const std::vector<std::string>& flags) -> std::string
@@ -73,7 +73,7 @@ namespace Reflect::CodeGeneration
 		}
 	}
 
-	void CG_CPP_Legacy::WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_Legacy::WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "Reflect::ReflectMember " + data.NameWithNamespace + "::GetMember(const char* memberName)\n{" << NEW_LINE;
@@ -132,7 +132,7 @@ namespace Reflect::CodeGeneration
 		file << "}\n" << NEW_LINE;
 	}
 
-	void CG_CPP_Legacy::WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_Legacy::WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "Reflect::ReflectFunction " + data.NameWithNamespace + "::GetFunction(const char* functionName)\n{" << NEW_LINE;

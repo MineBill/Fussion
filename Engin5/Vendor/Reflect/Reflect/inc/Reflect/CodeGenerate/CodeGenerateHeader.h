@@ -11,7 +11,7 @@
 
 namespace Reflect
 {
-	struct ReflectAddtionalOptions;
+	struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -22,10 +22,10 @@ namespace Reflect::CodeGeneration
 		CodeGenerateHeader() { }
 		~CodeGenerateHeader() { }
 
-		void GenerateHeader(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+		void GenerateHeader(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
 	private:
-		void WriteMacros(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+		void WriteMacros(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
 	private:
 		CG_Header_Legacy m_CGHeaderLegacy;

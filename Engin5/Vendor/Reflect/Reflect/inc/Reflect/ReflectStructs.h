@@ -11,6 +11,7 @@
 struct ReflectFunction;
 struct ReflectMember;
 #endif
+#include "Structs/TypeId.h"
 
 namespace Reflect
 {
@@ -19,7 +20,15 @@ namespace Reflect
 	class GenerateTypeInfoForType;
 
 	struct REFLECT_API IReflect
-	{ };
+	{
+	    TypeId const& GetTypeID()
+	    {
+	        return m_TypeId;
+	    }
+
+	protected:
+	    TypeId m_TypeId;
+	};
 #else
 	struct ReflectType
 	{

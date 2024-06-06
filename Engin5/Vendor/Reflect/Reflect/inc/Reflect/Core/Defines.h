@@ -14,7 +14,7 @@
 #define REFLECT_API __declspec(dllexport)
 #elif defined (REFLECT_DLL_IMPORT)
 #define REFLECT_API __declspec(dllimport)
-#else 
+#else
 #define REFLECT_API
 #endif
 
@@ -37,6 +37,6 @@
 
 
 // Only use a REFLECT_CLASS/REFLECT_STRUCT for the parser and do not generate
-// any additional reflected files for this object. Using this can improved the overall
+// any additional reflected files for this object. Using this can improve the overall
 // reflected code.
 #define REFLECT_LOOKUP_ONLY "REFLECT_LOOKUP_ONLY"

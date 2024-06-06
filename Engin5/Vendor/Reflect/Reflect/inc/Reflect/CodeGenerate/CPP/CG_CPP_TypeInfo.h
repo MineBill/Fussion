@@ -4,7 +4,7 @@
 
 namespace Reflect
 {
-    struct ReflectAddtionalOptions;
+    struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -14,13 +14,13 @@ namespace Reflect::CodeGeneration
     {
     public:
         
-        void Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+        void Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
     private:
-        void WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
-        void WriteGenerateTypeInheritance(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
-        void WriteGenerateTypeMembers(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
-        void WriteGenerateTypeFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+        void WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
+        void WriteGenerateTypeInheritance(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
+        void WriteGenerateTypeMembers(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
+        void WriteGenerateTypeFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
         void WriteReflectCPPInheritanceChain(std::ofstream& file, EReflectType refectType, const Parser::ReflectTypeNameData& typeNameData, int lineIndent);
 

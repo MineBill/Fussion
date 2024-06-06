@@ -34,7 +34,7 @@ namespace Reflect
 		//, Reflect_CMD_Option_Single_File_EXT
 	};
 
-	struct ReflectAddtionalOptions
+	struct ReflectAdditionalOptions
 	{
 		std::string_view GetOption(std::string_view optionKey) const
 		{

@@ -22,7 +22,7 @@ namespace Reflect::CodeGeneration
 
 #define WRITE_CURRENT_FILE_ID(ContainerName, FileName) file << "#define " + GetCurrentFileID(ContainerName, FileName)
 
-	void CodeGenerateHeader::GenerateHeader(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CodeGenerateHeader::GenerateHeader(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 
@@ -40,7 +40,7 @@ namespace Reflect::CodeGeneration
 		WriteMacros(data, file, additionalOptions);
 	}
 
-	void CodeGenerateHeader::WriteMacros(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CodeGenerateHeader::WriteMacros(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		for (const auto& reflectData : data.ReflectData)

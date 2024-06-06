@@ -9,7 +9,7 @@
 
 namespace Reflect
 {
-	struct ReflectAddtionalOptions;
+	struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -20,7 +20,7 @@ namespace Reflect::CodeGeneration
 		CodeGenerateSource() { }
 		~CodeGenerateSource() { }
 
-		void GenerateSource(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+		void GenerateSource(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
 	private:
 		CG_CPP_Legacy m_CG_CPP_Legacy;

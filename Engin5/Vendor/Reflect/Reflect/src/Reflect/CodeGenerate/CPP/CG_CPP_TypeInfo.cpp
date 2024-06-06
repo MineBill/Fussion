@@ -13,13 +13,13 @@ namespace Reflect::CodeGeneration
 {
 #ifdef REFLECT_TYPE_INFO_ENABLED
 
-    void CG_CPP_TypeInfo::Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+    void CG_CPP_TypeInfo::Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
     {
 		REFLECT_PROFILE_FUNCTION();
         WriteGenerateTypeInfo(data, file, additionalOptions);
     }
 
-	void CG_CPP_TypeInfo::WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_TypeInfo::WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 
@@ -50,13 +50,14 @@ namespace Reflect::CodeGeneration
 		TAB_N(3); file << "std::vector<MemberInfo> memberInfos = GenerateMemberInfos(objectInstance);" << NEW_LINE;
 		TAB_N(3); file << "std::vector<Type> " << data.Name << "_InheritanceTypes;" << NEW_LINE;
 		TAB_N(3); file << NEW_LINE;
-				  
+
 		TAB_N(3); file << "s_" << data.Name << "TypeInfo = TypeInfo(" << NEW_LINE;
 		TAB_N(4); file << "Type::MakeType<::" << data.NameWithNamespace << ">(), " << NEW_LINE;
 		TAB_N(4); file << "objectInstance, " << NEW_LINE;
 		TAB_N(4); file << "std::move(parentTypeInfos), " << NEW_LINE;
 		TAB_N(4); file << "std::move(memberInfos), " << NEW_LINE;
 		TAB_N(4); file << "std::move(functionInfos));" << NEW_LINE;
+
 
 		TAB_N(3); file << "s_" << data.Name << "Initialised = true;" << NEW_LINE;
 		TAB_N(2); file << "}" << NEW_LINE;
@@ -90,11 +91,13 @@ namespace Reflect::CodeGeneration
 		file << "}\n" << NEW_LINE;
 
 		file << "Reflect::TypeInfo " + GetTypeName(data) + "::ReflectRegisterCallback(void* objectInstance)\n{" << NEW_LINE;
+        file << "\tif (objectInstance == nullptr) __debugbreak();" << NEW_LINE;
+        TAB_N(1); file << "static_cast<" + GetTypeName(data) + "*>(objectInstance)->m_TypeId = " << "Reflect::TypeId::MakeTypeId<" << data.NameWithNamespace << ">();" << NEW_LINE;
 		file << "\treturn " + GetTypeName(data) + "::GetStaticTypeInfo(static_cast<" + GetTypeName(data) + "*>(objectInstance)); " << NEW_LINE;
 		file << "}\n" << NEW_LINE;
 	}
 
-	void CG_CPP_TypeInfo::WriteGenerateTypeInheritance(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_TypeInfo::WriteGenerateTypeInheritance(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "\tstd::vector<TypeInfo> GenerateParentTypeInfos(" + GetTypeName(data) + "* objectInstance)\n\t{" << NEW_LINE;
@@ -102,7 +105,7 @@ namespace Reflect::CodeGeneration
 
 		for (const auto& item : data.Inheritance)
 		{
-			if (!item.IsReflected) 
+			if (!item.IsReflected)
 			{
 				continue;
 			}
@@ -115,14 +118,14 @@ namespace Reflect::CodeGeneration
 		file << "\t}" << NEW_LINE;
 	}
 
-	void CG_CPP_TypeInfo::WriteGenerateTypeFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_TypeInfo::WriteGenerateTypeFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		auto generateFunctionArgs = [&data]()->std::string
 		{
 			auto generateSingleArg = [&data](const Parser::ReflectTypeNameData& arg) -> std::string
 			{
-				
+
 				std::string str;
 				if (arg.NameWithNamespace.empty())
 				{
@@ -215,7 +218,7 @@ namespace Reflect::CodeGeneration
 		file << "\t}" << NEW_LINE;
 	}
 
-	void CG_CPP_TypeInfo::WriteGenerateTypeMembers(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CG_CPP_TypeInfo::WriteGenerateTypeMembers(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "\tstd::vector<MemberInfo> GenerateMemberInfos(" + GetTypeName(data)  + "* objectInstance)\n\t{" << NEW_LINE;
@@ -305,7 +308,7 @@ namespace Reflect::CodeGeneration
 
 			TAB_N(lineIndent + 1);
 			file << "objectInstance" << NEW_LINE;
-			
+
 			TAB_N(lineIndent + 1);
 			file << "));" << NEW_LINE;
 
@@ -367,7 +370,7 @@ namespace Reflect::CodeGeneration
 			file << typeNameData.Name << "_" << data.Name << "));\n";
 		}
 
-		file << "\n";		
+		file << "\n";
 	}
 
 	std::string CG_CPP_TypeInfo::GetTypeName(const Parser::ReflectContainerData& data) const

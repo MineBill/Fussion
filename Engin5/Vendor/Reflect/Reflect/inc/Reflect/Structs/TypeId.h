@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Reflect/Core/Defines.h"
+#include "Reflect/Core/Util.h"
 
 #include <string>
 #include <xhash>
+
 
 #ifdef REFLECT_TYPE_INFO_ENABLED
 namespace Reflect
@@ -46,7 +48,7 @@ namespace Reflect
 
 		operator bool() const;
 		bool IsValid() const;
-		
+
 		bool operator==(const TypeId& other) const;
 		bool operator!=(const TypeId& other) const;
 

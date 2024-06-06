@@ -7,7 +7,7 @@
 
 namespace Reflect
 {
-	struct ReflectAddtionalOptions;
+	struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -21,7 +21,7 @@ namespace Reflect::CodeGeneration
 		REFLECT_API CodeGenerate();
 		REFLECT_API ~CodeGenerate();
 
-		REFLECT_API void Reflect(const Parser::FileParser& parser, const ReflectAddtionalOptions* additionalOptions);
+		REFLECT_API void Reflect(const Parser::FileParser& parser, const ReflectAdditionalOptions* additionalOptions);
 		REFLECT_API static void IncludeHeader(const std::string& headerToInclude, std::ofstream& file, bool windowsInclude = false);
 
 	private:

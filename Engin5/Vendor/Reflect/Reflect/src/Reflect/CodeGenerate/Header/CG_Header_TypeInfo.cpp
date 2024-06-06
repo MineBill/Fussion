@@ -8,7 +8,7 @@
 namespace Reflect::CodeGeneration
 {
 #ifdef REFLECT_TYPE_INFO_ENABLED
-	void CG_Header_TypeInfo::WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_TypeInfo::WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "#define " + currentFileId + "_GENERATE_TYPE_INFO" + NEW_LINE_SLASH;

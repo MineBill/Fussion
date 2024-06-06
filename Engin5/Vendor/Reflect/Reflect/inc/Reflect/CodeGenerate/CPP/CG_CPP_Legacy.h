@@ -5,7 +5,7 @@
 
 namespace Reflect
 {
-    struct ReflectAddtionalOptions;
+    struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -14,13 +14,13 @@ namespace Reflect::CodeGeneration
     {
     public:
 
-        void Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+        void Generate(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
     private:
-        void WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+        void WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
-        void WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
-        void WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions);
+        void WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
+        void WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions);
 
         void WriteReflectCPPInheritanceChain(std::ofstream& file, EReflectType reflectType, const Parser::ReflectTypeNameData& typeNameData, int indent);
 

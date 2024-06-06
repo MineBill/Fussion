@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Reflect/Structs/TypeInfo.h"
+#include "Reflect/ReflectStructs.h"
 
 #include <unordered_map>
 #include <mutex>
@@ -36,7 +37,7 @@ namespace Reflect
         template<typename T>
         static TypeInfo GetTypeInfo(void* objectInstance)
         {
-            static_assert(std::is_base_of_v<::Reflect::IReflect, T>);
+            static_assert(std::is_base_of_v<IReflect, T>);
             return GetTypeInfo(T::GetTypeId(), objectInstance);
         }
 

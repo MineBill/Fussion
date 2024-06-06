@@ -18,7 +18,7 @@ namespace Reflect::CodeGeneration
 	CodeGenerate::~CodeGenerate()
 	{ }
 
-	void CodeGenerate::Reflect(const Parser::FileParser& parser, const ReflectAddtionalOptions* additionalOptions)
+	void CodeGenerate::Reflect(const Parser::FileParser& parser, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 
@@ -55,21 +55,21 @@ namespace Reflect::CodeGeneration
 #else
 		//else
 		{
-			{
-				REFLECT_PROFILE_SCOPE("Remove all old gen files");
-				for (const auto& data : parser.GetAllFileParsedData())
-				{
-					if (data.parserOptions.DoNotReflect)
-					{
-						continue;
-					}
-
-					if (std::filesystem::exists(data.FilePath + "/Generated"))
-					{
-						std::filesystem::remove_all(data.FilePath + "/Generated");
-					}
-				}
-			}
+			// {
+			// 	REFLECT_PROFILE_SCOPE("Remove all old gen files");
+			// 	for (const auto& data : parser.GetAllFileParsedData())
+			// 	{
+			// 		if (data.parserOptions.DoNotReflect)
+			// 		{
+			// 			continue;
+			// 		}
+			//
+			// 		if (std::filesystem::exists(data.FilePath + "/Generated"))
+			// 		{
+			// 			std::filesystem::remove_all(data.FilePath + "/Generated");
+			// 		}
+			// 	}
+			// }
 
 			for (const auto& data : parser.GetAllFileParsedData())
 			{

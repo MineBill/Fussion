@@ -5,7 +5,7 @@
 
 namespace Reflect
 {
-    struct ReflectAddtionalOptions;
+    struct ReflectAdditionalOptions;
 }
 
 namespace Reflect::CodeGeneration
@@ -14,7 +14,7 @@ namespace Reflect::CodeGeneration
     class CG_Header_TypeInfo
     {
     public:
-        void WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions);
+        void WriteGenerateTypeInfo(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions);
         void WriteClosingMacro(std::ofstream& file, std::string_view currentFileId);
     };
 #endif

@@ -21,7 +21,7 @@ namespace Reflect::CodeGeneration
 			return defaultReturnPointer ? arg.Type + "*" : arg.Type;
 	}
 
-	void CG_Header_Legacy::WriteGeneratedData(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteGeneratedData(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		WriteMemberProperties(data, file, currentFileId, additionalOptions);
@@ -51,7 +51,7 @@ namespace Reflect::CodeGeneration
 		file << NEW_LINE_SLASH;
 	}
 
-	void CG_Header_Legacy::WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteMemberProperties(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "#define " + currentFileId + "_PROPERTIES" + NEW_LINE_SLASH;
@@ -60,7 +60,7 @@ namespace Reflect::CodeGeneration
 		WRITE_CLOSE;
 	}
 
-	void CG_Header_Legacy::WriteMemberPropertiesOffsets(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteMemberPropertiesOffsets(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "#define " + currentFileId + "_PROPERTIES_OFFSET" + NEW_LINE_SLASH;
@@ -72,7 +72,7 @@ namespace Reflect::CodeGeneration
 		WRITE_CLOSE;
 	}
 
-	void CG_Header_Legacy::WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteMemberGet(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "#define " + currentFileId + "_PROPERTIES_GET \\\n";
@@ -83,7 +83,7 @@ namespace Reflect::CodeGeneration
 		WRITE_CLOSE;
 	}
 
-	void CG_Header_Legacy::WriteFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteFunctions(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		//TODO: Pass in parameters in someway. Prob need to use templates.
@@ -173,7 +173,7 @@ namespace Reflect::CodeGeneration
 		WRITE_CLOSE;
 	}
 
-	void CG_Header_Legacy::WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAddtionalOptions* additionalOptions)
+	void CG_Header_Legacy::WriteFunctionGet(const Parser::ReflectContainerData& data, std::ofstream& file, const std::string& currentFileId, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 		file << "#define " + currentFileId + "_FUNCTION_GET" + NEW_LINE_SLASH;

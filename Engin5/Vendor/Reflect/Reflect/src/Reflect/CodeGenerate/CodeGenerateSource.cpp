@@ -7,7 +7,7 @@
 
 namespace Reflect::CodeGeneration
 {
-	void CodeGenerateSource::GenerateSource(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAddtionalOptions* additionalOptions)
+	void CodeGenerateSource::GenerateSource(const Parser::FileParsedData& data, std::ofstream& file, const ReflectAdditionalOptions* additionalOptions)
 	{
 		REFLECT_PROFILE_FUNCTION();
 
