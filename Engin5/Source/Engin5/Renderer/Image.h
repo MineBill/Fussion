@@ -80,6 +80,17 @@ namespace Engin5
 
         virtual ImageSpecification const& GetSpec() const = 0;
 
-        virtual void SetData(std::span<s8>) = 0;
+        virtual void SetData(std::span<u8>) = 0;
+        virtual void TransitionLayout(ImageLayout new_layout) = 0;
+
+        s32 GetWidth() const
+        {
+            return GetSpec().Width;
+        }
+
+        s32 GetHeight() const
+        {
+            return GetSpec().Height;
+        }
     };
 }

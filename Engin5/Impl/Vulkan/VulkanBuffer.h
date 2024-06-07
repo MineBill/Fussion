@@ -12,6 +12,7 @@ namespace Engin5
         VulkanBuffer(VulkanDevice* device, BufferSpecification spec);
 
         void SetData(void* data, size_t size) override;
+        void CopyToImage(Ref<Image> const& image) override;
 
         BufferSpecification const& GetSpec() const override { return m_Specification; }
 

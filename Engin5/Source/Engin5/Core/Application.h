@@ -27,7 +27,9 @@ namespace Engin5
 
         virtual void OnEvent(Event&) {}
 
-        Window const* GetWindow() const { return m_Window.get(); }
+        virtual void OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc) {}
+
+        Window& GetWindow() const { return *m_Window.get(); }
         static Application* Instance() { return s_Instance; }
 
         void Run();

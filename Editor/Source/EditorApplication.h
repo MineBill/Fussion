@@ -1,35 +1,23 @@
 ﻿#pragma once
-#include "EditorCamera.h"
-#include "SceneRenderer.h"
 #include "Engin5/Core/Application.h"
-#include "Engin5/Renderer/UniformBuffer.h"
+#include "Engin5/Scene/Scene.h"
 #include "Layers/ImGuiLayer.h"
+#include "Layers/Editor.h"
 
-class EditorLayer;
+class Editor;
 class EditorApplication: public Engin5::Application
 {
 public:
     void OnStart() override;
     void OnUpdate(f32 delta) override;
     void OnEvent(Engin5::Event&) override;
-
-    void Resize(Vector2 size);
-
-    EditorCamera& GetCamera() { return m_Camera; }
+    void OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     static EditorApplication* Instance() { return s_EditorInstance; }
 
-    SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 private:
     static EditorApplication* s_EditorInstance;
-    Ptr<ImGuiLayer> m_ImGuiLayer;
 
-    EditorCamera m_Camera;
-    SceneRenderer m_SceneRenderer{};
-    f32 m_FOV{50.0f};
-    glm::mat4 m_Perspective{};
-    glm::mat4 m_View{};
-
-    Vector2 m_ViewportSize{10, 10};
-    EditorLayer* m_EditorLayer{};
+    Ptr<ImGuiLayer> m_ImGuiLayer{};
+    Ptr<Editor> m_Editor{};
 };

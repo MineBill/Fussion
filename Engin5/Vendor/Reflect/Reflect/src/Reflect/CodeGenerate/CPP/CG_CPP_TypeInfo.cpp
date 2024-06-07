@@ -49,6 +49,12 @@ namespace Reflect::CodeGeneration
 		TAB_N(3); file << "std::vector<FunctionInfo> functionInfos = GenerateFunctionInfos(objectInstance);" << NEW_LINE;
 		TAB_N(3); file << "std::vector<MemberInfo> memberInfos = GenerateMemberInfos(objectInstance);" << NEW_LINE;
 		TAB_N(3); file << "std::vector<Type> " << data.Name << "_InheritanceTypes;" << NEW_LINE;
+		TAB_N(3); file << "std::vector<std::string> " << "flags;" << NEW_LINE;
+		TAB_N(3); file << NEW_LINE;
+
+        for (auto const& prop: data.ContainerProps) {
+            TAB_N(3); file << "flags.emplace_back(\"" << prop << "\");" << NEW_LINE;
+        }
 		TAB_N(3); file << NEW_LINE;
 
 		TAB_N(3); file << "s_" << data.Name << "TypeInfo = TypeInfo(" << NEW_LINE;
@@ -56,8 +62,8 @@ namespace Reflect::CodeGeneration
 		TAB_N(4); file << "objectInstance, " << NEW_LINE;
 		TAB_N(4); file << "std::move(parentTypeInfos), " << NEW_LINE;
 		TAB_N(4); file << "std::move(memberInfos), " << NEW_LINE;
-		TAB_N(4); file << "std::move(functionInfos));" << NEW_LINE;
-
+		TAB_N(4); file << "std::move(functionInfos)," << NEW_LINE;
+		TAB_N(4); file << "std::move(flags));" << NEW_LINE;
 
 		TAB_N(3); file << "s_" << data.Name << "Initialised = true;" << NEW_LINE;
 		TAB_N(2); file << "}" << NEW_LINE;
@@ -91,8 +97,9 @@ namespace Reflect::CodeGeneration
 		file << "}\n" << NEW_LINE;
 
 		file << "Reflect::TypeInfo " + GetTypeName(data) + "::ReflectRegisterCallback(void* objectInstance)\n{" << NEW_LINE;
-        file << "\tif (objectInstance == nullptr) __debugbreak();" << NEW_LINE;
-        TAB_N(1); file << "static_cast<" + GetTypeName(data) + "*>(objectInstance)->m_TypeId = " << "Reflect::TypeId::MakeTypeId<" << data.NameWithNamespace << ">();" << NEW_LINE;
+        TAB_N(1); file << "if (objectInstance != nullptr) {" << NEW_LINE;
+        TAB_N(2); file << "static_cast<" + GetTypeName(data) + "*>(objectInstance)->m_TypeId = " << "Reflect::TypeId::MakeTypeId<" << data.NameWithNamespace << ">();" << NEW_LINE;
+        TAB_N(1); file << "}" << NEW_LINE;
 		file << "\treturn " + GetTypeName(data) + "::GetStaticTypeInfo(static_cast<" + GetTypeName(data) + "*>(objectInstance)); " << NEW_LINE;
 		file << "}\n" << NEW_LINE;
 	}

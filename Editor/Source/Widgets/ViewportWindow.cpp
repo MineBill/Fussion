@@ -1,5 +1,5 @@
 ﻿#include "ViewportWindow.h"
-#include "Layers/EditorLayer.h"
+#include "Layers/Editor.h"
 #include "EditorApplication.h"
 #include "SceneRenderer.h"
 #include "Layers/ImGuiLayer.h"
@@ -23,15 +23,15 @@ void ViewportWindow::OnDraw()
         m_IsFocused = ImGui::IsWindowHovered();
 
         if (const auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
-            EditorApplication::Instance()->Resize(size);
+            Editor::OnViewportResized(size);
+            // EditorApplication::Instance()->Resize(size);
             m_Size = size;
         }
 
         {
             ZoneScopedN("Get image from set");
-            const auto image = EditorApplication::Instance()->GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(0);
-            const auto set = ImGuiLayer::This()->ImageToVkSet[transmute(u64, image->GetRenderHandle<VkImage>())];
-            ImGui::Image(set, m_Size);
+            const auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(0);
+            ImGui::Image(IMGUI_IMAGE(image), m_Size);
         }
 
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
@@ -49,7 +49,7 @@ void ViewportWindow::OnDraw()
             const ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("Simple overlay\n" "(right-click to change position)");
             ImGui::Separator();
-            auto pos = EditorApplication::Instance()->GetCamera().GetPosition();
+            auto pos = Editor::GetCamera().GetPosition();
             ImGui::Text("Mouse Position: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
         }
         ImGui::End();

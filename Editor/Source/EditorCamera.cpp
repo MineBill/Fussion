@@ -52,7 +52,7 @@ void EditorCamera::HandleEvent(Event& event)
     dispatcher.Dispatch<MouseButtonPressed>([this](MouseButtonPressed const& mouse_pressed) -> bool {
         if (m_HasFocus && mouse_pressed.Button == MouseButton::Right) {
             m_CapturedMouse = true;
-            Application::Instance()->GetWindow()->SetMouseMode(MouseMode::Locked);
+            Application::Instance()->GetWindow().SetMouseMode(MouseMode::Locked);
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
         }
         return false;
@@ -61,7 +61,7 @@ void EditorCamera::HandleEvent(Event& event)
     dispatcher.Dispatch<MouseButtonReleased>([this](MouseButtonReleased const& mouse_released) -> bool {
         if (mouse_released.Button == MouseButton::Right && m_CapturedMouse) {
             m_CapturedMouse = false;
-            Application::Instance()->GetWindow()->SetMouseMode(MouseMode::Unlocked);
+            Application::Instance()->GetWindow().SetMouseMode(MouseMode::Unlocked);
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         }
         return false;

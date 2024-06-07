@@ -21,7 +21,7 @@ void SceneRenderer::Init()
                 .StoreOp = RenderPassAttachmentStoreOp::Store,
                 .Format = ImageFormat::B8G8R8A8_UNORM,
                 .FinalLayout = ImageLayout::ColorAttachmentOptimal,
-                .ClearColor = {0.2f, 0.6f, 0.15f, 1.0f},
+                .ClearColor = {0.0f, 1.0f, 0.0f, 1.0f},
             },
             RenderPassAttachment {
                 .Label = "Depth Attachment",

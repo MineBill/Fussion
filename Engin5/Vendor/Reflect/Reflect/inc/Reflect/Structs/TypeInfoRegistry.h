@@ -41,6 +41,8 @@ namespace Reflect
             return GetTypeInfo(T::GetTypeId(), objectInstance);
         }
 
+        static std::vector<TypeInfo> GetAllTypes();
+
     private:
         std::unordered_map<TypeId, CreateTypeInfoFunc> m_registry;
         std::mutex m_registryLock;

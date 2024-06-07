@@ -5,12 +5,18 @@
 
 namespace Reflect
 {
-    /// @brief 
+    /// @brief
     class REFLECT_API TypeInfo
     {
     public:
         TypeInfo();
-        TypeInfo(Type type, void* objectInstance, std::vector<TypeInfo> parentInfos, std::vector<MemberInfo> memberInfos, std::vector<FunctionInfo> functionInfos);
+        TypeInfo(
+            Type type,
+            void* objectInstance,
+            std::vector<TypeInfo> parentInfos,
+            std::vector<MemberInfo> memberInfos,
+            std::vector<FunctionInfo> functionInfos,
+            std::vector<std::string> flags);
         ~TypeInfo();
 
         operator bool() const;
@@ -26,6 +32,8 @@ namespace Reflect
             TypeId typeId = TypeId::MakeTypeId<T>();
             return IsDerivedFrom(typeId);
         }
+
+        [[nodiscard]] bool HasFlag(std::string const& flag) const;
 
         std::vector<TypeInfo> GetParentInfos() const;
 
@@ -49,6 +57,7 @@ namespace Reflect
         std::vector<TypeInfo> m_parentTypeInfos;
         std::vector<MemberInfo> m_memberInfos;
         std::vector<FunctionInfo> m_functionInfos;
+        std::vector<std::string> m_flags;
 
         template<typename>
         friend class GenerateTypeInfoForType;

@@ -1,7 +1,10 @@
 ﻿#include "e5pch.h"
 #include "VulkanImage.h"
 
+#include <magic_enum/magic_enum.hpp>
+
 #include "Common.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanImageView.h"
 #include "VulkanSampler.h"
 
@@ -73,8 +76,95 @@ namespace Engin5
             Sampler->Destroy();
     }
 
-    void VulkanImage::SetData(std::span<s8>)
+    void VulkanImage::SetData(std::span<u8> data)
     {
+        auto buffer = Device::Instance()->CreateBuffer(
+        {
+            .Label = "Buffer For Image Copy",
+            .Usage = BufferUsage::TransferSource,
+            .Size = cast(s32, data.size_bytes()),
+            .Mapped = true,
+        });
+
+        buffer->SetData(data.data(), data.size());
+
+        TransitionLayout(ImageLayout::TransferDstOptimal);
+        buffer->CopyToImage(this->As<Image>());
+        TransitionLayout(ImageLayout::ShaderReadOnlyOptimal);
+    }
+
+    void VulkanImage::TransitionLayout(ImageLayout new_layout)
+    {
+        const auto old_layout = Specification.Layout;
+        if (old_layout == new_layout) {
+            return;
+        }
+
+        Specification.Layout = new_layout;
+        const auto cmd = Device::Instance()->BeginSingleTimeCommand()->As<VulkanCommandBuffer>();
+        defer(Device::Instance()->EndSingleTimeCommand(cmd));
+
+        auto barrier = VkImageMemoryBarrier {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .oldLayout = ImageLayoutToVulkan(old_layout),
+            .newLayout = ImageLayoutToVulkan(new_layout),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = Handle,
+            .subresourceRange = VkImageSubresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        };
+
+        auto src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        auto dst_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+        using enum ImageLayout;
+        if (old_layout == Undefined && new_layout == TransferDstOptimal) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (old_layout == TransferDstOptimal && new_layout == ShaderReadOnlyOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else if (old_layout == ShaderReadOnlyOptimal && new_layout == TransferDstOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (old_layout == ColorAttachmentOptimal && new_layout == ShaderReadOnlyOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else if (old_layout == ColorAttachmentOptimal && new_layout == TransferSrcOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (old_layout == TransferSrcOptimal && new_layout == ColorAttachmentOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        }
+        else {
+            PANIC("Unsupported image transition from '{}' to '{}'", magic_enum::enum_name(old_layout), magic_enum::enum_name(new_layout));
+        }
+
+        vkCmdPipelineBarrier(cmd->Handle, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
 
     VkFormat ImageFormatToVulkan(const ImageFormat format)

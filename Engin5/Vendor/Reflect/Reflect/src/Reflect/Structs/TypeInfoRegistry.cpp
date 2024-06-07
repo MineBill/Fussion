@@ -63,4 +63,19 @@ namespace Reflect
         }
         return TypeInfo();
     }
+
+    std::vector<TypeInfo> TypeInfoRegistry::GetAllTypes()
+    {
+        static std::vector<TypeInfo> type_infos{};
+        static bool initialized = false;
+        if (!initialized) {
+            initialized = true;
+            std::lock_guard typeInfosLock(Instance().m_registryLock);
+            for (const auto& [typeTypeId, createFunc] : Instance().m_registry)
+            {
+                type_infos.push_back(createFunc(nullptr));
+            }
+        }
+        return type_infos;
+    }
 }

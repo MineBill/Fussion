@@ -4,5 +4,6 @@ add_rules("plugin.vsxmake.autoupdate")
 set_warnings("allextra")
 
 includes("Vendor.lua")
-includes("Engin5")
-includes("Editor")
+includes("HeaderTool/HeaderTool.lua")
+includes("Engin5/Engin5.lua")
+includes("Editor/Editor.lua")

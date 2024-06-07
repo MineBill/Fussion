@@ -2,10 +2,10 @@
 #include "EditorWindow.h"
 #include "Engin5/Core/Types.h"
 
-class ViewportWindow: public EditorWindow
+class ViewportWindow final: public EditorWindow
 {
 public:
-    WIDGET_CLASS(ViewportWindow)
+    EDITOR_WINDOW(ViewportWindow)
 
     void OnDraw() override;
 

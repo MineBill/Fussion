@@ -25,10 +25,12 @@ namespace Engin5
         bool Mapped;
     };
 
+    class Image;
     class Buffer: public RenderHandle
     {
     public:
         virtual void SetData(void* data, size_t size) = 0;
+        virtual void CopyToImage(Ref<Image> const& image) = 0;
 
         virtual BufferSpecification const& GetSpec() const = 0;
     };

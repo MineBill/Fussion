@@ -10,6 +10,13 @@ enum class LogLevel {
     Fatal,
 };
 
+struct LogEntry
+{
+    LogLevel Level;
+    std::string Message;
+    std::source_location Location;
+};
+
 class LogSink
 {
     friend class Log;
@@ -25,7 +32,6 @@ class Log {
 public:
     explicit Log(LogLevel default_level = LogLevel::Info);
     ~Log();
-    static Log* DefaultLogger();
 
     void SetLogLevel(LogLevel level);
     void Write(LogLevel level, std::string_view message, const std::source_location& loc = std::source_location::current()) const;
@@ -34,6 +40,7 @@ public:
 
     LogLevel GetPriority() const { return m_Priority; }
 
+    static Log* DefaultLogger();
 private:
     std::vector<Ref<LogSink>> m_Sinks{};
 };

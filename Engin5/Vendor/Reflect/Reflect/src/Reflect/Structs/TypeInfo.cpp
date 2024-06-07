@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include <iterator>
+#include <algorithm>
 
 namespace Reflect
 {
@@ -9,12 +10,19 @@ namespace Reflect
     {
     }
 
-    TypeInfo::TypeInfo(Type type, void* objectInstance, std::vector<TypeInfo> parentInfos, std::vector<MemberInfo> memberInfos, std::vector<FunctionInfo> functionInfos)
-        : m_type(std::move(type))
+    TypeInfo::TypeInfo(
+        Type type,
+        void* objectInstance,
+        std::vector<TypeInfo> parentInfos,
+        std::vector<MemberInfo> memberInfos,
+        std::vector<FunctionInfo> functionInfos,
+        std::vector<std::string> flags)
+        : m_type(type)
         , m_objectInstance(objectInstance)
         , m_parentTypeInfos(std::move(parentInfos))
         , m_memberInfos(std::move(memberInfos))
         , m_functionInfos(std::move(functionInfos))
+        , m_flags(std::move(flags))
     {
     }
 
@@ -49,7 +57,7 @@ namespace Reflect
         // we don't need to go through all out parent checking.
         for (const TypeInfo& info : m_parentTypeInfos)
         {
-            if (info.GetTypeId() == typeId) 
+            if (info.GetTypeId() == typeId)
             {
                 return true;
             }
@@ -64,6 +72,11 @@ namespace Reflect
             }
         }
         return false;
+    }
+
+    bool TypeInfo::HasFlag(std::string const& flag) const
+    {
+        return std::ranges::find(m_flags, flag) != std::end(m_flags);
     }
 
     std::vector<TypeInfo> TypeInfo::GetParentInfos() const

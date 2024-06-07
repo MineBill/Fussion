@@ -8,6 +8,8 @@ Binaries/
 build/
 cmake-build-debug/
 
+**/Generated/
+
 # Files
 *.vcxproj
 *.vcxproj.user

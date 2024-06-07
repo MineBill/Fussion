@@ -24,3 +24,5 @@ public:
 private:
     static ImGuiLayer* s_Instance;
 };
+
+#define IMGUI_IMAGE(image) ImGuiLayer::This()->ImageToVkSet[transmute(u64, image->GetRenderHandle<VkImage>())]

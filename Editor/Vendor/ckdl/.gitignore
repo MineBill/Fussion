@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+
+/build*/
+/_skbuild/
+/.vs/
+/.vscode/
+/out/
+/dist/
+*.egg-info
+MANIFEST.in
+/doc/_build/

@@ -25,10 +25,10 @@ namespace Engin5
     {
         auto [image, ok] = s_Renderer->m_Swapchain->GetNextImage();
         if (!ok) {
-            auto window = Application::Instance()->GetWindow();
+            auto& window = Application::Instance()->GetWindow();
             // @note Is there a better way to handle resizing?
             Device::Instance()->WaitIdle();
-            s_Renderer->m_Swapchain->Resize(window->GetWidth(), window->GetHeight());
+            s_Renderer->m_Swapchain->Resize(window.GetWidth(), window.GetHeight());
             return {};
         }
         s_Renderer->m_CurrentImage = image;
@@ -118,9 +118,9 @@ namespace Engin5
 
         m_UIRenderPass = device->CreateRenderPass(ui_rp_spec);
 
-        auto window = Application::Instance()->GetWindow();
+        auto& window = Application::Instance()->GetWindow();
         const auto swapchain_spec = SwapChainSpecification {
-            .Size = {cast(f32, window->GetWidth()), cast(f32, window->GetHeight())},
+            .Size = {cast(f32, window.GetWidth()), cast(f32, window.GetHeight())},
             .PresentMode = VideoPresentMode::Immediate,
             .Format = ImageFormat::B8G8R8A8_UNORM,
         };

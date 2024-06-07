@@ -1,10 +1,16 @@
 ﻿#pragma once
 #include "EditorWindow.h"
+#include "Engin5/Scene/Entity.h"
 
-class InspectorWindow: public EditorWindow
+class InspectorWindow final: public EditorWindow
 {
 public:
-    WIDGET_CLASS(InspectorWindow)
+    EDITOR_WINDOW(InspectorWindow)
 
     void OnDraw() override;
+
+private:
+    void DrawEntity(Engin5::Entity& e);
+
+    void DrawComponent();
 };

@@ -37,6 +37,38 @@ namespace Engin5
         memcpy(m_AllocationInfo.pMappedData, data, size);
     }
 
+    void VulkanBuffer::CopyToImage(Ref<Image> const& image)
+    {
+        const auto cmd = Device::Instance()->BeginSingleTimeCommand();
+        defer (Device::Instance()->EndSingleTimeCommand(cmd));
+
+        auto copy = VkBufferImageCopy {
+            .bufferOffset = 0,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource = VkImageSubresourceLayers {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+            .imageOffset = VkOffset3D{0, 0, 0},
+            .imageExtent = VkExtent3D {
+                .width = cast(u32, image->GetWidth()),
+                .height = cast(u32, image->GetHeight()),
+                .depth = 1,
+            }
+        };
+
+        vkCmdCopyBufferToImage(
+            cmd->GetRenderHandle<VkCommandBuffer>(),
+            m_Handle,
+            image->GetRenderHandle<VkImage>(),
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            1,
+            &copy);
+    }
+
     VkBufferUsageFlags BufferUsageToVulkan(BufferUsageFlags usage)
     {
         using enum BufferUsage;

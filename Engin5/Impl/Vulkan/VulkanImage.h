@@ -22,7 +22,9 @@ namespace Engin5
         void Destroy() override;
 
         ImageSpecification const& GetSpec() const override { return Specification; }
-        void SetData(std::span<s8>) override;
+        void SetData(std::span<u8>) override;
+        void TransitionLayout(ImageLayout new_layout) override;
+
         void* GetRawHandle() override { return Handle; }
 
         Ref<VulkanImageView> View{};
