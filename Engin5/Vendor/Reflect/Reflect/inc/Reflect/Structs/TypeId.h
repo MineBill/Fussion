@@ -4,8 +4,6 @@
 #include "Reflect/Core/Util.h"
 
 #include <string>
-#include <xhash>
-
 
 #ifdef REFLECT_TYPE_INFO_ENABLED
 namespace Reflect
