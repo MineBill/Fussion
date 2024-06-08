@@ -18,6 +18,7 @@ cmake-build-debug/
 *.log
 Makefile
 imgui.ini
+.reflect_cache
 /CMakeLists.txt
 
 # Exclude
