@@ -21,7 +21,7 @@ target "Editor"
     add_includedirs (
         "Source"
     )
-
+    
     add_files (
         "Source/**.cpp"
     )
@@ -45,4 +45,5 @@ target "Editor"
 
     if is_plat("windows") then
         set_runtimes("MDd")
+        add_ldflags("/WHOLEARCHIVE:Engin5", {force = true})
     end
