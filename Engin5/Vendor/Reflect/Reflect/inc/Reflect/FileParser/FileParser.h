@@ -3,7 +3,7 @@
 #include "Reflect/Core/Defines.h"
 #include "Reflect/FileParser/ParserStructs.h"
 
-#include "Reflect/Structs/PropertyMeta.h"
+#include "Reflect/Structs/MetaProp.h"
 
 #include <string>
 #include <fstream>
@@ -69,7 +69,7 @@ namespace Reflect::Parser
 
 		size_t FindEndOfContainer(const FileParsedData& fileData);
 		std::vector<std::string> ReflectFlags(FileParsedData fileData);
-		std::vector<PropertyMeta> ReflectPropertyMetas(FileParsedData fileData);
+		std::vector<MetaProp> ReflectMetaProps(FileParsedData fileData);
 
 		void ResolveNamespaces();
 		void LinkAllInheritances();

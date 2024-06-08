@@ -5,16 +5,19 @@
 namespace Reflect
 {
     Property::Property()
-    { }
+    {
+    }
 
-    Property::Property(Type objectType, std::string name, PropertyType propertyType, std::vector<std::string> flags, std::vector<PropertyMeta> propertyMetas, void* objectInstance)
+    Property::Property(Type objectType, std::string name, PropertyType propertyType, std::vector<std::string> flags,
+                       std::vector<MetaProp> propertyMetas, void* objectInstance)
         : m_objectType(std::move(objectType))
-        , m_name(std::move(name))
-        , m_propertyType(propertyType)
-        , m_flags(std::move(flags))
-        , m_propertyMetas(std::move(propertyMetas))
-        , m_objectInstance(objectInstance)
-    { }
+          , m_name(std::move(name))
+          , m_objectInstance(objectInstance)
+          , m_flags(std::move(flags))
+          , m_propertyMetas(std::move(propertyMetas))
+          , m_propertyType(propertyType)
+    {
+    }
 
     Property::operator bool() const
     {
@@ -45,10 +48,8 @@ namespace Reflect
 
     bool Property::HasFlag(std::string_view flag) const
     {
-        for (const std::string& str : m_flags)
-        {
-            if (str == flag)
-            {
+        for (const std::string& str : m_flags) {
+            if (str == flag) {
                 return true;
             }
         }
@@ -58,15 +59,12 @@ namespace Reflect
     bool Property::HasAnyFlags(const std::vector<std::string>& flags) const
     {
         std::unordered_set<std::string_view> flagsSet;
-        for (const std::string& memberFlag : m_flags)
-        {
+        for (const std::string& memberFlag : m_flags) {
             flagsSet.insert(memberFlag);
         }
 
-        for (const std::string& flag : flags)
-        {
-            if (flagsSet.find(flag) != flagsSet.end())
-            {
+        for (const std::string& flag : flags) {
+            if (flagsSet.contains(flag)) {
                 return true;
             }
         }
@@ -83,20 +81,18 @@ namespace Reflect
         return m_propertyType;
     }
 
-    PropertyMeta Property::GetMeta(std::string_view propertyName) const
+    MetaProp Property::GetMeta(std::string_view propertyName) const
     {
-        for (size_t i = 0; i < m_propertyMetas.size(); ++i)
-        {
-            const PropertyMeta& meta = m_propertyMetas[i];
-            if (meta.GetKey() == propertyName)
-            {
+        for (size_t i = 0; i < m_propertyMetas.size(); ++i) {
+            const MetaProp& meta = m_propertyMetas[i];
+            if (meta.GetKey() == propertyName) {
                 return meta;
             }
         }
-        return PropertyMeta("", "");
+        return MetaProp("", "");
     }
 
-    const std::vector<PropertyMeta>& Property::GetAllMetas() const
+    const std::vector<MetaProp>& Property::GetAllMetas() const
     {
         return m_propertyMetas;
     }

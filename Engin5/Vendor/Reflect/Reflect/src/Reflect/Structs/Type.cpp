@@ -8,7 +8,7 @@ namespace Reflect
 
     Type::Type(std::string_view typeName, uint64_t typeSize)
         : m_typeId(TypeId(typeName))
-        , m_typeSize(typeSize)
+          , m_typeSize(typeSize)
     {
         m_prettyTypeName = Util::RemoveNamespaces(std::string(typeName));
     }

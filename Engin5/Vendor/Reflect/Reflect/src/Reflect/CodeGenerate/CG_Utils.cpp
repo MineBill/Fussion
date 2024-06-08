@@ -22,7 +22,7 @@ namespace Reflect::CodeGeneration
             if (!instanceChaiPrefix.empty())
             {
                 str += std::string(instanceChaiPrefix) + "_";
-            } 
+            }
             str += std::string(name) + "_InheritanceChain), ";
         }
         else

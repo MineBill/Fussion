@@ -154,7 +154,13 @@ namespace Reflect::CodeGeneration
 				TAB_N(2);
 				file << "if (returnValuePtr != nullptr)" << NEW_LINE_SLASH << "\t\t{" << NEW_LINE_SLASH;
 				TAB_N(3);
-				file << returnType(func) << "ptr->" + func.Name + "(" + populateArgs(func.Parameters) + ");" << NEW_LINE_SLASH "\t\t}" << NEW_LINE_SLASH;
+				file << returnType(func) << "ptr->" + func.Name + "(" + populateArgs(func.Parameters) + ")";
+			    if (func.ReflectValueType != EReflectValueType::Value && func.ReflectModifier == EReflectValueModifier::Const) {
+                    file << ")";
+			    }
+
+			    file << ";" << NEW_LINE_SLASH "\t\t}" << NEW_LINE_SLASH;
+
 				TAB_N(2);
 				file << "else\\\n\t\t{\\\n\t\t\t" << "ptr->" + func.Name + "(" + populateArgs(func.Parameters) + ");" << NEW_LINE_SLASH "\t\t}" << NEW_LINE_SLASH;
 			}
@@ -164,8 +170,8 @@ namespace Reflect::CodeGeneration
 				file << "ptr->" + func.Name + "(" + populateArgs(func.Parameters) + ");" + NEW_LINE_SLASH;
 			}
 
-			if (func.ReflectValueType != EReflectValueType::Value && func.ReflectModifier == EReflectValueModifier::Const)
-				file << ")";
+			// if (func.ReflectValueType != EReflectValueType::Value && func.ReflectModifier == EReflectValueModifier::Const)
+			// 	file << ")";
 			TAB_N(2);
 			file << "return Reflect::EReflectReturnCode::SUCCESS;" << NEW_LINE_SLASH;
 			file << "\t}\\\n";

@@ -16,19 +16,19 @@ struct ReflectMember;
 namespace Reflect
 {
 #if REFLECT_TYPE_INFO_ENABLED
-	template<typename T>
-	class GenerateTypeInfoForType;
+    template <typename T>
+    class GenerateTypeInfoForType;
 
-	struct REFLECT_API IReflect
-	{
-	    TypeId const& GetTypeID()
-	    {
-	        return m_TypeId;
-	    }
+    struct REFLECT_API IReflect
+    {
+        const TypeId& GetTypeID()
+        {
+            return m_TypeId;
+        }
 
-	protected:
-	    TypeId m_TypeId;
-	};
+    protected:
+        TypeId m_TypeId;
+    };
 #else
 	struct ReflectType
 	{

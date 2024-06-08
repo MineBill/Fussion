@@ -166,7 +166,7 @@ namespace Reflect::CodeGeneration
 					TAB_N(indent);
 					file << "{\n";
 				}
-				
+
 				for (const Parser::ReflectInheritanceData& d : data.Inheritances)
 				{
 					writeInheritance(d);

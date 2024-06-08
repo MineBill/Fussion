@@ -7,30 +7,36 @@ namespace Reflect
 {
     class TypeInfo;
 
-    /// @brief A MemberInfo is a representation of a member variable which has been reflected 
+    /// @brief A MemberInfo is a representation of a member variable which has been reflected
     /// on a class/struct.
     class REFLECT_API MemberInfo : public Property
     {
     public:
         MemberInfo();
-        MemberInfo(Type type, std::string memberName, EReflectValueType valueType, 
-            EReflectValueModifier modiferType, std::vector<std::string> flags, uint64_t offset, 
-            void* objectInstance);
-        MemberInfo(Type type, std::string memberName, EReflectValueType valueType, 
-            EReflectValueModifier modiferType, std::vector<std::string> flags, std::vector<PropertyMeta> propertyMetas,
-            uint64_t offset, void* objectInstance);
+        MemberInfo(Type type, std::string memberName, EReflectValueType valueType,
+                   EReflectValueModifier modiferType, std::vector<std::string> flags, uint64_t offset,
+                   void* objectInstance);
+        MemberInfo(Type type, std::string memberName, EReflectValueType valueType,
+                   EReflectValueModifier modiferType, std::vector<std::string> flags,
+                   std::vector<MetaProp> propertyMetas,
+                   uint64_t offset, void* objectInstance);
         ~MemberInfo();
 
         EReflectValueType GetValueType() const;
         EReflectValueModifier GetModifierType() const;
 
         void* GetMemberPointer() const;
-        template<typename T>
+
+        /// @brief Get a pointer to this member.
+        /// @tparam T The type to use.
+        /// @return A pointer to the member T or nullptr if the member is not of type T.
+        template <typename T>
         T* GetMemberPointer() const
         {
+            if (!IsType<T>())
+                return nullptr;
             void* memberPtr = GetMemberPointer();
-            if (!memberPtr)
-            {
+            if (!memberPtr) {
                 return nullptr;
             }
             return static_cast<T*>(memberPtr);
@@ -39,7 +45,6 @@ namespace Reflect
     private:
         void SetObjectInstance(void* objectInstance);
 
-    private:
         /// @brief Is this member of type value, pointer or reference.
         EReflectValueType m_valueType = EReflectValueType::Unknown;
         /// @brief Is this member a const, static or volatile.

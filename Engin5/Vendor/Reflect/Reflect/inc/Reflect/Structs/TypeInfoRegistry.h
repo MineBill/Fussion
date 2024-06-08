@@ -29,12 +29,14 @@ namespace Reflect
 
         static TypeInfo GetTypeInfo(const TypeId& typeId);
         static TypeInfo GetTypeInfo(const TypeId& typeId, void* objectInstance);
-        template<typename T>
+
+        template <typename T>
         static TypeInfo GetTypeInfo()
         {
             return GetTypeInfo<T>(nullptr);
         }
-        template<typename T>
+
+        template <typename T>
         static TypeInfo GetTypeInfo(void* objectInstance)
         {
             static_assert(std::is_base_of_v<IReflect, T>);
@@ -53,7 +55,10 @@ namespace Reflect
     struct REFLECT_API TypeInfoRegister
     {
         TypeId m_typeId;
-        TypeInfoRegister() { }
+
+        TypeInfoRegister()
+        {
+        }
 
         TypeInfoRegister(const char* typeName, TypeInfoRegistry::CreateTypeInfoFunc createTypeInfoFunc)
         {

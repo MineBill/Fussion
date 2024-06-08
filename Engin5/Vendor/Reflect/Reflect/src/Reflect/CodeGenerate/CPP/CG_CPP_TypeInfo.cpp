@@ -50,20 +50,36 @@ namespace Reflect::CodeGeneration
 		TAB_N(3); file << "std::vector<MemberInfo> memberInfos = GenerateMemberInfos(objectInstance);" << NEW_LINE;
 		TAB_N(3); file << "std::vector<Type> " << data.Name << "_InheritanceTypes;" << NEW_LINE;
 		TAB_N(3); file << "std::vector<std::string> " << "flags;" << NEW_LINE;
+		TAB_N(3); file << "std::vector<MetaProp> " << "metaProps;" << NEW_LINE;
 		TAB_N(3); file << NEW_LINE;
+
+        for (auto const& prop: data.MetaProps) {
+            auto const value = prop.GetValue();
+            if (value[0] == '\"' && value[strlen(value) - 1] == '\"') {
+                TAB_N(3); file << "metaProps.emplace_back(\"" << prop.GetKey() << "\", " << prop.GetValue() << ");" << NEW_LINE;
+            } else {
+                TAB_N(3); file << "metaProps.emplace_back(\"" << prop.GetKey() << "\", \"" << prop.GetValue() << "\");" << NEW_LINE;
+            }
+        }
 
         for (auto const& prop: data.ContainerProps) {
             TAB_N(3); file << "flags.emplace_back(\"" << prop << "\");" << NEW_LINE;
         }
-		TAB_N(3); file << NEW_LINE;
+		TAB_N(3); file << NEW_LINE << NEW_LINE;
+
+        TAB_N(3); file << "auto constructor = []() -> void* {" << NEW_LINE;
+        TAB_N(4); file << "return new ::" << data.NameWithNamespace << "();" << NEW_LINE;
+        TAB_N(3); file << "};" << NEW_LINE << NEW_LINE;
 
 		TAB_N(3); file << "s_" << data.Name << "TypeInfo = TypeInfo(" << NEW_LINE;
 		TAB_N(4); file << "Type::MakeType<::" << data.NameWithNamespace << ">(), " << NEW_LINE;
 		TAB_N(4); file << "objectInstance, " << NEW_LINE;
+		TAB_N(4); file << "constructor, " << NEW_LINE;
 		TAB_N(4); file << "std::move(parentTypeInfos), " << NEW_LINE;
 		TAB_N(4); file << "std::move(memberInfos), " << NEW_LINE;
 		TAB_N(4); file << "std::move(functionInfos)," << NEW_LINE;
-		TAB_N(4); file << "std::move(flags));" << NEW_LINE;
+		TAB_N(4); file << "std::move(flags)," << NEW_LINE;
+		TAB_N(4); file << "std::move(metaProps));" << NEW_LINE;
 
 		TAB_N(3); file << "s_" << data.Name << "Initialised = true;" << NEW_LINE;
 		TAB_N(2); file << "}" << NEW_LINE;
@@ -174,15 +190,15 @@ namespace Reflect::CodeGeneration
 				return str;
 			};
 
-		auto generateFunctionPropertyMetas = [&data]()->std::string
+		auto generateFunctionMetaProps = [&data]()->std::string
 			{
 				std::string str;
 				for (const auto& func : data.Functions)
 				{
-					str += "\t\tstd::vector<PropertyMeta> " + func.Name + "_PropertyMetas;" + NEW_LINE;
-					for (const auto& propertyMeta : func.PropertyMetas)
+					str += "\t\tstd::vector<MetaProp> " + func.Name + "_MetaProps;" + NEW_LINE;
+					for (const auto& meta_prop : func.MetaProps)
 					{
-						str += "\t\t" + func.Name + "_PropertyMetas.emplace_back(PropertyMeta(\"" + propertyMeta.GetKey() + "\", \"" + propertyMeta.GetValue() + "\"));" + NEW_LINE;
+						str += "\t\t" + func.Name + "_MetaProps.emplace_back(\"" + meta_prop.GetKey() + "\", \"" + meta_prop.GetValue() + "\");" + NEW_LINE;
 					}
 					str += NEW_LINE;
 				}
@@ -204,7 +220,7 @@ namespace Reflect::CodeGeneration
 			str += "\"" + func.Name + "\"" + ", ";
 			str += "std::move(" + func.Name + "_Args), ";
 			str += "std::move(" + func.Name + "_Flags), ";
-			str += "std::move(" + func.Name + "_PropertyMetas), ";
+			str += "std::move(" + func.Name + "_MetaProps), ";
 			str += GetTypeName(data) + "::__REFLECT_FUNC__" + func.Name + ", ";
 			str += "objectInstance";
 			return str;
@@ -214,7 +230,7 @@ namespace Reflect::CodeGeneration
 
 		file << generateFunctionArgs();
 		file << generateFunctionFlags();
-		file << generateFunctionPropertyMetas();
+		file << generateFunctionMetaProps();
 
 		file << "\t\tstd::vector<FunctionInfo> functionInfos;" << NEW_LINE;
 		for (const auto& f : data.Functions)
@@ -231,7 +247,7 @@ namespace Reflect::CodeGeneration
 		file << "\tstd::vector<MemberInfo> GenerateMemberInfos(" + GetTypeName(data)  + "* objectInstance)\n\t{" << NEW_LINE;
 		file << "\t\tstd::vector<MemberInfo> memberInfos;\n" << NEW_LINE;
 		file << "\t\tstd::vector<std::string> flags;\n" << NEW_LINE;
-		file << "\t\tstd::vector<PropertyMeta> propertyMeta;\n" << NEW_LINE;
+		file << "\t\tstd::vector<MetaProp> metaProps;\n" << NEW_LINE;
 
 		for (const auto& member : data.Members)
 		{
@@ -259,7 +275,7 @@ namespace Reflect::CodeGeneration
 			TAB_N(lineIndent);
 			file << "flags.clear();" << NEW_LINE;
 			TAB_N(lineIndent);
-			file << "propertyMeta.clear();" << NEW_LINE;
+			file << "metaProps.clear();" << NEW_LINE;
 			file << NEW_LINE;
 
 			for (const auto& flag : member.ContainerProps)
@@ -268,10 +284,10 @@ namespace Reflect::CodeGeneration
 				file << "flags.push_back(\"" + flag + "\");" << NEW_LINE;
 			}
 
-			for (const auto& propertyMeta : member.PropertyMetas)
+			for (const auto& meta_prop : member.MetaProps)
 			{
 				TAB_N(lineIndent);
-				file << "propertyMeta.push_back(PropertyMeta(\"" << propertyMeta.GetKey() << "\", \"" << propertyMeta.GetValue() << "\"));" << NEW_LINE;
+				file << "metaProps.push_back(\"" << meta_prop.GetKey() << "\", \"" << meta_prop.GetValue() << "\");" << NEW_LINE;
 			}
 			file << NEW_LINE;
 
@@ -308,7 +324,7 @@ namespace Reflect::CodeGeneration
 			file << "flags, " << NEW_LINE;
 
 			TAB_N(lineIndent + 1);
-			file << "propertyMeta, " << NEW_LINE;
+			file << "metaProps, " << NEW_LINE;
 
 			TAB_N(lineIndent + 1);
 			file << "offsetof(::" + data.NameWithNamespace + ", " + member.Name + "), " << NEW_LINE;

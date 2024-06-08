@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Reflect/Structs/Type.h"
-#include "Reflect/Structs/PropertyMeta.h"
+#include "Reflect/Structs/MetaProp.h"
 
 #include <vector>
 
@@ -17,7 +17,8 @@ namespace Reflect
     {
     public:
         Property();
-        Property(Type objectType, std::string name, PropertyType propertyType, std::vector<std::string> flags, std::vector<PropertyMeta> propertyMetas, void* objectInstance);
+        Property(Type objectType, std::string name, PropertyType propertyType, std::vector<std::string> flags,
+                 std::vector<MetaProp> propertyMetas, void* objectInstance);
 
         operator bool() const;
         virtual bool IsValid() const;
@@ -26,13 +27,19 @@ namespace Reflect
         TypeId GetTypeId() const;
         std::string_view GetName() const;
 
+        template <typename T>
+        bool IsType() const
+        {
+            return GetTypeId() == TypeId::MakeTypeId<T>();
+        }
+
         bool HasFlag(std::string_view flag) const;
         bool HasAnyFlags(const std::vector<std::string>& flags) const;
         const std::vector<std::string>& GetFlags() const;
 
         PropertyType GetPropertyType() const;
-        PropertyMeta GetMeta(std::string_view propertyName) const;
-        const std::vector<PropertyMeta>& GetAllMetas() const;
+        MetaProp GetMeta(std::string_view propertyName) const;
+        const std::vector<MetaProp>& GetAllMetas() const;
 
     protected:
         /// @brief Define the member type or the function return type.
@@ -42,7 +49,7 @@ namespace Reflect
         void* m_objectInstance = nullptr;
 
         std::vector<std::string> m_flags;
-        std::vector<PropertyMeta> m_propertyMetas;
+        std::vector<MetaProp> m_propertyMetas;
         PropertyType m_propertyType;
     };
 }

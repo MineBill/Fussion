@@ -13,16 +13,20 @@ namespace Reflect
     TypeInfo::TypeInfo(
         Type type,
         void* objectInstance,
+        Constructor constructor,
         std::vector<TypeInfo> parentInfos,
         std::vector<MemberInfo> memberInfos,
         std::vector<FunctionInfo> functionInfos,
-        std::vector<std::string> flags)
+        std::vector<std::string> flags,
+        std::vector<MetaProp> metaProps)
         : m_type(type)
-        , m_objectInstance(objectInstance)
-        , m_parentTypeInfos(std::move(parentInfos))
-        , m_memberInfos(std::move(memberInfos))
-        , m_functionInfos(std::move(functionInfos))
-        , m_flags(std::move(flags))
+          , m_objectInstance(objectInstance)
+          , m_constructor(constructor)
+          , m_parentTypeInfos(std::move(parentInfos))
+          , m_memberInfos(std::move(memberInfos))
+          , m_functionInfos(std::move(functionInfos))
+          , m_flags(std::move(flags))
+          , m_metaProps(std::move(metaProps))
     {
     }
 
@@ -55,28 +59,45 @@ namespace Reflect
     {
         // First check if any direct parent is of typeId. THis is in the hope that
         // we don't need to go through all out parent checking.
-        for (const TypeInfo& info : m_parentTypeInfos)
-        {
-            if (info.GetTypeId() == typeId)
-            {
+        for (const TypeInfo& info : m_parentTypeInfos) {
+            if (info.GetTypeId() == typeId) {
                 return true;
             }
         }
 
         // Check if our parent is derived from typeId.
-        for (const TypeInfo& info : m_parentTypeInfos)
-        {
-            if (info.IsDerivedFrom(typeId))
-            {
+        for (const TypeInfo& info : m_parentTypeInfos) {
+            if (info.IsDerivedFrom(typeId)) {
                 return true;
             }
         }
         return false;
     }
 
-    bool TypeInfo::HasFlag(std::string const& flag) const
+    bool TypeInfo::HasFlag(const std::string& flag) const
     {
         return std::ranges::find(m_flags, flag) != std::end(m_flags);
+    }
+
+    bool TypeInfo::HasMetaProp(std::string_view name) const
+    {
+        return std::ranges::find_if(m_metaProps, [name](const MetaProp& meta) {
+            return meta.GetKey() == name;
+        }) != m_metaProps.end();
+    }
+
+    MetaProp TypeInfo::GetMetaProp(std::string_view key) const
+    {
+        if (const auto it = std::ranges::find_if(m_metaProps, [key](const MetaProp& meta) {
+            return meta.GetKey() == key;
+        }); it != m_metaProps.end())
+            return *it;
+        return {};
+    }
+
+    std::vector<MetaProp> const& TypeInfo::GetMetaProps() const
+    {
+        return m_metaProps;
     }
 
     std::vector<TypeInfo> TypeInfo::GetParentInfos() const
@@ -89,8 +110,7 @@ namespace Reflect
         std::vector<MemberInfo> members;
         std::copy(m_memberInfos.begin(), m_memberInfos.end(), std::back_inserter(members));
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             const std::vector<MemberInfo> parentMemberInfos = parentTypeInfo.GetMemberInfos();
             std::move(parentMemberInfos.begin(), parentMemberInfos.end(), std::back_inserter(members));
@@ -101,20 +121,16 @@ namespace Reflect
 
     MemberInfo TypeInfo::GetMemberInfo(std::string_view memberName) const
     {
-        for (const MemberInfo& info : m_memberInfos)
-        {
-            if (info.GetName() == memberName)
-            {
+        for (const MemberInfo& info : m_memberInfos) {
+            if (info.GetName() == memberName) {
                 return info;
             }
         }
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             if (MemberInfo parentMemberInfo = parentTypeInfo.GetMemberInfo(memberName);
-                parentMemberInfo.IsValid())
-            {
+                parentMemberInfo.IsValid()) {
                 return parentMemberInfo;
             }
         }
@@ -124,7 +140,7 @@ namespace Reflect
 
     std::vector<MemberInfo> TypeInfo::GetMemberInfosWithFlag(std::string_view flag) const
     {
-        return GetMemberInfosWithFlags({ std::string(flag) });
+        return GetMemberInfosWithFlags({std::string(flag)});
     }
 
     std::vector<MemberInfo> TypeInfo::GetMemberInfosWithFlags(std::vector<std::string> flags) const
@@ -133,12 +149,9 @@ namespace Reflect
         std::unordered_set<int> addedMembers;
 
         int index = 0;
-        for (const MemberInfo& info : m_memberInfos)
-        {
-            for (const std::string flag : flags)
-            {
-                if (info.HasFlag(flag) && addedMembers.find(index) == addedMembers.end())
-                {
+        for (const MemberInfo& info : m_memberInfos) {
+            for (const std::string flag : flags) {
+                if (info.HasFlag(flag) && !addedMembers.contains(index)) {
                     members.push_back(info);
                     addedMembers.insert(index);
                 }
@@ -146,8 +159,7 @@ namespace Reflect
             ++index;
         }
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             const std::vector<MemberInfo> parentMemberInfos = parentTypeInfo.GetMemberInfosWithFlags(flags);
             std::move(parentMemberInfos.begin(), parentMemberInfos.end(), std::back_inserter(members));
@@ -158,20 +170,16 @@ namespace Reflect
 
     FunctionInfo TypeInfo::GetFunctionInfo(std::string_view functionName) const
     {
-        for (const FunctionInfo& info : m_functionInfos)
-        {
-            if (info.GetName() == functionName)
-            {
+        for (const FunctionInfo& info : m_functionInfos) {
+            if (info.GetName() == functionName) {
                 return info;
             }
         }
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             if (FunctionInfo parentFunctionInfo = parentTypeInfo.GetFunctionInfo(functionName);
-                parentFunctionInfo.IsValid())
-            {
+                parentFunctionInfo.IsValid()) {
                 return parentFunctionInfo;
             }
         }
@@ -181,7 +189,7 @@ namespace Reflect
 
     std::vector<FunctionInfo> TypeInfo::GetFunctionInfosWithFlag(std::string_view flag) const
     {
-        return GetFunctionInfosWithFlags({ std::string(flag) });
+        return GetFunctionInfosWithFlags({std::string(flag)});
     }
 
     std::vector<FunctionInfo> TypeInfo::GetFunctionInfosWithFlags(std::vector<std::string> flags) const
@@ -190,12 +198,9 @@ namespace Reflect
         std::unordered_set<int> addedFunctions;
 
         int index = 0;
-        for (const FunctionInfo& info : m_functionInfos)
-        {
-            for (const std::string flag : flags)
-            {
-                if (info.HasFlag(flag) && addedFunctions.find(index) == addedFunctions.end())
-                {
+        for (const FunctionInfo& info : m_functionInfos) {
+            for (const std::string flag : flags) {
+                if (info.HasFlag(flag) && !addedFunctions.contains(index)) {
                     functions.push_back(info);
                     addedFunctions.insert(index);
                 }
@@ -203,8 +208,7 @@ namespace Reflect
             ++index;
         }
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             const std::vector<FunctionInfo> parentFunctionInfos = parentTypeInfo.GetFunctionInfosWithFlags(flags);
             std::move(parentFunctionInfos.begin(), parentFunctionInfos.end(), std::back_inserter(functions));
@@ -218,8 +222,7 @@ namespace Reflect
         std::vector<FunctionInfo> functions;
         std::copy(m_functionInfos.begin(), m_functionInfos.end(), std::back_inserter(functions));
 
-        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i)
-        {
+        for (size_t i = 0; i < m_parentTypeInfos.size(); ++i) {
             const TypeInfo& parentTypeInfo = m_parentTypeInfos[i];
             const std::vector<FunctionInfo> parentFunctionInfos = parentTypeInfo.GetFunctionInfos();
             std::move(parentFunctionInfos.begin(), parentFunctionInfos.end(), std::back_inserter(functions));
@@ -231,17 +234,14 @@ namespace Reflect
     void TypeInfo::SetObjectInstance(void* objectInstance)
     {
         m_objectInstance = objectInstance;
-        for (TypeInfo& info : m_parentTypeInfos)
-        {
+        for (TypeInfo& info : m_parentTypeInfos) {
             info.SetObjectInstance(objectInstance);
         }
 
-        for (MemberInfo& info : m_memberInfos)
-        {
+        for (MemberInfo& info : m_memberInfos) {
             info.SetObjectInstance(objectInstance);
         }
-        for (FunctionInfo& info : m_functionInfos)
-        {
+        for (FunctionInfo& info : m_functionInfos) {
             info.SetObjectInstance(objectInstance);
         }
     }

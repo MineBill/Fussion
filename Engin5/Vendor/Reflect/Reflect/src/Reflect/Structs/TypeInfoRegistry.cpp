@@ -15,8 +15,7 @@ namespace Reflect
         std::lock_guard lock(Instance().m_registryLock);
 
         if (auto iter = Instance().m_registry.find(typeId);
-            iter != Instance().m_registry.end())
-        {
+            iter != Instance().m_registry.end()) {
             return;
         }
         Instance().m_registry[typeId] = createTypeInfoFunc;
@@ -27,8 +26,7 @@ namespace Reflect
         std::lock_guard lock(Instance().m_registryLock);
 
         if (auto iter = Instance().m_registry.find(typeId);
-            iter != Instance().m_registry.end())
-        {
+            iter != Instance().m_registry.end()) {
             Instance().m_registry.erase(typeId);
         }
     }
@@ -36,10 +34,8 @@ namespace Reflect
     bool TypeInfoRegistry::HasTypeInfo(const TypeId& typeId) const
     {
         std::lock_guard typeInfosLock(Instance().m_registryLock);
-        for (const auto& [typeTypeId, createFunc] : Instance().m_registry)
-        {
-            if (typeId == typeTypeId)
-            {
+        for (const auto& [typeTypeId, createFunc] : Instance().m_registry) {
+            if (typeId == typeTypeId) {
                 return true;
             }
         }
@@ -54,10 +50,8 @@ namespace Reflect
     TypeInfo TypeInfoRegistry::GetTypeInfo(const TypeId& typeId, void* objectInstance)
     {
         std::lock_guard typeInfosLock(Instance().m_registryLock);
-        for (const auto& [typeTypeId, createFunc] : Instance().m_registry)
-        {
-            if (typeId == typeTypeId)
-            {
+        for (const auto& [typeTypeId, createFunc] : Instance().m_registry) {
+            if (typeId == typeTypeId) {
                 return createFunc(objectInstance);
             }
         }
@@ -71,8 +65,7 @@ namespace Reflect
         if (!initialized) {
             initialized = true;
             std::lock_guard typeInfosLock(Instance().m_registryLock);
-            for (const auto& [typeTypeId, createFunc] : Instance().m_registry)
-            {
+            for (const auto& [typeTypeId, createFunc] : Instance().m_registry) {
                 type_infos.push_back(createFunc(nullptr));
             }
         }

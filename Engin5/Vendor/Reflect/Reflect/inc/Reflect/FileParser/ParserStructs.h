@@ -2,7 +2,7 @@
 
 #include "Reflect/Core/Enums.h"
 
-#include "Reflect/Structs/PropertyMeta.h"
+#include "Reflect/Structs/MetaProp.h"
 
 #include <string>
 #include <vector>
@@ -70,7 +70,7 @@ namespace Reflect::Parser
 		EReflectValueType ReflectValueType = EReflectValueType::Unknown;
 		EReflectValueModifier ReflectModifier = EReflectValueModifier::None;
 		std::vector<std::string> ContainerProps;
-		std::vector<PropertyMeta> PropertyMetas;
+		std::vector<MetaProp> MetaProps;
 
 		std::vector<ReflectInheritanceData> TypeInheritance;
 
@@ -147,7 +147,7 @@ namespace Reflect::Parser
 
 	struct FileParserOptions
 	{
-		/// @brief Mark all files to not be reflected. To be used if you want to parser a directory to get 
+		/// @brief Mark all files to not be reflected. To be used if you want to parser a directory to get
 		/// relevant data for another directoy.
 		bool DoNotReflect = false;
 	};

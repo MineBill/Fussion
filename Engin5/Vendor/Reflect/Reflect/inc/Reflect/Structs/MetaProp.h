@@ -10,10 +10,11 @@ namespace Reflect
 {
     /// @brief Store additional meta data for a property defined within an 'REFLECT_PROPERTY'
     /// Example: REFLECT_PROPERTY(Meta(ClampMin(0.0f), ClampMax(1.0f), DebugName("Clamped Float"))
-    class REFLECT_API PropertyMeta
+    class REFLECT_API MetaProp
     {
     public:
-        PropertyMeta(const char* key, const char* value);
+        MetaProp() = default;
+        MetaProp(const char* key, const char* value);
 
         operator bool() const;
         bool IsValid() const;
@@ -28,23 +29,20 @@ namespace Reflect
             return m_value.c_str();
         }
 
-        template<typename T
-        , typename = std::enable_if_t<
-            std::is_same_v<int, T>
-            || std::is_same_v<float, T>
-            || std::is_same_v<std::string, T>>>
+        template <typename T
+                  , typename = std::enable_if_t<
+                      std::is_same_v<int, T>
+                      || std::is_same_v<float, T>
+                      || std::is_same_v<std::string, T>>>
         T GetValue() const
         {
-            if constexpr (std::is_same_v<int, T>)
-            {
+            if constexpr (std::is_same_v<int, T>) {
                 return std::stoi(m_value);
             }
-            else if constexpr (std::is_same_v<float, T>)
-            {
+            else if constexpr (std::is_same_v<float, T>) {
                 return std::stof(m_value);
             }
-            else if constexpr (std::is_same_v<std::string, T>)
-            {
+            else if constexpr (std::is_same_v<std::string, T>) {
                 return std::string(m_value);
             }
             assert(false && "[PropertyMeta::GetValue<T>] Template T must be of a valid type.");
@@ -56,4 +54,3 @@ namespace Reflect
         std::string m_value;
     };
 }
-

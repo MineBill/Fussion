@@ -19,16 +19,14 @@ namespace Reflect
         /// @brief Make a 'Type' from a template arguement.
         /// @tparam T 
         /// @return 
-        template<typename T>
+        template <typename T>
         static Type MakeType()
         {
-            if constexpr (std::is_void_v<T>)
-            {
+            if constexpr (std::is_void_v<T>) {
                 Type type("void", 0);
                 return type;
             }
-            else
-            {
+            else {
                 Type type(Util::GetValueTypeName<T>(), sizeof(T));
                 return type;
             }

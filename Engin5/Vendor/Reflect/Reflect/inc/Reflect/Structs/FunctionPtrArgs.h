@@ -13,13 +13,13 @@ namespace Reflect
     /// </summary>
     struct REFLECT_API FunctionPtrArgs
     {
-    public:
         struct Arg
         {
             Arg(std::string type, void* ptr)
                 : Type(type)
-                , Ptr(ptr)
-            { }
+                  , Ptr(ptr)
+            {
+            }
 
             std::string GetType() const { return Type; }
             void* Get() const { return Ptr; }
@@ -29,20 +29,24 @@ namespace Reflect
             void* Ptr;
         };
 
-        FunctionPtrArgs() { }
+        FunctionPtrArgs()
+        {
+        }
+
         FunctionPtrArgs(const std::vector<Arg>& args)
             : m_args(args)
-        { }
+        {
+        }
 
         Arg GetArg(uint32_t index) const
         {
             return m_args.at(index);
         }
 
-        template<typename T>
+        template <typename T>
         void AddArg(T* obj)
         {
-            m_args.push_back(Arg(Reflect::Util::GetTypeName(*obj), obj));
+            m_args.push_back(Arg(Util::GetTypeName(*obj), obj));
         }
 
         void Clear() { m_args.clear(); }
