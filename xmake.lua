@@ -9,10 +9,9 @@ rule("CompilerFlags")
 
         target:add("cxxflags", "cl::/EHsc")
         target:add("cxxflags", "cl::/permissive-")
+        target:add("cxxflags", "cl::/wd4514 /wd4820")
     end)
 rule_end()
-
-set_warnings("allextra")
 
 includes("Vendor.lua")
 includes("HeaderTool/HeaderTool.lua")

@@ -4,7 +4,8 @@ target("Sandbox")
     add_files("Source/**.cpp")
     add_extrafiles("Assets/**.shader")
     set_rundir("$(projectdir)/Sandbox")
-    
+    set_default(false)
+
     add_deps("Engin5")
 
     if is_plat("windows") then

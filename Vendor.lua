@@ -50,8 +50,8 @@ target("AngelScript")
         "Engin5/Vendor/angelscript/sdk/angelscript/source/**.h",
         "Engin5/Vendor/angelscript/sdk/add_on/**.h"
     )
-    add_includedirs("Engin5/Vendor/angelscript/sdk/angelscript/include", {public = true})
-    add_includedirs("Engin5/Vendor/angelscript/sdk/add_on/", {public = true})
+    add_sysincludedirs("Engin5/Vendor/angelscript/sdk/angelscript/include", {public = true})
+    add_sysincludedirs("Engin5/Vendor/angelscript/sdk/add_on/", {public = true})
 
     if is_plat("windows") then
         add_files("Engin5/Vendor/angelscript/sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm")
@@ -61,7 +61,7 @@ target_end()
 
 target "magic_enum"
     set_kind "headeronly"
-    add_includedirs("Vendor/magic_enum/include", {public = true})
+    add_sysincludedirs("Vendor/magic_enum/include", {public = true})
     set_group("Vendor")
 target_end()
 
@@ -72,7 +72,7 @@ target "Reflect"
 
     add_files("Engin5/Vendor/Reflect/Reflect/src/**.cpp")
     add_headerfiles("Engin5/Vendor/Reflect/Reflect/inc/**.h")
-    add_includedirs("Engin5/Vendor/Reflect/Reflect/inc", {public = true})
+    add_sysincludedirs("Engin5/Vendor/Reflect/Reflect/inc", {public = true})
     add_defines("REFLECT_TYPE_INFO_ENABLED", {public = true})
 
     set_policy("build.fence", true)

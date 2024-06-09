@@ -47,6 +47,7 @@ namespace Reflect::CodeGeneration
                                          const ReflectAdditionalOptions* additionalOptions)
     {
         REFLECT_PROFILE_FUNCTION();
+        CG_Utils::PushDisableWarnings(file);
         for (const auto& reflectData : data.ReflectData) {
             CG_Utils::WriteIfDefines(reflectData, file);
 
@@ -72,6 +73,7 @@ namespace Reflect::CodeGeneration
             CG_Utils::WriteEndIfDefines(reflectData, file);
             WRITE_CLOSE;
         }
+        CG_Utils::PopDisableWarnings(file);
 
 #ifndef REFLECT_SINGLE_FILE
         file << "#undef CURRENT_FILE_ID\n";

@@ -20,6 +20,7 @@ namespace Reflect::CodeGeneration
         if (!additionalOptions->options.at(Keys::Reflect_CMD_Option_PCH_Include).empty()) {
             CodeGenerate::IncludeHeader(additionalOptions->options.at(Keys::Reflect_CMD_Option_PCH_Include), file);
         }
+        CG_Utils::PushDisableWarnings(file);
         CodeGenerate::IncludeHeader("../" + data.FileName + ".h", file);
         file << NEW_LINE;
 
@@ -37,7 +38,9 @@ namespace Reflect::CodeGeneration
 			m_CG_CPP_Legacy.Generate(reflectData, file, additionalOptions);
 #endif
             CG_Utils::WriteEndIfDefines(reflectData, file);
+
         }
+        CG_Utils::PopDisableWarnings(file);
     }
 
     //void CodeGenerateSource::WriteFunctionBindings(const Parser::ReflectContainerData& data, std::ofstream& file)

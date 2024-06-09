@@ -22,6 +22,9 @@ namespace Reflect::CodeGeneration
         static void WriteIfDefines(const Parser::ReflectContainerData& data, std::ofstream& file);
         static void WriteEndIfDefines(const Parser::ReflectContainerData& data, std::ofstream& file);
 
+        static void PushDisableWarnings(std::ofstream& file);
+        static void PopDisableWarnings(std::ofstream& file);
+
     private:
         static std::string WriteReflectTypeCPP(std::string_view type, EReflectType reflectType, EReflectValueType valueType, const std::vector<Parser::ReflectInheritanceData>& inheritance, std::string_view name);
     };

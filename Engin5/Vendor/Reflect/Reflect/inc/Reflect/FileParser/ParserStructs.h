@@ -144,7 +144,7 @@ namespace Reflect::Parser
 
 		std::vector<ReflectMemberData> Members;
 		std::vector<Parser::ReflectFunctionData> Functions;
-	};
+    };
 
 	struct FileParserOptions
 	{

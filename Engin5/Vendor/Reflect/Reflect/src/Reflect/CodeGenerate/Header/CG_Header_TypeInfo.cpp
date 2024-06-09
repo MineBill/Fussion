@@ -14,11 +14,11 @@ namespace Reflect::CodeGeneration
 		file << "#define " + currentFileId + "_GENERATE_TYPE_INFO" + NEW_LINE_SLASH;
 		WRITE_PUBLIC;
 		file << TAB << "static Reflect::TypeInfo GetStaticTypeInfo();" << NEW_LINE_SLASH;
-		file << TAB << "static Reflect::TypeInfo GetStaticTypeInfo(" + data.NameWithNamespace + "* ownerPointer);" << NEW_LINE_SLASH;
+		file << TAB << "static Reflect::TypeInfo GetStaticTypeInfo(" + data.NameWithNamespace + "*);" << NEW_LINE_SLASH;
 		file << TAB << "virtual Reflect::TypeInfo GetTypeInfo();" << NEW_LINE_SLASH;
 		WRITE_PRIVATE;
 		file << TAB << "static Reflect::TypeInfoRegister s_TypeInfoRegister;" << NEW_LINE_SLASH;
-		file << TAB << "static Reflect::TypeInfo ReflectRegisterCallback(void* objectInstance);" << NEW_LINE_SLASH;
+		file << TAB << "static Reflect::TypeInfo ReflectRegisterCallback(void*);" << NEW_LINE_SLASH;
 		file << TAB << "friend class Reflect::GenerateTypeInfoForType<" + data.Name + ">;";
 		file << NEW_LINE << NEW_LINE;
 		CG_Header_Legacy::WriteFunctions(data, file, currentFileId, additionalOptions);

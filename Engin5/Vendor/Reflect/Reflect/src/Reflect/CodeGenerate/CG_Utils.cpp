@@ -75,6 +75,40 @@ namespace Reflect::CodeGeneration
         }
     }
 
+    void CG_Utils::PushDisableWarnings(std::ofstream& file)
+    {
+        file << "#if defined(_MSC_VER)" << '\n';
+        file << "#pragma warning(push)" << '\n';
+        // Disable warnings for unused parameters and variables
+        // 4100: unreferenced formal parameter
+        // 4101: unreferenced local variable
+        // 4189: local variable is initialized but not referenced
+        // 4464: relative include path contains '..'
+        // 4061: enumerator 'identifier' in switch of enum 'enumeration' is not explicitly handled by a case label
+        //       This would be a cool warning to have enabled, but shit plus plus doesn't allow you to opt out for
+        //       certain switch cases, so ¯\_(ツ)_/¯.
+        for (const std::string& warning : {"4100", "4101", "4189", "4464", "4061"})
+        {
+            file << "#pragma warning(disable: " << warning << ")" << '\n';
+        }
+        file << "#elif defined(__GNUC__) || defined(__clang__)" << '\n';
+        file << "#pragma GCC diagnostic push" << '\n';
+        for (const std::string& warning : {"unused-parameter", "unused-variable"})
+        {
+            file << "#pragma GCC diagnostic ignored \"-W" << warning << "\"" << '\n';
+        }
+        file << "#endif" << '\n';
+    }
+
+    void CG_Utils::PopDisableWarnings(std::ofstream& file)
+    {
+        file << "#if defined(_MSC_VER)" << '\n';
+        file << "#pragma warning(pop)" << '\n';
+        file << "#elif defined(__GNUC__) || defined(__clang__)" << '\n';
+        file << "#pragma GCC diagnostic pop" << '\n';
+        file << "#endif" << '\n';
+    }
+
     std::string CG_Utils::WriteReflectTypeCPP(std::string_view type, EReflectType reflectType, EReflectValueType valueType, const std::vector<Parser::ReflectInheritanceData>& inheritance, std::string_view name)
     {
         std::string str;

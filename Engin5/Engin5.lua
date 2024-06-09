@@ -2,6 +2,7 @@ target("Engin5")
     set_kind("static")
     set_languages("c++20")
     add_ldflags("cl::/debug:fastlink")
+    set_warnings("everything")
 
     add_files (
         "Source/**.cpp",
@@ -44,7 +45,7 @@ target("Engin5")
     add_rules("CompilerFlags")
 
     if is_plat("windows") then
-        add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR")
+        add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR", {public = true})
         add_links("gdi32", "user32", "shell32")
         set_runtimes("MDd")
         add_sysincludedirs(os.getenv("VULKAN_SDK") .. "/Include", {public = true})
