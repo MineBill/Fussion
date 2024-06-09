@@ -1,45 +1,12 @@
-project "Sandbox"
-   kind "ConsoleApp"
-   language "C++"
-   cppdialect "C++20"
-   targetdir "Binaries/%{cfg.buildcfg}"
-   staticruntime "off"
+target("Sandbox")
+    set_kind("binary")
+    set_languages("c++23")
+    add_files("Source/**.cpp")
+    add_extrafiles("Assets/**.shader")
+    set_rundir("$(projectdir)/Sandbox")
+    
+    add_deps("Engin5")
 
-   files { "Source/**.h", "Source/**.cpp" }
-
-   includedirs
-   {
-        "Source",
-
-	    "../Engin5/Source",
-        "%{IncludeDir.glm}"
-   }
-
-   links
-   {
-        "Engin5",
-   }
-
-   targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")
-   objdir ("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
-
-   filter "system:windows"
-        systemversion "latest"
-        defines { "WINDOWS" }
-
-   filter "configurations:Debug"
-        defines { "DEBUG" }
-        runtime "Debug"
-        symbols "On"
-
-   filter "configurations:Release"
-        defines { "RELEASE" }
-        runtime "Release"
-        optimize "On"
-        symbols "On"
-
-   filter "configurations:Dist"
-        defines { "DIST" }
-        runtime "Release"
-        optimize "On"
-        symbols "Off"
+    if is_plat("windows") then
+        set_runtimes("MDd")
+    end

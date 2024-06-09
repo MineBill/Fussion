@@ -1,26 +1,3 @@
-rule("autogen")
-    set_extensions(".h")
-    before_buildcmd_file(function (target, batchcmds, sourcefile, opt)
-        -- local sourcefile_cx = path.join(target:autogendir(), "rules", "autogen", path.basename(sourcefile) .. ".cpp")
-        -- local objectfile = target:objectfile(sourcefile_cx)
-        -- table.insert(target:objectfiles(), objectfile)
-
-        if string.find(sourcefile, "_reflect_generated") then
-            local source = sourcefile:gsub("_reflect_generated", ""):gsub("Generated\\", "")
-            batchcmds:show_progress(opt.progress, "Running reflection tool on header %s", source)
-            batchcmds:set_depmtime(os.mtime(source))
-        end
-
-        -- batchcmds:show_progress(opt.progress, "${color.build.object}compiling.autogen %s", sourcefile)
-        -- batchcmds:mkdir(path.directory(sourcefile_cx))
-        -- batchcmds:vrunv(target:dep("autogen"):targetfile(), {sourcefile, sourcefile_cx})
-        -- batchcmds:compile(sourcefile_cx, objectfile)
-
-        -- batchcmds:add_depfiles(sourcefile, target:dep("autogen"):targetfile())
-        -- batchcmds:set_depmtime(os.mtime(objectfile))
-        -- batchcmds:set_depcache(target:dependfile(objectfile))
-    end)
-
 target("Engin5")
     set_kind("static")
     set_languages("c++20")
@@ -32,11 +9,6 @@ target("Engin5")
 
         "Vendor/tracy/public/TracyClient.cpp"
     )
-
-    -- add_files (
-    --     "Source/**.h",
-    --     "Impl/**.h"
-    -- )
 
     add_headerfiles (
         "Source/**.h",
@@ -52,10 +24,10 @@ target("Engin5")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("Reflect")
-    add_deps("HeaderTool")
+    add_deps("AngelScript")
 
+    add_deps("HeaderTool")
     add_rules("RunHeaderTool")
-    -- add_rules("autogen")
 
     set_pcxxheader("Source/e5pch.h")
 

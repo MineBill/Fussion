@@ -7,6 +7,7 @@
 #include "Engin5/OS/Clock.h"
 #include "Engin5/Renderer/Renderer.h"
 #include "Engin5/Scene/Components/BaseComponents.h"
+#include "Scripting/ScriptingEngine.h"
 
 namespace Engin5
 {
@@ -50,6 +51,8 @@ namespace Engin5
             return false;
         });
 
+        ScriptingEngine::Initialize();
+        defer (ScriptingEngine::Shutdown());
 
         Renderer::Init(*m_Window.get());
         Renderer::GetInstance()->CreateDefaultResources();
