@@ -11,8 +11,15 @@ target("HeaderTool")
         "REFLECT_TYPE_INFO_ENABLED"
     )
 
+    add_rules("CompilerFlags")
+
     if is_plat("windows") then
         set_runtimes("MDd")
+        add_defines("OS_WINDOWS")
+    elseif is_plat("linux") then
+        add_defines("OS_LINUX")
+    elseif is_plat("macos") then
+        add_defines("OS_MACOS")
     end
 
 rule("RunHeaderTool")

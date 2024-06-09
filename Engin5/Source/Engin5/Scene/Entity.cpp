@@ -28,6 +28,9 @@ namespace Engin5
     void Entity::AddComponent(Reflect::TypeId const& type_id)
     {
         auto type_info = Reflect::TypeInfoRegistry::GetTypeInfo(type_id);
+        if (!type_info.GetType().IsValid())
+            return;
+
         if (HasComponent(type_id)) {
             LOG_WARNF("Attempted to add an already existing component of type {}", type_info.GetType().GetPrettyTypeName());
             return;

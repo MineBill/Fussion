@@ -41,8 +41,7 @@ target("Engin5")
         "VK_NO_PROTOTYPES"
     )
 
-    add_cxxflags("cl::/EHsc")
-    add_cxxflags("cl::/permissive-")
+    add_rules("CompilerFlags")
 
     if is_plat("windows") then
         add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR")

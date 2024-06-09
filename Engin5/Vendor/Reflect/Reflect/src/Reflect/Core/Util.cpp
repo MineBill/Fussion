@@ -56,8 +56,10 @@ namespace Reflect
     void Util::RemoveCharReverse(std::string& str, const char& c)
     {
         size_t index = str.rfind(c);
-        auto itr = str.begin() + (index != -1 ? index : str.size());
-        str.erase(itr);
+        if (index != std::string::npos) {
+            auto itr = str.begin() + index;
+            str.erase(itr);
+        }
     }
 
     void Util::RemoveCharAll(std::string& str, const char& c)

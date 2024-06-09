@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <vector>
 #include <typeinfo>
+#if defined(OS_LINUX)
+#include <cxxabi.h>
+#endif
 
 namespace Reflect
 {
@@ -27,9 +30,16 @@ namespace Reflect
 		template<typename T>
 		std::string GetTypeName()
 		{
+#if defined(OS_WINDOWS)
 			std::string name = typeid(T).name();
-			for (const std::string& key : Keys::ContainerKeys)
-			{
+#elif defined(OS_LINUX)
+			const char *mangled_name = typeid(T).name();
+			int status = 0;
+			char* demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &status);
+			std::string name = (status == 0) ? demangled_name : mangled_name;
+			free(demangled_name);
+#endif
+			for (const std::string &key : Keys::ContainerKeys) {
 				RemoveString(name, key);
 			}
 			RemoveString(name, Keys::PointerTypeIdKey);

@@ -9,6 +9,7 @@ namespace Engin5 {
     {
         REFLECT_GENERATED_BODY()
     public:
-
+        REFLECT_PROPERTY(ShowInEditor, Meta(Range(10.0|100.0)))
+        f32 FieldOfView = 10.22;
     };
 }

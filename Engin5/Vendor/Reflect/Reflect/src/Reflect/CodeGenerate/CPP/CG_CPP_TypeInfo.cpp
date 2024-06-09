@@ -8,6 +8,7 @@
 
 #include <unordered_set>
 #include <functional>
+#include <cstring>
 
 namespace Reflect::CodeGeneration
 {
@@ -287,7 +288,7 @@ namespace Reflect::CodeGeneration
 			for (const auto& meta_prop : member.MetaProps)
 			{
 				TAB_N(lineIndent);
-				file << "metaProps.push_back(\"" << meta_prop.GetKey() << "\", \"" << meta_prop.GetValue() << "\");" << NEW_LINE;
+				file << "metaProps.emplace_back(\"" << meta_prop.GetKey() << "\", \"" << meta_prop.GetValue() << "\");" << NEW_LINE;
 			}
 			file << NEW_LINE;
 

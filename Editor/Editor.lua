@@ -17,11 +17,12 @@ target "Editor"
     set_languages("c++20")
 	set_rundir("$(projectdir)/Editor")
     set_default(true)
+    add_rules("CompilerFlags")
 
     add_includedirs (
         "Source"
     )
-    
+
     add_files (
         "Source/**.cpp"
     )
@@ -46,4 +47,8 @@ target "Editor"
     if is_plat("windows") then
         set_runtimes("MDd")
         add_ldflags("/WHOLEARCHIVE:Engin5", {force = true})
+    end
+
+    if is_plat("linux") then
+        add_linkgroups("Engin5", {whole = true})
     end

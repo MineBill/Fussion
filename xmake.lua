@@ -1,5 +1,16 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
+add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
+
+rule("CompilerFlags")
+    on_load(function (target)
+        target:add("cxxflags", "gcc::-Wno-changes-meaning")
+        target:add("cxxflags", "clag::-Wno-changes-meaning")
+
+        target:add("cxxflags", "cl::/EHsc")
+        target:add("cxxflags", "cl::/permissive-")
+    end)
+rule_end()
 
 set_warnings("allextra")
 

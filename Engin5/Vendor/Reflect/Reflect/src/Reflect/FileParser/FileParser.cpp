@@ -16,7 +16,6 @@
 #include <tuple>
 #include <functional>
 #include <unordered_map>
-#include <xhash>
 
 #define EXP_PARSER
 
@@ -1507,8 +1506,8 @@ namespace Reflect::Parser
         REFLECT_PROFILE_FUNCTION();
 
         if (cursor < 0 || cursor >= view.size()) {
-            Log_Error("[FileParser::CheckStringViewBounds] File: '%s', Line: '%s', Cursor: '%d'.",
-                      fileData.FileName.c_str(), view.data(), cursor);
+            // Log_Error("[FileParser::CheckStringViewBounds] File: '%s', Line: '%s', Cursor: '%d'.",
+            //           fileData.FileName.c_str(), view.data(), cursor);
             exit(0);
         }
     }

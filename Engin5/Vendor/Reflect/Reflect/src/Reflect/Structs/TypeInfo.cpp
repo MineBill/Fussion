@@ -21,7 +21,7 @@ namespace Reflect
         std::vector<MetaProp> metaProps)
         : m_type(type)
           , m_objectInstance(objectInstance)
-          , m_constructor(constructor)
+          , m_constructor(std::move(constructor))
           , m_parentTypeInfos(std::move(parentInfos))
           , m_memberInfos(std::move(memberInfos))
           , m_functionInfos(std::move(functionInfos))

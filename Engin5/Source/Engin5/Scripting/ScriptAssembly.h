@@ -64,7 +64,9 @@ namespace Engin5
 
         std::optional<ScriptClass> GetClass(std::string const& name)
         {
-            return m_Classes[name];
+            if (m_Classes.contains(name))
+                return m_Classes[name];
+            return std::nullopt;
         }
 
         std::unordered_map<std::string, ScriptClass>& GetAllClasses() { return m_Classes; }

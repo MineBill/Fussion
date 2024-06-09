@@ -11,6 +11,14 @@
 #include "Engin5/Scene/Component.h"
 #include "Engin5/Scripting/ScriptingEngine.h"
 
+std::tuple<f32, f32> ParseRangeMeta(std::string value)
+{
+    auto comma = value.find_first_of('|');
+    auto min = std::stof(value.substr(0, comma));
+    auto max = std::stof(value.substr(comma + 1));
+    return {min, max};
+}
+
 void InspectorWindow::OnStart()
 {
     EditorWindow::OnStart();
@@ -78,7 +86,12 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
                     ImGui::InputInt("##s32", transmute(s32*, number64));
                 }
                 else if (auto* numberf32 = member.GetMemberPointer<f32>()) {
-                    ImGui::InputFloat("##f32", numberf32);
+                    if (auto range = member.GetMeta("Range"); range.IsValid()) {
+                        auto [min, max] = ParseRangeMeta(range.GetValue());
+                        ImGui::SliderFloat("##f32", numberf32, min, max);
+                    } else {
+                        ImGui::InputFloat("##f32", numberf32);
+                    }
                 }
 
                 ImGuiH::EndProperty();

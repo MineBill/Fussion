@@ -10,7 +10,7 @@ namespace Reflect
     class REFLECT_API TypeInfo
     {
     public:
-        using Constructor = void*(*)();
+        using Constructor = void* (*)();
 
         TypeInfo();
         TypeInfo(
@@ -41,7 +41,8 @@ namespace Reflect
 
         void* Construct() const
         {
-            return m_constructor();
+            auto data = m_constructor();
+            return data;
         }
 
         [[nodiscard]] bool HasFlag(const std::string& flag) const;

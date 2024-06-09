@@ -50,7 +50,7 @@ void Editor::OnStart()
     file.close();
 
     auto assembly = ScriptingEngine::Get().CompileAssembly(std::filesystem::current_path().parent_path() / "Editor" / "Assets" / "Scripts", "Game");
-    if (auto klass = assembly->GetClass("Test")) {
+    if (auto klass = assembly->GetClass("Test"); klass.has_value()) {
         if (ScriptInstance script = klass->CreateInstance(); script.IsValid()) {
             script.CallMethod("OnStart");
         }

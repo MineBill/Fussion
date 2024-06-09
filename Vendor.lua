@@ -44,7 +44,7 @@ target("AngelScript")
 
     add_files(
         "Engin5/Vendor/angelscript/sdk/angelscript/source/**.cpp",
-        "Engin5/Vendor/angelscript/sdk/add_on/**.cpp"
+        "Engin5/Vendor/angelscript/sdk/add_on/**.cpp|autowrapper/generator/generateheader.cpp"
     )
     add_headerfiles(
         "Engin5/Vendor/angelscript/sdk/angelscript/source/**.h",
@@ -77,8 +77,15 @@ target "Reflect"
 
     set_policy("build.fence", true)
 
+    add_rules("CompilerFlags")
+
     if is_plat("windows") then
         set_runtimes("MDd")
+        add_defines("OS_WINDOWS")
+    elseif is_plat("linux") then
+        add_defines("OS_LINUX")
+    elseif is_plat("macos") then
+        add_defines("OS_MACOS")
     end
 target_end()
 
