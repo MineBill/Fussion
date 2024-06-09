@@ -11,6 +11,7 @@
 #include "Widgets/InspectorWindow.h"
 #include "Widgets/SceneTreeWindow.h"
 #include "SceneRenderer.h"
+#include "Widgets/ScriptsInspector.h"
 
 class Editor: public Engin5::Layer
 {
@@ -66,4 +67,6 @@ private:
     Ptr<InspectorWindow> m_InspectorWindow;
     Ptr<SceneTreeWindow> m_SceneWindow;
     Ptr<ConsoleWindow> m_ConsoleWindow;
+
+    Ptr<ScriptsInspector> m_ScriptsInspector;
 };

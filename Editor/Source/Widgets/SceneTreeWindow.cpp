@@ -30,17 +30,19 @@ void SceneTreeWindow::OnDraw()
             ImGui::PushID(entity.GetId());
             defer (ImGui::PopID());
 
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(2, 2));
             const bool open = ImGui::TreeNodeEx(entity.GetName().c_str(), flags);
             if (ImGui::IsItemClicked()) {
                 if (Engin5::Input::IsKeyUp(Engin5::KeyboardKey::LeftControl)) {
                     m_Selection.clear();
                 }
-                m_Selection[entity.GetId()] = entity;
+                m_Selection[entity.GetId()] = &entity;
             }
 
             if (open) {
                 ImGui::TreePop();
             }
+            ImGui::PopStyleVar();
         });
     }
     ImGui::End();

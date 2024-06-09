@@ -6,6 +6,13 @@
 
 namespace Engin5
 {
+    void Scene::OnUpdate(f32 delta)
+    {
+        for (auto& [id, entity]: m_Entities) {
+            entity.OnUpdate(delta);
+        }
+    }
+
     Entity* Scene::CreateEntity(std::string const& name)
     {
         UUID id{};

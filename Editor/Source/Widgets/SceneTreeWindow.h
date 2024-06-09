@@ -9,7 +9,7 @@ public:
 
     void OnDraw() override;
 
-    std::unordered_map<Engin5::UUID, Engin5::Entity&> const& GetSelection() const { return m_Selection; }
+    std::unordered_map<Engin5::UUID, Engin5::Entity*> const& GetSelection() const { return m_Selection; }
 private:
-    std::unordered_map<Engin5::UUID, Engin5::Entity&> m_Selection{};
+    std::unordered_map<Engin5::UUID, Engin5::Entity*> m_Selection{};
 };

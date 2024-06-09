@@ -9,6 +9,8 @@ namespace Engin5
     {
         friend class Entity;
     public:
+        void OnUpdate(f32 delta);
+
         Entity* CreateEntity(std::string const& name = "Entity");
 
         Entity* GetEntity(UUID handle);

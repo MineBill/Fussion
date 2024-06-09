@@ -1,12 +1,14 @@
 ﻿#include "Editor.h"
 
-#include <imgui.h>
-#include <tracy/Tracy.hpp>
-
 #include "Engin5/Input/Input.h"
 #include "Engin5/Core/Application.h"
 #include "Engin5/Scene/Components/BaseComponents.h"
 #include "Engin5/Scene/Scene.h"
+
+#include <imgui.h>
+#include <tracy/Tracy.hpp>
+
+#include "Engin5/Scripting/ScriptingEngine.h"
 
 Editor* Editor::s_EditorInstance = nullptr;
 using namespace Engin5;
@@ -26,6 +28,7 @@ void Editor::OnStart()
     m_InspectorWindow = MakePtr<InspectorWindow>(this);
     m_ConsoleWindow = MakePtr<ConsoleWindow>(this);
     m_SceneWindow = MakePtr<SceneTreeWindow>(this);
+    m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
@@ -36,16 +39,28 @@ void Editor::OnStart()
 
     m_ActiveScene = MakeRef<Scene>();
     auto const entity = m_ActiveScene->CreateEntity();
-    entity->AddComponent<StupidComponent>();
     m_ActiveScene->CreateEntity("Bob");
     m_ActiveScene->CreateEntity("Mike");
     auto const e = m_ActiveScene->CreateEntity("John");
-    e->AddComponent<StupidComponent>();
+    e->AddComponent<PointLight>();
+
+    auto stream = ScriptingEngine::Get().DumpCurrentTypes();
+    std::ofstream file("Assets/Scripts/as.predefined");
+    file << stream.str();
+    file.close();
+
+    auto assembly = ScriptingEngine::Get().CompileAssembly(std::filesystem::current_path().parent_path() / "Editor" / "Assets" / "Scripts", "Game");
+    if (auto klass = assembly->GetClass("Test")) {
+        if (ScriptInstance script = klass->CreateInstance(); script.IsValid()) {
+            script.CallMethod("OnStart");
+        }
+    }
 
     m_ViewportWindow->OnStart();
     m_InspectorWindow->OnStart();
     m_ConsoleWindow->OnStart();
     m_SceneWindow->OnStart();
+    m_ScriptsInspector->OnStart();
 }
 
 void Editor::OnEnable()
@@ -68,26 +83,34 @@ void Editor::OnUpdate(const f32 delta)
     }
     ImGui::DockSpaceOverViewport();
 
-    ImGui::BeginMainMenuBar();
-
-    if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("Open..")) {
-
-        }
-        ImGui::EndMenu();
-    }
-
     static bool show_demo_window = false;
-    if (ImGui::BeginMenu("Extra")) {
-        ImGui::Checkbox("Demo Window", &show_demo_window);
-        if (ImGui::MenuItem("Save Layout")) {
-            ImGui::SaveIniSettingsToDisk("Assets/EditorLayout.ini");
+    ImGui::BeginMainMenuBar();
+    {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open..")) {
+
+            }
+            ImGui::EndMenu();
         }
 
-        ImGui::EndMenu();
-    }
+        if (ImGui::BeginMenu("Windows")) {
+            if (ImGui::MenuItem("Scripts Inspector")) {
+                m_ScriptsInspector->Show();
+            }
+            ImGui::EndMenu();
+        }
 
-    ImGui::Text("Delta: %f", delta);
+        if (ImGui::BeginMenu("Extra")) {
+            ImGui::Checkbox("Demo Window", &show_demo_window);
+            if (ImGui::MenuItem("Save Layout")) {
+                ImGui::SaveIniSettingsToDisk("Assets/EditorLayout.ini");
+            }
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::Text("Delta: %f", delta);
+    }
     ImGui::EndMainMenuBar();
 
     if (show_demo_window) {
@@ -98,6 +121,7 @@ void Editor::OnUpdate(const f32 delta)
     m_InspectorWindow->OnDraw();
     m_ConsoleWindow->OnDraw();
     m_SceneWindow->OnDraw();
+    m_ScriptsInspector->OnDraw();
 }
 
 void Editor::OnEvent(Event& event)

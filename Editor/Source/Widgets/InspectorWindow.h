@@ -7,6 +7,7 @@ class InspectorWindow final: public EditorWindow
 public:
     EDITOR_WINDOW(InspectorWindow)
 
+    void OnStart() override;
     void OnDraw() override;
 
 private:

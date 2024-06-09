@@ -9,6 +9,12 @@
 #include <tracy/Tracy.hpp>
 
 #include "Engin5/Scene/Component.h"
+#include "Engin5/Scripting/ScriptingEngine.h"
+
+void InspectorWindow::OnStart()
+{
+    EditorWindow::OnStart();
+}
 
 void InspectorWindow::OnDraw()
 {
@@ -19,7 +25,7 @@ void InspectorWindow::OnDraw()
         auto selection = m_Editor->GetSceneTree().GetSelection();
         if (!selection.empty()) {
             if (selection.size() == 1) {
-                auto entity = &selection.begin()->second;
+                auto entity = selection.begin()->second;
                 DrawEntity(*entity);
             } else {
                 ImGui::Text("Multiple entities selected");
@@ -37,10 +43,15 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
 
     ImGuiH::InputText("Name", e.GetNameRef());
 
-    ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts.Bold);
-    // ImGui::TextUnformatted("Position"); ImGui::SameLine();
-    // ImGuiHelpers::DragVec3("Position", &e.GetTransform()->Position, 0.01, 0, 0, "%.2f", style.Fonts.Bold);
-    // ImGuiHelpers::DragVec3("Euler Angles", &e.GetTransform()->EulerAngles, 0.01, 0, 0, "%.2f", style.Fonts.Bold);
+    ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts.BoldSmall);
+    ImGui::TextUnformatted("Position");
+    ImGuiHelpers::DragVec3("##position", &e.Transform.Position, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+
+    ImGui::TextUnformatted("Euler Angles");
+    ImGuiHelpers::DragVec3("##euler_angles", &e.Transform.EulerAngles, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+
+    ImGui::TextUnformatted("Scale");
+    ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
     ImGuiHelpers::EndGroupPanel();
 
     for (const auto& [id, component]: e.GetComponents()) {
@@ -57,17 +68,17 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
 
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                if (member.GetTypeId() == Reflect::TypeId::MakeTypeId<bool>()) {
-                    ImGui::Checkbox("##bool", member.GetMemberPointer<bool>());
+                if (auto* b = member.GetMemberPointer<bool>(); b) {
+                    ImGui::Checkbox("##bool", b);
                 }
-                else if (member.GetTypeId() == Reflect::TypeId::MakeTypeId<s32>()) {
-                    ImGui::InputInt("##s32", member.GetMemberPointer<s32>());
+                else if (auto* number32 = member.GetMemberPointer<s32>()) {
+                    ImGui::InputInt("##s32", number32);
                 }
-                else if (member.GetTypeId() == Reflect::TypeId::MakeTypeId<s64>()) {
-                    ImGui::InputInt("##s64", member.GetMemberPointer<s32>());
+                else if (auto* number64 = member.GetMemberPointer<s64>()) {
+                    ImGui::InputInt("##s32", transmute(s32*, number64));
                 }
-                else if (member.GetTypeId() == Reflect::TypeId::MakeTypeId<f32>()) {
-                    ImGui::InputFloat("##f32", member.GetMemberPointer<f32>());
+                else if (auto* numberf32 = member.GetMemberPointer<f32>()) {
+                    ImGui::InputFloat("##f32", numberf32);
                 }
 
                 ImGuiH::EndProperty();
@@ -89,10 +100,19 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
         for (auto const& info : Reflect::TypeInfoRegistry::GetAllTypes()) {
-            if (info.HasFlag("ShowInEditor")) {
-                ImGui::MenuItem(std::format("{}", info.GetType().GetPrettyTypeName()).c_str());
+            if (info.IsDerivedFrom<Component>() && !e.HasComponent(info.GetTypeId())) {
+                if (ImGui::MenuItem(std::format("{}", info.GetType().GetPrettyTypeName()).c_str())) {
+                    e.AddComponent(info.GetTypeId());
+                }
             }
         }
+        // for (auto const& aa : ScriptingEngine::Get().GetAssembly("Game")->GetClassesOfType("Component")) {
+        //     if (!e.HasComponent(??)) {
+        //         if (ImGui::MenuItem(aa->GetName().c_str())) {
+        //             e.AddComponent(??);
+        //         }
+        //     }
+        // }
         ImGui::EndPopup();
     }
 }

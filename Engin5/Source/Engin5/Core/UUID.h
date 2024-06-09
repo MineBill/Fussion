@@ -1,8 +1,10 @@
 ﻿#pragma once
 #include "Types.h"
+#include "Reflect/Reflect.h"
 
 namespace Engin5
 {
+    REFLECT_CLASS(REFLECT_LOOKUP_ONLY)
     class UUID
     {
     public:

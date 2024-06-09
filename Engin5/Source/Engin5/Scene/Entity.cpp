@@ -27,8 +27,29 @@ namespace Engin5
 
     void Entity::AddComponent(Reflect::TypeId const& type_id)
     {
-        auto id = type_id.GetHash();
         auto type_info = Reflect::TypeInfoRegistry::GetTypeInfo(type_id);
+        if (HasComponent(type_id)) {
+            LOG_WARNF("Attempted to add an already existing component of type {}", type_info.GetType().GetPrettyTypeName());
+            return;
+        }
+
+        auto const id = type_id.GetHash();
         // type_info.GetFunctionInfo("ctor");
+        auto component = MakeRef<Component>();
+        component.reset(cast(Component*, type_info.Construct()));
+        m_Components[id] = component;
+    }
+
+    bool Entity::HasComponent(Reflect::TypeId const& type_id) const
+    {
+        auto const id = type_id.GetHash();
+        return m_Components.contains(id);
+    }
+
+    void Entity::OnUpdate(f32 const delta)
+    {
+        for (auto& [id, component]: m_Components) {
+            component->OnUpdate(delta);
+        }
     }
 }

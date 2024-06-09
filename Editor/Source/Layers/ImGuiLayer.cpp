@@ -46,9 +46,10 @@ void ImGuiLayer::Init()
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable;
 
     auto& [Fonts] = Editor::Get().GetStyle();
-    Fonts.RegularNormal = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
+    Fonts.RegularNormal = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 14.0f);
     Fonts.RegularSmall  = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 12.0f);
     Fonts.Bold          = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
+    io.FontDefault = Fonts.RegularNormal;
 
 #if !defined(OS_LINUX)
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
