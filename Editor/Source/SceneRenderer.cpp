@@ -3,14 +3,14 @@
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/OS/FileSystem.h"
-#include "Engin5/Renderer/Device.h"
-#include "Engin5/Renderer/Renderer.h"
-#include "Engin5/Renderer/ShaderCompiler.h"
+#include "Fussion/OS/FileSystem.h"
+#include "Fussion/Renderer/Device.h"
+#include "Fussion/Renderer/Renderer.h"
+#include "Fussion/Renderer/ShaderCompiler.h"
 
 void SceneRenderer::Init()
 {
-    using namespace Engin5;
+    using namespace Fussion;
 
     const auto scene_rp_spec = RenderPassSpecification {
         .Label = "Scene RenderPass",
@@ -95,15 +95,15 @@ void SceneRenderer::Init()
 void SceneRenderer::Resize(const Vector2 new_size)
 {
     ZoneScoped;
-    Engin5::Device::Instance()->WaitIdle();
+    Fussion::Device::Instance()->WaitIdle();
     m_RenderArea = new_size;
     m_FrameBuffer->Resize(new_size);
 }
 
-void SceneRenderer::Render(Ref<Engin5::CommandBuffer> const& cmd, RenderPacket const& packet)
+void SceneRenderer::Render(Ref<Fussion::CommandBuffer> const& cmd, RenderPacket const& packet)
 {
     ZoneScoped;
-    using namespace Engin5;
+    using namespace Fussion;
 
     m_GlobalData.Data.Perspective = packet.Camera.Perspective;
     m_GlobalData.Data.View = packet.Camera.View;

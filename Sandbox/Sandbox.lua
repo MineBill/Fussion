@@ -6,7 +6,7 @@ target("Sandbox")
     set_rundir("$(projectdir)/Sandbox")
     set_default(false)
 
-    add_deps("Engin5")
+    add_deps("Fussion")
 
     if is_plat("windows") then
         set_runtimes("MDd")

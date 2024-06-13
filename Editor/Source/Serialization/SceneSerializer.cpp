@@ -2,7 +2,7 @@
 #include "EditorApplication.h"
 #include "Helpers.h"
 
-#include "Engin5/Scene/Scene.h"
+#include "Fussion/Scene/Scene.h"
 
 #include "kdlpp.h"
 
@@ -29,9 +29,9 @@ void SerializeStruct(Node& root, Reflect::TypeInfo const& type_info)
     }
 }
 
-void SceneSerializer::Save(AssetMetadata metadata, Engin5::Asset* asset)
+void SceneSerializer::Save(AssetMetadata metadata, Fussion::Asset* asset)
 {
-    auto scene = cast(Engin5::Scene*, asset);
+    auto scene = cast(Fussion::Scene*, asset);
     EASSERT(scene != nullptr);
 
     Node root{"Scene"};
@@ -51,11 +51,13 @@ void SceneSerializer::Save(AssetMetadata metadata, Engin5::Asset* asset)
 
         root.children().push_back(node);
     }
+
+    LOG_DEBUGF("Saving scene {}", metadata.Path.string());
 }
 
-Engin5::Asset* SceneSerializer::Load(AssetMetadata metadata)
+Fussion::Asset* SceneSerializer::Load(AssetMetadata metadata)
 {
-    auto scene = new Engin5::Scene();
+    auto scene = new Fussion::Scene();
     auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
     auto data = kdl::parse(path.string());
 

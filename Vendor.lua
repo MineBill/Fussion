@@ -43,18 +43,18 @@ target("AngelScript")
     set_group("Vendor")
 
     add_files(
-        "Engin5/Vendor/angelscript/sdk/angelscript/source/**.cpp",
-        "Engin5/Vendor/angelscript/sdk/add_on/**.cpp|autowrapper/generator/generateheader.cpp"
+        "Fussion/Vendor/angelscript/sdk/angelscript/source/**.cpp",
+        "Fussion/Vendor/angelscript/sdk/add_on/**.cpp|autowrapper/generator/generateheader.cpp"
     )
     add_headerfiles(
-        "Engin5/Vendor/angelscript/sdk/angelscript/source/**.h",
-        "Engin5/Vendor/angelscript/sdk/add_on/**.h"
+        "Fussion/Vendor/angelscript/sdk/angelscript/source/**.h",
+        "Fussion/Vendor/angelscript/sdk/add_on/**.h"
     )
-    add_sysincludedirs("Engin5/Vendor/angelscript/sdk/angelscript/include", {public = true})
-    add_sysincludedirs("Engin5/Vendor/angelscript/sdk/add_on/", {public = true})
+    add_sysincludedirs("Fussion/Vendor/angelscript/sdk/angelscript/include", {public = true})
+    add_sysincludedirs("Fussion/Vendor/angelscript/sdk/add_on/", {public = true})
 
     if is_plat("windows") then
-        add_files("Engin5/Vendor/angelscript/sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm")
+        add_files("Fussion/Vendor/angelscript/sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm")
         set_runtimes("MDd")
     end
 target_end()
@@ -70,9 +70,9 @@ target "Reflect"
     set_languages("c++20")
     set_group("Vendor")
 
-    add_files("Engin5/Vendor/Reflect/Reflect/src/**.cpp")
-    add_headerfiles("Engin5/Vendor/Reflect/Reflect/inc/**.h")
-    add_sysincludedirs("Engin5/Vendor/Reflect/Reflect/inc", {public = true})
+    add_files("Fussion/Vendor/Reflect/Reflect/src/**.cpp")
+    add_headerfiles("Fussion/Vendor/Reflect/Reflect/inc/**.h")
+    add_sysincludedirs("Fussion/Vendor/Reflect/Reflect/inc", {public = true})
     add_defines("REFLECT_TYPE_INFO_ENABLED", {public = true})
 
     set_policy("build.fence", true)
@@ -91,7 +91,7 @@ target_end()
 
 target("kdl")
     set_kind("static")
-    set_group("vendor")
+    set_group("Vendor")
     set_languages("c++20", "c11")
 
     add_files(

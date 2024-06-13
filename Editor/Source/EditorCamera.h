@@ -1,12 +1,12 @@
 ﻿#pragma once
-#include "Engin5/Core/Types.h"
-#include "Engin5/Events/Event.h"
+#include "Fussion/Core/Types.h"
+#include "Fussion/Events/Event.h"
 
 class EditorCamera
 {
 public:
     void OnUpdate(f32);
-    void HandleEvent(Engin5::Event& event);
+    void HandleEvent(Fussion::Event& event);
 
     void Resize(Vector2 new_size);
 

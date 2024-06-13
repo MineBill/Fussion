@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "EditorWindow.h"
-#include "Engin5/Scene/Entity.h"
+#include "Fussion/Scene/Entity.h"
 
 class InspectorWindow final: public EditorWindow
 {
@@ -11,7 +11,7 @@ public:
     void OnDraw() override;
 
 private:
-    void DrawEntity(Engin5::Entity& e);
+    void DrawEntity(Fussion::Entity& e);
 
     void DrawComponent();
 };

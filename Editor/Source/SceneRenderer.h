@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include "Engin5/Core/Types.h"
-#include "Engin5/Renderer/CommandBuffer.h"
-#include "Engin5/Renderer/FrameBuffer.h"
-#include "Engin5/Renderer/RenderPass.h"
-#include "Engin5/Renderer/UniformBuffer.h"
+#include "Fussion/Core/Types.h"
+#include "Fussion/Renderer/CommandBuffer.h"
+#include "Fussion/Renderer/FrameBuffer.h"
+#include "Fussion/Renderer/RenderPass.h"
+#include "Fussion/Renderer/UniformBuffer.h"
 
 struct GlobalData
 {
@@ -28,19 +28,19 @@ public:
     void Init();
     void Resize(Vector2 new_size);
 
-    void Render(const Ref<Engin5::CommandBuffer>& cmd, const RenderPacket& packet);
+    void Render(const Ref<Fussion::CommandBuffer>& cmd, const RenderPacket& packet);
 
-    Ref<Engin5::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
+    Ref<Fussion::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
 
 private:
     // static SceneRenderer* s_Instance;
 
-    Ref<Engin5::Shader> m_TriangleShader{};
-    Ref<Engin5::ResourcePool> m_ResourcePool{};
-    Ref<Engin5::Resource> m_GlobalResource{};
-    Engin5::UniformBuffer<GlobalData> m_GlobalData;
+    Ref<Fussion::Shader> m_TriangleShader{};
+    Ref<Fussion::ResourcePool> m_ResourcePool{};
+    Ref<Fussion::Resource> m_GlobalResource{};
+    Fussion::UniformBuffer<GlobalData> m_GlobalData;
 
     Vector2 m_RenderArea{};
-    Ref<Engin5::RenderPass> m_SceneRenderPass{};
-    Ref<Engin5::FrameBuffer> m_FrameBuffer{};
+    Ref<Fussion::RenderPass> m_SceneRenderPass{};
+    Ref<Fussion::FrameBuffer> m_FrameBuffer{};
 };

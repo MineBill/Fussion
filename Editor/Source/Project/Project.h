@@ -2,8 +2,8 @@
 #include <filesystem>
 
 #include "EditorAssetManager.h"
-#include "Engin5/Core/Result.h"
-#include "Engin5/Core/Types.h"
+#include "Fussion/Core/Result.h"
+#include "Fussion/Core/Types.h"
 
 class Project
 {

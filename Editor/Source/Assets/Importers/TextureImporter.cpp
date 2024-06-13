@@ -1,7 +1,7 @@
 ﻿#include "TextureImporter.h"
-#include "Engin5/Util/stb_image.h"
+#include "Fussion/Util/stb_image.h"
 
-using namespace Engin5;
+using namespace Fussion;
 
 Ref<Texture2D> TextureImporter::LoadTextureFromFile(std::filesystem::path path)
 {

@@ -1,37 +1,41 @@
 ﻿#pragma once
-#include "Engin5/Assets/AssetManagerBase.h"
-#include "Engin5/Assets/Asset.h"
-#include "Engin5/Core/Types.h"
+#include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Assets/AssetManagerBase.h"
+#include "Fussion/Assets/Asset.h"
+#include "Fussion/Core/Types.h"
 
 #include <filesystem>
 #include <unordered_map>
 #include <concepts>
 
-#include "Assets/AssetImporter.h"
-
 struct AssetMetadata
 {
-    Engin5::AssetType Type = Engin5::AssetType::Invalid;
+    Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
 
     bool IsVirtual = false;
     bool DontSerialize = false;
+
+    bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };
 
 class AssetSerializer;
-class EditorAssetManager final: public Engin5::AssetManagerBase
+class EditorAssetManager final: public Fussion::AssetManagerBase
 {
 public:
     EditorAssetManager();
 
-    Engin5::Asset* GetAsset(Engin5::AssetHandle handle, Engin5::AssetType type) override;
-    bool IsAssetLoaded(Engin5::AssetHandle handle) override;
-    bool IsAssetHandleValid(Engin5::AssetHandle handle) override;
+    Fussion::Asset* GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) override;
+    bool IsAssetLoaded(Fsn::AssetHandle handle) override;
+    bool IsAssetHandleValid(Fsn::AssetHandle handle) override;
 
-    template<std::derived_from<Engin5::Asset> T>
-    Engin5::AssetHandle CreateAsset(std::filesystem::path const& path)
+    bool IsPathAnAsset(std::filesystem::path const& path) const;
+    AssetMetadata GetMetadata(std::filesystem::path const& path) const;
+
+    template<std::derived_from<Fsn::Asset> T>
+    Fsn::AssetRef<T> CreateAsset(std::filesystem::path const& path)
     {
-        Engin5::AssetHandle handle;
+        Fussion::AssetHandle handle;
         m_Registry[handle] = AssetMetadata{
             .Type = T::GetStaticType(),
             .Path = path,
@@ -44,17 +48,17 @@ public:
 
         Serialize();
 
-        return handle;
+        return Fsn::AssetRef<T>(handle, this);
     }
 
-    void SaveAsset(Engin5::AssetHandle handle);
+    void SaveAsset(Fussion::AssetHandle handle);
 
     void Serialize();
     void Deserialize();
 
 private:
-    std::unordered_map<Engin5::AssetHandle, AssetMetadata> m_Registry{};
-    std::unordered_map<Engin5::AssetHandle, Ref<Engin5::Asset>> m_LoadedAssets{};
+    std::unordered_map<Fsn::AssetHandle, AssetMetadata> m_Registry{};
+    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 
-    std::map<Engin5::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
+    std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
 };

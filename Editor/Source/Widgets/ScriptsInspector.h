@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "EditorWindow.h"
-#include "Engin5/Scripting/ScriptAssembly.h"
+#include "Fussion/Scripting/ScriptAssembly.h"
 
 class ScriptsInspector: public EditorWindow
 {
@@ -10,5 +10,5 @@ public:
     void OnDraw() override;
 
 private:
-    Engin5::ScriptClass* m_SelectedClass{nullptr};
+    Fussion::ScriptClass* m_SelectedClass{nullptr};
 };

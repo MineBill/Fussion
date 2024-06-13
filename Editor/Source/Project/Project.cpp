@@ -1,10 +1,10 @@
 #include "Project.h"
 
 #include "kdlpp.h"
-#include "Engin5/OS/FileSystem.h"
+#include "Fussion/OS/FileSystem.h"
 #include <magic_enum/magic_enum.hpp>
 
-#include "Engin5/Core/Result.h"
+#include "Fussion/Core/Result.h"
 #include "Serialization/Helpers.h"
 #include "Serialization/AssetSerializer.h"
 
@@ -21,7 +21,7 @@ void Project::Save(std::filesystem::path path)
 
 bool Project::Load(std::filesystem::path path)
 {
-    using namespace Engin5;
+    using namespace Fussion;
     s_ActiveProject = MakeRef<Project>();
 
     auto const data = FileSystem::ReadEntireFile(path);

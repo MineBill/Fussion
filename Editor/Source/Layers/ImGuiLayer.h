@@ -1,11 +1,11 @@
 ﻿#pragma once
-#include "Engin5/Core/Layer.h"
-#include "Engin5/Renderer/CommandBuffer.h"
+#include "Fussion/Core/Layer.h"
+#include "Fussion/Renderer/CommandBuffer.h"
 
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.h>
 
-class ImGuiLayer: public Engin5::Layer
+class ImGuiLayer: public Fussion::Layer
 {
 public:
     ImGuiLayer();
@@ -17,7 +17,7 @@ public:
     void OnUpdate(f32) override;
 
     void Begin();
-    void End(const Ref<Engin5::CommandBuffer>&);
+    void End(const Ref<Fussion::CommandBuffer>&);
 
     // @Todo The VkDescriptorSet could be changed to void*.
     std::map<u64, VkDescriptorSet> ImageToVkSet;

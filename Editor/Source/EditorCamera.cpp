@@ -5,17 +5,17 @@
 
 #include <imgui.h>
 
-#include "Engin5/Events/KeyboardEvents.h"
-#include "Engin5/Input/Input.h"
+#include "Fussion/Events/KeyboardEvents.h"
+#include "Fussion/Input/Input.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#include "Engin5/Log/Formatters.h"
-#include "Engin5/Core/Application.h"
+#include "Fussion/Log/Formatters.h"
+#include "Fussion/Core/Application.h"
 
-using namespace Engin5;
+using namespace Fussion;
 
 void EditorCamera::OnUpdate(const f32 delta)
 {

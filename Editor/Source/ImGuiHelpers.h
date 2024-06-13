@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <imgui.h>
 
-namespace Engin5
+namespace Fussion
 {
     class Image;
 }
@@ -23,7 +23,7 @@ namespace ImGuiHelpers
 
     void InputText(const char* label, std::string &value, ImGuiInputTextFlags flags = 0);
 
-    bool ImageToggleButton(const char* id, Ref<Engin5::Image> const& image, bool& toggled, Vector2 size);
+    bool ImageToggleButton(const char* id, Ref<Fussion::Image> const& image, bool& toggled, Vector2 size);
 } // namespace ImGuiHelpers
 
 namespace ImGuiH = ImGuiHelpers;

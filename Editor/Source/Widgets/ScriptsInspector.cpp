@@ -1,6 +1,6 @@
 ﻿#include "ScriptsInspector.h"
 
-#include "Engin5/Scripting/ScriptingEngine.h"
+#include "Fussion/Scripting/ScriptingEngine.h"
 #include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
 
@@ -14,7 +14,7 @@ void ScriptsInspector::OnDraw()
     {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        auto assembly = Engin5::ScriptingEngine::Get().GetAssembly("Game");
+        auto assembly = Fussion::ScriptingEngine::Get().GetAssembly("Game");
 
         ImGui::TextUnformatted("Inspecting Game assembly");
         ImGui::BeginChild("Types", Vector2(200, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);

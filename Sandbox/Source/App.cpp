@@ -2,7 +2,7 @@
 #include "scriptstdstring/scriptstdstring.h"
 #include "scriptbuilder/scriptbuilder.h"
 #include "AngelDumper.h"
-#include "Engin5/Core/Core.h"
+#include "Fussion/Core/Core.h"
 
 #include <print>
 #include <fstream>

@@ -3,13 +3,13 @@
 #include "ImGuiHelpers.h"
 #include "EditorApplication.h"
 
-#include "Engin5/Scene/Components/BaseComponents.h"
+#include "Fussion/Scene/Components/BaseComponents.h"
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/Scene/Component.h"
-#include "Engin5/Scripting/ScriptingEngine.h"
+#include "Fussion/Scene/Component.h"
+#include "Fussion/Scripting/ScriptingEngine.h"
 
 std::tuple<f32, f32> ParseRangeMeta(std::string value)
 {
@@ -43,9 +43,9 @@ void InspectorWindow::OnDraw()
     ImGui::End();
 }
 
-void InspectorWindow::DrawEntity(Engin5::Entity& e)
+void InspectorWindow::DrawEntity(Fussion::Entity& e)
 {
-    using namespace Engin5;
+    using namespace Fussion;
     ZoneScoped;
     auto& style = Editor::Get().GetStyle();
 

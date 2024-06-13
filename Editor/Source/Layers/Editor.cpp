@@ -1,21 +1,20 @@
 ﻿#include "Editor.h"
 
-#include "Engin5/Input/Input.h"
-#include "Engin5/Core/Application.h"
-#include "Engin5/Scene/Components/BaseComponents.h"
-#include "Engin5/Scene/Scene.h"
+#include "Fussion/Input/Input.h"
+#include "Fussion/Core/Application.h"
+#include "Fussion/Scene/Components/BaseComponents.h"
 
-#include "Engin5/OS/Dialog.h"
-#include "Engin5/Scripting/ScriptingEngine.h"
+#include "Fussion/OS/Dialog.h"
+#include "Fussion/Scripting/ScriptingEngine.h"
 
 #include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/Assets/AssetRef.h"
+#include "Fussion/Assets/AssetRef.h"
 
 Editor* Editor::s_EditorInstance = nullptr;
-using namespace Engin5;
+using namespace Fussion;
 
 
 Editor::Editor()
@@ -34,6 +33,7 @@ void Editor::OnStart()
     m_ConsoleWindow = MakePtr<ConsoleWindow>(this);
     m_SceneWindow = MakePtr<SceneTreeWindow>(this);
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
+    m_ContentBrowser = MakePtr<ContentBrowser>(this);
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
@@ -53,6 +53,7 @@ void Editor::OnStart()
     m_ConsoleWindow->OnStart();
     m_SceneWindow->OnStart();
     m_ScriptsInspector->OnStart();
+    m_ContentBrowser->OnStart();
 }
 
 void Editor::OnEnable()
@@ -90,19 +91,27 @@ void Editor::OnUpdate(const f32 delta)
     ImGui::BeginMainMenuBar();
     {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Create Scene")) {
-                auto handle = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("Pepegas.scene");
-                m_ActiveScene = AssetManager::GetAsset<Scene>(handle);
+            if (ImGui::BeginMenu("New..")) {
+                if (ImGui::MenuItem("Create Scene")) {
+                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("Pepegas.scene");
+                    // m_ActiveScene = AssetManager::GetAsset<Scene>(handle);
+                }
+                ImGui::EndMenu();
             }
 
             ImGui::Separator();
-            if (ImGui::MenuItem("Open..")) {
 
-            }
+            if (!m_ActiveScene)
+                ImGui::BeginDisabled();
+
             if (ImGui::MenuItem("Save..", "Ctrl+S")) {
                 Project::ActiveProject()->Save();
-                // Project::ActiveProject()->GetAssetManager()->SaveAsset();
+                Project::ActiveProject()->GetAssetManager()->SaveAsset(m_ActiveScene.Handle());
             }
+
+            if (!m_ActiveScene)
+                ImGui::EndDisabled();
+
             ImGui::EndMenu();
         }
 
@@ -135,7 +144,7 @@ void Editor::OnUpdate(const f32 delta)
     m_ConsoleWindow->OnDraw();
     m_SceneWindow->OnDraw();
     m_ScriptsInspector->OnDraw();
-
+    m_ContentBrowser->OnDraw();
 }
 
 void Editor::OnEvent(Event& event)

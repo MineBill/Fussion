@@ -29,7 +29,7 @@ target "Editor"
     add_sysincludedirs("Vendor/imgui")
     add_files("Vendor/imgui/*.cpp")
 
-    add_deps("Engin5", "kdl")
+    add_deps("Fussion", "kdl")
     add_packages("glfw")
 
     add_deps("HeaderTool")
@@ -37,9 +37,9 @@ target "Editor"
 
     if is_plat("windows") then
         set_runtimes("MDd")
-        add_ldflags("/WHOLEARCHIVE:Engin5", {force = true})
+        add_ldflags("/WHOLEARCHIVE:Fussion", {force = true})
     end
 
     if is_plat("linux") then
-        add_linkgroups("Engin5", {whole = true})
+        add_linkgroups("Fussion", {whole = true})
     end

@@ -3,8 +3,8 @@
 #include "EditorApplication.h"
 #include "Layers/ImGuiLayer.h"
 
-#include "Engin5/Renderer/Renderer.h"
-#include "Engin5/Input/Input.h"
+#include "Fussion/Renderer/Renderer.h"
+#include "Fussion/Input/Input.h"
 #include "imgui.h"
 
 
@@ -12,11 +12,11 @@
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/Events/ApplicationEvents.h"
-#include "Engin5/Log/FileSink.h"
-#include "Engin5/OS/Dialog.h"
-#include "Engin5/OS/FileSystem.h"
-#include "Engin5/Scene/Entity.h"
+#include "Fussion/Events/ApplicationEvents.h"
+#include "Fussion/Log/FileSink.h"
+#include "Fussion/OS/Dialog.h"
+#include "Fussion/OS/FileSystem.h"
+#include "Fussion/Scene/Entity.h"
 #include "Project/Project.h"
 
 EditorApplication* EditorApplication::s_EditorInstance;
@@ -24,7 +24,7 @@ EditorApplication* EditorApplication::s_EditorInstance;
 void EditorApplication::OnStart()
 {
     ZoneScoped;
-    using namespace Engin5;
+    using namespace Fussion;
 
     s_EditorInstance = this;
     Log::DefaultLogger()->RegisterSink(FileSink::Create("Pepegas.log"));
@@ -50,7 +50,7 @@ void EditorApplication::OnStart()
 void EditorApplication::OnUpdate(const f32 delta)
 {
     ZoneScoped;
-    using namespace Engin5;
+    using namespace Fussion;
 
     m_ImGuiLayer->Begin();
 
@@ -83,9 +83,9 @@ void EditorApplication::OnUpdate(const f32 delta)
     Renderer::End(cmd);
 }
 
-void EditorApplication::OnEvent(Engin5::Event& event)
+void EditorApplication::OnEvent(Fussion::Event& event)
 {
-    using namespace Engin5;
+    using namespace Fussion;
     Application::OnEvent(event);
 }
 

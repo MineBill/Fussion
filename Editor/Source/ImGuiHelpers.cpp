@@ -1,7 +1,7 @@
 ﻿#define IMGUI_DEFINE_MATH_OPERATORS
 #include "ImGuiHelpers.h"
 
-#include "Engin5/Core/Core.h"
+#include "Fussion/Core/Core.h"
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -261,7 +261,7 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Engin5::Image> const& image, bool& toggled, Vector2 size)
+bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::Image> const& image, bool& toggled, Vector2 size)
 {
     auto button = cast(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
     // auto button = Vector4(0, 1, 0, 1);

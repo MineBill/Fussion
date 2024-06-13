@@ -10,9 +10,9 @@
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/OS/FileSystem.h"
+#include "Fussion/OS/FileSystem.h"
 
-using namespace Engin5;
+using namespace Fussion;
 
 EditorAssetManager::EditorAssetManager()
 {
@@ -47,6 +47,26 @@ bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
     return m_Registry.contains(handle);
 }
 
+bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path) const
+{
+    for (auto const& [id, metadata] : m_Registry) {
+        if (metadata.Path == path) {
+            return true;
+        }
+    }
+    return false;
+}
+
+AssetMetadata EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
+{
+    for (auto const& [id, metadata] : m_Registry) {
+        if (metadata.Path == path) {
+            return metadata;
+        }
+    }
+    return {};
+}
+
 void EditorAssetManager::SaveAsset(AssetHandle handle)
 {
     m_AssetSerializers[m_Registry[handle].Type]->Save(m_Registry[handle], m_LoadedAssets[handle].get());
@@ -70,7 +90,7 @@ void EditorAssetManager::Serialize()
         }
 
         auto& node = root.children().emplace_back("Asset");
-        node.properties().insert_or_assign("Handle", cast(u64, handle));
+        node.properties().insert_or_assign("Handle", std::to_string(cast(u64, handle)));
         node.properties().insert_or_assign("Type", magic_enum::enum_name(metadata.Type)).first->second.set_type_annotation("AssetType");
         node.properties().insert_or_assign("Path", metadata.Path.string());
     }
@@ -91,7 +111,7 @@ void EditorAssetManager::Deserialize()
         LOG_WARNF("{} did not exist", path.string());
         return;
     }
-    auto const data = Engin5::FileSystem::ReadEntireFile(path);
+    auto const data = FileSystem::ReadEntireFile(path);
 
     auto doc = kdl::parse(data);
 
@@ -99,14 +119,16 @@ void EditorAssetManager::Deserialize()
         if (auto registry = FindNode(doc.nodes(), "AssetRegistry")) {
             for (auto const& node : registry->children()) {
                 if (node.name() == "Asset") {
-                    auto handle = GetProperty<u64>(node, "Handle");
-                    auto type = GetProperty<std::string>(node, "Type");
-                    auto path = GetProperty<std::string>(node, "Path");
+                    auto const handle = std::stoull(*GetProperty<std::string>(node, "Handle"));
+                    auto const path = GetProperty<std::string>(node, "Path");
+                    auto const type = GetProperty<std::string>(node, "Type");
 
-                    m_Registry[Engin5::UUID(*handle)] = AssetMetadata{
-                        .Type = *magic_enum::enum_cast<Engin5::AssetType>(*type),
+                    m_Registry[Fsn::UUID(handle)] = AssetMetadata{
+                        .Type = *magic_enum::enum_cast<AssetType>(*type),
                         .Path = *path,
                     };
+
+                    LOG_DEBUGF("Adding asset '{}' with handle '{}' to registry.", *path, handle);
                 }
             }
         }
@@ -114,3 +136,4 @@ void EditorAssetManager::Deserialize()
         LOG_ERRORF("Exception caught while deserialize asset registry: {}", e.what());
     }
 }
+

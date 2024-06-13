@@ -2,32 +2,21 @@
 #include "EditorCamera.h"
 #include "EditorStyle.h"
 #include "Widgets/ViewportWindow.h"
-
-#include "Engin5/Core/Layer.h"
-#include "Engin5/Core/Types.h"
-#include "Engin5/Renderer/CommandBuffer.h"
-#include "Project/Project.h"
 #include "Widgets/ConsoleWindow.h"
 #include "Widgets/InspectorWindow.h"
 #include "Widgets/SceneTreeWindow.h"
+#include "Project/Project.h"
 #include "SceneRenderer.h"
-#include "Engin5/Assets/AssetRef.h"
 #include "Widgets/ScriptsInspector.h"
 
-namespace Pepe = Engin5;
-namespace Limbo
-{
+#include "Fussion/Core/Layer.h"
+#include "Fussion/Core/Types.h"
+#include "Fussion/Renderer/CommandBuffer.h"
+#include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Scene/Scene.h"
+#include "Widgets/ContentBrowser.h"
 
-}
-
-namespace Void
-{
-
-}
-
-namespace
-
-class Editor: public Engin5::Layer
+class Editor: public Fsn::Layer
 {
 public:
     Editor();
@@ -37,9 +26,9 @@ public:
     void OnDisable() override;
 
     void OnUpdate(f32) override;
-    void OnEvent(Engin5::Event&) override;
+    void OnEvent(Fsn::Event&) override;
 
-    void OnDraw(Ref<Engin5::CommandBuffer> cmd);
+    void OnDraw(Ref<Fsn::CommandBuffer> cmd);
     EditorStyle& GetStyle() { return m_Style; }
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 
@@ -56,22 +45,22 @@ public:
 
     static Editor& Get() { return *s_EditorInstance; }
 
-
-    static EditorCamera&  GetCamera()      { return s_EditorInstance->m_Camera; }
-    static Project&       GetProject()     { return s_EditorInstance->m_Project; }
-    static Engin5::AssetRef<Engin5::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
+    static EditorCamera&             GetCamera()      { return s_EditorInstance->m_Camera; }
+    static Project&                  GetProject()     { return s_EditorInstance->m_Project; }
+    static Fsn::AssetRef<Fsn::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
 
     // Editor Windows
-    static ViewportWindow&  GetViewport()  { return *s_EditorInstance->m_ViewportWindow.get(); }
-    static InspectorWindow& GetInspector() { return *s_EditorInstance->m_InspectorWindow.get(); }
-    static SceneTreeWindow& GetSceneTree() { return *s_EditorInstance->m_SceneWindow.get(); }
-    static ConsoleWindow&   GetConsole()   { return *s_EditorInstance->m_ConsoleWindow.get(); }
+    static ViewportWindow&  GetViewport()       { return *s_EditorInstance->m_ViewportWindow.get(); }
+    static InspectorWindow& GetInspector()      { return *s_EditorInstance->m_InspectorWindow.get(); }
+    static SceneTreeWindow& GetSceneTree()      { return *s_EditorInstance->m_SceneWindow.get(); }
+    static ConsoleWindow&   GetConsole()        { return *s_EditorInstance->m_ConsoleWindow.get(); }
+    static ContentBrowser&  GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
 
 private:
     static Editor* s_EditorInstance;
     std::vector<LogEntry> m_LogEntries{};
 
-    Engin5::AssetRef<Engin5::Scene> m_ActiveScene;
+    Fsn::AssetRef<Fsn::Scene> m_ActiveScene;
     SceneRenderer m_SceneRenderer;
 
     Project m_Project;
@@ -82,6 +71,7 @@ private:
     Ptr<InspectorWindow> m_InspectorWindow;
     Ptr<SceneTreeWindow> m_SceneWindow;
     Ptr<ConsoleWindow> m_ConsoleWindow;
+    Ptr<ContentBrowser> m_ContentBrowser;
 
     Ptr<ScriptsInspector> m_ScriptsInspector;
 };

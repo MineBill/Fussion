@@ -4,9 +4,9 @@
 #include <tracy/Tracy.hpp>
 
 #include "EditorApplication.h"
-#include "Engin5/Input/Input.h"
-#include "Engin5/Scene/Entity.h"
-#include "Engin5/Scene/Components/BaseComponents.h"
+#include "Fussion/Input/Input.h"
+#include "Fussion/Scene/Entity.h"
+#include "Fussion/Scene/Components/BaseComponents.h"
 
 void SceneTreeWindow::OnDraw()
 {
@@ -14,18 +14,20 @@ void SceneTreeWindow::OnDraw()
     if (ImGui::Begin("Scene Entities")) {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        if (auto const scene = Editor::GetActiveScene(); scene != nullptr) {
+        if (auto scene_ref = Editor::GetActiveScene()) {
+            auto scene = scene_ref.Get();
+
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::BeginMenu("New")) {
                     if (ImGui::MenuItem("Entity")) {
-                        (void)Editor::GetActiveScene()->CreateEntity();
+                        scene->CreateEntity();
                     }
                     ImGui::EndMenu();
                 }
                 ImGui::EndPopup();
             }
 
-            scene->ForEachEntity([this](Engin5::Entity& entity) {
+            scene->ForEachEntity([this](Fussion::Entity& entity) {
                 ImGuiTreeNodeFlags flags =
                     ImGuiTreeNodeFlags_FramePadding |
                     ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -42,7 +44,7 @@ void SceneTreeWindow::OnDraw()
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(2, 2));
                 const bool open = ImGui::TreeNodeEx(entity.GetName().c_str(), flags);
                 if (ImGui::IsItemClicked()) {
-                    if (Engin5::Input::IsKeyUp(Engin5::KeyboardKey::LeftControl)) {
+                    if (Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl)) {
                         m_Selection.clear();
                     }
                     m_Selection[entity.GetId()] = &entity;

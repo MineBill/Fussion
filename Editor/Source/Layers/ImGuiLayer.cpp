@@ -1,8 +1,8 @@
 ﻿#include "e5pch.h"
 #include "ImGuiLayer.h"
 
-#include "Engin5/Renderer/Device.h"
-#include "Engin5/Core/Application.h"
+#include "Fussion/Renderer/Device.h"
+#include "Fussion/Core/Application.h"
 #include "Vulkan/VulkanDevice.h"
 #include <GLFW/glfw3.h>
 
@@ -15,7 +15,7 @@
 #include "EditorApplication.h"
 #include "Editor.h"
 #include "EditorStyle.h"
-#include "Engin5/Renderer/Renderer.h"
+#include "Fussion/Renderer/Renderer.h"
 
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanImageView.h"
@@ -38,7 +38,7 @@ ImGuiLayer::ImGuiLayer()
 void ImGuiLayer::Init()
 {
     ZoneScoped;
-    using namespace Engin5;
+    using namespace Fussion;
     LOG_DEBUGF("Initializing ImGui layer.");
 
     IMGUI_CHECKVERSION();
@@ -151,7 +151,7 @@ void ImGuiLayer::Begin()
     ImGui::NewFrame();
 }
 
-void ImGuiLayer::End(const Ref<Engin5::CommandBuffer>& cmd)
+void ImGuiLayer::End(const Ref<Fussion::CommandBuffer>& cmd)
 {
     ZoneScoped;
     ImGui::Render();
