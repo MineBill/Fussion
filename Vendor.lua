@@ -89,6 +89,32 @@ target "Reflect"
     end
 target_end()
 
+target("kdl")
+    set_kind("static")
+    set_group("vendor")
+    set_languages("c++20", "c11")
+
+    add_files(
+        "Editor/Vendor/ckdl/src/**.c",
+        "Editor/Vendor/ckdl/bindings/cpp/src/kdlpp.cpp"
+    )
+
+    add_headerfiles("Editor/Vendor/ckdl/src/**.h")
+
+    add_sysincludedirs(
+        "Editor/Vendor/ckdl/include",
+        "Editor/Vendor/ckdl/bindings/cpp/include",
+        {public = true}
+    )
+
+    add_defines("KDLPP_STATIC_LIB", "KDL_STATIC_LIB", {public = true})
+
+    add_rules("CompilerFlags")
+    if is_plat("windows") then
+        set_runtimes("MDd")
+    end
+target_end()
+
 if is_plat("linux") then
     add_requires("spirv-cross")
 end

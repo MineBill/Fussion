@@ -33,6 +33,9 @@ namespace Reflect
             return GetTypeId() == TypeId::MakeTypeId<T>();
         }
 
+        bool IsPrimitiveType() const { return m_objectType.IsPrimitive(); }
+        bool IsClassType() const { return m_objectType.IsClass(); }
+
         bool HasFlag(std::string_view flag) const;
         bool HasAnyFlags(const std::vector<std::string>& flags) const;
         const std::vector<std::string>& GetFlags() const;

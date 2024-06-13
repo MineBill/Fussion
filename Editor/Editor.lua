@@ -1,17 +1,3 @@
-package("ckdl")
-    add_deps("cmake")
-    set_sourcedir(path.join(os.scriptdir(), "Vendor/ckdl"))
-    on_install(function (package)
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
-        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        table.insert(configs, "-DBUILD_KDLPP=ON")
-        table.insert(configs, "-DBUILD_TESTS=OFF")
-        import("package.tools.cmake").install(package, configs)
-    end)
-package_end()
-add_requires("ckdl")
-
 target "Editor"
     set_kind("binary")
     set_languages("c++20")
@@ -33,7 +19,8 @@ target "Editor"
     )
 
     add_defines(
-        "REFLECT_TYPE_INFO_ENABLED"
+        "REFLECT_TYPE_INFO_ENABLED",
+        "USE_EDITOR"
     )
 
     add_extrafiles("Assets/**.shader")
@@ -42,8 +29,11 @@ target "Editor"
     add_sysincludedirs("Vendor/imgui")
     add_files("Vendor/imgui/*.cpp")
 
-    add_deps("Engin5")
-    add_packages("glfw", "ckdl")
+    add_deps("Engin5", "kdl")
+    add_packages("glfw")
+
+    add_deps("HeaderTool")
+    add_rules("RunHeaderTool")
 
     if is_plat("windows") then
         set_runtimes("MDd")

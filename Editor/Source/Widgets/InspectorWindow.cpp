@@ -94,6 +94,19 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
                     }
                 }
 
+                if (auto* string = member.GetMemberPointer<std::string>(); string) {
+                    if (member.HasFlag("ScriptRef")) {
+                        if (ImGui::Button("Select Script")) {
+                        }
+                    } else {
+                        ImGui::InputText("##string", string);
+                    }
+
+                    if constexpr (std::is_destructible_v<int>) {
+
+                    }
+                }
+
                 ImGuiH::EndProperty();
             }
             ImGui::Separator();
@@ -119,13 +132,6 @@ void InspectorWindow::DrawEntity(Engin5::Entity& e)
                 }
             }
         }
-        // for (auto const& aa : ScriptingEngine::Get().GetAssembly("Game")->GetClassesOfType("Component")) {
-        //     if (!e.HasComponent(??)) {
-        //         if (ImGui::MenuItem(aa->GetName().c_str())) {
-        //             e.AddComponent(??);
-        //         }
-        //     }
-        // }
         ImGui::EndPopup();
     }
 }

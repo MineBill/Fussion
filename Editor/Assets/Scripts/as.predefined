@@ -1,0 +1,90 @@
+class string{
+	~string();
+	string();
+	string(const string&in);
+	string& opAssign(const string&in);
+	string& opAddAssign(const string&in);
+	bool opEquals(const string&in) const;
+	int opCmp(const string&in) const;
+	string opAdd(const string&in) const;
+	uint length() const;
+	void resize(uint);
+	bool isEmpty() const;
+	uint8& opIndex(uint);
+	const uint8& opIndex(uint) const;
+	string& opAssign(double);
+	string& opAddAssign(double);
+	string opAdd(double) const;
+	string opAdd_r(double) const;
+	string& opAssign(float);
+	string& opAddAssign(float);
+	string opAdd(float) const;
+	string opAdd_r(float) const;
+	string& opAssign(int64);
+	string& opAddAssign(int64);
+	string opAdd(int64) const;
+	string opAdd_r(int64) const;
+	string& opAssign(uint64);
+	string& opAddAssign(uint64);
+	string opAdd(uint64) const;
+	string opAdd_r(uint64) const;
+	string& opAssign(bool);
+	string& opAddAssign(bool);
+	string opAdd(bool) const;
+	string opAdd_r(bool) const;
+	string substr(uint start = 0, int count = - 1) const;
+	int findFirst(const string&in, uint start = 0) const;
+	int findFirstOf(const string&in, uint start = 0) const;
+	int findFirstNotOf(const string&in, uint start = 0) const;
+	int findLast(const string&in, int start = - 1) const;
+	int findLastOf(const string&in, int start = - 1) const;
+	int findLastNotOf(const string&in, int start = - 1) const;
+	void insert(uint pos, const string&in other);
+	void erase(uint pos, int count = - 1);
+}
+class Array<T>{
+	T& opIndex(uint index);
+	const T& opIndex(uint index) const;
+	T[]& opAssign(const T[]&in);
+	void InsertAt(uint index, const T&in value);
+	void InsertAt(uint index, const T[]&inout arr);
+	void InsertLast(const T&in value);
+	void RemoveAt(uint index);
+	void RemoveLast();
+	void RemoveRange(uint start, uint count);
+	uint length() const;
+	void Reserve(uint length);
+	void Resize(uint length);
+	void SortAsc();
+	void SortAsc(uint startAt, uint count);
+	void SortDesc();
+	void SortDesc(uint startAt, uint count);
+	void Reverse();
+	int Find(const T&in value) const;
+	int Find(uint startAt, const T&in value) const;
+	int FindByRef(const T&in value) const;
+	int FindByRef(uint startAt, const T&in value) const;
+	bool OpEquals(const T[]&in) const;
+	bool IsEmpty() const;
+	void Sort(T[]::less&in, uint startAt = 0, uint count = uint ( - 1 ));
+	funcdef bool less(const T&in, const T&in);
+}
+class Any{
+	Any& opAssign(Any&in);
+	void Store(?&in);
+	void Store(const int64&in);
+	void Store(const double&in);
+	bool Retrieve(?&out);
+	bool Retrieve(int64&out);
+	bool Retrieve(double&out);
+}
+interface Script{
+}
+string formatInt(int64 val, const string&in options = "", uint width = 0);
+string formatUInt(uint64 val, const string&in options = "", uint width = 0);
+string formatFloat(double val, const string&in options = "", uint width = 0, uint precision = 0);
+int64 parseInt(const string&in, uint base = 10, uint&out byteCount = 0);
+uint64 parseUInt(const string&in, uint base = 10, uint&out byteCount = 0);
+double parseFloat(const string&in, uint&out byteCount = 0);
+void Print(const string&in message);
+namespace Log { void Debug(const string&in message); }

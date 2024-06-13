@@ -19,6 +19,7 @@
 
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanImageView.h"
+#include "Vulkan/Common.h"
 
 ImGuiLayer* ImGuiLayer::s_Instance;
 

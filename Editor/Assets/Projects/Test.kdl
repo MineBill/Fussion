@@ -1,0 +1,7 @@
+Project version="0.0.0" {
+    AssetsFolder "Assets"
+    CacheFolder "Cache"
+    AssetRegistry "AssetRegistry.registry"
+
+    DefaultScene "Pepe"
+}

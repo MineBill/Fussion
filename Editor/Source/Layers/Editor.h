@@ -11,7 +11,21 @@
 #include "Widgets/InspectorWindow.h"
 #include "Widgets/SceneTreeWindow.h"
 #include "SceneRenderer.h"
+#include "Engin5/Assets/AssetRef.h"
 #include "Widgets/ScriptsInspector.h"
+
+namespace Pepe = Engin5;
+namespace Limbo
+{
+
+}
+
+namespace Void
+{
+
+}
+
+namespace
 
 class Editor: public Engin5::Layer
 {
@@ -42,9 +56,10 @@ public:
 
     static Editor& Get() { return *s_EditorInstance; }
 
-    static EditorCamera&      GetCamera()      { return s_EditorInstance->m_Camera; }
-    static Project&           GetProject()     { return s_EditorInstance->m_Project; }
-    static Ref<Engin5::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
+
+    static EditorCamera&  GetCamera()      { return s_EditorInstance->m_Camera; }
+    static Project&       GetProject()     { return s_EditorInstance->m_Project; }
+    static Engin5::AssetRef<Engin5::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
 
     // Editor Windows
     static ViewportWindow&  GetViewport()  { return *s_EditorInstance->m_ViewportWindow.get(); }
@@ -56,7 +71,7 @@ private:
     static Editor* s_EditorInstance;
     std::vector<LogEntry> m_LogEntries{};
 
-    Ref<Engin5::Scene> m_ActiveScene;
+    Engin5::AssetRef<Engin5::Scene> m_ActiveScene;
     SceneRenderer m_SceneRenderer;
 
     Project m_Project;

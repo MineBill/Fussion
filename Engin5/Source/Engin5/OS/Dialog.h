@@ -37,4 +37,7 @@ namespace Engin5::Dialogs
     };
 
     MessageButton ShowMessageBox(MessageBox data);
+
+    std::filesystem::path ShowFilePicker(std::string_view name, std::vector<std::string_view> supported_files);
+    std::filesystem::path ShowDirectoryPicker();
 }

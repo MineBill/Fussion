@@ -4,7 +4,6 @@
 #include "Scripting/ScriptingEngine.h"
 #include "Generated/ScriptComponent_reflect_generated.h"
 
-
 namespace Engin5
 {
     REFLECT_CLASS()
@@ -15,9 +14,7 @@ namespace Engin5
         ScriptComponent() = default;
         COMPONENT(ScriptComponent)
 
-        // void OnCreate() override {}
-        // void OnDestroy() override {}
-        void OnUpdate(f32 delta) override;
+        void OnUpdate(f32) override;
 
     private:
         ScriptClass* m_ScriptClass{nullptr};

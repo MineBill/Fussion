@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Buffer.h"
 #include "Device.h"
-#include "Vulkan/Common.h"
 
 namespace Engin5
 {

@@ -7,7 +7,7 @@ vsxmake2022/
 Binaries/
 build/
 cmake-build-debug/
-
+.cache/
 **/Generated/
 
 # Files

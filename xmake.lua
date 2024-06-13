@@ -1,6 +1,7 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
+set_policy("package.install_locally", true)
 
 rule("CompilerFlags")
     on_load(function (target)

@@ -7,7 +7,13 @@
 
 namespace Reflect
 {
-    /// @brief A Type is a representation of a type. This would include the type name, type size and if it is a fundamental type or not. 
+    template <typename T>
+    concept Arithmetic = std::integral<T> or std::floating_point<T> or std::is_scalar_v<T>;
+
+    template <typename T>
+    concept Primitive = Arithmetic<T> or std::same_as<T, bool> or std::same_as<T, std::string>;
+
+    /// @brief A Type is a representation of a type. This would include the type name, type size and if it is a fundamental type or not.
     /// This is Reflect's version of c++ typeid but with some additional data.
     class REFLECT_API Type
     {
@@ -17,8 +23,8 @@ namespace Reflect
         ~Type();
 
         /// @brief Make a 'Type' from a template arguement.
-        /// @tparam T 
-        /// @return 
+        /// @tparam T
+        /// @return
         template <typename T>
         static Type MakeType()
         {
@@ -28,6 +34,11 @@ namespace Reflect
             }
             else {
                 Type type(Util::GetValueTypeName<T>(), sizeof(T));
+                if constexpr (Primitive<T>) {
+                    type.m_PrimitiveType = true;
+                } else if constexpr (std::is_class_v<T>) {
+                    type.m_ClassType = true;
+                }
                 return type;
             }
         }
@@ -49,8 +60,12 @@ namespace Reflect
 
         uint64_t GetTypeSize() const;
 
+        bool IsClass() const { return m_ClassType; }
+        bool IsPrimitive() const { return m_PrimitiveType; }
+
     private:
         TypeId m_typeId;
+        bool m_PrimitiveType = false, m_ClassType = false;
 
         /// @brief TypeName with no namespaces.
         std::string m_prettyTypeName;

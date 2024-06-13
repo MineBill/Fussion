@@ -11,8 +11,6 @@ namespace Engin5
     {
         REFLECT_GENERATED_BODY()
     public:
-
-
         void OnUpdate(f32 delta) override;
 
         REFLECT_PROPERTY()

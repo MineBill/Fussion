@@ -68,9 +68,15 @@ namespace Reflect::CodeGeneration
         }
 		TAB_N(3); file << NEW_LINE << NEW_LINE;
 
-        TAB_N(3); file << "auto constructor = []() -> void* {" << NEW_LINE;
-        TAB_N(4); file << "return new ::" << data.NameWithNamespace << "();" << NEW_LINE;
-        TAB_N(3); file << "};" << NEW_LINE << NEW_LINE;
+        if (std::ranges::find(data.ContainerProps, "Abstract") == data.ContainerProps.end()) {
+            TAB_N(3); file << "auto constructor = []() -> void* {" << NEW_LINE;
+            TAB_N(4); file << "return new ::" << data.NameWithNamespace << "();" << NEW_LINE;
+            TAB_N(3); file << "};" << NEW_LINE << NEW_LINE;
+        } else {
+            TAB_N(3); file << "auto constructor = []() -> void* {" << NEW_LINE;
+            TAB_N(4); file << "return nullptr;" << NEW_LINE;
+            TAB_N(3); file << "};" << NEW_LINE << NEW_LINE;
+        }
 
 		TAB_N(3); file << "s_" << data.Name << "TypeInfo = TypeInfo(" << NEW_LINE;
 		TAB_N(4); file << "Type::MakeType<::" << data.NameWithNamespace << ">(), " << NEW_LINE;

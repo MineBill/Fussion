@@ -10,6 +10,11 @@ target("Engin5")
 
         "Vendor/tracy/public/TracyClient.cpp"
     )
+    if is_plat("windows") then
+        add_files("Platform/Windows/**.cpp")
+    elseif is_plat("linux") then
+        add_files("Platform/Linux/**.cpp")
+    end
 
     add_headerfiles (
         "Source/**.h",
@@ -46,7 +51,7 @@ target("Engin5")
 
     if is_plat("windows") then
         add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR", {public = true})
-        add_links("gdi32", "user32", "shell32")
+        add_links("gdi32", "user32", "shell32", "Comdlg32")
         set_runtimes("MDd")
         add_sysincludedirs(os.getenv("VULKAN_SDK") .. "/Include", {public = true})
         add_links (

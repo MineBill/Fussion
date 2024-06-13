@@ -14,6 +14,7 @@
 
 #include "Engin5/Events/ApplicationEvents.h"
 #include "Engin5/Log/FileSink.h"
+#include "Engin5/OS/Dialog.h"
 #include "Engin5/OS/FileSystem.h"
 #include "Engin5/Scene/Entity.h"
 #include "Project/Project.h"
@@ -28,6 +29,10 @@ void EditorApplication::OnStart()
     s_EditorInstance = this;
     Log::DefaultLogger()->RegisterSink(FileSink::Create("Pepegas.log"));
     LOG_DEBUGF("Current path is: {}", std::filesystem::current_path().string());
+
+    auto path = Dialogs::ShowFilePicker("Project File", {"*.kdl"});
+    auto loaded = Project::Load(path);
+    EASSERT(loaded, "Project loading must not fail, for now.");
 
     s_EditorInstance = this;
     m_Editor = MakePtr<Editor>();

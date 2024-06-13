@@ -5,13 +5,18 @@
 #include "Engin5/Scene/Components/BaseComponents.h"
 #include "Engin5/Scene/Scene.h"
 
+#include "Engin5/OS/Dialog.h"
+#include "Engin5/Scripting/ScriptingEngine.h"
+
 #include <imgui.h>
+#include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "Engin5/Scripting/ScriptingEngine.h"
+#include "Engin5/Assets/AssetRef.h"
 
 Editor* Editor::s_EditorInstance = nullptr;
 using namespace Engin5;
+
 
 Editor::Editor()
 {
@@ -37,24 +42,11 @@ void Editor::OnStart()
 
     OnViewportResized(Vector2(300, 300));
 
-    m_ActiveScene = MakeRef<Scene>();
-    auto const entity = m_ActiveScene->CreateEntity();
-    m_ActiveScene->CreateEntity("Bob");
-    m_ActiveScene->CreateEntity("Mike");
-    auto const e = m_ActiveScene->CreateEntity("John");
-    e->AddComponent<PointLight>();
 
     auto stream = ScriptingEngine::Get().DumpCurrentTypes();
     std::ofstream file("Assets/Scripts/as.predefined");
     file << stream.str();
     file.close();
-
-    auto assembly = ScriptingEngine::Get().CompileAssembly(std::filesystem::current_path().parent_path() / "Editor" / "Assets" / "Scripts", "Game");
-    if (auto klass = assembly->GetClass("Test"); klass.has_value()) {
-        if (ScriptInstance script = klass->CreateInstance(); script.IsValid()) {
-            script.CallMethod("OnStart");
-        }
-    }
 
     m_ViewportWindow->OnStart();
     m_InspectorWindow->OnStart();
@@ -79,7 +71,18 @@ void Editor::OnUpdate(const f32 delta)
     m_Camera.OnUpdate(delta);
 
     if (Input::IsKeyPressed(KeyboardKey::G)) {
-        LOG_DEBUGF("Delta: {}", delta);
+        using namespace Dialogs;
+
+        // MessageBox box {
+        //     .Title = "Hello",
+        //     .Message = "Are you stupid?",
+        //     .Type = MessageType::Info,
+        //     .Action = MessageAction::YesNo
+        // };
+        // LOG_DEBUGF("Got: {}", magic_enum::enum_name(ShowMessageBox(box)));
+
+        // auto path = ShowFilePicker("Project", {"*.*"});
+        // LOG_DEBUGF("{}", path.extension().string());
     }
     ImGui::DockSpaceOverViewport();
 
@@ -87,8 +90,18 @@ void Editor::OnUpdate(const f32 delta)
     ImGui::BeginMainMenuBar();
     {
         if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Create Scene")) {
+                auto handle = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("Pepegas.scene");
+                m_ActiveScene = AssetManager::GetAsset<Scene>(handle);
+            }
+
+            ImGui::Separator();
             if (ImGui::MenuItem("Open..")) {
 
+            }
+            if (ImGui::MenuItem("Save..", "Ctrl+S")) {
+                Project::ActiveProject()->Save();
+                // Project::ActiveProject()->GetAssetManager()->SaveAsset();
             }
             ImGui::EndMenu();
         }
@@ -122,6 +135,7 @@ void Editor::OnUpdate(const f32 delta)
     m_ConsoleWindow->OnDraw();
     m_SceneWindow->OnDraw();
     m_ScriptsInspector->OnDraw();
+
 }
 
 void Editor::OnEvent(Event& event)

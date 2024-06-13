@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include <vulkan/vulkan_core.h>
-
 #include "Engin5/Core/Types.h"
 #include "Engin5/Renderer/CommandBuffer.h"
 #include "Engin5/Renderer/FrameBuffer.h"

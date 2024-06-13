@@ -4,6 +4,7 @@
 #include "Engin5/Core/UUID.h"
 #include "Generated/Entity_reflect_generated.h"
 
+class SceneSerializer;
 namespace Engin5
 {
 
@@ -25,6 +26,8 @@ namespace Engin5
     class Entity: REFLECT_BASE
     {
         friend class Scene;
+        friend SceneSerializer;
+        friend class SceneBinarySerializer;
 
         REFLECT_GENERATED_BODY()
     public:

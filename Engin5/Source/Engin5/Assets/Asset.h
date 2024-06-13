@@ -35,6 +35,6 @@ namespace Engin5
         AssetType m_Type{AssetType::Invalid};
         AssetHandle m_Handle{0};
 
-        friend class AssetManager;
+        friend class AssetManagerBase;
     };
 }
