@@ -2,7 +2,7 @@ target("Fussion")
     set_kind("static")
     set_languages("c++20")
     add_ldflags("cl::/debug:fastlink")
-    set_warnings("everything")
+    set_warnings("allextra")
 
     add_files (
         "Source/**.cpp",

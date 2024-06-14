@@ -1,9 +1,10 @@
 ﻿#include "ContentBrowser.h"
+#include "Serialization/AssetSerializer.h"
 
-#include "imgui.h"
 #include "Assets/Importers/TextureImporter.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
+#include "imgui.h"
 
 void ContentBrowser::OnStart()
 {
@@ -44,7 +45,6 @@ void ContentBrowser::OnDraw()
                     LOG_DEBUGF("Double clicked asset");
                 }
             }
-
 
             ImGui::TextUnformatted(entry.Name.c_str());
         }

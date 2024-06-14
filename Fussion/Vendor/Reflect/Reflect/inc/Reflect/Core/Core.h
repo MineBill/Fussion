@@ -3,7 +3,7 @@
 #include "Reflect/Core/Defines.h"
 #include <unordered_map>
 #include <string_view>
-
+#include <string>
 
 namespace Reflect
 {

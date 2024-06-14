@@ -93,7 +93,7 @@ namespace Reflect::CodeGeneration
         }
         file << "#elif defined(__GNUC__) || defined(__clang__)" << '\n';
         file << "#pragma GCC diagnostic push" << '\n';
-        for (const std::string& warning : {"unused-parameter", "unused-variable"})
+        for (const std::string& warning : {"unused-parameter", "unused-variable", "endif-labels"})
         {
             file << "#pragma GCC diagnostic ignored \"-W" << warning << "\"" << '\n';
         }

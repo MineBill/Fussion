@@ -58,7 +58,6 @@ namespace Fussion
 
         void AddComponent(Reflect::TypeId const& type_id);
 
-        REFLECT_PROPERTY()
         UUID GetId() const { return m_Handle; }
 
         REFLECT_PROPERTY()

@@ -3,13 +3,12 @@
 #include "Fussion/Core/UUID.h"
 #include "Fussion/Assets/Asset.h"
 
+class SceneSerializer;
+class SceneBinarySerializer;
 namespace Fussion
 {
     class Scene: public Asset
     {
-        friend class Entity;
-        friend class SceneSerializer;
-        friend class SceneBinarySerializer;
     public:
         Scene();
 
@@ -36,6 +35,10 @@ namespace Fussion
     private:
         std::string m_Name{};
         std::unordered_map<UUID, Entity> m_Entities{};
+
+        friend class Entity;
+        friend SceneSerializer;
+        friend SceneBinarySerializer;
     };
 }
 

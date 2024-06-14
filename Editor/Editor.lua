@@ -4,7 +4,7 @@ target "Editor"
 	set_rundir("$(projectdir)/Editor")
     set_default(true)
     add_rules("CompilerFlags")
-    set_warnings("all")
+    set_warnings("allextra")
 
     add_includedirs (
         "Source"
