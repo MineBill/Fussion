@@ -2,57 +2,69 @@
 #include "Fussion/Core/Types.h"
 #include <source_location>
 
-enum class LogLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
-    Fatal,
-};
-
-struct LogEntry
+namespace Fussion
 {
-    LogLevel Level;
-    std::string Message;
-    std::source_location Location;
-};
+    enum class LogLevel
+    {
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Fatal,
+    };
 
-class LogSink
-{
-    friend class Log;
-public:
-    virtual ~LogSink() = default;
-    virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
-protected:
-    class Log* m_Logger;
-};
+    struct LogEntry
+    {
+        LogLevel Level;
+        std::string Message;
+        std::source_location Location;
+    };
 
-class Log {
-    LogLevel m_Priority{};
-public:
-    explicit Log(LogLevel default_level = LogLevel::Info);
-    ~Log();
+    class LogSink
+    {
+        friend class Log;
 
-    void SetLogLevel(LogLevel level);
-    void Write(LogLevel level, std::string_view message, const std::source_location& loc = std::source_location::current()) const;
+    public:
+        virtual ~LogSink() = default;
+        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
 
-    void RegisterSink(Ref<LogSink> const& sink);
+    protected:
+        class Log* m_Logger;
+    };
 
-    LogLevel GetPriority() const { return m_Priority; }
+    class Log
+    {
+        LogLevel m_Priority{};
 
-    static Log* DefaultLogger();
-private:
-    std::vector<Ref<LogSink>> m_Sinks{};
-};
+    public:
+        explicit Log(LogLevel default_level = LogLevel::Info);
+        ~Log();
 
-#define LOG_FATAL(message) Log::DefaultLogger()->Write(LogLevel::Fatal, message)
-#define LOG_ERROR(message) Log::DefaultLogger()->Write(LogLevel::Error, message)
-#define LOG_WARN(message) Log::DefaultLogger()->Write(LogLevel::Warning, message)
-#define LOG_INFO(message) Log::DefaultLogger()->Write(LogLevel::Info, message)
-#define LOG_DEBUG(message) Log::DefaultLogger()->Write(LogLevel::Debug, message)
+        void SetLogLevel(LogLevel level);
+        void Write(LogLevel level, std::string_view message,
+                   const std::source_location& loc = std::source_location::current()) const;
 
-#define LOG_FATALF(fmt, ...) Log::DefaultLogger()->Write(LogLevel::Fatal, std::format(fmt, ##__VA_ARGS__))
-#define LOG_ERRORF(fmt, ...) Log::DefaultLogger()->Write(LogLevel::Error, std::format(fmt, ##__VA_ARGS__))
-#define LOG_WARNF(fmt, ...) Log::DefaultLogger()->Write(LogLevel::Warning, std::format(fmt, ##__VA_ARGS__))
-#define LOG_INFOF(fmt, ...) Log::DefaultLogger()->Write(LogLevel::Info, std::format(fmt, ##__VA_ARGS__))
-#define LOG_DEBUGF(fmt, ...) Log::DefaultLogger()->Write(LogLevel::Debug, std::format(fmt, ##__VA_ARGS__))
+        void RegisterSink(Ref<LogSink> const& sink);
+
+        LogLevel GetPriority() const { return m_Priority; }
+
+        static Log* DefaultLogger();
+
+    private:
+        std::vector<Ref<LogSink>> m_Sinks{};
+    };
+}
+
+namespace Fsn = Fussion;
+
+#define LOG_FATAL(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Fatal, message)
+#define LOG_ERROR(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Error, message)
+#define LOG_WARN(message)  Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Warning, message)
+#define LOG_INFO(message)  Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Info, message)
+#define LOG_DEBUG(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Debug, message)
+
+#define LOG_FATALF(fmt, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Fatal, std::format(fmt, ##__VA_ARGS__))
+#define LOG_ERRORF(fmt, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Error, std::format(fmt, ##__VA_ARGS__))
+#define LOG_WARNF(fmt, ...)  Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Warning, std::format(fmt, ##__VA_ARGS__))
+#define LOG_INFOF(fmt, ...)  Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Info, std::format(fmt, ##__VA_ARGS__))
+#define LOG_DEBUGF(fmt, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Debug, std::format(fmt, ##__VA_ARGS__))

@@ -14,5 +14,5 @@ private:
 
     bool m_InfoEnable{true}, m_WarningEnabled{true}, m_ErrorEnabled{true};
     bool m_AutoScroll{true};
-    std::vector<LogEntry> m_LogEntries;
+    std::vector<Fsn::LogEntry> m_LogEntries;
 };

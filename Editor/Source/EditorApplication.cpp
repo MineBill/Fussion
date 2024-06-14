@@ -89,7 +89,7 @@ void EditorApplication::OnEvent(Fussion::Event& event)
     Application::OnEvent(event);
 }
 
-void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
+void EditorApplication::OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc)
 {
     if (m_Editor)
         m_Editor->OnLogReceived(level, message, loc);

@@ -32,9 +32,9 @@ public:
     EditorStyle& GetStyle() { return m_Style; }
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 
-    void OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc);
+    void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc);
 
-    std::vector<LogEntry> GetLogEntries()
+    std::vector<Fsn::LogEntry> GetLogEntries()
     {
         auto entries = m_LogEntries;
         m_LogEntries.clear();
@@ -58,7 +58,7 @@ public:
 
 private:
     static Editor* s_EditorInstance;
-    std::vector<LogEntry> m_LogEntries{};
+    std::vector<Fsn::LogEntry> m_LogEntries{};
 
     Fsn::AssetRef<Fsn::Scene> m_ActiveScene;
     SceneRenderer m_SceneRenderer;

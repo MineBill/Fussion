@@ -61,18 +61,19 @@ void ConsoleWindow::OnDraw()
                 if (entry.Message.find(search_term) != std::string::npos) {
                     Vector4 text_color{};
                     switch (entry.Level) {
-                    case LogLevel::Debug:
-                    case LogLevel::Info:
+                    using enum Fsn::LogLevel;
+                    case Debug:
+                    case Info:
                         if (!m_InfoEnable) continue;
                         text_color = Vector4(1, 1, 1, 1);
                         break;
-                    case LogLevel::Warning:
+                    case Warning:
                         if (!m_WarningEnabled) continue;
                         text_color = Vector4(1, 1, 0, 1);
                         break;
-                    case LogLevel::Error:
+                    case Error:
                         if (!m_ErrorEnabled) continue;
-                    case LogLevel::Fatal:
+                    case Fatal:
                         text_color = Vector4(1, 0, 0, 1);
                         break;
                     }

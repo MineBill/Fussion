@@ -11,7 +11,7 @@ public:
     void OnStart() override;
     void OnUpdate(f32 delta) override;
     void OnEvent(Fussion::Event&) override;
-    void OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc) override;
+    void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     static EditorApplication* Instance() { return s_EditorInstance; }
 
