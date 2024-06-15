@@ -43,25 +43,26 @@
 #define transmute(type, expression) reinterpret_cast<type>(expression)
 #define require_results [[nodiscard]]
 
-template <typename F>
-struct Defer
+namespace Fussion
 {
-    F f;
-
-    Defer(F f) : f(f)
+    template <typename F>
+    struct Defer
     {
+        explicit Defer(F f) : m_F(f) {}
+        ~Defer() { m_F(); }
+
+    private:
+        F m_F;
+    };
+
+    template <typename F>
+    Defer<F> MakeDefer(F f)
+    {
+        return Defer<F>(f);
     }
-
-    ~Defer() { f(); }
-};
-
-template <typename F>
-Defer<F> MakeDefer(F f)
-{
-    return Defer<F>(f);
 }
 
 #define DEFER_1(x, y) x##y
 #define DEFER_2(x, y) DEFER_1(x, y)
 #define DEFER_3(x)    DEFER_2(x, __COUNTER__)
-#define defer(code)   auto DEFER_3(_defer_) = MakeDefer([&](){code;})
+#define defer(code)   auto DEFER_3(_defer_) = Fussion::MakeDefer([&](){code;})

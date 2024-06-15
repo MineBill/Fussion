@@ -44,6 +44,19 @@ public:
         };
 
         m_LoadedAssets[handle] = MakeRef<T>();
+
+        // Create the necessary directories, recursively.
+        auto base_path = path;
+        base_path.remove_filename();
+        if (!base_path.empty()) {
+            try {
+                std::filesystem::create_directories(base_path);
+            }
+            catch (std::exception& e) {
+                LOG_DEBUGF("Exception caught in create_directories: '{}'\npath {}", e.what(), path.string());
+            }
+        }
+
         SaveAsset(handle);
 
         Serialize();

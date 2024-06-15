@@ -5,6 +5,7 @@
 #include "Fussion/Scene/Scene.h"
 
 #include "kdlpp.h"
+#include "Fussion/OS/FileSystem.h"
 
 using kdl::Node;
 using kdl::Document;
@@ -35,6 +36,10 @@ void SceneSerializer::Save(AssetMetadata metadata, Fussion::Asset* asset)
     EASSERT(scene != nullptr);
 
     Node root{"Scene"};
+
+    Node name{"Name"};
+    name.args().emplace_back(scene->m_Name);
+    root.children().push_back(name);
     for (auto const& [handle, entity] : scene->m_Entities) {
         Node node{"Entity"};
 
@@ -52,16 +57,23 @@ void SceneSerializer::Save(AssetMetadata metadata, Fussion::Asset* asset)
         root.children().push_back(node);
     }
 
-    LOG_DEBUGF("Saving scene {}", metadata.Path.string());
+    Document doc{{root}};
+
+    auto full_path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
+    Fsn::FileSystem::WriteEntireFile(full_path, doc.to_string());
+    LOG_DEBUGF("Saving scene {}", full_path.string());
 }
 
 Fussion::Asset* SceneSerializer::Load(AssetMetadata metadata)
 {
-    auto scene = new Fussion::Scene();
-    auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
+    auto const scene = new Fussion::Scene();
+    auto const path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
     auto data = kdl::parse(path.string());
 
     if (auto root = FindNode(data.nodes(), "Scene")) {
+        if (auto const n_name = FindNode(data.nodes(), "Name")) {
+            scene->m_Name = *GetArgAt<std::string>(*n_name, 0, kdl::Type::String);
+        }
         for (auto const& node : root->children()) {
             if (node.name() == "Entity") {
                 auto handle = GetProperty<u64>(node, "Handle");

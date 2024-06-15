@@ -11,6 +11,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
+#include "EditorApplication.h"
 #include "Fussion/Assets/AssetRef.h"
 
 Editor* Editor::s_EditorInstance = nullptr;
@@ -28,12 +29,12 @@ Editor::Editor()
 void Editor::OnStart()
 {
     ZoneScoped;
-    m_ViewportWindow = MakePtr<ViewportWindow>(this);
-    m_InspectorWindow = MakePtr<InspectorWindow>(this);
-    m_ConsoleWindow = MakePtr<ConsoleWindow>(this);
-    m_SceneWindow = MakePtr<SceneTreeWindow>(this);
+    m_ViewportWindow   = MakePtr<ViewportWindow>(this);
+    m_InspectorWindow  = MakePtr<InspectorWindow>(this);
+    m_ConsoleWindow    = MakePtr<ConsoleWindow>(this);
+    m_SceneWindow      = MakePtr<SceneTreeWindow>(this);
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
-    m_ContentBrowser = MakePtr<ContentBrowser>(this);
+    m_ContentBrowser   = MakePtr<ContentBrowser>(this);
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
@@ -41,7 +42,6 @@ void Editor::OnStart()
     m_SceneRenderer.Init();
 
     OnViewportResized(Vector2(300, 300));
-
 
     auto stream = ScriptingEngine::Get().DumpCurrentTypes();
     std::ofstream file("Assets/Scripts/as.predefined");
@@ -93,8 +93,7 @@ void Editor::OnUpdate(const f32 delta)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::BeginMenu("New..")) {
                 if (ImGui::MenuItem("Create Scene")) {
-                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("Pepegas.scene");
-                    // m_ActiveScene = AssetManager::GetAsset<Scene>(handle);
+                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.kdl");
                 }
                 ImGui::EndMenu();
             }
@@ -111,6 +110,12 @@ void Editor::OnUpdate(const f32 delta)
 
             if (!m_ActiveScene)
                 ImGui::EndDisabled();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Quit")) {
+                Quit();
+            }
 
             ImGui::EndMenu();
         }
@@ -161,6 +166,11 @@ void Editor::OnDraw(Ref<CommandBuffer> cmd)
             .Position = m_Camera.GetPosition(),
         }
     });
+}
+
+void Editor::Quit()
+{
+    LOG_DEBUG("Quitting application");
 }
 
 void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)

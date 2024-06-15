@@ -29,6 +29,8 @@ public:
     void OnEvent(Fsn::Event&) override;
 
     void OnDraw(Ref<Fsn::CommandBuffer> cmd);
+    void Quit();
+
     EditorStyle& GetStyle() { return m_Style; }
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 
