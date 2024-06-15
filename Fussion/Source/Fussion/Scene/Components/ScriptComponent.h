@@ -2,14 +2,11 @@
 #include "Fussion/Scene/Component.h"
 #include "Scripting/ScriptAssembly.h"
 #include "Scripting/ScriptingEngine.h"
-#include "Generated/ScriptComponent_reflect_generated.h"
 
 namespace Fussion
 {
-    REFLECT_CLASS()
     class ScriptComponent: public Component
     {
-        REFLECT_GENERATED_BODY()
     public:
         ScriptComponent() = default;
         COMPONENT(ScriptComponent)

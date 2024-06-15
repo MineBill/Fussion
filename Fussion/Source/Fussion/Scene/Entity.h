@@ -2,7 +2,6 @@
 #include "Component.h"
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/UUID.h"
-#include "Generated/Entity_reflect_generated.h"
 
 class SceneSerializer;
 namespace Fussion
@@ -22,27 +21,22 @@ namespace Fussion
 
     class Scene;
 
-    REFLECT_CLASS()
-    class Entity: REFLECT_BASE
+    class Entity
     {
         friend class Scene;
         friend SceneSerializer;
         friend class SceneBinarySerializer;
 
-        REFLECT_GENERATED_BODY()
     public:
         Transform Transform;
 
         Entity() = default;
         Entity(UUID const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
 
-        REFLECT_PROPERTY()
         void SetParent(Entity const& parent);
 
-        REFLECT_PROPERTY()
         void AddChild(Entity const& child);
 
-        REFLECT_PROPERTY()
         void RemoveChild(Entity const& child);
 
         template<std::derived_from<Component> C>
@@ -56,14 +50,12 @@ namespace Fussion
             return component;
         }
 
-        void AddComponent(Reflect::TypeId const& type_id);
+        // void AddComponent(Reflect::TypeId const& type_id);
 
         UUID GetId() const { return m_Handle; }
 
-        REFLECT_PROPERTY()
         std::string const& GetName() const { return m_Name; }
 
-        REFLECT_PROPERTY()
         std::string& GetNameRef() { return m_Name; }
 
         std::map<UUID, Ref<Component>>& GetComponents() { return m_Components; }
@@ -75,8 +67,7 @@ namespace Fussion
             return m_Components.contains(id);
         }
 
-        REFLECT_PROPERTY()
-        bool HasComponent(Reflect::TypeId const& type_id) const;
+        // bool HasComponent(Reflect::TypeId const& type_id) const;
 
     private:
         void OnUpdate(f32 delta);

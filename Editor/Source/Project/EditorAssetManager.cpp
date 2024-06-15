@@ -9,6 +9,7 @@
 #include <kdlpp.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
+#include <fstream>
 
 #include "Fussion/OS/FileSystem.h"
 

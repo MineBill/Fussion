@@ -1,8 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/UUID.h"
-#include "Reflect/Reflect.h"
-#include "Generated/Asset_reflect_generated.h"
 
 namespace Fussion
 {
@@ -23,10 +21,8 @@ namespace Fussion
 
     using AssetHandle = UUID;
 
-    REFLECT_CLASS()
-    class Asset: REFLECT_BASE
+    class Asset
     {
-        REFLECT_GENERATED_BODY()
     public:
         require_results AssetType GetType() const { return m_Type; }
         require_results AssetHandle GetHandle() const { return m_Handle; }

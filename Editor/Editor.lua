@@ -32,9 +32,6 @@ target "Editor"
     add_deps("Fussion", "kdl")
     add_packages("glfw")
 
-    add_deps("HeaderTool")
-    add_rules("RunHeaderTool")
-
     if is_plat("windows") then
         set_runtimes("MDd")
         add_ldflags("/WHOLEARCHIVE:Fussion", {force = true})

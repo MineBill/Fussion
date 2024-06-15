@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Asset.h"
 #include "Fussion/Renderer/Image.h"
-#include "Generated/Texture2D_reflect_generated.h"
 
 namespace Fussion
 {
@@ -12,10 +11,8 @@ namespace Fussion
         f32 Aspect() const { return cast(f32, Width) / cast(f32, Height); }
     };
 
-    REFLECT_CLASS()
     class Texture2D: public Asset
     {
-        REFLECT_GENERATED_BODY()
     public:
         static Ref<Texture2D> Create(u8* data, Texture2DSpec spec);
 

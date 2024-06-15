@@ -29,11 +29,7 @@ target("Fussion")
     add_packages("glfw", "VMA")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
-    add_deps("Reflect")
     add_deps("AngelScript")
-
-    add_deps("HeaderTool")
-    add_rules("RunHeaderTool")
 
     set_pcxxheader("Source/e5pch.h")
 

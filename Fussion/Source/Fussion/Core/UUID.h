@@ -1,10 +1,8 @@
 ﻿#pragma once
 #include "Types.h"
-#include "Reflect/Reflect.h"
 
 namespace Fussion
 {
-    REFLECT_CLASS(REFLECT_LOOKUP_ONLY)
     class UUID
     {
     public:

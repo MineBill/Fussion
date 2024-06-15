@@ -3,11 +3,11 @@
 #include "ImGuiHelpers.h"
 #include "EditorApplication.h"
 
-#include "Fussion/Scene/Components/BaseComponents.h"
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
 
+#include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Scripting/ScriptingEngine.h"
 
@@ -64,60 +64,6 @@ void InspectorWindow::DrawEntity(Fussion::Entity& e)
 
     for (const auto& [id, component]: e.GetComponents()) {
         ZoneScopedN("Drawing Component");
-        auto instance = component->GetTypeInfo();
-
-        if (ImGui::CollapsingHeader(instance.GetType().GetPrettyTypeName().data())) {
-            ImGui::Separator();
-            for (auto const& member : instance.GetMemberInfosWithFlag("ShowInEditor")) {
-                ZoneScopedN("Drawing Component Member");
-                ImGuiH::BeginProperty(member.GetName().data());
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(member.GetName().data());
-
-                ImGui::TableNextColumn();
-                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                if (auto* b = member.GetMemberPointer<bool>(); b) {
-                    ImGui::Checkbox("##bool", b);
-                }
-                else if (auto* number32 = member.GetMemberPointer<s32>()) {
-                    ImGui::InputInt("##s32", number32);
-                }
-                else if (auto* number64 = member.GetMemberPointer<s64>()) {
-                    ImGui::InputInt("##s32", transmute(s32*, number64));
-                }
-                else if (auto* numberf32 = member.GetMemberPointer<f32>()) {
-                    if (auto range = member.GetMeta("Range"); range.IsValid()) {
-                        auto [min, max] = ParseRangeMeta(range.GetValue());
-                        ImGui::SliderFloat("##f32", numberf32, min, max);
-                    } else {
-                        ImGui::InputFloat("##f32", numberf32);
-                    }
-                }
-
-                if (auto* string = member.GetMemberPointer<std::string>(); string) {
-                    if (member.HasFlag("ScriptRef")) {
-                        if (ImGui::Button("Select Script")) {
-                        }
-                    } else {
-                        ImGui::InputText("##string", string);
-                    }
-
-                    if constexpr (std::is_destructible_v<int>) {
-
-                    }
-                }
-
-                ImGuiH::EndProperty();
-            }
-            ImGui::Separator();
-        }
-
-        for (const auto& function : instance.GetFunctionInfosWithFlag("ShowInEditor")) {
-            if (function.IsValid()) {
-                if (ImGui::Button(std::format("Invoke '{}'", function.GetName()).c_str()))
-                    (void)function.Invoke();
-            }
-        }
     }
 
     if (ImGuiH::ButtonCenteredOnLine("Add Component")) {
@@ -125,13 +71,13 @@ void InspectorWindow::DrawEntity(Fussion::Entity& e)
     }
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
-        for (auto const& info : Reflect::TypeInfoRegistry::GetAllTypes()) {
-            if (info.IsDerivedFrom<Component>() && !e.HasComponent(info.GetTypeId())) {
-                if (ImGui::MenuItem(std::format("{}", info.GetType().GetPrettyTypeName()).c_str())) {
-                    e.AddComponent(info.GetTypeId());
-                }
-            }
-        }
+        // for (auto const& info : Reflect::TypeInfoRegistry::GetAllTypes()) {
+        //     if (info.IsDerivedFrom<Component>() && !e.HasComponent(info.GetTypeId())) {
+        //         if (ImGui::MenuItem(std::format("{}", info.GetType().GetPrettyTypeName()).c_str())) {
+        //             e.AddComponent(info.GetTypeId());
+        //         }
+        //     }
+        // }
         ImGui::EndPopup();
     }
 }

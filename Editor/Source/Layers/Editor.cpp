@@ -43,10 +43,10 @@ void Editor::OnStart()
 
     OnViewportResized(Vector2(300, 300));
 
-    auto stream = ScriptingEngine::Get().DumpCurrentTypes();
-    std::ofstream file("Assets/Scripts/as.predefined");
-    file << stream.str();
-    file.close();
+    // auto stream = ScriptingEngine::Get().DumpCurrentTypes();
+    // std::ofstream file("Assets/Scripts/as.predefined");
+    // file << stream.str();
+    // file.close();
 
     m_ViewportWindow->OnStart();
     m_InspectorWindow->OnStart();
