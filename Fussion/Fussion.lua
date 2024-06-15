@@ -26,7 +26,7 @@ target("Fussion")
     add_includedirs("Impl", {public = true})
 	add_includedirs("Vendor/entt/src", {public = true})
 
-    add_packages("glfw", "VMA")
+    add_packages("glfw", "VMA", "rttr")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")

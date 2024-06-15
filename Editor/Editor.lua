@@ -30,7 +30,7 @@ target "Editor"
     add_files("Vendor/imgui/*.cpp")
 
     add_deps("Fussion", "kdl")
-    add_packages("glfw")
+    add_packages("glfw", "rttr")
 
     if is_plat("windows") then
         set_runtimes("MDd")
