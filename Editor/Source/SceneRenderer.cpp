@@ -1,5 +1,7 @@
 ﻿#include "SceneRenderer.h"
 
+#include "Assets/Importers/TextureImporter.h"
+
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
@@ -7,6 +9,7 @@
 #include "Fussion/Renderer/Device.h"
 #include "Fussion/Renderer/Renderer.h"
 #include "Fussion/Renderer/ShaderCompiler.h"
+#include "Project/Project.h"
 
 void SceneRenderer::Init()
 {
@@ -81,6 +84,12 @@ void SceneRenderer::Init()
             .Count = 1,
             .Stages = ShaderType::Vertex | ShaderType::Fragment,
         },
+        ResourceUsage{
+            .Label = "Texture",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+        },
     };
     auto layout = Device::Instance()->CreateResourceLayout(resource_usages);
     auto result = m_ResourcePool->Allocate(layout);
@@ -90,6 +99,8 @@ void SceneRenderer::Init()
     }
 
     m_GlobalResource = result.TakeValue();
+
+    m_TestTexture = TextureImporter::LoadTextureFromFile(std::filesystem::current_path() / "Assets" / "coords.png");
 }
 
 void SceneRenderer::Resize(const Vector2 new_size)
@@ -116,6 +127,7 @@ void SceneRenderer::Render(Ref<Fussion::CommandBuffer> const& cmd, RenderPacket 
         cmd->UseShader(m_TriangleShader);
         cmd->BindResource(m_GlobalResource, m_TriangleShader, 0);
         cmd->BindUniformBuffer(m_GlobalData.GetBuffer(), m_GlobalResource, 0);
+        cmd->BindImage(m_TestTexture->GetImage(), m_GlobalResource, 1);
         cmd->Draw(6, 1);
     }
     cmd->EndRenderPass(m_SceneRenderPass);

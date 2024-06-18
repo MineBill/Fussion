@@ -162,6 +162,7 @@ namespace Fussion
                     }
                 }
             }
+
         }
 
         {
@@ -185,6 +186,32 @@ namespace Fussion
                         auto& usage = metadata.Uniforms[set][binding];
                         usage.Label = input.name;
                         usage.Type = ResourceType::UniformBuffer;
+                        usage.Count = 1;
+                        usage.Stages = ShaderType::Fragment;
+                    } else {
+                        auto& usage = metadata.Uniforms[set][binding];
+                        usage.Stages = usage.Stages | ShaderType::Fragment;
+                    }
+                }
+            }
+
+            for (auto const& image: resources.sampled_images) {
+                auto set = reflection_compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
+                auto binding = reflection_compiler.get_decoration(image.id, spv::DecorationBinding);
+
+                if (!metadata.Uniforms.contains(set)) {
+                    if (!metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = metadata.Uniforms[set][binding];
+                        usage.Label = image.name;
+                        usage.Type = ResourceType::CombinedImageSampler;
+                        usage.Count = 1;
+                        usage.Stages = ShaderType::Fragment;
+                    }
+                } else {
+                    if (!metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = metadata.Uniforms[set][binding];
+                        usage.Label = image.name;
+                        usage.Type = ResourceType::CombinedImageSampler;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
                     } else {

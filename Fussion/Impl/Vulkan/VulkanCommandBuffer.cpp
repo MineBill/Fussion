@@ -3,6 +3,8 @@
 
 #include "Common.h"
 #include "VulkanFrameBuffer.h"
+#include "VulkanImage.h"
+#include "VulkanImageView.h"
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
 #include "Resources/VulkanResourcePool.h"
@@ -11,7 +13,7 @@ Fussion::VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandB
 {
     Specification = spec;
 
-    auto ci = VkCommandBufferAllocateInfo {
+    auto ci = VkCommandBufferAllocateInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .commandPool = device->CommandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
@@ -23,7 +25,7 @@ Fussion::VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandB
 
 void Fussion::VulkanCommandBuffer::Begin(CommandBufferType type)
 {
-    auto begin_info = VkCommandBufferBeginInfo {
+    auto begin_info = VkCommandBufferBeginInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
     };
 
@@ -52,30 +54,30 @@ void Fussion::VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_
     std::vector<VkClearValue> clear_values;
     for (const auto& attachment : render_pass->GetSpec().Attachments) {
         if (Image::IsDepthFormat(attachment.Format)) {
-            clear_values.push_back(VkClearValue {
-                .depthStencil = VkClearDepthStencilValue {
+            clear_values.push_back(VkClearValue{
+                .depthStencil = VkClearDepthStencilValue{
                     .depth = attachment.ClearDepth,
                     .stencil = attachment.ClearStencil,
                 },
             });
         } else {
-            clear_values.push_back(VkClearValue {
-                .color = VkClearColorValue {
-                    .float32 = {attachment.ClearColor[0], attachment.ClearColor[1], attachment.ClearColor[2], attachment.ClearColor[3]},
+            clear_values.push_back(VkClearValue{
+                .color = VkClearColorValue{
+                    .float32 = { attachment.ClearColor[0], attachment.ClearColor[1], attachment.ClearColor[2], attachment.ClearColor[3] },
                 },
             });
         }
     }
     const auto fb_spec = frame_buffer->GetSpec();
-    auto info = VkRenderPassBeginInfo {
+    auto info = VkRenderPassBeginInfo{
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .renderPass = render_pass->GetRenderHandle<VkRenderPass>(),
         .framebuffer = frame_buffer->GetRenderHandle<VkFramebuffer>(),
-        .renderArea = VkRect2D {
-            .offset = VkOffset2D {
+        .renderArea = VkRect2D{
+            .offset = VkOffset2D{
                 .x = 0, .y = 0,
             },
-            .extent = VkExtent2D {
+            .extent = VkExtent2D{
                 .width = CAST(u32, fb_spec.Width),
                 .height = CAST(u32, fb_spec.Height),
             },
@@ -105,12 +107,12 @@ void Fussion::VulkanCommandBuffer::UseShader(Ref<Shader> const& shader)
 
 void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
 {
-    auto scissor = VkRect2D {
-        .offset = VkOffset2D {
+    auto scissor = VkRect2D{
+        .offset = VkOffset2D{
             .x = CAST(s32, size.x),
             .y = CAST(s32, size.y),
         },
-        .extent = VkExtent2D {
+        .extent = VkExtent2D{
             .width = CAST(u32, size.z),
             .height = CAST(u32, size.w),
         },
@@ -121,7 +123,7 @@ void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
 
 void Fussion::VulkanCommandBuffer::SetViewport(const Vector2 size)
 {
-    auto viewport = VkViewport {
+    auto viewport = VkViewport{
         .x = 0,
         .y = size.y > 0 ? 0 : -size.y,
         .width = size.x,
@@ -165,15 +167,38 @@ void Fussion::VulkanCommandBuffer::BindResource(Ref<Resource> const& resource, R
     vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, location, 1, sets, 0, nullptr);
 }
 
+void Fussion::VulkanCommandBuffer::BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location)
+{
+    auto vk_image = image->As<VulkanImage>();
+    auto image_info = VkDescriptorImageInfo{
+        .sampler = vk_image->Sampler->GetRenderHandle<VkSampler>(),
+        .imageView = vk_image->View->GetRenderHandle<VkImageView>(),
+        .imageLayout = ImageLayoutToVulkan(vk_image->Specification.Layout != ImageLayout::Undefined ? vk_image->Specification.Layout : vk_image->Specification.FinalLayout)
+    };
+
+    auto write = VkWriteDescriptorSet{
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet = resource->GetRenderHandle<VkDescriptorSet>(),
+        .dstBinding = location,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        // .pBufferInfo = &buffer_info,
+        .pImageInfo = &image_info,
+    };
+
+    vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
+}
+
 void Fussion::VulkanCommandBuffer::BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location)
 {
-    auto buffer_info = VkDescriptorBufferInfo {
+    auto buffer_info = VkDescriptorBufferInfo{
         .buffer = buffer->GetRenderHandle<VkBuffer>(),
         .offset = 0,
         .range = VK_WHOLE_SIZE,
     };
 
-    auto write = VkWriteDescriptorSet {
+    auto write = VkWriteDescriptorSet{
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .dstSet = resource->GetRenderHandle<VkDescriptorSet>(),
         .dstBinding = location,

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Renderer/CommandBuffer.h"
 #include "Fussion/Renderer/FrameBuffer.h"
@@ -39,6 +40,7 @@ private:
     Ref<Fussion::ResourcePool> m_ResourcePool{};
     Ref<Fussion::Resource> m_GlobalResource{};
     Fussion::UniformBuffer<GlobalData> m_GlobalData;
+    Ref<Fussion::Texture2D> m_TestTexture;
 
     Vector2 m_RenderArea{};
     Ref<Fussion::RenderPass> m_SceneRenderPass{};
