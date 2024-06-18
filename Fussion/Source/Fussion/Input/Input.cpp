@@ -84,7 +84,7 @@ namespace Fussion
     }
 
     f32 Input::GetAxis(KeyboardKey positive, KeyboardKey negative) {
-        return cast(f32, IsKeyDown(positive)) - cast(f32, IsKeyDown(negative));
+        return CAST(f32, IsKeyDown(positive)) - CAST(f32, IsKeyDown(negative));
     }
 
     bool Input::IsMouseButtonDown(MouseButton button)

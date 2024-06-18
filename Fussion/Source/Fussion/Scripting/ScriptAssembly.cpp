@@ -48,7 +48,7 @@ namespace Fussion
             ScriptProperty prop;
 
             const char* name;
-            type->GetProperty(i, &name, transmute(int*, &prop.TypeId), &prop.IsPrivate, &prop.IsProtected, &prop.Offset, &prop.IsReference);
+            type->GetProperty(i, &name, TRANSMUTE(int*, &prop.TypeId), &prop.IsPrivate, &prop.IsProtected, &prop.Offset, &prop.IsReference);
 
             m_Properties[name] = prop;
         }

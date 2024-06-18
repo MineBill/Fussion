@@ -61,7 +61,7 @@ namespace Fussion
 
         Clock clock;
         while (!m_Window->ShouldClose()) {
-            const auto delta = cast(f32, clock.Reset()) / 1000.0f;
+            const auto delta = CAST(f32, clock.Reset()) / 1000.0f;
             m_Window->Update();
             OnUpdate(delta);
 

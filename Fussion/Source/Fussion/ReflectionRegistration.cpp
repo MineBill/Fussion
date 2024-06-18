@@ -8,11 +8,6 @@
 
 #include <print>
 
-class Empty
-{
-
-};
-
 namespace
 {
     void Register()
@@ -50,32 +45,39 @@ namespace
 
         // region Components
 
+        using meta::constructor_policy::as_raw_pointer;
+
         meta::class_<PointLight>(meta::metadata_()
             ("Name"s, "PointLight"s))
-            .constructor_<>(meta::constructor_policy::as_raw_pointer)
+            .constructor_<>(as_raw_pointer)
             .constructor_<Entity*>(meta::constructor_policy::as_raw_pointer)
         ;
 
+        using meta::member_policy::as_pointer;
+
         meta::class_<Camera>(meta::metadata_()
             ("Name"s, "Camera"s))
-            .constructor_<>(meta::constructor_policy::as_raw_pointer)
-            .constructor_<Entity*>(meta::constructor_policy::as_raw_pointer)
-            .member_("FieldOfView", &Camera::FieldOfView, meta::metadata_()
+            .constructor_<>(as_raw_pointer)
+            .constructor_<Entity*>(as_raw_pointer)
+            .member_("FieldOfView", &Camera::FieldOfView, as_pointer, meta::metadata_()
                 ("Range"s, "1, 100"s)
             )
+            .member_("SignedType", &Camera::SignedType, as_pointer)
+            .member_("UnsignedType", &Camera::UnsignedType, as_pointer)
+            .member_("AStringToo", &Camera::AStringToo, as_pointer)
         ;
 
         meta::class_<MeshRenderer>(meta::metadata_()
             ("Name"s, "MeshRenderer"s))
-            .constructor_<>(meta::constructor_policy::as_raw_pointer)
-            .constructor_<Entity*>(meta::constructor_policy::as_raw_pointer)
-            .member_("Mesh", &MeshRenderer::Mesh)
+            .constructor_<>(as_raw_pointer)
+            .constructor_<Entity*>(as_raw_pointer)
+            .member_("Mesh", &MeshRenderer::Mesh, as_pointer)
         ;
 
         meta::class_<ScriptComponent>(meta::metadata_()
             ("Name"s, "ScriptComponent"s))
-            .constructor_<>(meta::constructor_policy::as_raw_pointer)
-            .constructor_<Entity*>(meta::constructor_policy::as_raw_pointer)
+            .constructor_<>(as_raw_pointer)
+            .constructor_<Entity*>(as_raw_pointer)
         ;
 
         meta::static_scope_("Components")

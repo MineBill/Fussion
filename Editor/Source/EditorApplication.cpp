@@ -30,9 +30,9 @@ void EditorApplication::OnStart()
     Log::DefaultLogger()->RegisterSink(FileSink::Create("Pepegas.log"));
     LOG_DEBUGF("Current path is: {}", std::filesystem::current_path().string());
 
-    auto path = Dialogs::ShowFilePicker("Project File", {"*.kdl"});
+    auto path = Dialogs::ShowFilePicker("Project File", {"*.fsnproj"});
     auto loaded = Project::Load(path);
-    EASSERT(loaded, "Project loading must not fail, for now.");
+    VERIFY(loaded, "Project loading must not fail, for now.");
 
     s_EditorInstance = this;
     m_Editor = MakePtr<Editor>();
@@ -65,7 +65,7 @@ void EditorApplication::OnUpdate(const f32 delta)
     }
 
     cmd->Begin();
-    auto window_size = Vector2{cast(f32, m_Window->GetWidth()), cast(f32, m_Window->GetHeight())};
+    auto window_size = Vector2{CAST(f32, m_Window->GetWidth()), CAST(f32, m_Window->GetHeight())};
 
     m_Editor->OnDraw(cmd);
 
@@ -86,7 +86,7 @@ void EditorApplication::OnUpdate(const f32 delta)
 void EditorApplication::OnEvent(Fussion::Event& event)
 {
     using namespace Fussion;
-    Application::OnEvent(event);
+    m_Editor->OnEvent(event);
 }
 
 void EditorApplication::OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc)

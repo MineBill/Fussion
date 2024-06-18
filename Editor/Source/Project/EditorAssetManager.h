@@ -16,6 +16,7 @@ struct AssetMetadata
     bool IsVirtual = false;
     bool DontSerialize = false;
 
+    Fussion::AssetHandle Handle;
     bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };
 
@@ -41,6 +42,7 @@ public:
             .Path = path,
             .IsVirtual = false,
             .DontSerialize = false,
+            .Handle = handle,
         };
 
         m_LoadedAssets[handle] = MakeRef<T>();

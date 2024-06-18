@@ -76,7 +76,7 @@ namespace Fussion
         auto instance_create_info = VkInstanceCreateInfo {
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             .pApplicationInfo = &application_info,
-            .enabledExtensionCount = cast(u32, extensions.size()),
+            .enabledExtensionCount = CAST(u32, extensions.size()),
             .ppEnabledExtensionNames = extensions.data(),
         };
 
@@ -104,7 +104,7 @@ namespace Fussion
         VK_CHECK(vkCreateInstance(&instance_create_info, nullptr, &Instance))
         volkLoadInstance(Instance);
 
-        VK_CHECK(glfwCreateWindowSurface(Instance, cast(GLFWwindow*, window.NativeHandle()), nullptr, &Surface));
+        VK_CHECK(glfwCreateWindowSurface(Instance, CAST(GLFWwindow*, window.NativeHandle()), nullptr, &Surface));
     }
 
     bool VulkanInstance::CheckValidationLayers()

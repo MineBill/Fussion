@@ -1,6 +1,6 @@
 target "Editor"
     set_kind("binary")
-    set_languages("c++20")
+    set_languages("c++23")
 	set_rundir("$(projectdir)/Editor")
     set_default(true)
     add_rules("CompilerFlags")
@@ -30,7 +30,7 @@ target "Editor"
     add_files("Vendor/imgui/*.cpp")
 
     add_deps("Fussion", "kdl")
-    add_packages("glfw", "rttr")
+    add_packages("glfw")
 
     if is_plat("windows") then
         set_runtimes("MDd")

@@ -120,7 +120,7 @@ namespace Fussion
 
         auto& window = Application::Instance()->GetWindow();
         const auto swapchain_spec = SwapChainSpecification {
-            .Size = {cast(f32, window.GetWidth()), cast(f32, window.GetHeight())},
+            .Size = {CAST(f32, window.GetWidth()), CAST(f32, window.GetHeight())},
             .PresentMode = VideoPresentMode::Immediate,
             .Format = ImageFormat::B8G8R8A8_UNORM,
         };

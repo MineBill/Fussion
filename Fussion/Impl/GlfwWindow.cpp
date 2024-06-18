@@ -36,8 +36,8 @@ namespace Fussion
             auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             SetPosition({
-                cast(f32, mode->width) / 2.0 - cast(f32, options.InitialWidth) / 2.0,
-                cast(f32, mode->height) / 2.0 - cast(f32, options.InitialHeight) / 2.0
+                CAST(f32, mode->width) / 2.0 - CAST(f32, options.InitialWidth) / 2.0,
+                CAST(f32, mode->height) / 2.0 - CAST(f32, options.InitialHeight) / 2.0
             });
         }
 
@@ -45,16 +45,16 @@ namespace Fussion
 
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr) // NOLINT(bugprone-lambda-function-name)
-            me->m_Width = cast(u32, width);
-            me->m_Height = cast(u32, height);
+            VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
+            me->m_Width = CAST(u32, width);
+            me->m_Height = CAST(u32, height);
             auto event = WindowResized(width, height);
             me->m_EventCallback(event);
         });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow *window, int glfw_key, int, int action, int) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr) // NOLINT(bugprone-lambda-function-name)
+            VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
 
             auto key = GlfwKeyToFussion(glfw_key);
             switch (action) {
@@ -71,18 +71,18 @@ namespace Fussion
                 me->m_EventCallback(event);
             } break;
             default:
-                EASSERT(false, "Should never reach this assert")
+                VERIFY(false, "Should never reach this assert")
             }
         });
 
         glfwSetCursorPosCallback(m_Window, [](GLFWwindow *window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr, "")
+            VERIFY(me != nullptr, "")
 
             auto rel_x = x - me->m_OldX;
             auto rel_y = y - me->m_OldY;
-            me->m_OldX = cast(f32, x);
-            me->m_OldY = cast(f32, y);
+            me->m_OldX = CAST(f32, x);
+            me->m_OldY = CAST(f32, y);
 
             auto event = MouseMoved(x, y, rel_x, rel_y);
             me->m_EventCallback(event);
@@ -90,7 +90,7 @@ namespace Fussion
 
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow *window, int button, int action, int) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr, "")
+            VERIFY(me != nullptr, "")
 
             auto mouse_button = GlfwMouseButtonToFussion(button);
             switch (action) {
@@ -107,13 +107,13 @@ namespace Fussion
                 me->m_EventCallback(event);
             } break;
             default:
-                EASSERT(false, "Should never reach this assert") // NOLINT(bugprone-lambda-function-name)
+                VERIFY(false, "Should never reach this assert") // NOLINT(bugprone-lambda-function-name)
             }
         });
 
         glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow *window, int maximized) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
+            VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (maximized == 1) {
                 me->m_IsMinimized = false;
@@ -124,7 +124,7 @@ namespace Fussion
 
         glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int minimized) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
+            VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (minimized == 1) {
                 me->m_IsMinimized = true;
@@ -135,9 +135,9 @@ namespace Fussion
 
         glfwSetScrollCallback(m_Window, [](GLFWwindow *window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(window));
-            EASSERT(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
+            VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
-            MouseWheelMoved event(cast(f32, x), cast(f32, y));
+            MouseWheelMoved event(CAST(f32, x), CAST(f32, y));
             me->m_EventCallback(event);
         });
     }
@@ -182,14 +182,14 @@ namespace Fussion
     {
         s32 height;
         glfwGetFramebufferSize(m_Window, nullptr, &height);
-        return cast(u32, height);
+        return CAST(u32, height);
     }
 
     u32 GlfwWindow::GetWidth() const
     {
         s32 width;
         glfwGetFramebufferSize(m_Window, &width, nullptr);
-        return cast(u32, width);
+        return CAST(u32, width);
     }
 
     void* GlfwWindow::NativeHandle() const
@@ -199,7 +199,7 @@ namespace Fussion
 
     void GlfwWindow::SetPosition(Vector2 position) const
     {
-        glfwSetWindowPos(m_Window, cast(s32, position.x), cast(s32, position.y));
+        glfwSetWindowPos(m_Window, CAST(s32, position.x), CAST(s32, position.y));
     }
 
     KeyboardKey GlfwKeyToFussion(int key)

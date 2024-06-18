@@ -91,7 +91,7 @@ namespace Fussion
 
         const auto ci = VkPipelineLayoutCreateInfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-            .setLayoutCount = cast(u32, vk_layouts.size()),
+            .setLayoutCount = CAST(u32, vk_layouts.size()),
             .pSetLayouts = vk_layouts.data(),
             .pushConstantRangeCount = 0,
             .pPushConstantRanges = nullptr,
@@ -106,7 +106,7 @@ namespace Fussion
     {
         return {
             .binding = 0,
-            .stride = cast(u32, layout.Stride),
+            .stride = CAST(u32, layout.Stride),
             .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
         };
     }
@@ -146,7 +146,7 @@ namespace Fussion
                 .location = i,
                 .binding = 0,
                 .format = VertexElementTypeToVulkan(layout.Attributes[i].Type),
-                .offset = cast(u32, layout.Attributes[i].Offset),
+                .offset = CAST(u32, layout.Attributes[i].Offset),
             });
         }
         return ret;
@@ -191,7 +191,7 @@ namespace Fussion
             .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
             .vertexBindingDescriptionCount = !spec.AttributeLayout.Attributes.empty() ? 1_u32 : 0_u32,
             .pVertexBindingDescriptions = &binding_desc,
-            .vertexAttributeDescriptionCount = cast(u32, attributes_desc.size()),
+            .vertexAttributeDescriptionCount = CAST(u32, attributes_desc.size()),
             .pVertexAttributeDescriptions = attributes_desc.data(),
         };
 
@@ -209,7 +209,7 @@ namespace Fussion
             blend_attachment_states.push_back(config.ColorBlendAttachment);
         }
 
-        config.ColorBlendState.attachmentCount = cast(u32, blend_attachment_states.size());
+        config.ColorBlendState.attachmentCount = CAST(u32, blend_attachment_states.size());
         config.ColorBlendState.pAttachments = blend_attachment_states.data();
 
         auto viewport = VkViewport{};
@@ -243,7 +243,7 @@ namespace Fussion
 
         VK_CHECK(vkCreateGraphicsPipelines(device->Handle, nullptr, 1, &pipeline_ci, nullptr, &self->m_Handle));
 
-        device->SetHandleName(transmute(u64, self->m_Handle), VK_OBJECT_TYPE_PIPELINE, spec.Label);
+        device->SetHandleName(TRANSMUTE(u64, self->m_Handle), VK_OBJECT_TYPE_PIPELINE, spec.Label);
 
         return self;
     }

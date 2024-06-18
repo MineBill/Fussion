@@ -107,10 +107,10 @@ namespace Fussion
         auto fb_ci = VkFramebufferCreateInfo {
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .renderPass = m_RenderPass->GetRenderHandle<VkRenderPass>(),
-            .attachmentCount = cast(u32, attachments.size()),
+            .attachmentCount = CAST(u32, attachments.size()),
             .pAttachments = attachments.data(),
-            .width = cast(u32, m_Specification.Width),
-            .height = cast(u32, m_Specification.Height),
+            .width = CAST(u32, m_Specification.Width),
+            .height = CAST(u32, m_Specification.Height),
             .layers = 1,
         };
 
@@ -119,8 +119,8 @@ namespace Fussion
 
     void VulkanFrameBuffer::Resize(Vector2 new_size)
     {
-        m_Specification.Width = cast(s32, new_size.x);
-        m_Specification.Height = cast(s32, new_size.y);
+        m_Specification.Width = CAST(s32, new_size.x);
+        m_Specification.Height = CAST(s32, new_size.y);
 
         Destroy();
         Invalidate();

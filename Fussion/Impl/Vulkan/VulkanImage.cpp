@@ -21,12 +21,12 @@ namespace Fussion
             .imageType = VK_IMAGE_TYPE_2D,
             .format = ImageFormatToVulkan(spec.Format),
             .extent = VkExtent3D {
-                .width = cast(u32, spec.Width),
-                .height = cast(u32, spec.Height),
+                .width = CAST(u32, spec.Width),
+                .height = CAST(u32, spec.Height),
                 .depth = 1,
             },
             .mipLevels = 1,
-            .arrayLayers = cast(u32, spec.LayerCount),
+            .arrayLayers = CAST(u32, spec.LayerCount),
             .samples = SampleCountToVulkan(spec.Samples),
             .tiling = VK_IMAGE_TILING_OPTIMAL,
             .usage = ImageUsageToVulkan(spec.Usage),
@@ -82,7 +82,7 @@ namespace Fussion
         {
             .Label = "Buffer For Image Copy",
             .Usage = BufferUsage::TransferSource,
-            .Size = cast(s32, data.size_bytes()),
+            .Size = CAST(s32, data.size_bytes()),
             .Mapped = true,
         });
 
@@ -258,7 +258,7 @@ namespace Fussion
             return VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
         }
 
-        PANIC("Invalid image layout '{}'", cast(s32, layout))
+        PANIC("Invalid image layout '{}'", CAST(s32, layout))
         return {};
     }
 }

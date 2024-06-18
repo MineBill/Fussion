@@ -3,7 +3,7 @@
 
 namespace Fussion
 {
-    template<typename T>
+    template<class T>
     class AssetRef
     {
         static_assert(std::derived_from<T, Asset>, "T must be of type Asset!");
@@ -16,7 +16,7 @@ namespace Fussion
 
         T* Get()
         {
-            return cast(T*, m_AssetManager->GetAsset(m_Handle, T::GetStaticType()));
+            return CAST(T*, m_AssetManager->GetAsset(m_Handle, T::GetStaticType()));
         }
 
         require_results bool IsValid() const { return m_AssetManager != nullptr; }

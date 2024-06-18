@@ -50,7 +50,7 @@ namespace Fussion::Dialogs
 
         a |= MB_SYSTEMMODAL;
 
-        auto const handle = glfwGetWin32Window(transmute(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
+        auto const handle = glfwGetWin32Window(TRANSMUTE(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
         int const answer = MessageBoxW(handle, w_message.c_str(), w_title.c_str(), a);
         switch (answer) {
         case IDOK:
@@ -69,8 +69,8 @@ namespace Fussion::Dialogs
 
     std::filesystem::path ShowFilePicker(std::string_view name, std::vector<std::string_view> supported_files)
     {
-        auto handle = glfwGetWin32Window(cast(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
-        EASSERT(handle != nullptr);
+        auto handle = glfwGetWin32Window(CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
+        VERIFY(handle != nullptr);
 
         std::wstring file;
         file.resize(256);

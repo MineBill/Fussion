@@ -1,15 +1,12 @@
 #include "Project.h"
 
-#include "kdlpp.h"
 #include "Fussion/OS/FileSystem.h"
 #include <magic_enum/magic_enum.hpp>
 
+#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Core/Result.h"
-#include "Serialization/Helpers.h"
 #include "Serialization/AssetSerializer.h"
-
-using kdl::Document;
-using kdl::Node;
+#include "Fussion/Serialization/Json.h"
 
 Ref<Project> Project::s_ActiveProject;
 
@@ -26,32 +23,19 @@ bool Project::Load(std::filesystem::path path)
 
     auto const data = FileSystem::ReadEntireFile(path);
 
-    auto doc = kdl::parse(data);
+    auto j = json::parse(data, nullptr, true, true);
 
     s_ActiveProject->m_ProjectPath = path;
     auto const base = path.parent_path();
 
-    if (auto proj = FindNode(doc.nodes(), "Project")) {
-        if (auto a = FindNode(proj->children(), "AssetsFolder")) {
-            if (auto value = GetArgAt<std::string>(*a, 0, kdl::Type::String)) {
-                s_ActiveProject->m_AssetsFolderPath = base / *value;
-            }
-        }
-
-        if (auto a = FindNode(proj->children(), "CacheFolder")) {
-            if (auto value = GetArgAt<std::string>(*a, 0, kdl::Type::String)) {
-                s_ActiveProject->m_CacheFolderPath = base / *value;
-            }
-        }
-
-        if (auto a = FindNode(proj->children(), "AssetRegistry")) {
-            if (auto value = GetArgAt<std::string>(*a, 0, kdl::Type::String)) {
-                s_ActiveProject->m_AssetRegistryPath = base / *value;
-            }
-        }
-    } else {
-        LOG_ERRORF("Could not find Project node in project file");
-        return false;
+    if (j.contains("AssetsFolder")) {
+        s_ActiveProject->m_AssetsFolderPath = base / j["AssetsFolder"].get<std::string>();
+    }
+    if (j.contains("CacheFolder")) {
+        s_ActiveProject->m_CacheFolderPath = base / j["CacheFolder"].get<std::string>();
+    }
+    if (j.contains("AssetRegistry")) {
+        s_ActiveProject->m_AssetRegistryPath = base / j["AssetRegistry"].get<std::string>();
     }
 
     // @todo Check that all the paths exist.

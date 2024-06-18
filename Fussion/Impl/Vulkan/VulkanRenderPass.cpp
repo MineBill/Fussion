@@ -56,7 +56,7 @@ namespace Fussion
         case 64:
             return VK_SAMPLE_COUNT_64_BIT;
         default:
-            EASSERT(false, "Invalid sample count of {}", count)
+            VERIFY(false, "Invalid sample count of {}", count)
         }
         return {};
     }
@@ -156,9 +156,9 @@ namespace Fussion
 
             auto vk_subpass = VkSubpassDescription {
                 .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-                .inputAttachmentCount = cast(u32, inputs[i].size()),
+                .inputAttachmentCount = CAST(u32, inputs[i].size()),
                 .pInputAttachments = inputs[i].data(),
-                .colorAttachmentCount = cast(u32, colors[i].size()),
+                .colorAttachmentCount = CAST(u32, colors[i].size()),
                 .pColorAttachments = colors[i].data(),
                 .pResolveAttachments = resolves[i].data(),
                 .pDepthStencilAttachment = &depth_ref,
@@ -220,17 +220,17 @@ namespace Fussion
 
         auto renderpass_create_info = VkRenderPassCreateInfo {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-            .attachmentCount = cast(u32, attachments.size()),
+            .attachmentCount = CAST(u32, attachments.size()),
             .pAttachments = attachments.data(),
-            .subpassCount = cast(u32, subpasses.size()),
+            .subpassCount = CAST(u32, subpasses.size()),
             .pSubpasses = subpasses.data(),
-            .dependencyCount = cast(u32, dependencies.size()),
+            .dependencyCount = CAST(u32, dependencies.size()),
             .pDependencies = dependencies.data(),
         };
 
         VK_CHECK(vkCreateRenderPass(device->Handle, &renderpass_create_info, nullptr, &m_Handle))
 
-        device->SetHandleName(transmute(u64, m_Handle), VK_OBJECT_TYPE_RENDER_PASS, spec.Label);
+        device->SetHandleName(TRANSMUTE(u64, m_Handle), VK_OBJECT_TYPE_RENDER_PASS, spec.Label);
     }
 
     void VulkanRenderPass::Begin()

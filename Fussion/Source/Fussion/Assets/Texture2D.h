@@ -8,7 +8,7 @@ namespace Fussion
     {
         s32 Width, Height;
 
-        f32 Aspect() const { return cast(f32, Width) / cast(f32, Height); }
+        f32 Aspect() const { return CAST(f32, Width) / CAST(f32, Height); }
     };
 
     class Texture2D: public Asset

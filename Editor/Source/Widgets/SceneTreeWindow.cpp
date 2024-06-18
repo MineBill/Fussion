@@ -19,45 +19,81 @@ void SceneTreeWindow::OnDraw()
 
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::BeginMenu("New")) {
-                    if (ImGui::MenuItem("Entity")) {
+                    if (ImGui::MenuItem("Empty Entity")) {
                         scene->CreateEntity();
                     }
                     ImGui::EndMenu();
                 }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Parent to Scene")) {
+
+                }
                 ImGui::EndPopup();
             }
+            auto root = scene->GetRoot();
+            for (auto const& child : root->GetChildren()) {
+                DrawEntityHierarchy(child);
+            }
 
-            scene->ForEachEntity([this](Fussion::Entity& entity) {
-                ImGuiTreeNodeFlags flags =
-                    ImGuiTreeNodeFlags_FramePadding |
-                    ImGuiTreeNodeFlags_SpanAvailWidth |
-                    ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                    ImGuiTreeNodeFlags_OpenOnArrow;
-
-                if (m_Selection.contains(entity.GetId())) {
-                    flags |= ImGuiTreeNodeFlags_Selected;
-                }
-
-                ImGui::PushID(entity.GetId());
-                defer(ImGui::PopID());
-
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(2, 2));
-                const bool open = ImGui::TreeNodeEx(entity.GetName().c_str(), flags);
-                if (ImGui::IsItemClicked()) {
-                    if (Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl)) {
-                        m_Selection.clear();
-                    }
-                    m_Selection[entity.GetId()] = &entity;
-                }
-
-                if (open) {
-                    ImGui::TreePop();
-                }
-                ImGui::PopStyleVar();
-            });
         } else {
             ImGui::TextUnformatted("No scene loaded");
         }
     }
     ImGui::End();
+}
+
+void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
+{
+    auto scene = Editor::GetActiveScene().Get();
+    auto entity = scene->GetEntity(handle);
+
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+
+    if (entity->GetChildren().empty()) {
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+    if (m_Selection.contains(handle)) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    ImGui::PushID(handle);
+    defer (ImGui::PopID());
+
+    auto opened = ImGui::TreeNodeEx(entity->GetName().c_str(), flags);
+
+    if (ImGui::IsItemClicked()) {
+        if (Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl)) {
+            m_Selection.clear();
+        }
+        m_Selection[entity->GetId()] = entity;
+    }
+
+    if (ImGui::BeginPopupContextWindow()) {
+        if (ImGui::MenuItem("Parent to Scene")) {
+            entity->SetParent(*scene->GetRoot());
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginDragDropSource()) {
+        ImGui::SetDragDropPayload("SCENE_TREE_NODE", &handle, sizeof(handle), ImGuiCond_Once);
+        ImGui::TextUnformatted("Drop over another tree node to re-parent.");
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget()) {
+        if (auto const payload = ImGui::AcceptDragDropPayload("SCENE_TREE_NODE"); payload != nullptr) {
+            Fsn::UUID const source_handle = *CAST(Fsn::UUID*, payload->Data);
+            auto const source = scene->GetEntity(source_handle);
+            source->SetParent(*entity);
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (opened) {
+        for (auto const& child : entity->GetChildren()) {
+            DrawEntityHierarchy(child);
+        }
+        ImGui::TreePop();
+    }
 }

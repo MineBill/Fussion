@@ -1,7 +1,7 @@
-﻿#include <utility>
+﻿#include "e5pch.h"
+#include "AssetManager.h"
 
-#include "e5pch.h"
-#include "AssetManagerBase.h"
+#include <utility>
 
 namespace Fussion
 {

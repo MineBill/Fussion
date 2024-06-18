@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <unordered_map>
 
+#include "Project/EditorAssetManager.h"
+
 class ContentBrowser: public EditorWindow
 {
 public:
@@ -14,6 +16,7 @@ public:
     {
         Folder = 0,
         GenericAsset = 1,
+        Back = 2,
     };
 
     struct Entry
@@ -23,6 +26,7 @@ public:
         std::string Name;
         bool IsDirectory;
         Fsn::AssetType Type;
+        AssetMetadata Metadata;
     };
 
     EDITOR_WINDOW(ContentBrowser)
@@ -30,7 +34,7 @@ public:
     void OnStart() override;
     void OnDraw() override;
 
-    void ChangeDirectory(std::filesystem::path const& path);
+    void ChangeDirectory(std::filesystem::path path);
 
 private:
     std::unordered_map<Icon, Ref<Fsn::Texture2D>> m_Icons;

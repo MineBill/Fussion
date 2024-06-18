@@ -41,11 +41,6 @@ void ScriptsInspector::OnDraw()
                 ImGui::TextUnformatted(name.c_str());
                 ImGui::TextUnformatted(magic_enum::enum_name(method.TypeId).data());
             }
-
-            // for (auto& [name, method] : m_SelectedClass->GetMethods()) {
-            //     if (ImGui::Button(std::format("Invoke '{}'", name).c_str())) {
-            //     }
-            // }
         }
         ImGui::EndChild();
     }

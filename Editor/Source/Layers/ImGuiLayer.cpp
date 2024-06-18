@@ -57,7 +57,7 @@ void ImGuiLayer::Init()
 #endif
 
     auto device = Device::Instance()->As<VulkanDevice>();
-    auto window = cast(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle());
+    auto window = CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle());
 
     ImGui_ImplGlfw_InitForVulkan(window, true);
 
@@ -94,7 +94,7 @@ void ImGuiLayer::Init()
         },
     };
     ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void* device) {
-        return vkGetInstanceProcAddr(cast(VulkanDevice*, device)->Instance->Instance, function_name);
+        return vkGetInstanceProcAddr(CAST(VulkanDevice*, device)->Instance->Instance, function_name);
     }, device.get());
     ImGui_ImplVulkan_Init(&info);
     Device::Instance()->RegisterImageCallback([this](Ref<Image> const& image, bool create) {
@@ -119,12 +119,12 @@ void ImGuiLayer::Init()
                 break;
                 }
 
-                ImageToVkSet[transmute(u64, vk_image->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
+                ImageToVkSet[TRANSMUTE(u64, vk_image->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
                     vk_image->Sampler->GetRenderHandle<VkSampler>(),
                     vk_image->View->GetRenderHandle<VkImageView>(), layout);
 
             } else {
-                auto handle = transmute(u64, image->GetRawHandle());
+                auto handle = TRANSMUTE(u64, image->GetRawHandle());
                 if (ImageToVkSet.contains(handle))
                     ImGui_ImplVulkan_RemoveTexture(ImageToVkSet[handle]);
             }

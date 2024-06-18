@@ -10,7 +10,7 @@
 
 #define USE_ASSERTIONS
 #ifdef USE_ASSERTIONS
-#define EASSERT(expr, ...)                                                                           \
+#define VERIFY(expr, ...)                                                                           \
         {                                                                                            \
             if (!(expr)) {                                                                           \
                 LOG_ERRORF("ASSERTION HIT: {}", #expr);                                              \
@@ -39,9 +39,11 @@
         BUILTIN_TRAP_FUNCTION();                                                             \
     }
 
-#define cast(type, expression) static_cast<type>(expression)
-#define transmute(type, expression) reinterpret_cast<type>(expression)
+#define CAST(type, expression) static_cast<type>(expression)
+#define TRANSMUTE(type, expression) reinterpret_cast<type>(expression)
 #define require_results [[nodiscard]]
+#define MUSTUSE [[nodiscard]]
+#define DEPRECATED(msg) [[deprecated(msg)]]
 
 namespace Fussion
 {

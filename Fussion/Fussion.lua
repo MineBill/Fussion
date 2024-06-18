@@ -1,6 +1,6 @@
 target("Fussion")
     set_kind("static")
-    set_languages("c++20")
+    set_languages("c++23")
     add_ldflags("cl::/debug:fastlink")
     set_warnings("allextra")
 
@@ -18,7 +18,9 @@ target("Fussion")
 
     add_headerfiles (
         "Source/**.h",
-        "Impl/**.h"
+        "Source/**.hpp",
+        "Impl/**.h",
+        "**.natvis"
     )
 
     add_includedirs("Source/Fussion")
@@ -26,7 +28,7 @@ target("Fussion")
     add_includedirs("Impl", {public = true})
 	add_includedirs("Vendor/entt/src", {public = true})
 
-    add_packages("glfw", "VMA", "rttr")
+    add_packages("glfw", "VMA")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")

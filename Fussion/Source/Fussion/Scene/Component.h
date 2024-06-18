@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
+#include "Fussion/meta.hpp/meta_all.hpp"
 
 namespace Fussion
 {
@@ -7,6 +8,7 @@ namespace Fussion
 
     class Component
     {
+        META_HPP_ENABLE_POLY_INFO()
     public:
         Component() = default;
         explicit Component(Entity* owner): m_Owner(owner) {}

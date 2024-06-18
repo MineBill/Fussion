@@ -93,7 +93,7 @@ void Editor::OnUpdate(const f32 delta)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::BeginMenu("New..")) {
                 if (ImGui::MenuItem("Create Scene")) {
-                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.kdl");
+                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.fsn");
                 }
                 ImGui::EndMenu();
             }
@@ -180,6 +180,11 @@ void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source
         std::string(message),
         loc,
     });
+}
+
+void Editor::ChangeScene(Fsn::AssetRef<Fsn::Scene> scene)
+{
+    s_EditorInstance->m_ActiveScene = scene;
 }
 
 void Editor::OnViewportResized(Vector2 new_size)

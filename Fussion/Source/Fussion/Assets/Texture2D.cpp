@@ -20,7 +20,7 @@ namespace Fussion
 
         texture->m_Spec = spec;
         texture->m_Image = Device::Instance()->CreateImage(image_spec);
-        texture->m_Image->SetData({data, cast(size_t, spec.Width * spec.Height * 4)});
+        texture->m_Image->SetData({data, CAST(size_t, spec.Width * spec.Height * 4)});
         texture->m_Image->TransitionLayout(ImageLayout::ShaderReadOnlyOptimal);
 
         return texture;

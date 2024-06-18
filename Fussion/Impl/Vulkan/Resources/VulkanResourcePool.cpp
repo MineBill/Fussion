@@ -34,15 +34,15 @@ namespace Fussion
         for (const auto& limit : spec.ResourceLimits) {
             limits.push_back(VkDescriptorPoolSize {
                 .type = ResourceTypeToVulkan(limit.Type),
-                .descriptorCount = cast(u32, limit.Limit),
+                .descriptorCount = CAST(u32, limit.Limit),
             });
         }
 
         auto ci = VkDescriptorPoolCreateInfo {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
             .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-            .maxSets = cast(u32, spec.MaxSets),
-            .poolSizeCount = cast(u32, limits.size()),
+            .maxSets = CAST(u32, spec.MaxSets),
+            .poolSizeCount = CAST(u32, limits.size()),
             .pPoolSizes = limits.data(),
         };
 
@@ -72,9 +72,9 @@ namespace Fussion
         }
 
         if (!name.empty()) {
-            device->SetHandleName(transmute(u64, resource->m_Handle), VK_OBJECT_TYPE_DESCRIPTOR_SET, name);
+            device->SetHandleName(TRANSMUTE(u64, resource->m_Handle), VK_OBJECT_TYPE_DESCRIPTOR_SET, name);
             device->SetHandleName(
-                transmute(u64, layout->GetRenderHandle<VkDescriptorSetLayout>()),
+                TRANSMUTE(u64, layout->GetRenderHandle<VkDescriptorSetLayout>()),
                 VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT,
                 std::format("Layout - {}", name));
         }

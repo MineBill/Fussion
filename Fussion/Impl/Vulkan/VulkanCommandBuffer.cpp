@@ -76,11 +76,11 @@ void Fussion::VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_
                 .x = 0, .y = 0,
             },
             .extent = VkExtent2D {
-                .width = cast(u32, fb_spec.Width),
-                .height = cast(u32, fb_spec.Height),
+                .width = CAST(u32, fb_spec.Width),
+                .height = CAST(u32, fb_spec.Height),
             },
         },
-        .clearValueCount = cast(u32, clear_values.size()),
+        .clearValueCount = CAST(u32, clear_values.size()),
         .pClearValues = clear_values.data(),
     };
 
@@ -99,7 +99,7 @@ void Fussion::VulkanCommandBuffer::EndRenderPass(const Ref<RenderPass> render_pa
 void Fussion::VulkanCommandBuffer::UseShader(Ref<Shader> const& shader)
 {
     auto s = shader->As<VulkanShader>();
-    auto handle = cast(VkPipeline, shader->GetPipeline()->GetRenderHandle<VkPipeline>());
+    auto handle = CAST(VkPipeline, shader->GetPipeline()->GetRenderHandle<VkPipeline>());
     vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, handle);
 }
 
@@ -107,12 +107,12 @@ void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
 {
     auto scissor = VkRect2D {
         .offset = VkOffset2D {
-            .x = cast(s32, size.x),
-            .y = cast(s32, size.y),
+            .x = CAST(s32, size.x),
+            .y = CAST(s32, size.y),
         },
         .extent = VkExtent2D {
-            .width = cast(u32, size.z),
-            .height = cast(u32, size.w),
+            .width = CAST(u32, size.z),
+            .height = CAST(u32, size.w),
         },
     };
 

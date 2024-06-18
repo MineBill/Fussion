@@ -8,6 +8,7 @@ namespace Fussion
 {
     class PointLight: public Component
     {
+        META_HPP_ENABLE_POLY_INFO(Component)
     public:
         PointLight() = default;
         COMPONENT(PointLight)

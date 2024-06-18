@@ -16,8 +16,7 @@
 #include "Fussion/Scene/Scene.h"
 #include "Widgets/ContentBrowser.h"
 
-class Editor: public Fsn::Layer
-{
+class Editor : public Fsn::Layer {
 public:
     Editor();
 
@@ -43,20 +42,22 @@ public:
         return entries;
     }
 
+    static void ChangeScene(Fsn::AssetRef<Fsn::Scene> scene);
+
     static void OnViewportResized(Vector2 new_size);
 
     static Editor& Get() { return *s_EditorInstance; }
 
-    static EditorCamera&             GetCamera()      { return s_EditorInstance->m_Camera; }
-    static Project&                  GetProject()     { return s_EditorInstance->m_Project; }
+    static EditorCamera& GetCamera() { return s_EditorInstance->m_Camera; }
+    static Project& GetProject() { return s_EditorInstance->m_Project; }
     static Fsn::AssetRef<Fsn::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
 
     // Editor Windows
-    static ViewportWindow&  GetViewport()       { return *s_EditorInstance->m_ViewportWindow.get(); }
-    static InspectorWindow& GetInspector()      { return *s_EditorInstance->m_InspectorWindow.get(); }
-    static SceneTreeWindow& GetSceneTree()      { return *s_EditorInstance->m_SceneWindow.get(); }
-    static ConsoleWindow&   GetConsole()        { return *s_EditorInstance->m_ConsoleWindow.get(); }
-    static ContentBrowser&  GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
+    static ViewportWindow& GetViewport() { return *s_EditorInstance->m_ViewportWindow.get(); }
+    static InspectorWindow& GetInspector() { return *s_EditorInstance->m_InspectorWindow.get(); }
+    static SceneTreeWindow& GetSceneTree() { return *s_EditorInstance->m_SceneWindow.get(); }
+    static ConsoleWindow& GetConsole() { return *s_EditorInstance->m_ConsoleWindow.get(); }
+    static ContentBrowser& GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
 
 private:
     static Editor* s_EditorInstance;

@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 class Editor;
+
+/// Base class for all editor windows.
 class EditorWindow
 {
 public:
@@ -11,7 +13,9 @@ public:
     virtual void OnStart() {}
     virtual void OnDraw() = 0;
 
-    bool IsFocused() const { return m_IsFocused; }
+    /// Returns if the current window is focused or not, whatever that means for the
+    /// current window.
+    [[nodiscard]] bool IsFocused() const { return m_IsFocused; }
 
     void Hide()
     {
@@ -23,7 +27,7 @@ public:
         m_IsVisible = true;
     }
 
-    bool IsVisible() const { return m_IsVisible; }
+    [[nodiscard]] bool IsVisible() const { return m_IsVisible; }
 
 protected:
     Editor *m_Editor{};

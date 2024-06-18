@@ -19,7 +19,7 @@ namespace Fussion
             return VK_FILTER_NEAREST;
         }
 
-        EASSERT(false, "Unhandled {} for {}", magic_enum::enum_name(mode), magic_enum::enum_type_name<FilterMode>())
+        VERIFY(false, "Unhandled {} for {}", magic_enum::enum_name(mode), magic_enum::enum_type_name<FilterMode>())
         return {};
     }
 
@@ -38,7 +38,7 @@ namespace Fussion
             return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
         }
 
-        EASSERT(false, "Unhandled {} for {}", magic_enum::enum_name(mode), magic_enum::enum_type_name<WrapMode>())
+        VERIFY(false, "Unhandled {} for {}", magic_enum::enum_name(mode), magic_enum::enum_type_name<WrapMode>())
         return {};
     }
 
@@ -54,9 +54,9 @@ namespace Fussion
             .addressModeV = TextureWrapToVulkan(spec.Wrap),
             .addressModeW = TextureWrapToVulkan(spec.Wrap),
             .mipLodBias = 0.0,
-            .anisotropyEnable = cast(VkBool32, spec.UseAnisotropy),
+            .anisotropyEnable = CAST(VkBool32, spec.UseAnisotropy),
             .maxAnisotropy = spec.UseAnisotropy ? 1.0f : 0.0f,
-            .compareEnable = cast(VkBool32, spec.UseDepthCompare),
+            .compareEnable = CAST(VkBool32, spec.UseDepthCompare),
             .compareOp = VK_COMPARE_OP_ALWAYS,
             .minLod = 0.0,
             .maxLod = std::numeric_limits<f32>::max(),

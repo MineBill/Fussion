@@ -31,25 +31,6 @@ package("VMA")
 package_end()
 add_requires("VMA")
 
-package("rttr")
-    add_deps("cmake")
-    set_sourcedir(path.join(os.scriptdir(), "Vendor/rttr"))
-    on_install(function (package)
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
-        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        table.insert(configs, "-DBUILD_RTTR_DYNAMIC=OFF")
-        table.insert(configs, "-DBUILD_STATIC=ON")
-        table.insert(configs, "-DBUILD_EXAMPLES=OFF")
-        table.insert(configs, "-DBUILD_DOCUMENTATION=OFF")
-        table.insert(configs, "-DBUILD_PACKAGE=OFF")
-        table.insert(configs, "-DBUILD_INSTALLR=OFF")
-        table.insert(configs, "-DBUILD_UNIT_TESTS=OFF")
-        import("package.tools.cmake").install(package, configs)
-    end)
-package_end()
-add_requires("rttr")
-
 target("glm", function()
     set_kind "headeronly"
     set_group "Vendor"

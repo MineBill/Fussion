@@ -2,15 +2,20 @@
 #include "Entity.h"
 #include "Fussion/Scene/Scene.h"
 
-#include <algorithm>
+#include "Components/Camera.h"
 
 namespace Fussion
 {
-    void Entity::SetParent(Entity const& parent)
+    void Entity::SetParent(Entity const& new_parent)
     {
-        m_Scene->GetEntity(m_Parent)->RemoveChild(*this);
-        m_Scene->GetEntity(parent)->AddChild(*this);
-        m_Parent = parent.m_Handle;
+        if (IsGrandchild(new_parent.m_Handle))
+            return;
+
+        if (auto p = m_Scene->GetEntity(m_Parent)) {
+            p->RemoveChild(*this);
+        }
+        m_Scene->GetEntity(new_parent)->AddChild(*this);
+        m_Parent = new_parent.m_Handle;
     }
 
     void Entity::AddChild(Entity const& child)
@@ -25,34 +30,51 @@ namespace Fussion
         }
     }
 
-    // void Entity::AddComponent(Reflect::TypeId const& type_id)
-    // {
-    //     auto type_info = Reflect::TypeInfoRegistry::GetTypeInfo(type_id);
-    //     if (!type_info.GetType().IsValid())
-    //         return;
-    //
-    //     if (HasComponent(type_id)) {
-    //         LOG_WARNF("Attempted to add an already existing component of type {}", type_info.GetType().GetPrettyTypeName());
-    //         return;
-    //     }
-    //
-    //     auto const id = type_id.GetHash();
-    //     // type_info.GetFunctionInfo("ctor");
-    //     auto component = MakeRef<Component>();
-    //     component.reset(cast(Component*, type_info.Construct()));
-    //     m_Components[id] = component;
-    // }
-    //
-    // bool Entity::HasComponent(Reflect::TypeId const& type_id) const
-    // {
-    //     auto const id = type_id.GetHash();
-    //     return m_Components.contains(id);
-    // }
+    auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
+    {
+        VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
+            "Attempted to add a component that doesn't derive from Component, weird.");
+
+        auto component = MakeRef<Component>();
+
+        auto data = type.create(this);
+
+        auto ptr = *CAST(Component**, data.get_data());
+        Ref<Component> comp;
+        comp.reset(ptr);
+
+        comp->OnCreate();
+        m_Components[type.get_hash()] = comp;
+        return comp;
+    }
+
+    auto Entity::HasComponent(meta_hpp::class_type type) const -> bool
+    {
+        return m_Components.contains(type.get_hash());
+    }
 
     void Entity::OnUpdate(f32 const delta)
     {
         for (auto& [id, component]: m_Components) {
             component->OnUpdate(delta);
         }
+    }
+
+    bool Entity::IsGrandchild(UUID handle) const
+    {
+        if (m_Children.empty()) {
+            return false;
+        }
+
+        for (auto const& child : m_Children) {
+            if (child == handle) {
+                return true;
+            }
+
+            if (auto en = m_Scene->GetEntity(child); en->IsGrandchild(handle)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

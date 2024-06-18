@@ -24,6 +24,7 @@ void EditorCamera::OnUpdate(const f32 delta)
         glm::radians(m_EulerAngles.x),
         glm::radians(m_EulerAngles.y));
 
+
     if (m_CapturedMouse) {
         const auto x = Input::GetAxis(KeyboardKey::D, KeyboardKey::A);
         const auto y = Input::GetAxis(KeyboardKey::Space, KeyboardKey::LeftControl);

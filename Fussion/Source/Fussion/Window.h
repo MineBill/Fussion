@@ -35,7 +35,7 @@ namespace Fussion
         virtual ~Window() = default;
         Vector2 GetSize() const
         {
-            return {cast(f32, GetWidth()), cast(f32, GetHeight())};
+            return {CAST(f32, GetWidth()), CAST(f32, GetHeight())};
         }
 
         virtual void SetMouseMode(MouseMode mode) const = 0;

@@ -3,6 +3,7 @@
 #include "EditorApplication.h"
 #include "SceneRenderer.h"
 #include "Layers/ImGuiLayer.h"
+#include "Fussion/Assets/AssetManager.h"
 
 #include <cmath>
 #include <imgui.h>
@@ -53,6 +54,16 @@ void ViewportWindow::OnDraw()
             ImGui::Text("Mouse Position: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
         }
         ImGui::End();
+
+        if (ImGui::BeginDragDropTarget()) {
+            if (auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET"); payload) {
+                auto handle = CAST(Fussion::AssetHandle*, payload->Data);
+
+                auto scene = Fsn::AssetManager::GetAsset<Fussion::Scene>(*handle);
+                Editor::ChangeScene(scene);
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
     ImGui::End();
 }

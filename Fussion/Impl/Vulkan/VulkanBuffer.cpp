@@ -11,7 +11,7 @@ namespace Fussion
     {
         const auto buffer_ci = VkBufferCreateInfo {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .size = cast(VkDeviceSize, spec.Size),
+            .size = CAST(VkDeviceSize, spec.Size),
             .usage = BufferUsageToVulkan(spec.Usage),
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         };
@@ -28,7 +28,7 @@ namespace Fussion
         VK_CHECK(vmaCreateBuffer(device->Allocator, &buffer_ci, &allocation_info, &m_Handle, &m_Allocation, &m_AllocationInfo))
 
         // device->SetHandleName(reinterpret_cast<u64>(Handle), VK_OBJECT_TYPE_BUFFER, spec.Label);
-        device->SetHandleName(transmute(u64, m_Handle), VK_OBJECT_TYPE_BUFFER, spec.Label);
+        device->SetHandleName(TRANSMUTE(u64, m_Handle), VK_OBJECT_TYPE_BUFFER, spec.Label);
     }
 
     void VulkanBuffer::SetData(void* data, size_t size)
@@ -54,8 +54,8 @@ namespace Fussion
             },
             .imageOffset = VkOffset3D{0, 0, 0},
             .imageExtent = VkExtent3D {
-                .width = cast(u32, image->GetWidth()),
-                .height = cast(u32, image->GetHeight()),
+                .width = CAST(u32, image->GetWidth()),
+                .height = CAST(u32, image->GetHeight()),
                 .depth = 1,
             }
         };

@@ -19,7 +19,7 @@ Clock::Clock()
     timespec now{};
     clock_gettime(CLOCK_BOOTTIME, &now);
 
-    m_TickCount = cast(u64, now.tv_sec) * 1000000000LL + cast(u64, now.tv_nsec);
+    m_TickCount = CAST(u64, now.tv_sec) * 1000000000LL + CAST(u64, now.tv_nsec);
 #endif
 }
 
@@ -33,12 +33,12 @@ u64 Clock::Reset()
     QueryPerformanceFrequency(&frequency);
     const auto diff = integer.QuadPart - m_TickCount;
     m_TickCount = integer.QuadPart;
-    return cast(u64, diff * 1000000 / frequency.QuadPart);
+    return CAST(u64, diff * 1000000 / frequency.QuadPart);
 #elif defined(OS_LINUX)
     timespec ts{};
     clock_gettime(CLOCK_BOOTTIME, &ts);
 
-    const u64 now = cast(u64, ts.tv_sec) * 1000000000LL + cast(u64, ts.tv_nsec);
+    const u64 now = CAST(u64, ts.tv_sec) * 1000000000LL + CAST(u64, ts.tv_nsec);
     u64 diff = (now - m_TickCount) / 1000; // to ms
     m_TickCount = now;
 

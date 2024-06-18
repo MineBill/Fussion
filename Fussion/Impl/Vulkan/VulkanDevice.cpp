@@ -331,7 +331,7 @@ namespace Fussion
 
         const VkDeviceCreateInfo device_create_info {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .queueCreateInfoCount = cast(u32, queue_infos.size()),
+            .queueCreateInfoCount = CAST(u32, queue_infos.size()),
             .pQueueCreateInfos = queue_infos.data(),
             .enabledExtensionCount = 1,
             .ppEnabledExtensionNames = g_RequiredDeviceExtensions,
@@ -349,7 +349,7 @@ namespace Fussion
         const auto pool_create_info = VkCommandPoolCreateInfo {
             .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-            .queueFamilyIndex = cast(u32, FamilyIndices.GraphicsFamily.value()),
+            .queueFamilyIndex = CAST(u32, FamilyIndices.GraphicsFamily.value()),
         };
 
         VK_CHECK(vkCreateCommandPool(Handle, &pool_create_info, nullptr, &CommandPool))

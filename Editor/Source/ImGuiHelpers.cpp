@@ -263,7 +263,7 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
 
 bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::Image> const& image, bool& toggled, Vector2 size)
 {
-    auto button = cast(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
+    auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
     // auto button = Vector4(0, 1, 0, 1);
 
     if (toggled) {

@@ -2,14 +2,18 @@
 #include "EditorWindow.h"
 #include "Fussion/Scene/Entity.h"
 
-class SceneTreeWindow final : public EditorWindow
-{
+class SceneTreeWindow final : public EditorWindow {
 public:
+    using SelectionList = std::unordered_map<Fussion::UUID, Fussion::Entity*>;
+
     EDITOR_WINDOW(SceneTreeWindow)
 
     void OnDraw() override;
 
-    std::unordered_map<Fussion::UUID, Fussion::Entity*> const& GetSelection() const { return m_Selection; }
+    [[nodiscard]] SelectionList const& GetSelection() const { return m_Selection; }
+
 private:
-    std::unordered_map<Fussion::UUID, Fussion::Entity*> m_Selection{};
+    void DrawEntityHierarchy(Fsn::UUID handle);
+
+    SelectionList m_Selection{};
 };

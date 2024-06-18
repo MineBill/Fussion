@@ -20,8 +20,8 @@ namespace Fussion
                 .aspectMask = aspect_flag,
                 .baseMipLevel = 0,
                 .levelCount = 1,
-                .baseArrayLayer = cast(u32, spec.BaseLayerIndex),
-                .layerCount = cast(u32, spec.LayerCount),
+                .baseArrayLayer = CAST(u32, spec.BaseLayerIndex),
+                .layerCount = CAST(u32, spec.LayerCount),
             }
         };
 

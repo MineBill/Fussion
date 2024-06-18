@@ -41,7 +41,7 @@ namespace Fussion
         m_ScriptEngine = asCreateScriptEngine();
 
         auto r = m_ScriptEngine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
-        EASSERT(r >= 0, "Failed to set message callback");
+        VERIFY(r >= 0, "Failed to set message callback");
 
         RegisterStdString(m_ScriptEngine);
         RegisterScriptArray(m_ScriptEngine, false);
@@ -89,17 +89,17 @@ namespace Fussion
     {
         CScriptBuilder builder;
         auto r = builder.StartNewModule(m_ScriptEngine, module_name.c_str());
-        EASSERT(r >= 0, "Error while starting new module");
+        VERIFY(r >= 0, "Error while starting new module");
 
         for (auto& entry : std::filesystem::recursive_directory_iterator(path)) {
             if (entry.is_directory() || entry.path().extension() != ".as") continue;
 
             r = builder.AddSectionFromFile(entry.path().string().c_str());
-            EASSERT(r >= 0, "Error while adding section from file: {}", entry.path().string());
+            VERIFY(r >= 0, "Error while adding section from file: {}", entry.path().string());
         }
 
         r = builder.BuildModule();
-        EASSERT(r >= 0, "Error while building game module");
+        VERIFY(r >= 0, "Error while building game module");
 
         auto const module = m_ScriptEngine->GetModule(module_name.c_str());
         m_LoadedAssemblies[module_name] = MakeRef<ScriptAssembly>(module);

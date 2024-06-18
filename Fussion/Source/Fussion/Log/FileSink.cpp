@@ -41,7 +41,7 @@ namespace Fussion
     FileSink::FileSink(std::string const& file_name)
     {
         const auto fopen_err = fopen_s(&m_OutputFile, file_name.c_str(), "w");
-        EASSERT(fopen_err == 0, "Could not open/create log file '{}'", file_name);
+        VERIFY(fopen_err == 0, "Could not open/create log file '{}'", file_name);
     }
 
     void FileSink::Write(LogLevel level, std::string_view message, std::source_location const& loc)

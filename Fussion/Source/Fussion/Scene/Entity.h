@@ -4,81 +4,97 @@
 #include "Fussion/Core/UUID.h"
 
 class SceneSerializer;
-namespace Fussion
-{
 
-    struct Transform
+namespace Fussion {
+
+struct Transform {
+    Vector3 Position{};
+    Vector3 EulerAngles{};
+    Vector3 Scale = Vector3(1, 1, 1);
+
+    Mat4 GetView() const
     {
-        Vector3 Position{};
-        Vector3 EulerAngles{};
-        Vector3 Scale = Vector3(1, 1, 1);
+        return Mat4(1.0);
+    }
+};
 
-        Mat4 GetView() const
-        {
-            return Mat4(1.0);
-        }
-    };
+class Scene;
 
-    class Scene;
+class Entity {
+    friend class Scene;
+    friend SceneSerializer;
+    friend class SceneBinarySerializer;
 
-    class Entity
+public:
+    Transform Transform;
+
+    Entity() = default;
+    Entity(UUID const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+
+    void SetParent(Entity const& new_parent);
+    void AddChild(Entity const& child);
+    void RemoveChild(Entity const& child);
+
+    template<std::derived_from<Component> C>
+    auto AddComponent() -> Ref<C>
     {
-        friend class Scene;
-        friend SceneSerializer;
-        friend class SceneBinarySerializer;
-
-    public:
-        Transform Transform;
-
-        Entity() = default;
-        Entity(UUID const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
-
-        void SetParent(Entity const& parent);
-
-        void AddChild(Entity const& child);
-
-        void RemoveChild(Entity const& child);
-
-        template<std::derived_from<Component> C>
-        Ref<C> AddComponent()
-        {
-            if (HasComponent<C>())
-                return nullptr;
-            auto const id = C::GetStaticTypeInfo().GetTypeId().GetHash();
-            auto component = MakeRef<C>(this);
-            m_Components[id] = component;
-            return component;
+        auto type = meta_hpp::resolve_type<C>();
+        if (HasComponent<C>()) {
+            LOG_WARNF("Attempted to re-add component `{}`", type.get_metadata().at("Name").template as<std::string>());
+            return nullptr;
         }
+        auto const id = type.get_hash();
+        m_Components[id] = MakeRef<C>(this);
+        return m_Components[id];
+    }
 
-        // void AddComponent(Reflect::TypeId const& type_id);
+    auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
 
-        UUID GetId() const { return m_Handle; }
+    [[nodiscard]]
+    auto GetId() const -> UUID { return m_Handle; }
 
-        std::string const& GetName() const { return m_Name; }
+    [[nodiscard]]
+    auto GetName() const -> std::string const& { return m_Name; }
 
-        std::string& GetNameRef() { return m_Name; }
+    auto GetNameRef() -> std::string& { return m_Name; }
 
-        std::map<UUID, Ref<Component>>& GetComponents() { return m_Components; }
+    [[nodicard]]
+    auto GetComponents() const -> std::map<UUID, Ref<Component>> const& { return m_Components; }
 
-        template<std::derived_from<Component> C>
-        bool HasComponent() const
-        {
-            auto const id = C::GetStaticTypeInfo().GetTypeId().GetHash();
-            return m_Components.contains(id);
-        }
+    template<std::derived_from<Component> C>
+    [[nodiscard]]
+    auto HasComponent() const -> bool
+    {
+        return m_Components.contains(meta_hpp::resolve_type<C>().get_hash());
+    }
 
-        // bool HasComponent(Reflect::TypeId const& type_id) const;
+    [[nodiscard]]
+    auto HasComponent(meta_hpp::class_type type) const -> bool;
 
-    private:
-        void OnUpdate(f32 delta);
+    template<std::derived_from<Component> C>
+    [[nodiscard]]
+    auto GetComponent() -> Ref<C>
+    {
+        VERIFY(HasComponent<C>());
+        auto component = m_Components[meta_hpp::resolve_type<C>().get_hash()];
+        return std::dynamic_pointer_cast<C>(component);
+    }
 
-        UUID m_Parent;
-        std::vector<UUID> m_Children;
+    [[nodiscard]]
+    auto GetChildren() const -> std::vector<UUID> const& { return m_Children; }
 
-        std::map<UUID, Ref<Component>> m_Components;
+private:
+    void OnUpdate(f32 delta);
 
-        UUID m_Handle;
-        std::string m_Name{"Entity"};
-        Scene* m_Scene{};
-    };
+    bool IsGrandchild(UUID handle) const;
+
+    UUID m_Parent;
+    std::vector<UUID> m_Children;
+
+    std::map<UUID, Ref<Component>> m_Components;
+
+    UUID m_Handle;
+    std::string m_Name{ "Entity" };
+    Scene* m_Scene{};
+};
 }

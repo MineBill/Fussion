@@ -24,14 +24,14 @@ namespace Fussion
         template<class T>
         Ref<T> As()
         {
-            EASSERT(this != nullptr, "*this is a nullptr");
+            VERIFY(this != nullptr, "*this is a nullptr");
             return std::dynamic_pointer_cast<T>(shared_from_this());
         }
 
         template<class T>
         T GetRenderHandle()
         {
-            return transmute(T, GetRawHandle());
+            return TRANSMUTE(T, GetRawHandle());
         }
 
         virtual void* GetRawHandle() = 0;

@@ -6,6 +6,5 @@ namespace Fussion
     class Mesh : public Asset
     {
     public:
-
     };
 }

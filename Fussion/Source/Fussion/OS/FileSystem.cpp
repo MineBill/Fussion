@@ -8,7 +8,7 @@ namespace Fussion
 {
     std::string FileSystem::ReadEntireFile(std::filesystem::path const& path)
     {
-        EASSERT(std::filesystem::exists(path), "Path {} does not exist", path.string());
+        VERIFY(std::filesystem::exists(path), "Path {} does not exist", path.string());
         std::ifstream file(path);
         return std::string(std::istreambuf_iterator(file), std::istreambuf_iterator<char>());
     }

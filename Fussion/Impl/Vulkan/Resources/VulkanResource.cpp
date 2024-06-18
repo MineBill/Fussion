@@ -30,7 +30,7 @@ namespace Fussion
             VkDescriptorSetLayoutBinding binding {
                 .binding = i,
                 .descriptorType = ResourceTypeToVulkan(resource.Type),
-                .descriptorCount = cast(u32, resource.Count),
+                .descriptorCount = CAST(u32, resource.Count),
                 .stageFlags = ShaderStagesToVulkan(resource.Stages)
             };
             bindings.push_back(binding);
@@ -38,7 +38,7 @@ namespace Fussion
 
         const auto ci = VkDescriptorSetLayoutCreateInfo {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .bindingCount = cast(u32, bindings.size()),
+            .bindingCount = CAST(u32, bindings.size()),
             .pBindings = bindings.data()
         };
 

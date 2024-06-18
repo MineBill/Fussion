@@ -4,11 +4,16 @@
 #include "EditorApplication.h"
 
 #include <imgui.h>
+#include <magic_enum/magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
 
+#include "Fussion/Assets/Mesh.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Component.h"
+#include "Fussion/Scene/Components/Camera.h"
+#include "Fussion/Scene/Components/MeshRenderer.h"
+#include "Fussion/Scene/Components/ScriptComponent.h"
 #include "Fussion/Scripting/ScriptingEngine.h"
 
 std::tuple<f32, f32> ParseRangeMeta(std::string value)
@@ -16,7 +21,7 @@ std::tuple<f32, f32> ParseRangeMeta(std::string value)
     auto comma = value.find_first_of('|');
     auto min = std::stof(value.substr(0, comma));
     auto max = std::stof(value.substr(comma + 1));
-    return {min, max};
+    return { min, max };
 }
 
 void InspectorWindow::OnStart()
@@ -30,11 +35,12 @@ void InspectorWindow::OnDraw()
     if (ImGui::Begin("Inspector")) {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        auto selection = m_Editor->GetSceneTree().GetSelection();
-        if (!selection.empty()) {
+        if (auto const selection = m_Editor->GetSceneTree().GetSelection(); !selection.empty()) {
             if (selection.size() == 1) {
-                auto entity = selection.begin()->second;
-                DrawEntity(*entity);
+                auto const entity = selection.begin()->second;
+                if (DrawEntity(*entity)) {
+                    Editor::GetActiveScene().Get()->SetDirty();
+                }
             } else {
                 ImGui::Text("Multiple entities selected");
             }
@@ -43,10 +49,66 @@ void InspectorWindow::OnDraw()
     ImGui::End();
 }
 
-void InspectorWindow::DrawEntity(Fussion::Entity& e)
+bool InspectorWindow::DrawComponent(meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
+{
+    ZoneScoped;
+    bool modified{ false };
+    auto const name = component_type.get_metadata().at("Name").as<std::string>();
+    if (ImGui::CollapsingHeader(name.c_str())) {
+        for (auto const& member : component_type.get_members()) {
+            auto value = member.get(ptr);
+
+            ImGui::PushID(member.get_name().data());
+            defer(ImGui::PopID());
+
+            DoProperty(member.get_name(), [&] {
+                ZoneScoped;
+                if (auto const data_type = value.get_type().as_pointer().get_data_type(); data_type.is_number()) {
+                    ImGuiDataType type = 0;
+                    if (value.is<f32*>()) {
+                        type = ImGuiDataType_Float;
+                    } else if (value.is<f64*>()) {
+                        type = ImGuiDataType_Double;
+                    } else if (value.is<u32*>()) {
+                        type = ImGuiDataType_U32;
+                    } else if (value.is<u64*>()) {
+                        type = ImGuiDataType_U64;
+                    } else if (value.is<s32*>()) {
+                        type = ImGuiDataType_S32;
+                    } else if (value.is<s64*>()) {
+                        type = ImGuiDataType_S64;
+                    } else {
+                        PANIC("Unsupported numeric type for member");
+                    }
+                    // @note value has a pointer to the member pointer, so get_data returns that
+                    // pointer to the pointer.
+                    if (ImGui::InputScalar("", type, *CAST(void**, value.get_data()))) {
+                        modified = true;
+                    }
+                } else if (value.is<bool*>()) {
+                    if (ImGui::Checkbox("", value.as<bool*>())) {
+                        modified = true;
+                    }
+                } else if (value.is<std::string*>()) {
+                    if (ImGui::InputText("", value.as<std::string*>())) {
+                        modified = true;
+                    }
+                } else {
+                    ImGui::Text("Unsupported type for %s", member.get_name().c_str());
+                }
+            });
+        }
+        ImGui::Separator();
+    }
+    return modified;
+}
+
+bool InspectorWindow::DrawEntity(Fussion::Entity& e)
 {
     using namespace Fussion;
     ZoneScoped;
+
+    bool modified{ false };
     auto& style = Editor::Get().GetStyle();
 
     ImGuiH::InputText("Name", e.GetNameRef());
@@ -62,8 +124,11 @@ void InspectorWindow::DrawEntity(Fussion::Entity& e)
     ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
     ImGuiHelpers::EndGroupPanel();
 
-    for (const auto& [id, component]: e.GetComponents()) {
-        ZoneScopedN("Drawing Component");
+    for (const auto& [id, component] : e.GetComponents()) {
+        auto ptr = component->meta_poly_ptr();
+
+        auto type = ptr.get_type().as_pointer().get_data_type().as_class();
+        modified |= DrawComponent(type, std::move(ptr));
     }
 
     if (ImGuiH::ButtonCenteredOnLine("Add Component")) {
@@ -71,13 +136,29 @@ void InspectorWindow::DrawEntity(Fussion::Entity& e)
     }
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
-        // for (auto const& info : Reflect::TypeInfoRegistry::GetAllTypes()) {
-        //     if (info.IsDerivedFrom<Component>() && !e.HasComponent(info.GetTypeId())) {
-        //         if (ImGui::MenuItem(std::format("{}", info.GetType().GetPrettyTypeName()).c_str())) {
-        //             e.AddComponent(info.GetTypeId());
-        //         }
-        //     }
-        // }
+        auto scope = meta_hpp::resolve_scope("Components");
+        for (auto const& [name, type] : scope.get_typedefs()) {
+            VERIFY(type.is_class());
+            if (ImGui::MenuItem(name.c_str())) {
+                e.AddComponent(type.as_class());
+            }
+        }
         ImGui::EndPopup();
     }
+    return modified;
 }
+
+//
+// template<std::derived_from<Fussion::Component> T>
+// static void DrawComponent(Fsn::Entity& e, auto&& callback) {
+//     if (e.HasComponent<T>()) {
+//         ZoneScopedN("Drawing Component");
+//
+//         auto type = meta_hpp::resolve_type<T>();
+//         auto name = type.get_metadata().at("Name").template as<std::string>();
+//         if (ImGui::CollapsingHeader(name.c_str())) {
+//             callback(e.GetComponent<T>());
+//             ImGui::Separator();
+//         }
+//     }
+// };
