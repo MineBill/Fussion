@@ -4,15 +4,26 @@
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Log/Log.h"
 
-namespace Fussion
-{
-    class PointLight: public Component
-    {
-        META_HPP_ENABLE_POLY_INFO(Component)
-    public:
-        PointLight() = default;
-        COMPONENT(PointLight)
-    };
+#define FSN_FIELD(...)
+
+namespace Fussion {
+class PointLight : public Component {
+    META_HPP_ENABLE_POLY_INFO(Component)
+public:
+    COMPONENT_DEFAULT(PointLight)
+};
+
+class MoverComponent : public Component {
+    META_HPP_ENABLE_POLY_INFO(Component)
+
+public:
+    COMPONENT_DEFAULT(MoverComponent)
+
+    void OnUpdate(f32 delta) override;
+
+    FSN_FIELD()
+    f32 Speed;
+};
 }
 
 namespace Fsn = Fussion;

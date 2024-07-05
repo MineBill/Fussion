@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "EditorWindow.h"
-#include "Fussion/Core/Types.h"
+#include "Fussion/Math/Vector2.h"
 
 class ViewportWindow final: public EditorWindow
 {

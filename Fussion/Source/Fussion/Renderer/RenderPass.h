@@ -68,11 +68,11 @@ namespace Fussion
         RenderPassAttachmentLoadOp LoadOp;
         RenderPassAttachmentStoreOp StoreOp;
         ImageFormat Format;
-        int Samples = 1;
+        s32 Samples = 1;
 
         RenderPassAttachmentLoadOp StencilLoadOp;
         RenderPassAttachmentStoreOp StencilStoreOp;
-        int StencilClearValue;
+        s32 StencilClearValue = 0;
 
         ImageFormat StencilFormat;
         ImageLayout InitialLayout;

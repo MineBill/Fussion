@@ -9,8 +9,8 @@ namespace Fussion
     public:
         virtual ~AssetManagerBase() = default;
 
-        virtual bool IsAssetHandleValid(AssetHandle handle) = 0;
-        virtual bool IsAssetLoaded(AssetHandle handle) = 0;
+        virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
+        virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
 
         virtual Asset* GetAsset(AssetHandle handle, AssetType type) = 0;
     };

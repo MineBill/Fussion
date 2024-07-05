@@ -22,14 +22,14 @@ void SceneTreeWindow::OnDraw()
                     if (ImGui::MenuItem("Empty Entity")) {
                         scene->CreateEntity();
                     }
+                    ImGui::Separator();
+                    if (ImGui::MenuItem("Directional Light")) {}
                     ImGui::EndMenu();
                 }
                 ImGui::Separator();
-                if (ImGui::MenuItem("Parent to Scene")) {
-
-                }
                 ImGui::EndPopup();
             }
+
             auto root = scene->GetRoot();
             for (auto const& child : root->GetChildren()) {
                 DrawEntityHierarchy(child);
@@ -57,18 +57,27 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
     }
 
     ImGui::PushID(handle);
-    defer (ImGui::PopID());
+    defer(ImGui::PopID());
 
     auto opened = ImGui::TreeNodeEx(entity->GetName().c_str(), flags);
 
     if (ImGui::IsItemClicked()) {
-        if (Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl)) {
-            m_Selection.clear();
-        }
-        m_Selection[entity->GetId()] = entity;
+        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl));
     }
 
-    if (ImGui::BeginPopupContextWindow()) {
+    if (ImGui::BeginPopupContextItem()) {
+        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl));
+        if (ImGui::BeginMenu("New")) {
+            if (ImGui::MenuItem("Entity")) {
+                scene->CreateEntity("Entity", handle);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Destroy")) {
+            m_Selection.erase(entity->GetId());
+            scene->Destroy(entity);
+        }
         if (ImGui::MenuItem("Parent to Scene")) {
             entity->SetParent(*scene->GetRoot());
         }
@@ -96,4 +105,12 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
         }
         ImGui::TreePop();
     }
+}
+
+void SceneTreeWindow::SelectEntity(Fussion::Entity* entity, bool clear)
+{
+    if (clear) {
+        m_Selection.clear();
+    }
+    m_Selection[entity->GetId()] = entity;
 }

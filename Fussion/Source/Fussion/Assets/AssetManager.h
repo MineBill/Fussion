@@ -27,7 +27,7 @@ namespace Fussion
         template<typename T>
         static AssetRef<T> GetAsset(AssetHandle handle)
         {
-            return AssetRef<T>(handle, s_Active.get());
+            return AssetRef<T>(handle);
         }
     private:
         static Ref<AssetManagerBase> s_Active;

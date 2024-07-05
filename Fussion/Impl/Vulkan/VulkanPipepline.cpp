@@ -26,7 +26,7 @@ namespace Fussion
             .rasterizerDiscardEnable = false,
             .polygonMode = VK_POLYGON_MODE_FILL,
             .cullMode = VK_CULL_MODE_BACK_BIT,
-            .frontFace = VK_FRONT_FACE_CLOCKWISE,
+            .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
             .depthBiasEnable = false,
             // .depthBiasConstantFactor = ,
             // .depthBiasClamp = ,
@@ -89,13 +89,24 @@ namespace Fussion
             vk_layouts.push_back(layout->GetRenderHandle<VkDescriptorSetLayout>());
         }
 
-        const auto ci = VkPipelineLayoutCreateInfo {
+        auto ci = VkPipelineLayoutCreateInfo {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
             .setLayoutCount = CAST(u32, vk_layouts.size()),
             .pSetLayouts = vk_layouts.data(),
-            .pushConstantRangeCount = 0,
-            .pPushConstantRanges = nullptr,
         };
+
+        auto push_constant_count = self->m_Specification.PushConstants.size();
+        ci.pushConstantRangeCount = CAST(u32, push_constant_count);
+
+        std::vector<VkPushConstantRange> ranges(push_constant_count);
+        for (size_t i = 0; i < push_constant_count; i++) {
+            ranges[i] = VkPushConstantRange{
+                .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset = 0,
+                .size = CAST(u32, self->m_Specification.PushConstants[i].Size),
+            };
+        }
+        ci.pPushConstantRanges = ranges.data();
 
         VK_CHECK(vkCreatePipelineLayout(device->Handle, &ci, nullptr, &self->m_Handle));
 
@@ -203,6 +214,8 @@ namespace Fussion
         };
 
         auto config = VulkanPipelineConfig::Default();
+        config.ColorBlendAttachment.blendEnable = spec.UseBlending;
+        config.Multisample.rasterizationSamples = VK_SAMPLE_COUNT_8_BIT;
 
         std::vector<VkPipelineColorBlendAttachmentState> blend_attachment_states;
         for (auto rspec = render_pass->GetSpec(); auto const& thing : rspec.SubPasses[0].ColorAttachments) {

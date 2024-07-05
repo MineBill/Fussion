@@ -17,7 +17,7 @@ public:
 private:
     /// Draws a component in the inspector panel.
     /// @return true if the component was modified, false otherwise.
-    bool DrawComponent(meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
+    bool DrawComponent(Fsn::Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
 
     /// Draws an entity in the inspector panel.
     /// @return true if the entity was modified, false otherwise.

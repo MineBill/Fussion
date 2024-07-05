@@ -5,6 +5,13 @@
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
 #include "imgui.h"
+#include "Fussion/Assets/PbrMaterial.h"
+#include "Fussion/OS/Dialog.h"
+
+#include <ranges>
+
+using namespace Fussion;
+namespace fs = std::filesystem;
 
 void ContentBrowser::OnStart()
 {
@@ -14,6 +21,17 @@ void ContentBrowser::OnStart()
 
     m_Root = Project::ActiveProject()->GetAssetsFolder();
     ChangeDirectory(m_Root);
+
+    m_FileTypes[".png"] = AssetType::Texture2D;
+    m_FileTypes[".jpg"] = AssetType::Texture2D;
+    m_FileTypes[".jpeg"] = AssetType::Texture2D;
+    m_FileTypes[".glb"] = AssetType::Mesh;
+    m_FileTypes[".gltf"] = AssetType::Mesh;
+
+    m_ImportFilter.Name = "Supported Asset Files";
+    for (const auto& file_type : m_FileTypes | std::views::keys) {
+        m_ImportFilter.FilePatterns.push_back(std::format("*{}", file_type));
+    }
 }
 
 void ContentBrowser::OnDraw()
@@ -23,7 +41,24 @@ void ContentBrowser::OnDraw()
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::TextUnformatted(m_CurrentPath.string().c_str());
+        if (ImGui::Button("Import")) {
+            auto file = Fussion::Dialogs::ShowFilePicker(m_ImportFilter);
+            ImportFile(file);
+            Refresh();
+        }
         ImGui::BeginChild("##child");
+
+        if (ImGui::BeginPopupContextWindow()) {
+            if (ImGui::BeginMenu("New")) {
+                if (ImGui::MenuItem("PbrMaterial")) {
+                    auto path = fs::relative(m_CurrentPath, m_Root) / "New PbrMaterial.fsn";
+                    Project::ActiveProject()->GetAssetManager()->CreateAsset<PbrMaterial>(path);
+                    Refresh();
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndPopup();
+        }
 
         static s32 thumbnail_size = 64;
         static s32 padding = 8;
@@ -37,7 +72,7 @@ void ContentBrowser::OnDraw()
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(thumbnail_size, thumbnail_size);
-            size.x = m_Icons[Icon::Back]->Spec().Aspect() * size.y;
+            size.X = m_Icons[Icon::Back]->Spec().Aspect() * size.Y;
             ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Back]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                 LOG_DEBUGF("Double clicked folder");
@@ -50,7 +85,7 @@ void ContentBrowser::OnDraw()
             defer (ImGui::PopID());
             Vector2 size(thumbnail_size, thumbnail_size);
             if (entry.IsDirectory) {
-                size.x = m_Icons[Icon::Folder]->Spec().Aspect() * size.y;
+                size.X = m_Icons[Icon::Folder]->Spec().Aspect() * size.Y;
                 ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Folder]->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
@@ -61,8 +96,7 @@ void ContentBrowser::OnDraw()
             else {
                 Ref<Fsn::Texture2D> texture = m_Icons[Icon::GenericAsset];
 
-                auto size = Vector2(64, 64);
-                size.x = texture->Spec().Aspect() * size.y;
+                size.X = texture->Spec().Aspect() * size.Y;
                 ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
@@ -85,13 +119,13 @@ void ContentBrowser::OnDraw()
 
 // path cannot be a ref because it will point to an entry in m_Entries,
 // which we clear before using it.
-void ContentBrowser::ChangeDirectory(std::filesystem::path path)  // NOLINT(performance-unnecessary-value-param)
+void ContentBrowser::ChangeDirectory(fs::path path)  // NOLINT(performance-unnecessary-value-param)
 {
     m_CurrentPath = path;
 
     m_Entries.clear();
-    for (auto const& entry : std::filesystem::directory_iterator(path)) {
-        auto entry_path = std::filesystem::relative(entry.path(), Project::ActiveProject()->GetAssetsFolder());
+    for (auto const& entry : fs::directory_iterator(path)) {
+        auto entry_path = fs::relative(entry.path(), Project::ActiveProject()->GetAssetsFolder());
         auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(entry_path);
         if (metadata.IsValid() || entry.is_directory()) {
             m_Entries.push_back(Entry {
@@ -105,4 +139,31 @@ void ContentBrowser::ChangeDirectory(std::filesystem::path path)  // NOLINT(perf
         }
 
     }
+}
+
+void ContentBrowser::Refresh()
+{
+    ChangeDirectory(m_CurrentPath);
+}
+
+void ContentBrowser::ImportFile(fs::path const& path)
+{
+    if (!path.has_filename()) {
+        LOG_WARNF("Invalid name for import file: {}", path.string());
+        return;
+    }
+    VERIFY(m_FileTypes.contains(path.extension().string()));
+
+    auto name = path.filename().string();
+
+    auto copy_location = m_CurrentPath / name;
+    if (std::error_code err; !fs::copy_file(path, copy_location, fs::copy_options::overwrite_existing, err)) {
+        LOG_WARNF(R"(Failed to copy "{}" to "{}": "{}")", path.string(), copy_location.string(), err.message());
+        return;
+    }
+
+    auto asset_manager = Project::ActiveProject()->GetAssetManager();
+
+    auto rel = fs::relative(copy_location, Project::ActiveProject()->GetAssetsFolder());
+    asset_manager->RegisterAsset(rel, m_FileTypes[path.extension().string().c_str()]);
 }

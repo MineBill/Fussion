@@ -12,9 +12,9 @@ public:
     virtual ~AssetSerializer() = default;
 
     /// Save an asset file to disk. Usually in KDL.
-    virtual void Save(AssetMetadata metadata, Fussion::Asset* asset) = 0;
+    virtual void Save(AssetMetadata metadata, Ref<Fussion::Asset> const& asset) = 0;
 
     /// Load a file from disk.
     /// @return The asset if load was successful, nullptr otherwise.
-    virtual Fussion::Asset* Load(AssetMetadata metadata) = 0;
+    virtual Ref<Fussion::Asset> Load(AssetMetadata metadata) = 0;
 };

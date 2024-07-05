@@ -1,9 +1,12 @@
 ﻿#include "EditorAssetManager.h"
 #include "EditorApplication.h"
-#include "Serialization/AssetSerializer.h"
 #include "Project.h"
-
+#include "Serialization/AssetSerializer.h"
 #include "Serialization/SceneSerializer.h"
+#include "Serialization/TextureSerializer.h"
+#include "Serialization/MeshSerializer.h"
+#include "Serialization/PbrMaterialSerializer.h"
+
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Serialization/Json.h"
 
@@ -16,10 +19,15 @@ using namespace Fussion;
 EditorAssetManager::EditorAssetManager()
 {
     m_AssetSerializers[AssetType::Scene] = MakePtr<SceneSerializer>();
+    m_AssetSerializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
+    m_AssetSerializers[AssetType::Mesh] = MakePtr<MeshSerializer>();
+    m_AssetSerializers[AssetType::PbrMaterial] = MakePtr<PbrMaterialSerializer>();
 }
 
 Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 {
+    VERIFY(m_Registry.contains(handle));
+    ZoneScoped;
     if (!IsAssetLoaded(handle)) {
         // Load asset first
 
@@ -28,26 +36,25 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
         // ??
         m_LoadedAssets[handle] = {};
 
-        auto ptr = m_AssetSerializers[type]->Load(metadata);
-        VERIFY(ptr != nullptr);
-        m_LoadedAssets[handle].reset(ptr);
+        m_LoadedAssets[handle] = m_AssetSerializers[type]->Load(metadata);
         LOG_DEBUGF("Loading requested asset {} from '{}' of type {}", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));
     }
     return m_LoadedAssets[handle].get();
 }
 
-bool EditorAssetManager::IsAssetLoaded(AssetHandle handle)
+bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
 {
     return m_LoadedAssets.contains(handle);
 }
 
-bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle)
+bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
 {
     return m_Registry.contains(handle);
 }
 
 bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path) const
 {
+    ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
         if (metadata.Path == path) {
             return true;
@@ -58,6 +65,7 @@ bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path) const
 
 AssetMetadata EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
 {
+    ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
         if (metadata.Path == path) {
             return metadata;
@@ -66,9 +74,43 @@ AssetMetadata EditorAssetManager::GetMetadata(std::filesystem::path const& path)
     return {};
 }
 
+AssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
+{
+    if (IsAssetHandleValid(handle)) {
+        return m_Registry.at(handle);
+    }
+    return {};
+}
+
+void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type)
+{
+    if (type == AssetType::Invalid) {
+        LOG_WARNF("Ignoring Invalid asset type.");
+        return;
+    }
+    auto pos = std::ranges::find_if(m_Registry, [&path](auto entry) -> bool { return entry.second.Path == path; });
+    if (pos != m_Registry.end()) {
+        LOG_ERRORF("Cannot register asset at path '{}', another asset lives there", path.string());
+        return;
+    }
+
+    LOG_INFOF("Registering '{}' of type '{}'", path.string(), magic_enum::enum_name(type));
+
+    Fsn::UUID id;
+    m_Registry[id] = AssetMetadata{
+        .Type = type,
+        .Path = path,
+        .IsVirtual = false,
+        .DontSerialize = false,
+        .Handle = id,
+    };
+
+    Serialize();
+}
+
 void EditorAssetManager::SaveAsset(AssetHandle handle)
 {
-    m_AssetSerializers[m_Registry[handle].Type]->Save(m_Registry[handle], m_LoadedAssets[handle].get());
+    m_AssetSerializers[m_Registry[handle].Type]->Save(m_Registry[handle], m_LoadedAssets[handle]);
 }
 
 void EditorAssetManager::Serialize()
@@ -76,23 +118,8 @@ void EditorAssetManager::Serialize()
     ZoneScoped;
     auto project = Project::ActiveProject();
 
-    // std::vector<Node> nodes;
-    // auto& root = nodes.emplace_back("AssetRegistry");
-    //
-    // for (auto const& [handle, metadata] : m_Registry) {
-    //     if (metadata.IsVirtual || metadata.DontSerialize) {
-    //         continue;
-    //     }
-    //
-    //     auto& node = root.children().emplace_back("Asset");
-    //     node.properties().insert_or_assign("Handle", std::to_string(CAST(u64, handle)));
-    //     node.properties().insert_or_assign("Type", magic_enum::enum_name(metadata.Type)).first->second.set_type_annotation("AssetType");
-    //     node.properties().insert_or_assign("Path", metadata.Path.string());
-    // }
-    //
-    // auto const doc = Document({root});
     json j = {
-        {"$Type", "AssetRegistry"},
+        { "$Type", "AssetRegistry" },
     };
 
     u32 i = 0;
@@ -102,9 +129,9 @@ void EditorAssetManager::Serialize()
         }
 
         j["Assets"][i++] = {
-            {"Handle", handle},
-            {"Type", magic_enum::enum_name(metadata.Type)},
-            {"Path", metadata.Path.string()},
+            { "Handle", handle },
+            { "Type", magic_enum::enum_name(metadata.Type) },
+            { "Path", metadata.Path.string() },
         };
     }
 
@@ -121,9 +148,8 @@ void EditorAssetManager::Deserialize()
     }
     auto const data = FileSystem::ReadEntireFile(path);
 
-
     try {
-        auto j = json::parse(data);
+        auto j = json::parse(*data);
         auto type = j["$Type"].get<std::string>();
         if (type != "AssetRegistry") {
             LOG_WARNF("The provided file file is not an AssetRegistry but: {}", type);
@@ -146,4 +172,3 @@ void EditorAssetManager::Deserialize()
         LOG_ERRORF("Exception caught while deserialize asset registry: {}", e.what());
     }
 }
-

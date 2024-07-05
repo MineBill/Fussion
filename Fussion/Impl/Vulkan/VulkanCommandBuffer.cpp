@@ -109,12 +109,12 @@ void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
 {
     auto scissor = VkRect2D{
         .offset = VkOffset2D{
-            .x = CAST(s32, size.x),
-            .y = CAST(s32, size.y),
+            .x = CAST(s32, size.X),
+            .y = CAST(s32, size.Y),
         },
         .extent = VkExtent2D{
-            .width = CAST(u32, size.z),
-            .height = CAST(u32, size.w),
+            .width = CAST(u32, size.Z),
+            .height = CAST(u32, size.W),
         },
     };
 
@@ -125,9 +125,9 @@ void Fussion::VulkanCommandBuffer::SetViewport(const Vector2 size)
 {
     auto viewport = VkViewport{
         .x = 0,
-        .y = size.y > 0 ? 0 : -size.y,
-        .width = size.x,
-        .height = size.y,
+        .y = size.Y > 0 ? 0 : -size.Y,
+        .width = size.X,
+        .height = size.Y,
         .minDepth = 0,
         .maxDepth = 1,
     };
@@ -140,10 +140,9 @@ void Fussion::VulkanCommandBuffer::Draw(u32 vertex_count, u32 instance_count)
     vkCmdDraw(Handle, vertex_count, instance_count, 0, 0);
 }
 
-void Fussion::VulkanCommandBuffer::DrawIndexed(u32 vertex_count, u32 instance_count)
+void Fussion::VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count)
 {
-    (void)vertex_count;
-    (void)instance_count;
+    vkCmdDrawIndexed(Handle, index_count, instance_count, 0, 0, 0);
 }
 
 void Fussion::VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
@@ -209,4 +208,10 @@ void Fussion::VulkanCommandBuffer::BindUniformBuffer(Ref<Buffer> const& buffer, 
     };
 
     vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
+}
+
+void Fussion::VulkanCommandBuffer::PushConstants(Ref<Shader> const& shader, void* data, size_t size)
+{
+    auto layout = shader->GetPipeline()->GetLayout()->GetRenderHandle<VkPipelineLayout>();
+    vkCmdPushConstants(Handle, layout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, CAST(u32, size), data);
 }

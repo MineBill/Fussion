@@ -2,6 +2,7 @@
 #include "EditorWindow.h"
 
 #include "Fussion/Assets/Texture2D.h"
+#include "Fussion/OS/Dialog.h"
 #include "Fussion/Renderer/Image.h"
 
 #include <filesystem>
@@ -35,12 +36,18 @@ public:
     void OnDraw() override;
 
     void ChangeDirectory(std::filesystem::path path);
+    void Refresh();
 
 private:
+    void ImportFile(std::filesystem::path const& path);
+
     std::unordered_map<Icon, Ref<Fsn::Texture2D>> m_Icons;
     std::vector<Entry> m_Entries;
 
     std::filesystem::path m_Root;
     std::filesystem::path m_CurrentPath;
+
+    Fsn::Dialogs::FilePickerFilter m_ImportFilter;
+    std::unordered_map<std::string, Fsn::AssetType> m_FileTypes;
 };
 

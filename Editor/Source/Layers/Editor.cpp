@@ -68,6 +68,10 @@ void Editor::OnUpdate(const f32 delta)
 {
     ZoneScoped;
 
+    if (auto scene = m_ActiveScene.Get()) {
+        scene->OnUpdate(delta);
+    }
+
     m_Camera.SetFocus(m_ViewportWindow->IsFocused());
     m_Camera.OnUpdate(delta);
 
@@ -164,7 +168,8 @@ void Editor::OnDraw(Ref<CommandBuffer> cmd)
             .Perspective = m_Camera.GetPerspective(),
             .View = m_Camera.GetView(),
             .Position = m_Camera.GetPosition(),
-        }
+        },
+        .Scene = m_ActiveScene.Get(), // <-- is always nullptr probably
     });
 }
 

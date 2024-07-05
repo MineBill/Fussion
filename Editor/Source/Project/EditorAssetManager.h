@@ -8,8 +8,7 @@
 #include <unordered_map>
 #include <concepts>
 
-struct AssetMetadata
-{
+struct AssetMetadata {
     Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
 
@@ -21,25 +20,28 @@ struct AssetMetadata
 };
 
 class AssetSerializer;
-class EditorAssetManager final: public Fussion::AssetManagerBase
-{
+
+class EditorAssetManager final : public Fussion::AssetManagerBase {
 public:
     EditorAssetManager();
 
-    Fussion::Asset* GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) override;
-    bool IsAssetLoaded(Fsn::AssetHandle handle) override;
-    bool IsAssetHandleValid(Fsn::AssetHandle handle) override;
+    auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
+    bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
+    bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
 
     bool IsPathAnAsset(std::filesystem::path const& path) const;
-    AssetMetadata GetMetadata(std::filesystem::path const& path) const;
+    auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;
+    auto GetMetadata(Fsn::AssetHandle handle) const -> AssetMetadata;
+    void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
 
     template<std::derived_from<Fsn::Asset> T>
-    Fsn::AssetRef<T> CreateAsset(std::filesystem::path const& path)
+    auto CreateAsset(std::filesystem::path const& path) -> Fsn::AssetRef<T>
     {
+        auto normal_path = path.lexically_normal();
         Fussion::AssetHandle handle;
         m_Registry[handle] = AssetMetadata{
             .Type = T::GetStaticType(),
-            .Path = path,
+            .Path = normal_path,
             .IsVirtual = false,
             .DontSerialize = false,
             .Handle = handle,
@@ -48,14 +50,13 @@ public:
         m_LoadedAssets[handle] = MakeRef<T>();
 
         // Create the necessary directories, recursively.
-        auto base_path = path;
+        auto base_path = normal_path;
         base_path.remove_filename();
         if (!base_path.empty()) {
             try {
                 std::filesystem::create_directories(base_path);
-            }
-            catch (std::exception& e) {
-                LOG_DEBUGF("Exception caught in create_directories: '{}'\npath {}", e.what(), path.string());
+            } catch (std::exception& e) {
+                LOG_DEBUGF("Exception caught in create_directories: '{}'\npath {}", e.what(), normal_path.string());
             }
         }
 
@@ -63,7 +64,7 @@ public:
 
         Serialize();
 
-        return Fsn::AssetRef<T>(handle, this);
+        return Fsn::AssetRef<T>(handle);
     }
 
     void SaveAsset(Fussion::AssetHandle handle);

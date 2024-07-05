@@ -4,6 +4,8 @@
 
 #include "Components/Camera.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace Fussion
 {
     void Entity::SetParent(Entity const& new_parent)
@@ -53,11 +55,49 @@ namespace Fussion
         return m_Components.contains(type.get_hash());
     }
 
+    auto Entity::GetComponent(meta_hpp::class_type type) -> Ref<Component>
+    {
+        if (!HasComponent(type)) return nullptr;
+        auto component = m_Components[type.get_hash()];
+        return component;
+    }
+
+    void Entity::RemoveComponent(meta_hpp::class_type type)
+    {
+        VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
+            "Attempted to remove a component that doesn't derive from Component, weird.");
+
+        m_RemovedComponents.push_back(type.get_hash());
+    }
+
+    void Entity::OnDraw(RenderContext& context)
+    {
+        ZoneScoped;
+        for (auto& [id, component]: m_Components) {
+            (void)id;
+            component->OnDraw(context);
+        }
+    }
+
+    void Entity::OnDestroy()
+    {
+        LOG_DEBUGF("Destroying entity '{}'", m_Name);
+        if (auto parent = m_Scene->GetEntity(m_Parent)) {
+            parent->RemoveChild(*this);
+        }
+        // m_Scene->Destroy()
+    }
+
     void Entity::OnUpdate(f32 const delta)
     {
         for (auto& [id, component]: m_Components) {
             component->OnUpdate(delta);
         }
+
+        for (auto const& id : m_RemovedComponents) {
+            m_Components.erase(id);
+        }
+        m_RemovedComponents.clear();
     }
 
     bool Entity::IsGrandchild(UUID handle) const

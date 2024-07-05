@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/Events/Event.h"
+#include "Fussion/Math/Vector2.h"
+#include "Fussion/Math/Vector3.h"
 
 class EditorCamera
 {

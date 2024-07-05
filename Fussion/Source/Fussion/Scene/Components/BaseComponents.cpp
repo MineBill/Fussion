@@ -1,7 +1,10 @@
 ﻿#include "BaseComponents.h"
 
-#include "Fussion/Log/Log.h"
+#include "Scene/Entity.h"
 
-namespace Fussion
+namespace Fussion {
+void MoverComponent::OnUpdate(f32 delta)
 {
+    m_Owner->Transform.Position.X += delta * Speed;
+}
 }

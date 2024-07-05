@@ -75,6 +75,12 @@ ordered_json SerializeNativeComponent(meta_hpp::class_type component_type, meta_
             m = *value.as<bool*>();
         } else if (value.is<std::string*>()) {
             m = *value.as<std::string*>();
+        } else if (data_type.is_class()) {
+            auto class_type = data_type.as_class();
+            if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
+                auto m_Handle = class_type.get_member("m_Handle");
+                m = CAST(u64, m_Handle.get(value).as<AssetHandle>());
+            }
         }
     }
     return j;
@@ -115,9 +121,9 @@ void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, met
     }
 }
 
-void SceneSerializer::Save(AssetMetadata metadata, Fussion::Asset* asset)
+void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
 {
-    auto scene = CAST(Fussion::Scene*, asset);
+    auto scene = asset->As<Scene>();
     VERIFY(scene != nullptr);
 
     ordered_json j = {
@@ -157,14 +163,14 @@ void SceneSerializer::Save(AssetMetadata metadata, Fussion::Asset* asset)
     FileSystem::WriteEntireFile(full_path, j.dump(2));
 }
 
-Asset* SceneSerializer::Load(AssetMetadata metadata)
+Ref<Asset> SceneSerializer::Load(AssetMetadata metadata)
 {
-    auto const scene = new Scene();
+    auto const scene = MakeRef<Scene>();
     auto const path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
     auto const text = FileSystem::ReadEntireFile(path);
 
     try {
-        auto j = json::parse(text, nullptr, true, true);
+        auto j = json::parse(*text, nullptr, true, true);
         scene->m_Name = j["Name"].get<std::string>();
 
         auto entities = j["Entities"];

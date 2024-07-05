@@ -14,6 +14,7 @@ public:
 
 private:
     void DrawEntityHierarchy(Fsn::UUID handle);
+    void SelectEntity(Fussion::Entity* entity, bool clear = true);
 
     SelectionList m_Selection{};
 };

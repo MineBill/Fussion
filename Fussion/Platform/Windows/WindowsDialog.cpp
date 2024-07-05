@@ -4,6 +4,7 @@
 
 #include <GLFW//glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <ranges>
 #include <GLFW/glfw3native.h>
 
 #undef MessageBox
@@ -67,7 +68,20 @@ namespace Fussion::Dialogs
         return MessageButton::Ok;
     }
 
-    std::filesystem::path ShowFilePicker(std::string_view name, std::vector<std::string_view> supported_files)
+    std::filesystem::path ShowFilePicker(std::string_view name, FilePatternList const& supported_files)
+    {
+        return ShowFilePicker(FilePickerFilter {
+            .Name = std::string(name),
+            .FilePatterns = supported_files,
+        });
+    }
+
+    auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path
+    {
+        return ShowFilePicker(std::vector{filter});
+    }
+
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path
     {
         auto handle = glfwGetWin32Window(CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
         VERIFY(handle != nullptr);
@@ -76,15 +90,23 @@ namespace Fussion::Dialogs
         file.resize(256);
 
         using namespace std::string_literals;
-        std::string filter;
-        filter += name;
-        for (auto const& pattern : supported_files) {
-            filter += "\0"s;
-            filter += pattern;
-        }
-        filter += "\0"s;
+        std::string filter_string;
 
-        std::wstring const w_filter = WSTRING(filter);
+        for (const auto& [Name, FilePatterns] : filter) {
+            filter_string += Name + "\0"s;
+
+            for (size_t i = 0; i < FilePatterns.size(); i++) {
+                filter_string += FilePatterns[i];
+                if (FilePatterns.size() > 1 && i < FilePatterns.size() - 1) {
+                    filter_string += ";"s;
+                }
+            }
+            filter_string += "\0"s;
+        }
+
+        LOG_DEBUGF("Using the following for dialog filter !{}!", filter_string);
+
+        std::wstring const w_filter = WSTRING(filter_string);
         OPENFILENAMEW arg;
         ZeroMemory(&arg, sizeof(arg));
         arg.lStructSize = sizeof(OPENFILENAMEW);
@@ -96,7 +118,9 @@ namespace Fussion::Dialogs
         arg.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
         if (GetOpenFileNameW(&arg)) {
-            return std::string(file.begin(), file.end());
+            auto s = std::string(file.begin(), file.end());
+            std::erase(s, 0);
+            return s;
         }
         return "";
     }

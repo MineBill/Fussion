@@ -20,10 +20,12 @@ target "Editor"
 
     add_defines(
         "REFLECT_TYPE_INFO_ENABLED",
-        "USE_EDITOR"
+        "GLM_ENABLE_EXPERIMENTAL",
+        "USE_EDITOR",
+        "FSN_MATH_USE_GLOBALLY"
     )
 
-    add_extrafiles("Assets/**.shader")
+    add_extrafiles("Assets/**.shader", "Assets/**.glsl")
 
     -- IMGUI
     add_sysincludedirs("Vendor/imgui")

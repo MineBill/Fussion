@@ -26,7 +26,7 @@ target("Fussion")
     add_includedirs("Source/Fussion")
     add_includedirs("Source", {public = true})
     add_includedirs("Impl", {public = true})
-	add_includedirs("Vendor/entt/src", {public = true})
+    add_includedirs("Vendor/entt/src", {public = true})
 
     add_packages("glfw", "VMA")
     add_deps("magic_enum")

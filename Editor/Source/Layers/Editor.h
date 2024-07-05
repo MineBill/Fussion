@@ -59,6 +59,7 @@ public:
     static ConsoleWindow& GetConsole() { return *s_EditorInstance->m_ConsoleWindow.get(); }
     static ContentBrowser& GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
 
+    Fsn::AssetRef<Fsn::Texture2D> TextureRef;
 private:
     static Editor* s_EditorInstance;
     std::vector<Fsn::LogEntry> m_LogEntries{};

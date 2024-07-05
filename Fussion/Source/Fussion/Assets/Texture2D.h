@@ -19,6 +19,8 @@ namespace Fussion
         Ref<Image>& GetImage() { return m_Image; }
 
         Texture2DSpec Spec() const { return m_Spec; }
+
+        static AssetType GetStaticType() { return AssetType::Texture2D; }
     private:
         Ref<Image> m_Image{};
         Texture2DSpec m_Spec{};

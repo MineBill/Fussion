@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Image.h"
 #include "RenderPass.h"
+#include "Fussion/Math/Vector2.h"
 
 namespace Fussion
 {
@@ -10,7 +11,7 @@ namespace Fussion
     {
         ImageFormat Format;
         ImageUsageFlags Usage;
-        s32 Samples;
+        s32 Samples = 1;
     };
 
     struct FrameBufferSpecification

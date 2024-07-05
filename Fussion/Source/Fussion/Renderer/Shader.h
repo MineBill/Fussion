@@ -3,45 +3,47 @@
 #include "VertexLayout.h"
 #include "Fussion/Core/BitFlags.h"
 
-namespace Fussion
-{
-    struct ResourceUsage;
-    class Pipeline;
+namespace Fussion {
+struct ResourceUsage;
+class Pipeline;
 
-    enum class ShaderType
-    {
-        None = 1 << 0,
-        Vertex = 1 << 1,
-        Fragment = 1 << 2,
-        Compute = 1 << 3,
-    };
+enum class ShaderType {
+    None = 1 << 0,
+    Vertex = 1 << 1,
+    Fragment = 1 << 2,
+    Compute = 1 << 3,
+};
 
-    DECLARE_FLAGS(ShaderType, ShaderTypeFlags)
-    DECLARE_OPERATORS_FOR_FLAGS(ShaderTypeFlags)
+DECLARE_FLAGS(ShaderType, ShaderTypeFlags)
 
-    struct ShaderUniform
-    {
-        std::string Name;
-    };
+DECLARE_OPERATORS_FOR_FLAGS(ShaderTypeFlags)
 
-    struct ShaderMetadata
-    {
-        std::vector<VertexAttribute> VertexAttributes;
-        std::map<u32, std::map<u32, ResourceUsage>> Uniforms;
-        std::vector<u32> ColorOutputs;
-    };
+struct ShaderUniform {
+    std::string Name{};
+};
 
-    struct ShaderStage
-    {
-        ShaderType Type;
+struct PushConstant {
+    std::string Name{};
+    size_t Size{};
+};
 
-        std::vector<u32> Bytecode;
-    };
+struct ShaderMetadata {
+    std::vector<VertexAttribute> VertexAttributes{};
+    std::map<u32, std::map<u32, ResourceUsage>> Uniforms{};
+    std::vector<u32> ColorOutputs{};
+    std::vector<PushConstant> PushConstants{};
+    bool UseBlending{};
+};
 
-    class Shader: public RenderHandle
-    {
-    public:
-        virtual Ref<Pipeline> GetPipeline() const = 0;
-        virtual ShaderMetadata const& GetMetadata() = 0;
-    };
+struct ShaderStage {
+    ShaderType Type{};
+
+    std::vector<u32> Bytecode{};
+};
+
+class Shader : public RenderHandle {
+public:
+    virtual Ref<Pipeline> GetPipeline() const = 0;
+    virtual ShaderMetadata const& GetMetadata() = 0;
+};
 }

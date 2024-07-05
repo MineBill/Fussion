@@ -9,8 +9,7 @@ namespace Fussion
     {
         META_HPP_ENABLE_POLY_INFO(Component)
     public:
-        ScriptComponent() = default;
-        COMPONENT(ScriptComponent)
+        COMPONENT_DEFAULT(ScriptComponent)
 
         void OnUpdate(f32) override;
 

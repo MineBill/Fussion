@@ -9,9 +9,11 @@
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
 
+using namespace Fussion;
+
 bool operator==(const Vector2& vec, const Vector2& rhs)
 {
-    return fabs(vec.x - rhs.x) <= FLT_EPSILON && fabs(vec.y - rhs.y) <= FLT_EPSILON;
+    return fabs(vec.X - rhs.X) <= FLT_EPSILON && fabs(vec.Y - rhs.Y) <= FLT_EPSILON;
 }
 
 void ViewportWindow::OnDraw()
@@ -31,7 +33,7 @@ void ViewportWindow::OnDraw()
 
         {
             ZoneScopedN("Get image from set");
-            const auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(0);
+            const auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
             ImGui::Image(IMGUI_IMAGE(image), m_Size);
         }
 
@@ -51,17 +53,28 @@ void ViewportWindow::OnDraw()
             ImGui::Text("Simple overlay\n" "(right-click to change position)");
             ImGui::Separator();
             auto pos = Editor::GetCamera().GetPosition();
-            ImGui::Text("Mouse Position: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
+            ImGui::Text("Mouse Position: {}", pos);
         }
         ImGui::End();
 
         if (ImGui::BeginDragDropTarget()) {
-            if (auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET"); payload) {
-                auto handle = CAST(Fussion::AssetHandle*, payload->Data);
+            auto* payload = ImGui::GetDragDropPayload();
+            if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
+                auto handle = CAST(AssetHandle*, payload->Data);
 
-                auto scene = Fsn::AssetManager::GetAsset<Fussion::Scene>(*handle);
-                Editor::ChangeScene(scene);
+                auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*handle);
+                if (metadata.Type == AssetType::Scene) {
+                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                        auto scene = AssetManager::GetAsset<Scene>(*handle);
+                        Editor::ChangeScene(scene);
+                    }
+                } else if (metadata.Type == AssetType::Texture2D) {
+                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                        Editor::Get().TextureRef = AssetManager::GetAsset<Texture2D>(*handle);
+                    }
+                }
             }
+
             ImGui::EndDragDropTarget();
         }
     }

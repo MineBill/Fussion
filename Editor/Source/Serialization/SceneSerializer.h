@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include "AssetSerializer.h"
 
-class SceneSerializer: public AssetSerializer
+class SceneSerializer final : public AssetSerializer
 {
 public:
 
-    void Save(AssetMetadata metadata, Fussion::Asset* asset) override;
-    Fussion::Asset* Load(AssetMetadata metadata) override;
+    void Save(AssetMetadata metadata, Ref<Fussion::Asset> const& asset) override;
+    Ref<Fussion::Asset> Load(AssetMetadata metadata) override;
 };

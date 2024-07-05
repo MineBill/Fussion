@@ -1,6 +1,5 @@
 ﻿#define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
 #include "EditorCamera.h"
 
 #include <imgui.h>
@@ -12,17 +11,17 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#include "Fussion/Log/Formatters.h"
 #include "Fussion/Core/Application.h"
+#include "Fussion/Math/Vector4.h"
 
 using namespace Fussion;
 
 void EditorCamera::OnUpdate(const f32 delta)
 {
     auto rotation = glm::eulerAngleZXY(
-        glm::radians(m_EulerAngles.z),
-        glm::radians(m_EulerAngles.x),
-        glm::radians(m_EulerAngles.y));
+        glm::radians(m_EulerAngles.Z),
+        glm::radians(m_EulerAngles.X),
+        glm::radians(m_EulerAngles.Y));
 
 
     if (m_CapturedMouse) {
@@ -32,11 +31,12 @@ void EditorCamera::OnUpdate(const f32 delta)
         auto input = Vector3(x, y, z);
 
         m_Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * 0.001f;
+        m_Position *= 1;
     }
 
-    m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.x / m_ScreenSize.y, 0.1f, 1000.0f);
+    m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, 0.1f, 1000.0f);
 
-    m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), m_Position));
+    m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, m_Position)));
 }
 
 void EditorCamera::HandleEvent(Event& event)

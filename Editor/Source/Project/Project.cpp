@@ -23,7 +23,7 @@ bool Project::Load(std::filesystem::path path)
 
     auto const data = FileSystem::ReadEntireFile(path);
 
-    auto j = json::parse(data, nullptr, true, true);
+    auto j = json::parse(*data, nullptr, true, true);
 
     s_ActiveProject->m_ProjectPath = path;
     auto const base = path.parent_path();

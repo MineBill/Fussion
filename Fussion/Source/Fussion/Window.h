@@ -2,6 +2,7 @@
 #include "Core/BitFlags.h"
 #include "Core/Types.h"
 #include "Events/Event.h"
+#include "Fussion/Math/Vector2.h"
 
 namespace Fussion
 {

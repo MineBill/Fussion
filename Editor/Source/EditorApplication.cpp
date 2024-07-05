@@ -7,7 +7,6 @@
 #include "Fussion/Input/Input.h"
 #include "imgui.h"
 
-
 #include <glm/gtc/matrix_transform.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
@@ -71,8 +70,8 @@ void EditorApplication::OnUpdate(const f32 delta)
 
     const auto main = Renderer::GetInstance()->GetMainRenderPass();
     cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
-    cmd->SetViewport({window_size.x, -window_size.y});
-    cmd->SetScissor({0, 0, window_size.x, window_size.y});
+    cmd->SetViewport({window_size.X, -window_size.Y});
+    cmd->SetScissor({0, 0, window_size.X, window_size.Y});
 
     m_ImGuiLayer->End(cmd);
 

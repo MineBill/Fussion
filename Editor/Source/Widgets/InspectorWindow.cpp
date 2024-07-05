@@ -2,19 +2,18 @@
 #include "Layers/Editor.h"
 #include "ImGuiHelpers.h"
 #include "EditorApplication.h"
+#include "Fussion/Assets/Mesh.h"
+#include "Fussion/Math/Color.h"
 
 #include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
 
-#include "Fussion/Assets/Mesh.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Component.h"
-#include "Fussion/Scene/Components/Camera.h"
-#include "Fussion/Scene/Components/MeshRenderer.h"
-#include "Fussion/Scene/Components/ScriptComponent.h"
-#include "Fussion/Scripting/ScriptingEngine.h"
+
+using namespace Fussion;
 
 std::tuple<f32, f32> ParseRangeMeta(std::string value)
 {
@@ -49,7 +48,7 @@ void InspectorWindow::OnDraw()
     ImGui::End();
 }
 
-bool InspectorWindow::DrawComponent(meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
+bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
 {
     ZoneScoped;
     bool modified{ false };
@@ -93,6 +92,47 @@ bool InspectorWindow::DrawComponent(meta_hpp::class_type component_type, meta_hp
                     if (ImGui::InputText("", value.as<std::string*>())) {
                         modified = true;
                     }
+                } else if (value.is<Color*>()) {
+                    modified |= ImGui::ColorEdit4("", value.as<Color*>()->Raw);
+                } else if (data_type.is_class()) {
+                    auto class_type = data_type.as_class();
+                    if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
+                        auto m_Handle = class_type.get_member("m_Handle");
+
+                        ImGui::TextUnformatted("Asset Reference:");
+                        ImGui::SetNextItemAllowOverlap();
+                        Vector2 pos = ImGui::GetCursorPos();
+                        ImGui::Button(std::format("{}", CAST(u64, m_Handle.get(value).as<AssetHandle>())).c_str(), Vector2(64, 64));
+
+                        if (ImGui::BeginDragDropTarget()) {
+                            auto* payload = ImGui::GetDragDropPayload();
+                            if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
+                                auto handle = CAST(Fussion::AssetHandle*, payload->Data);
+
+                                if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                                    m_Handle.set(value, *handle);
+                                }
+                            }
+
+                            ImGui::EndDragDropTarget();
+                        }
+
+                        ImGui::SetCursorPos(pos + Vector2(2, 2));
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
+                        if (ImGui::Button("o", Vector2(16, 16))) {
+
+                        }
+                        ImGui::PopStyleVar();
+                    }
+                    // if (class_type.get_arity() > 0) {
+                    //     meta_hpp::resolve_type<Fsn::AssetRef<_>>();
+                    //     ImGui::Text("Template type!");
+                    // } else {
+                    //     ImGui::Text("Normal class type!");
+                    // }
+                    // // if (ImGui::InputText("", value.as<std::string*>())) {
+                    // //     modified = true;
+                    // // }
                 } else {
                     ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                 }
@@ -100,12 +140,19 @@ bool InspectorWindow::DrawComponent(meta_hpp::class_type component_type, meta_hp
         }
         ImGui::Separator();
     }
+    // if (ImGui::BeginPopupContextItem()) {
+    //     if (ImGui::MenuItem("Remove Component")) {
+    //         LOG_WARN("Remove component");
+    //         entity.RemoveComponent(component_type);
+    //     }
+    //
+    //     ImGui::EndPopup();
+    // }
     return modified;
 }
 
-bool InspectorWindow::DrawEntity(Fussion::Entity& e)
+bool InspectorWindow::DrawEntity(Entity& e)
 {
-    using namespace Fussion;
     ZoneScoped;
 
     bool modified{ false };
@@ -128,7 +175,7 @@ bool InspectorWindow::DrawEntity(Fussion::Entity& e)
         auto ptr = component->meta_poly_ptr();
 
         auto type = ptr.get_type().as_pointer().get_data_type().as_class();
-        modified |= DrawComponent(type, std::move(ptr));
+        modified |= DrawComponent(e, type, std::move(ptr));
     }
 
     if (ImGuiH::ButtonCenteredOnLine("Add Component")) {

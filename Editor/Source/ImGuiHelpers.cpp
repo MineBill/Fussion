@@ -153,7 +153,7 @@ void ImGuiHelpers::EndGroupPanel()
     ImGui::EndGroup();
 }
 
-void ImGuiHelpers::DragVec3(const char *id, glm::vec3 *value, f32 speed, f32 min, f32 max, const char *format, ImFont* font, ImFont* font2)
+void ImGuiHelpers::DragVec3(const char *id, Vector3 *value, f32 speed, f32 min, f32 max, const char *format, ImFont* font, ImFont* font2)
 {
     ImGui::PushID(id);
     constexpr auto X_COLOR = ImVec4(0.92f, 0.24f, 0.27f, 1.0);
@@ -186,7 +186,7 @@ void ImGuiHelpers::DragVec3(const char *id, glm::vec3 *value, f32 speed, f32 min
     ImGui::PushStyleColor(ImGuiCol_FrameBg, X_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, X_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##x", &value->x, speed, min, max, format);
+    ImGui::DragFloat("##x", &value->X, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -199,7 +199,7 @@ void ImGuiHelpers::DragVec3(const char *id, glm::vec3 *value, f32 speed, f32 min
     ImGui::PushStyleColor(ImGuiCol_FrameBg, Y_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Y_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##y", &value->y, speed, min, max, format);
+    ImGui::DragFloat("##y", &value->Y, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -212,7 +212,7 @@ void ImGuiHelpers::DragVec3(const char *id, glm::vec3 *value, f32 speed, f32 min
     ImGui::PushStyleColor(ImGuiCol_FrameBg, Z_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Z_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##z", &value->z, speed, min, max, format);
+    ImGui::DragFloat("##z", &value->Z, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -235,12 +235,12 @@ bool ImGuiHelpers::ButtonCenteredOnLine(const char *label, float alignment)
     return ImGui::Button(label);
 }
 
-void ImGuiHelpers::RenderSimpleRect(ImDrawList *draw_list, glm::vec2 const &position, glm::vec2 const &size, u32 color,
+void ImGuiHelpers::RenderSimpleRect(ImDrawList *draw_list, Vector2 const &position, Vector2 const &size, u32 color,
                                     f32 width)
 {
     ImGui::RenderRectFilledWithHole(
-        draw_list, ImRect(position.x, position.y, position.x + size.x, position.y + size.y),
-        ImRect(position.x + width, position.y + width, position.x + size.x - width, position.y + size.y - width), color,
+        draw_list, ImRect(position.X, position.Y, position.X + size.X, position.Y + size.Y),
+        ImRect(position.X + width, position.Y + width, position.X + size.X - width, position.Y + size.Y - width), color,
         0.0f);
 }
 

@@ -38,6 +38,15 @@ namespace Fussion::Dialogs
 
     MessageButton ShowMessageBox(MessageBox data);
 
-    std::filesystem::path ShowFilePicker(std::string_view name, std::vector<std::string_view> supported_files);
-    std::filesystem::path ShowDirectoryPicker();
+    using FilePatternList = std::vector<std::string>;
+    struct FilePickerFilter {
+        std::string Name;
+        FilePatternList FilePatterns;
+    };
+
+    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files) -> std::filesystem::path;
+    auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path;
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path;
+
+    auto ShowDirectoryPicker() -> std::filesystem::path;
 }

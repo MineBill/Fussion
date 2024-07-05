@@ -10,7 +10,7 @@
 
 #define USE_ASSERTIONS
 #ifdef USE_ASSERTIONS
-#define VERIFY(expr, ...)                                                                           \
+#define VERIFY(expr, ...)                                                                            \
         {                                                                                            \
             if (!(expr)) {                                                                           \
                 LOG_ERRORF("ASSERTION HIT: {}", #expr);                                              \
@@ -45,26 +45,30 @@
 #define MUSTUSE [[nodiscard]]
 #define DEPRECATED(msg) [[deprecated(msg)]]
 
-namespace Fussion
+#define UNIMPLEMENTED PANIC("This code path is unimplemented!")
+#define UNREACHABLE PANIC("Reached unreachable code!")
+
+namespace Fussion {
+template<typename F>
+struct Defer {
+    explicit Defer(F f) : m_F(f) {}
+    ~Defer() { m_F(); }
+
+private:
+    F m_F;
+};
+
+template<typename F>
+Defer<F> MakeDefer(F f)
 {
-    template <typename F>
-    struct Defer
-    {
-        explicit Defer(F f) : m_F(f) {}
-        ~Defer() { m_F(); }
-
-    private:
-        F m_F;
-    };
-
-    template <typename F>
-    Defer<F> MakeDefer(F f)
-    {
-        return Defer<F>(f);
-    }
+    return Defer<F>(f);
+}
 }
 
 #define DEFER_1(x, y) x##y
 #define DEFER_2(x, y) DEFER_1(x, y)
 #define DEFER_3(x)    DEFER_2(x, __COUNTER__)
 #define defer(code)   auto DEFER_3(_defer_) = Fussion::MakeDefer([&](){code;})
+
+#define FSN_CLASS(...)
+#define FSN_FIELD(...)

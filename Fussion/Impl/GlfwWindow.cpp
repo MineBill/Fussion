@@ -41,6 +41,8 @@ namespace Fussion
             });
         }
 
+        glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, 1);
+
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
@@ -199,7 +201,7 @@ namespace Fussion
 
     void GlfwWindow::SetPosition(Vector2 position) const
     {
-        glfwSetWindowPos(m_Window, CAST(s32, position.x), CAST(s32, position.y));
+        glfwSetWindowPos(m_Window, CAST(s32, position.X), CAST(s32, position.Y));
     }
 
     KeyboardKey GlfwKeyToFussion(int key)

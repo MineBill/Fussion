@@ -30,7 +30,7 @@ public:
     void ForEachEntity(Callback callback)
     {
         for (auto&& [id, entity] : m_Entities) {
-            callback(entity);
+            callback(&entity);
         }
     }
 
@@ -40,6 +40,9 @@ public:
     /// Marks the scene as modified.
     /// Mainly used by the editor.
     void SetDirty() { m_Dirty = true; }
+
+    void Destroy(UUID handle);
+    void Destroy(Entity const* entity);
 
     static AssetType GetStaticType() { return AssetType::Scene; }
 

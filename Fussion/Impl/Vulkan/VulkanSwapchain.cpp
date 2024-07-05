@@ -111,8 +111,7 @@ namespace Fussion
     {
         ZoneScoped;
         Destroy(true);
-        m_Specification.Size.x = width;
-        m_Specification.Size.y = height;
+        m_Specification.Size = Vector2(width, height);
 
         Invalidate();
     }
@@ -169,8 +168,8 @@ namespace Fussion
             .imageFormat = ImageFormatToVulkan(m_Specification.Format),
             .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
             .imageExtent = VkExtent2D {
-                .width = CAST(u32, m_Specification.Size.x),
-                .height = CAST(u32, m_Specification.Size.y),
+                .width = CAST(u32, m_Specification.Size.X),
+                .height = CAST(u32, m_Specification.Size.Y),
             },
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
@@ -188,8 +187,8 @@ namespace Fussion
 
         auto depth_spec = ImageSpecification {
             .Label = "Swapchain Depth Image",
-            .Width = CAST(s32, m_Specification.Size.x),
-            .Height = CAST(s32, m_Specification.Size.y),
+            .Width = CAST(s32, m_Specification.Size.X),
+            .Height = CAST(s32, m_Specification.Size.Y),
             .Samples = 1,
             .Format = ImageFormat::D32_SFLOAT,
             .Usage = ImageUsage::DepthStencilAttachment,
@@ -222,8 +221,8 @@ namespace Fussion
         for (u32 i = 0; i < image_count; i++) {
             auto spec = ImageSpecification {
                 .Label = "Swapchain Image",
-                .Width = CAST(s32, m_Specification.Size.x),
-                .Height = CAST(s32, m_Specification.Size.y),
+                .Width = CAST(s32, m_Specification.Size.X),
+                .Height = CAST(s32, m_Specification.Size.Y),
                 .Samples = 1,
                 .Format = m_Specification.Format,
                 .Usage = ImageUsage::ColorAttachment | ImageUsage::TransferDst,
@@ -240,8 +239,8 @@ namespace Fussion
 
         for (const auto& image : m_Images) {
             const auto spec = FrameBufferSpecification {
-                .Width = CAST(s32, m_Specification.Size.x),
-                .Height = CAST(s32, m_Specification.Size.y),
+                .Width = CAST(s32, m_Specification.Size.X),
+                .Height = CAST(s32, m_Specification.Size.Y),
             };
 
             const std::vector<Ref<Image>> images = {

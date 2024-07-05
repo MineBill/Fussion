@@ -71,7 +71,7 @@ namespace Fussion
                         .Label = "FrameBuffer Color Image",
                         .Width = m_Specification.Width,
                         .Height = m_Specification.Height,
-                        .Samples = m_Specification.Samples,
+                        .Samples = format.Samples,
                         .Format = format.Format,
                         .Usage = format.Usage,
                         .FinalLayout = ImageLayout::ColorAttachmentOptimal,
@@ -85,7 +85,7 @@ namespace Fussion
                     .Label = "FrameBuffer Depth Image",
                     .Width = m_Specification.Width,
                     .Height = m_Specification.Height,
-                    .Samples = m_Specification.Samples,
+                    .Samples = m_DepthFormat->Samples,
                     .Format = m_DepthFormat->Format,
                     .Usage = m_DepthFormat->Usage,
                 };
@@ -119,8 +119,8 @@ namespace Fussion
 
     void VulkanFrameBuffer::Resize(Vector2 new_size)
     {
-        m_Specification.Width = CAST(s32, new_size.x);
-        m_Specification.Height = CAST(s32, new_size.y);
+        m_Specification.Width = CAST(s32, new_size.X);
+        m_Specification.Height = CAST(s32, new_size.Y);
 
         Destroy();
         Invalidate();
