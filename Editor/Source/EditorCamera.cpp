@@ -12,6 +12,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Fussion/Core/Application.h"
+#include "Fussion/Math/Math.h"
 #include "Fussion/Math/Vector4.h"
 
 using namespace Fussion;
@@ -23,14 +24,13 @@ void EditorCamera::OnUpdate(const f32 delta)
         glm::radians(m_EulerAngles.X),
         glm::radians(m_EulerAngles.Y));
 
-
     if (m_CapturedMouse) {
         const auto x = Input::GetAxis(KeyboardKey::D, KeyboardKey::A);
         const auto y = Input::GetAxis(KeyboardKey::Space, KeyboardKey::LeftControl);
         const auto z = Input::GetAxis(KeyboardKey::S, KeyboardKey::W);
         auto input = Vector3(x, y, z);
 
-        Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * 0.002f;
+        Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * Speed;
     }
 
     m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, 0.1f, 1000.0f);
@@ -41,10 +41,21 @@ void EditorCamera::OnUpdate(const f32 delta)
 void EditorCamera::HandleEvent(Event& event)
 {
     EventDispatcher dispatcher(event);
-    dispatcher.Dispatch<MouseMoved>([this](MouseMoved& mouse_moved) -> bool {
+    dispatcher.Dispatch<MouseMoved>([this](MouseMoved const& mouse_moved) -> bool {
         if (m_CapturedMouse) {
             const auto input = Vector3(mouse_moved.RelY, mouse_moved.RelX, 0);
             m_EulerAngles += input * 0.1f;
+        }
+        return false;
+    });
+
+    dispatcher.Dispatch<MouseWheelMoved>([this](MouseWheelMoved const& mouse_wheel_moved) -> bool {
+        if (m_CapturedMouse) {
+            constexpr auto max_speed = 10.0f;
+            constexpr auto min_speed = 0.1f;
+
+            Speed += mouse_wheel_moved.Y * (Speed / max_speed);
+            Speed = Math::Clamp(Speed, min_speed, max_speed);
         }
         return false;
     });

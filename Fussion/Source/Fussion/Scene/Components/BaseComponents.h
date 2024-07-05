@@ -4,8 +4,6 @@
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Log/Log.h"
 
-#define FSN_FIELD(...)
-
 namespace Fussion {
 class PointLight : public Component {
     META_HPP_ENABLE_POLY_INFO(Component)
@@ -21,8 +19,7 @@ public:
 
     void OnUpdate(f32 delta) override;
 
-    FSN_FIELD()
-    f32 Speed;
+    f32 Speed{0.1f};
 };
 }
 

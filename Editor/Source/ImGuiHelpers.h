@@ -24,6 +24,18 @@ namespace ImGuiHelpers
     void InputText(const char* label, std::string &value, ImGuiInputTextFlags flags = 0);
 
     bool ImageToggleButton(const char* id, Ref<Fussion::Image> const& image, bool& toggled, Vector2 size);
+
+    template<typename... Args>
+    void Text(std::format_string<Args...> fmt, Args&& ...args)
+    {
+        ImGui::TextUnformatted(std::format(fmt, std::forward<Args>(args)...).c_str());
+    }
+
+    template<typename... Args>
+    bool Button(std::format_string<Args...> fmt, Args&& ...args)
+    {
+        return ImGui::Button(std::format(fmt, std::forward<Args>(args)...).c_str());
+    }
 } // namespace ImGuiHelpers
 
 namespace ImGuiH = ImGuiHelpers;

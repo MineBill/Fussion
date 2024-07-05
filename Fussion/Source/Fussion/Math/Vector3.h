@@ -117,4 +117,4 @@ struct Vector3 final {
 using Fussion::Vector3;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Vector3, "Vector3(%.1f, %.1f, %.1f)", v.X, v.Y, v.Z)
+FSN_MAKE_FORMATTABLE(Fussion::Vector3, "Vector3({:.2}, {:.2}, {:.2})", v.X, v.Y, v.Z)

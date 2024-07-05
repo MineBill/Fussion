@@ -105,4 +105,4 @@ struct Vector2 {
 using Fussion::Vector2;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2(%.1f, %.1f)", v.X, v.Y)
+FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2({:.2}, {:.2})", v.X, v.Y)

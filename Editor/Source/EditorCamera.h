@@ -7,6 +7,7 @@
 class EditorCamera {
 public:
     Vector3 Position{};
+    f32 Speed{1.0f};
 
     void OnUpdate(f32);
     void HandleEvent(Fussion::Event& event);
