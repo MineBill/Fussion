@@ -33,7 +33,7 @@ u64 Clock::Reset()
     QueryPerformanceFrequency(&frequency);
     const auto diff = integer.QuadPart - m_TickCount;
     m_TickCount = integer.QuadPart;
-    return CAST(u64, diff * 1000000 / frequency.QuadPart);
+    return CAST(u64, diff * 1000 / frequency.QuadPart);
 #elif defined(OS_LINUX)
     timespec ts{};
     clock_gettime(CLOCK_BOOTTIME, &ts);
