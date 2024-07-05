@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include <imgui.h>
+#include "ImGuizmo.h"
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 #include <magic_enum/magic_enum.hpp>
@@ -149,6 +150,7 @@ void ImGuiLayer::Begin()
     ImGui_ImplGlfw_NewFrame();
     ImGui_ImplVulkan_NewFrame();
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 }
 
 void ImGuiLayer::End(const Ref<Fussion::CommandBuffer>& cmd)

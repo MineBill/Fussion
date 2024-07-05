@@ -8,6 +8,7 @@
 #include "Fussion/Scripting/ScriptingEngine.h"
 
 #include <imgui.h>
+#include "ImGuizmo.h"
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
@@ -29,12 +30,12 @@ Editor::Editor()
 void Editor::OnStart()
 {
     ZoneScoped;
-    m_ViewportWindow   = MakePtr<ViewportWindow>(this);
-    m_InspectorWindow  = MakePtr<InspectorWindow>(this);
-    m_ConsoleWindow    = MakePtr<ConsoleWindow>(this);
-    m_SceneWindow      = MakePtr<SceneTreeWindow>(this);
+    m_ViewportWindow = MakePtr<ViewportWindow>(this);
+    m_InspectorWindow = MakePtr<InspectorWindow>(this);
+    m_ConsoleWindow = MakePtr<ConsoleWindow>(this);
+    m_SceneWindow = MakePtr<SceneTreeWindow>(this);
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
-    m_ContentBrowser   = MakePtr<ContentBrowser>(this);
+    m_ContentBrowser = MakePtr<ContentBrowser>(this);
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
@@ -44,26 +45,19 @@ void Editor::OnStart()
 
     OnViewportResized(Vector2(300, 300));
 
-    // auto stream = ScriptingEngine::Get().DumpCurrentTypes();
-    // std::ofstream file("Assets/Scripts/as.predefined");
-    // file << stream.str();
-    // file.close();
-
     m_ViewportWindow->OnStart();
     m_InspectorWindow->OnStart();
     m_ConsoleWindow->OnStart();
     m_SceneWindow->OnStart();
-    m_ScriptsInspector->OnStart();
     m_ContentBrowser->OnStart();
+
+    m_ScriptsInspector->OnStart();
+    m_ScriptsInspector->Hide();
 }
 
-void Editor::OnEnable()
-{
-}
+void Editor::OnEnable() {}
 
-void Editor::OnDisable()
-{
-}
+void Editor::OnDisable() {}
 
 void Editor::OnUpdate(const f32 delta)
 {
@@ -76,20 +70,6 @@ void Editor::OnUpdate(const f32 delta)
     m_Camera.SetFocus(m_ViewportWindow->IsFocused());
     m_Camera.OnUpdate(delta);
 
-    if (Input::IsKeyPressed(KeyboardKey::G)) {
-        using namespace Dialogs;
-
-        // MessageBox box {
-        //     .Title = "Hello",
-        //     .Message = "Are you stupid?",
-        //     .Type = MessageType::Info,
-        //     .Action = MessageAction::YesNo
-        // };
-        // LOG_DEBUGF("Got: {}", magic_enum::enum_name(ShowMessageBox(box)));
-
-        // auto path = ShowFilePicker("Project", {"*.*"});
-        // LOG_DEBUGF("{}", path.extension().string());
-    }
     ImGui::DockSpaceOverViewport();
 
     static bool show_demo_window = false;
@@ -140,8 +120,6 @@ void Editor::OnUpdate(const f32 delta)
 
             ImGui::EndMenu();
         }
-
-        ImGui::Text("Delta: %f", delta);
     }
     ImGui::EndMainMenuBar();
 
@@ -160,12 +138,19 @@ void Editor::OnUpdate(const f32 delta)
 void Editor::OnEvent(Event& event)
 {
     m_Camera.HandleEvent(event);
+
+    m_ViewportWindow->OnEvent(event);
+    m_InspectorWindow->OnEvent(event);
+    m_ConsoleWindow->OnEvent(event);
+    m_SceneWindow->OnEvent(event);
+    m_ScriptsInspector->OnEvent(event);
+    m_ContentBrowser->OnEvent(event);
 }
 
 void Editor::OnDraw(Ref<CommandBuffer> cmd)
 {
     m_SceneRenderer.Render(cmd, {
-        .Camera = RenderCamera {
+        .Camera = RenderCamera{
             .Perspective = m_Camera.GetPerspective(),
             .View = m_Camera.GetView(),
             .Position = m_Camera.Position,
@@ -181,14 +166,14 @@ void Editor::Quit()
 
 void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
 {
-    m_LogEntries.push_back(LogEntry {
+    m_LogEntries.push_back(LogEntry{
         level,
         std::string(message),
         loc,
     });
 }
 
-void Editor::ChangeScene(Fsn::AssetRef<Fsn::Scene> scene)
+void Editor::ChangeScene(AssetRef<Scene> scene)
 {
     s_EditorInstance->m_ActiveScene = scene;
 }
