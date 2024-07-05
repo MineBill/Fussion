@@ -52,7 +52,7 @@ void ViewportWindow::OnDraw()
             const ImGuiIO& io = ImGui::GetIO();
             ImGui::Text("Simple overlay\n" "(right-click to change position)");
             ImGui::Separator();
-            auto pos = Editor::GetCamera().GetPosition();
+            auto pos = Editor::GetCamera().Position;
             ImGui::Text("Mouse Position: {}", pos);
         }
         ImGui::End();

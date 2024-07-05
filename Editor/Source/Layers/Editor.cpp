@@ -39,6 +39,7 @@ void Editor::OnStart()
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
     m_Camera.Resize(Application::Instance()->GetWindow().GetSize());
+    m_Camera.Position = Vector3(0, 2, 0);
     m_SceneRenderer.Init();
 
     OnViewportResized(Vector2(300, 300));
@@ -167,7 +168,7 @@ void Editor::OnDraw(Ref<CommandBuffer> cmd)
         .Camera = RenderCamera {
             .Perspective = m_Camera.GetPerspective(),
             .View = m_Camera.GetView(),
-            .Position = m_Camera.GetPosition(),
+            .Position = m_Camera.Position,
         },
         .Scene = m_ActiveScene.Get(), // <-- is always nullptr probably
     });

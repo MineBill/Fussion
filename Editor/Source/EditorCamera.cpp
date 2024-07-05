@@ -30,13 +30,12 @@ void EditorCamera::OnUpdate(const f32 delta)
         const auto z = Input::GetAxis(KeyboardKey::S, KeyboardKey::W);
         auto input = Vector3(x, y, z);
 
-        m_Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * 0.001f;
-        m_Position *= 1;
+        Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * 0.002f;
     }
 
     m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, 0.1f, 1000.0f);
 
-    m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, m_Position)));
+    m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, Position)));
 }
 
 void EditorCamera::HandleEvent(Event& event)
