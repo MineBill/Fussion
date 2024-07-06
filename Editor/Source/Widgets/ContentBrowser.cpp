@@ -20,6 +20,7 @@ void ContentBrowser::OnStart()
     m_Icons[Icon::Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png");
     m_Icons[Icon::GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png");
     m_Icons[Icon::Back] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png");
+    m_Icons[Icon::Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png");
 
     m_Root = Project::ActiveProject()->GetAssetsFolder();
     ChangeDirectory(m_Root);
@@ -43,22 +44,36 @@ void ContentBrowser::OnDraw()
 
         m_IsFocused = ImGui::IsWindowFocused();
 
-        if (ImGui::Button("Import")) {
+        EUI::Button("Import", [&] {
             auto file = Fussion::Dialogs::ShowFilePicker(m_ImportFilter);
             ImportFile(file);
             Refresh();
-        }
+        });
         ImGui::SameLine();
         ImGui::Spacing();
         ImGui::SameLine();
         ImGui::Spacing();
         ImGui::SameLine();
-
-        // ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 
         ImGuiH::Text("Path: {}", m_RelativeToRoot.string());
 
-        // ImGui::InputText("", m_CurrentPath.string().c_str(), m_CurrentPath.string().size());
+        ImGui::SameLine();
+        auto width = ImGui::GetContentRegionAvail().x - (16 * 2 + ImGui::GetStyle().FramePadding.x);
+        ImGui::Dummy({ width, 0 });
+
+        ImGui::SameLine();
+        EUI::ImageButton(m_Icons[Icon::Dots], Vector2(16, 16), [&] {
+            ImGui::OpenPopup("ContentBrowserOptions");
+        });
+        if (ImGui::BeginItemTooltip()) {
+            ImGui::TextUnformatted("Press to view content browser options.");
+            ImGui::EndTooltip();
+        }
+
+        EUI::Popup("ContentBrowserOptions", [&] {
+            EUI::Property("Padding", &m_Padding, EUI::PropTypeRange{.Min = 2, .Max = 32});
+            EUI::Property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange{.Min = 16, .Max = 128});
+        });
 
         ImGui::Separator();
 
@@ -76,10 +91,7 @@ void ContentBrowser::OnDraw()
             ImGui::EndPopup();
         }
 
-        static s32 thumbnail_size = 64;
-        static s32 padding = 4;
-
-        auto item_size = padding + thumbnail_size + CAST(s32, ImGui::GetStyle().FramePadding.x);
+        auto item_size = m_Padding + m_ThumbnailSize + CAST(s32, ImGui::GetStyle().FramePadding.x);
         auto columns = CAST(s32, ImGui::GetContentRegionAvail().x) / item_size;
         if (columns <= 0)
             columns = 1;
@@ -90,7 +102,7 @@ void ContentBrowser::OnDraw()
         ImGui::PushStyleColor(ImGuiCol_Button, Vector4(0, 0, 0, 0));
 
         if (m_CurrentPath != m_Root) {
-            Vector2 size(thumbnail_size, thumbnail_size);
+            Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
             size.X = m_Icons[Icon::Back]->Spec().Aspect() * size.Y;
             ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Back]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
@@ -102,7 +114,7 @@ void ContentBrowser::OnDraw()
         for (auto const& entry : m_Entries) {
             ImGui::PushID(entry.Path.c_str());
             defer(ImGui::PopID());
-            Vector2 size(thumbnail_size, thumbnail_size);
+            Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
             if (entry.IsDirectory) {
                 size.X = m_Icons[Icon::Folder]->Spec().Aspect() * size.Y;
                 ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Folder]->GetImage()), size);

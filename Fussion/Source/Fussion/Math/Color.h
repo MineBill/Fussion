@@ -2,6 +2,7 @@
 #include "Math.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Math/Vector4.h"
+#include "Fussion/Log/Formatters.h"
 
 namespace Fussion {
 struct Color {
@@ -52,7 +53,7 @@ struct Color {
     Color(Vector4 v): R(v.X), G(v.Y), B(v.Z), A(v.W) {}
 
     [[nodiscard]]
-    static Color FromHex(s32 hex)
+    static Color FromHex(u32 hex)
     {
         return {
             CAST(f32, hex >> 24) / 256.f,
@@ -147,6 +148,7 @@ struct Color {
     static Color ForestGreen;
     static Color DarkGoldenRod;
     static Color Indigo;
+    static Color Transparent;
 };
 }
 
@@ -154,3 +156,7 @@ struct Color {
 using Fussion::Color;
 using HSL = Fussion::Color::HSL;
 #endif
+
+FSN_MAKE_FORMATTABLE(Fussion::Color, "Color(R: {}, G: {}, B: {}, A: {})", v.R, v.G, v.B, v.A)
+
+FSN_MAKE_FORMATTABLE(Fussion::Color::HSL, "HSL(H: {}, S: {}, L: {}, A: {})", v.H, v.S, v.L, v.A)

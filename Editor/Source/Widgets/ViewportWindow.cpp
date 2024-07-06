@@ -127,11 +127,23 @@ void ViewportWindow::OnDraw()
         ImGui::SetCursorPos(origin + Vector2(5, 5));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);
 
-        if (ImGuiH::Button("Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode))) {
-            ImGui::OpenPopup("GizmoSelection");
-        }
+        EUI::Button("Camera", [&] {
+            ImGui::OpenPopup("EditorCameraSettings");
+        }, ButtonStyleViewportButton);
 
-        if (ImGui::BeginPopup("GizmoSelection")) {
+        EUI::Popup("EditorCameraSettings", [&] {
+            EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+        });
+
+        ImGui::SameLine();
+        ImGui::Dummy({ 10, 0 });
+        ImGui::SameLine();
+
+        EUI::Button(std::format("Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode)), [&] {
+            ImGui::OpenPopup("GizmoSelection");
+        }, ButtonStyleViewportButton);
+
+        EUI::Popup("GizmoSelection", [&] {
             if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
                 m_GizmoMode = GizmoMode::Translation;
             }
@@ -141,17 +153,17 @@ void ViewportWindow::OnDraw()
             if (ImGui::MenuItem("Scale", "3", m_GizmoMode == GizmoMode::Scale)) {
                 m_GizmoMode = GizmoMode::Scale;
             }
-            ImGui::EndPopup();
-        }
+        });
 
         ImGui::SameLine();
-        if (ImGuiH::Button("Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace))) {
+
+        EUI::Button(std::format("Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace)), [&] {
             if (m_GizmoSpace == GizmoSpace::Local) {
                 m_GizmoSpace = GizmoSpace::World;
             } else if (m_GizmoSpace == GizmoSpace::World) {
                 m_GizmoSpace = GizmoSpace::Local;
             }
-        }
+        }, ButtonStyleViewportButton);
 
         ImGui::PopStyleVar();
 

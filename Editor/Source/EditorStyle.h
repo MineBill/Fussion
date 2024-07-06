@@ -4,7 +4,7 @@
 
 #include <imgui.h>
 
-constexpr auto AccentColor = 0x3C3798FF;
+constexpr auto AccentColor = 0xFF6300FF;
 
 struct ImFont;
 
@@ -32,6 +32,8 @@ struct InteractiveStyle {
 enum ButtonStyles {
     ButtonStyleGeneric,
     ButtonStyleDisabled,
+    ButtonStyleImageButton,
+    ButtonStyleViewportButton,
 
     ButtonStyleCount,
 };
@@ -40,7 +42,6 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
     Color TextColor{};
     Color BorderColor{};
     Color BorderShadowColor{};
-    Color BackgroundColor{};
 
     static ButtonStyle Default()
     {
@@ -48,13 +49,16 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
         auto& imgui_style = ImGui::GetStyle();
 
         style.Padding = Vector2(3, 3);
-        style.BackgroundColor = Color::FromHex(AccentColor);
+        style.NormalColor = Color::FromHex(AccentColor);
         style.TextColor = CAST(Vector4, imgui_style.Colors[ImGuiCol_Text]);
-        style.BorderColor = Color::White;
-        style.BorderShadowColor = Color::Black;
+        style.BorderColor = style.NormalColor.Darken(0.1f);
+        style.BorderShadowColor = Color::Transparent;
+        style.Border = true;
         style.Rounding = 2.0f;
         return style;
     }
+
+    void SetButtonColor(Color color);
 };
 
 enum WindowStyles {
@@ -81,10 +85,10 @@ struct EditorFonts {
 };
 
 struct EditorStyle {
-    static EditorStyle Default();
-
     EditorFonts Fonts;
 
     std::array<ButtonStyle, ButtonStyleCount> ButtonStyles{};
     std::array<ButtonStyle, WindowStyleCount> WindowStyles{};
+
+    void Init();
 };

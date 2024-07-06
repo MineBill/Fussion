@@ -16,8 +16,9 @@ public:
     enum class Icon
     {
         Folder = 0,
-        GenericAsset = 1,
-        Back = 2,
+        GenericAsset,
+        Back,
+        Dots,
     };
 
     struct Entry
@@ -47,6 +48,8 @@ private:
     std::filesystem::path m_Root;
     std::filesystem::path m_CurrentPath;
     std::filesystem::path m_RelativeToRoot;
+
+    f32 m_Padding{8}, m_ThumbnailSize{64};
 
     Fsn::Dialogs::FilePickerFilter m_ImportFilter;
     std::unordered_map<std::string, Fsn::AssetType> m_FileTypes;

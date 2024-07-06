@@ -1,10 +1,37 @@
 ﻿#include "EditorStyle.h"
 
-EditorStyle EditorStyle::Default()
+void ButtonStyle::SetButtonColor(Color color)
 {
-    EditorStyle style;
-    style.ButtonStyles[ButtonStyleGeneric] = ButtonStyle::Default();
-    style.ButtonStyles[ButtonStyleDisabled] = ButtonStyle::Default();
+    NormalColor = color;
+    HoverColor = NormalColor.Darken(0.1f);
+    PressedColor = NormalColor.Lighten(0.1f);
+}
 
-    return style;
+void EditorStyle::Init()
+{
+    ButtonStyles[ButtonStyleGeneric] = ButtonStyle::Default();
+    ButtonStyles[ButtonStyleDisabled] = ButtonStyle::Default();
+
+    {
+        auto style = ButtonStyle::Default();
+        style.Border = false;
+        style.NormalColor = Color::Transparent;
+        style.HoverColor = Color::Black;
+        style.HoverColor.A = 0.2f;
+
+        style.PressedColor = Color::White;
+        style.PressedColor.A = 0.2f;
+
+        ButtonStyles[ButtonStyleImageButton] = style;
+    }
+
+    {
+        auto style = ButtonStyle::Default();
+        style.Border = false;
+        style.Rounding = 5.0f;
+
+        style.SetButtonColor(Color::FromHex(AccentColor));
+
+        ButtonStyles[ButtonStyleViewportButton] = style;
+    }
 }

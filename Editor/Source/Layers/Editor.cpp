@@ -39,6 +39,7 @@ void Editor::OnStart()
     m_ContentBrowser = MakePtr<ContentBrowser>(this);
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
+    m_Style.Init();
 
     m_Camera.Resize(Application::Instance()->GetWindow().GetSize());
     m_Camera.Position = Vector3(0, 2, 0);
@@ -142,7 +143,6 @@ void Editor::OnEvent(Event& event)
 {
     EventDispatcher dispatcher(event);
     dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
-        LOG_DEBUGF("Mods: {}", CAST(s32, e.Mods));
         if (e.Key == KeyboardKey::Z && e.Mods.Test(KeyMod::Control)) {
             LOG_DEBUG("FUCK SHIT UNDO");
             Undo.Undo();
