@@ -8,16 +8,19 @@
 #include "Project/Project.h"
 #include "SceneRenderer.h"
 #include "Widgets/ScriptsInspector.h"
+#include "Widgets/ContentBrowser.h"
+#include "Undo.h"
 
 #include "Fussion/Core/Layer.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Renderer/CommandBuffer.h"
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Scene/Scene.h"
-#include "Widgets/ContentBrowser.h"
 
 class Editor : public Fsn::Layer {
 public:
+    UndoRedo Undo;
+
     Editor();
 
     void OnStart() override;
@@ -60,6 +63,7 @@ public:
     static ContentBrowser& GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
 
     Fsn::AssetRef<Fsn::Texture2D> TextureRef;
+
 private:
     static Editor* s_EditorInstance;
     std::vector<Fsn::LogEntry> m_LogEntries{};

@@ -17,6 +17,12 @@ rule("CompilerFlags")
     end)
 rule_end()
 
+option("LivePP")
+    set_showmenu(true)
+    add_defines("FSN_LIVEPP_ENABLED")
+    add_ldflags("/FUNCTIONPADMIN", "/OPT:NOREF", "/OPT:NOICF", "/Z7")
+option_end()
+
 includes("Vendor.lua")
 includes("Fussion/Fussion.lua")
 includes("Editor/Editor.lua")

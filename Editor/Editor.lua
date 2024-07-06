@@ -37,6 +37,8 @@ target "Editor"
     if is_plat("windows") then
         set_runtimes("MDd")
         add_ldflags("/WHOLEARCHIVE:Fussion", {force = true})
+
+        add_options("LivePP")
     end
 
     if is_plat("linux") then

@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "Fussion/Math/Color.h"
+#include "Fussion/Math/Vector4.h"
 #include <imgui.h>
 
 namespace Fussion

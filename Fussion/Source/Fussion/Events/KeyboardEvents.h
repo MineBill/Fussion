@@ -15,7 +15,7 @@ namespace Fussion
     public:
         EVENT(OnKeyDown)
 
-        explicit OnKeyDown(KeyboardKey key) : Key(key)
+        explicit OnKeyDown(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
         {
         }
 
@@ -25,6 +25,7 @@ namespace Fussion
         }
 
         KeyboardKey Key{};
+        KeyMods Mods{};
     };
 
     class OnKeyPressed final : public Event
@@ -32,7 +33,7 @@ namespace Fussion
     public:
         EVENT(OnKeyPressed)
 
-        explicit OnKeyPressed(KeyboardKey key) : Key(key)
+        explicit OnKeyPressed(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
         {
         }
 
@@ -42,6 +43,7 @@ namespace Fussion
         }
 
         KeyboardKey Key{};
+        KeyMods Mods{};
     };
 
     class OnKeyReleased final : public Event
@@ -49,7 +51,7 @@ namespace Fussion
     public:
         EVENT(OnKeyReleased)
 
-        explicit OnKeyReleased(KeyboardKey key) : Key(key)
+        explicit OnKeyReleased(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
         {
         }
 
@@ -59,6 +61,7 @@ namespace Fussion
         }
 
         KeyboardKey Key{};
+        KeyMods Mods{};
     };
 
 }

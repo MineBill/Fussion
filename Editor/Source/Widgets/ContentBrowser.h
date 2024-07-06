@@ -46,6 +46,7 @@ private:
 
     std::filesystem::path m_Root;
     std::filesystem::path m_CurrentPath;
+    std::filesystem::path m_RelativeToRoot;
 
     Fsn::Dialogs::FilePickerFilter m_ImportFilter;
     std::unordered_map<std::string, Fsn::AssetType> m_FileTypes;

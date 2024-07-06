@@ -1,5 +1,7 @@
 ﻿#include "ContentBrowser.h"
 #include "Serialization/AssetSerializer.h"
+#include "ImGuiHelpers.h"
+#include "EditorUI.h"
 
 #include "Assets/Importers/TextureImporter.h"
 #include "Layers/ImGuiLayer.h"
@@ -36,16 +38,30 @@ void ContentBrowser::OnStart()
 
 void ContentBrowser::OnDraw()
 {
-    if (ImGui::Begin("Content")) {
+
+    EUI::Window("Content", [&] {
+
         m_IsFocused = ImGui::IsWindowFocused();
 
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::TextUnformatted(m_CurrentPath.string().c_str());
         if (ImGui::Button("Import")) {
             auto file = Fussion::Dialogs::ShowFilePicker(m_ImportFilter);
             ImportFile(file);
             Refresh();
         }
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
+
+        // ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
+        ImGuiH::Text("Path: {}", m_RelativeToRoot.string());
+
+        // ImGui::InputText("", m_CurrentPath.string().c_str(), m_CurrentPath.string().size());
+
+        ImGui::Separator();
+
         ImGui::BeginChild("##child");
 
         if (ImGui::BeginPopupContextWindow()) {
@@ -61,7 +77,7 @@ void ContentBrowser::OnDraw()
         }
 
         static s32 thumbnail_size = 64;
-        static s32 padding = 8;
+        static s32 padding = 4;
 
         auto item_size = padding + thumbnail_size + CAST(s32, ImGui::GetStyle().FramePadding.x);
         auto columns = CAST(s32, ImGui::GetContentRegionAvail().x) / item_size;
@@ -69,6 +85,9 @@ void ContentBrowser::OnDraw()
             columns = 1;
 
         ImGui::Columns(columns, nullptr, false);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+        ImGui::PushStyleColor(ImGuiCol_Button, Vector4(0, 0, 0, 0));
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(thumbnail_size, thumbnail_size);
@@ -82,7 +101,7 @@ void ContentBrowser::OnDraw()
 
         for (auto const& entry : m_Entries) {
             ImGui::PushID(entry.Path.c_str());
-            defer (ImGui::PopID());
+            defer(ImGui::PopID());
             Vector2 size(thumbnail_size, thumbnail_size);
             if (entry.IsDirectory) {
                 size.X = m_Icons[Icon::Folder]->Spec().Aspect() * size.Y;
@@ -92,8 +111,7 @@ void ContentBrowser::OnDraw()
                     LOG_DEBUGF("Double clicked folder");
                     ChangeDirectory(entry.Path);
                 }
-            }
-            else {
+            } else {
                 Ref<Fsn::Texture2D> texture = m_Icons[Icon::GenericAsset];
 
                 size.X = texture->Spec().Aspect() * size.Y;
@@ -112,23 +130,26 @@ void ContentBrowser::OnDraw()
             ImGui::NextColumn();
         }
 
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
         ImGui::EndChild();
-    }
-    ImGui::End();
+    });
+
 }
 
 // path cannot be a ref because it will point to an entry in m_Entries,
 // which we clear before using it.
-void ContentBrowser::ChangeDirectory(fs::path path)  // NOLINT(performance-unnecessary-value-param)
+void ContentBrowser::ChangeDirectory(fs::path path) // NOLINT(performance-unnecessary-value-param)
 {
     m_CurrentPath = path;
+    m_RelativeToRoot = fs::relative(m_CurrentPath, m_Root);
 
     m_Entries.clear();
     for (auto const& entry : fs::directory_iterator(path)) {
         auto entry_path = fs::relative(entry.path(), Project::ActiveProject()->GetAssetsFolder());
         auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(entry_path);
         if (metadata.IsValid() || entry.is_directory()) {
-            m_Entries.push_back(Entry {
+            m_Entries.push_back(Entry{
                 .Path = entry.path(),
                 .StringPath = entry.path().string(),
                 .Name = entry.path().filename().string(),

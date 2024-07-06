@@ -14,6 +14,7 @@
 
 #include "EditorApplication.h"
 #include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Events/KeyboardEvents.h"
 
 Editor* Editor::s_EditorInstance = nullptr;
 using namespace Fussion;
@@ -133,10 +134,26 @@ void Editor::OnUpdate(const f32 delta)
     m_SceneWindow->OnDraw();
     m_ScriptsInspector->OnDraw();
     m_ContentBrowser->OnDraw();
+
+    Undo.Commit();
 }
 
 void Editor::OnEvent(Event& event)
 {
+    EventDispatcher dispatcher(event);
+    dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
+        LOG_DEBUGF("Mods: {}", CAST(s32, e.Mods));
+        if (e.Key == KeyboardKey::Z && e.Mods.Test(KeyMod::Control)) {
+            LOG_DEBUG("FUCK SHIT UNDO");
+            Undo.Undo();
+        }
+        if (e.Key == KeyboardKey::Y && e.Mods.Test(KeyMod::Control)) {
+            LOG_DEBUG("FUCK SHIT REDO");
+            Undo.Redo();
+        }
+        return false;
+    });
+
     m_Camera.HandleEvent(event);
 
     m_ViewportWindow->OnEvent(event);
@@ -155,7 +172,7 @@ void Editor::OnDraw(Ref<CommandBuffer> cmd)
             .View = m_Camera.GetView(),
             .Position = m_Camera.Position,
         },
-        .Scene = m_ActiveScene.Get(), // <-- is always nullptr probably
+        .Scene = m_ActiveScene.Get(),
     });
 }
 

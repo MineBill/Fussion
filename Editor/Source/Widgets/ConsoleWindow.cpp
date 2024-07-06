@@ -46,9 +46,7 @@ void ConsoleWindow::OnDraw()
 
         static std::string search_term;
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 50);
-        if (ImGui::InputTextWithHint("##search_input_label", "Enter search term..", &search_term)) {
-            LOG_DEBUGF("Search term was modified '{}'", search_term);
-        }
+        ImGui::InputTextWithHint("##search_input_label", "Enter search term..", &search_term);
 
         ImGui::SameLine();
         if (ImGui::Button("Clear")) {

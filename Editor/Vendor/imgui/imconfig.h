@@ -16,6 +16,7 @@
 
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
+#include "Fussion/Math/Color.h"
 
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
@@ -98,9 +99,11 @@
         constexpr ImVec2(const Vector2& f) : x(f.X), y(f.Y) {}                   \
         operator Vector2() const { return Vector2(x,y); }
 
-#define IM_VEC4_CLASS_EXTRA                                                     \
+#define IM_VEC4_CLASS_EXTRA                                                      \
         constexpr ImVec4(const Vector4& f) : x(f.X), y(f.Y), z(f.Z), w(f.W) {}   \
-        operator Vector4() const { return Vector4(x,y,z,w); }
+        operator Vector4() const { return Vector4(x,y,z,w); }                    \
+        constexpr ImVec4(const Color& f) : x(f.R), y(f.G), z(f.B), w(f.A) {}     \
+        operator Color() const { return Color(x,y,z,w); }
 
 //---- ...Or use Dear ImGui's own very basic math operators.
 //#define IMGUI_DEFINE_MATH_OPERATORS

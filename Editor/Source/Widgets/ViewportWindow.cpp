@@ -4,6 +4,7 @@
 #include "SceneRenderer.h"
 #include "Layers/ImGuiLayer.h"
 #include "Fussion/Assets/AssetManager.h"
+#include "EditorUI.h"
 
 #include <cmath>
 #include <imgui.h>
@@ -78,7 +79,6 @@ void ViewportWindow::OnDraw()
             ImGuiWindowFlags_NoNav;
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
-        defer(ImGui::PopStyleVar());
         if (ImGui::Begin("Debug Overlay", nullptr, window_flags)) {
             ImGui::TextUnformatted("Debug Overlay");
             ImGui::Separator();
@@ -86,6 +86,22 @@ void ViewportWindow::OnDraw()
             ImGuiH::Text("Mouse Position: {}", pos);
         }
         ImGui::End();
+        ImGui::PopStyleVar();
+
+        if (m_Editor->GetActiveScene().Get() == nullptr) {
+            ImGui::SetNextWindowPos(m_ContentOriginScreen + m_Size / 2.f + Vector2(0, m_Size.Y * 0.2f), 0, Vector2(0.5, 0.5));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(20, 20));
+            defer(ImGui::PopStyleVar());
+
+            ImGui::SetNextWindowBgAlpha(0.35f);
+            if (ImGui::Begin("No Scene Warning", nullptr, window_flags)) {
+                ImGui::PushFont(m_Editor->GetStyle().Fonts.RegularHuge);
+                defer(ImGui::PopFont());
+
+                ImGui::TextUnformatted("No scene loaded!");
+            }
+            ImGui::End();
+        }
 
         if (ImGui::BeginDragDropTarget()) {
             auto* payload = ImGui::GetDragDropPayload();
@@ -116,13 +132,13 @@ void ViewportWindow::OnDraw()
         }
 
         if (ImGui::BeginPopup("GizmoSelection")) {
-            if (ImGui::MenuItem("Translation", "W", m_GizmoMode == GizmoMode::Translation)) {
+            if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
                 m_GizmoMode = GizmoMode::Translation;
             }
-            if (ImGui::MenuItem("Rotation", "E", m_GizmoMode == GizmoMode::Rotation)) {
+            if (ImGui::MenuItem("Rotation", "2", m_GizmoMode == GizmoMode::Rotation)) {
                 m_GizmoMode = GizmoMode::Rotation;
             }
-            if (ImGui::MenuItem("Scale", "R", m_GizmoMode == GizmoMode::Scale)) {
+            if (ImGui::MenuItem("Scale", "3", m_GizmoMode == GizmoMode::Scale)) {
                 m_GizmoMode = GizmoMode::Scale;
             }
             ImGui::EndPopup();
@@ -142,6 +158,7 @@ void ViewportWindow::OnDraw()
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGuizmo::SetRect(m_ContentOriginScreen.X, m_ContentOriginScreen.Y, m_Size.X, m_Size.Y);
 
+        static bool activated = false;
         if (auto selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1) {
             for (auto const& [id, entity] : selection) {
 
@@ -157,6 +174,29 @@ void ViewportWindow::OnDraw()
                         entity->Transform.Position.Raw,
                         entity->Transform.EulerAngles.Raw,
                         entity->Transform.Scale.Raw);
+                    if (!activated) {
+                        activated = true;
+                        switch (m_GizmoMode) {
+                        case GizmoMode::Translation:
+                            m_Editor->Undo.PushSingle(&entity->Transform.Position, "Gizmo LocalPosition");
+                        case GizmoMode::Rotation:
+                            m_Editor->Undo.PushSingle(&entity->Transform.EulerAngles, "Gizmo LocalEulerAngles");
+                        case GizmoMode::Scale:
+                            m_Editor->Undo.PushSingle(&entity->Transform.Scale, "Gizmo LocalScale");
+                        }
+                    }
+                } else {
+                    if (activated && !ImGuizmo::IsUsingAny()) {
+                        activated = false;
+                        switch (m_GizmoMode) {
+                        case GizmoMode::Translation:
+                            m_Editor->Undo.CommitTag("Gizmo LocalPosition");
+                        case GizmoMode::Rotation:
+                            m_Editor->Undo.CommitTag("Gizmo LocalEulerAngles");
+                        case GizmoMode::Scale:
+                            m_Editor->Undo.CommitTag("Gizmo LocalScale");
+                        }
+                    }
                 }
             }
         }
