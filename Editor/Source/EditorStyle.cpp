@@ -1,5 +1,7 @@
 ﻿#include "EditorStyle.h"
 
+#include "Assets/Importers/TextureImporter.h"
+
 void ButtonStyle::SetButtonColor(Color color)
 {
     NormalColor = color;
@@ -34,4 +36,16 @@ void EditorStyle::Init()
 
         ButtonStyles[ButtonStyleViewportButton] = style;
     }
+
+    using enum EditorIcon;
+    EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png");
+    EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png");
+    EditorIcons[GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png");
+    EditorIcons[Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png");
+    EditorIcons[Search] = TextureImporter::LoadTextureFromFile("Assets/Icons/Search.png");
+
+    EditorIcons[Error] = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png");
+    EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png");
+    EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png");
+    EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png");
 }

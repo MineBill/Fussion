@@ -38,6 +38,7 @@ class Entity {
 
 public:
     Transform Transform;
+    std::string Name{"Entity"};
 
     Entity() = default;
     Entity(UUID const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
@@ -45,6 +46,9 @@ public:
     void SetParent(Entity const& new_parent);
     void AddChild(Entity const& child);
     void RemoveChild(Entity const& child);
+
+    void SetEnabled(bool enabled);
+    bool IsEnabled() const;
 
     auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
 
@@ -92,11 +96,6 @@ public:
     auto GetId() const -> UUID { return m_Handle; }
 
     [[nodiscard]]
-    auto GetName() const -> std::string const& { return m_Name; }
-
-    auto GetNameRef() -> std::string& { return m_Name; }
-
-    [[nodiscard]]
     auto GetComponents() const -> std::map<UUID, Ref<Component>> const& { return m_Components; }
 
     [[nodiscard]]
@@ -117,7 +116,8 @@ private:
     std::vector<UUID> m_RemovedComponents{};
 
     UUID m_Handle;
-    std::string m_Name{ "Entity" };
     Scene* m_Scene{};
+
+    bool m_Enabled{true};
 };
 }

@@ -19,6 +19,9 @@ namespace Fussion
         virtual void OnDestroy() {}
         virtual void OnUpdate(f32 delta) {}
 
+        virtual void OnEnabled() {}
+        virtual void OnDisabled() {}
+
         virtual void OnDraw(RenderContext& context) {}
 
         Entity* GetOwner() const { return m_Owner; }
@@ -27,9 +30,11 @@ namespace Fussion
     };
 }
 
-#define COMPONENT(name) \
+#define COMPONENT(name)                               \
+    META_HPP_ENABLE_POLY_INFO(Component)              \
+    public:                                           \
     explicit name(Entity* owner): Component(owner) {}
 
 #define COMPONENT_DEFAULT(name) \
-    name() = default; \
+    name() = default;           \
     COMPONENT(name)

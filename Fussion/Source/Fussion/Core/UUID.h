@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Types.h"
+#include "Fussion/Log/Formatters.h"
 
 namespace Fussion
 {
@@ -30,3 +31,5 @@ struct std::hash<Fussion::UUID>
 };
 
 namespace Fsn = Fussion;
+
+FSN_MAKE_FORMATTABLE(Fussion::UUID, "{}", static_cast<u64>(v))

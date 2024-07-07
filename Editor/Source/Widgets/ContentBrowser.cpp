@@ -2,14 +2,16 @@
 #include "Serialization/AssetSerializer.h"
 #include "ImGuiHelpers.h"
 #include "EditorUI.h"
-
+#include "Layers/Editor.h"
 #include "Assets/Importers/TextureImporter.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
-#include "imgui.h"
+
+#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/OS/Dialog.h"
 
+#include "imgui.h"
 #include <ranges>
 
 using namespace Fussion;
@@ -17,11 +19,6 @@ namespace fs = std::filesystem;
 
 void ContentBrowser::OnStart()
 {
-    m_Icons[Icon::Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png");
-    m_Icons[Icon::GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png");
-    m_Icons[Icon::Back] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png");
-    m_Icons[Icon::Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png");
-
     m_Root = Project::ActiveProject()->GetAssetsFolder();
     ChangeDirectory(m_Root);
 
@@ -62,7 +59,7 @@ void ContentBrowser::OnDraw()
         ImGui::Dummy({ width, 0 });
 
         ImGui::SameLine();
-        EUI::ImageButton(m_Icons[Icon::Dots], Vector2(16, 16), [&] {
+        EUI::ImageButton(m_Editor->GetStyle().EditorIcons[EditorIcon::Dots], Vector2(16, 16), [&] {
             ImGui::OpenPopup("ContentBrowserOptions");
         });
         if (ImGui::BeginItemTooltip()) {
@@ -71,8 +68,8 @@ void ContentBrowser::OnDraw()
         }
 
         EUI::Popup("ContentBrowserOptions", [&] {
-            EUI::Property("Padding", &m_Padding, EUI::PropTypeRange{.Min = 2, .Max = 32});
-            EUI::Property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange{.Min = 16, .Max = 128});
+            EUI::Property("Padding", &m_Padding, EUI::PropTypeRange{ .Min = 2, .Max = 32 });
+            EUI::Property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange{ .Min = 16, .Max = 128 });
         });
 
         ImGui::Separator();
@@ -103,10 +100,9 @@ void ContentBrowser::OnDraw()
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            size.X = m_Icons[Icon::Back]->Spec().Aspect() * size.Y;
-            ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Back]->GetImage()), size);
+            size.X = m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+            ImGui::ImageButton(IMGUI_IMAGE(m_Editor->GetStyle().EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                LOG_DEBUGF("Double clicked folder");
                 ChangeDirectory(m_CurrentPath.parent_path());
             }
         }
@@ -116,18 +112,24 @@ void ContentBrowser::OnDraw()
             defer(ImGui::PopID());
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
             if (entry.IsDirectory) {
-                size.X = m_Icons[Icon::Folder]->Spec().Aspect() * size.Y;
-                ImGui::ImageButton(IMGUI_IMAGE(m_Icons[Icon::Folder]->GetImage()), size);
+                size.X = m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+                ImGui::ImageButton(IMGUI_IMAGE(m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                    LOG_DEBUGF("Double clicked folder");
                     ChangeDirectory(entry.Path);
                 }
             } else {
-                Ref<Fsn::Texture2D> texture = m_Icons[Icon::GenericAsset];
 
-                size.X = texture->Spec().Aspect() * size.Y;
-                ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                if (entry.Type == AssetType::Texture2D) {
+                    if (auto texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get(); texture != nullptr) {
+                        size.X = texture->Spec().Aspect() * size.Y;
+                        ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                    }
+                } else {
+                    Ref<Fsn::Texture2D> texture = m_Editor->GetStyle().EditorIcons[EditorIcon::GenericAsset];
+                    size.X = texture->Spec().Aspect() * size.Y;
+                    ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                }
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     LOG_DEBUGF("Double clicked asset");
@@ -170,8 +172,21 @@ void ContentBrowser::ChangeDirectory(fs::path path) // NOLINT(performance-unnece
                 .Metadata = metadata,
             });
         }
-
     }
+
+    std::ranges::sort(m_Entries, [](Entry const& a, Entry const& b) {
+        if (a.IsDirectory || b.IsDirectory) {
+            return a.IsDirectory && !b.IsDirectory;
+        }
+
+        auto to_lowercase = [](const std::string& str) {
+            std::string result;
+            std::ranges::transform(str, std::back_inserter(result), [](unsigned char c) { return std::tolower(c); });
+            return result;
+        };
+
+        return std::ranges::lexicographical_compare(to_lowercase(a.Name), to_lowercase(b.Name));
+    });
 }
 
 void ContentBrowser::Refresh()

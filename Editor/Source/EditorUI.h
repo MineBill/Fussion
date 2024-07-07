@@ -1,9 +1,17 @@
 ﻿#pragma once
-#include "Layers/Editor.h"
 #include "Layers/ImGuiLayer.h"
+#include "EditorStyle.h"
+
+#include "Fussion/Assets/Texture2D.h"
+#include <misc/cpp/imgui_stdlib.h>
 #include <string>
 
 namespace EUI {
+namespace Detail {
+ButtonStyle& GetButtonStyle(ButtonStyles style);
+WindowStyle& GetWindowStyle(WindowStyles style);
+}
+
 struct PropTypeGeneric {};
 
 struct PropTypeRange {
@@ -39,6 +47,8 @@ void Property(std::string const& name, T* data, TypeKind kind = {})
         }
     } else if constexpr (std::is_same_v<T, bool>) {
         ImGui::Checkbox("", data);
+    } else if constexpr (std::is_same_v<T, std::string>) {
+        ImGui::InputText("", data);
     } else {
         static_assert(false, "Not implemented!");
     }
@@ -68,9 +78,11 @@ void Property(std::string const& name, auto&& data)
     ImGui::EndTable();
 }
 
-void Button(std::string const& label, auto&& func, ButtonStyles style_type = ButtonStyleGeneric, Vector2 size = Vector2(), f32 alignment = 0)
+template<typename Func>
+auto Button(std::string const& label, Func&& func, ButtonStyles style_type = ButtonStyleGeneric, Vector2 size = Vector2(), f32 alignment = 0)
 {
-    auto style = Editor::Get().GetStyle().ButtonStyles[style_type];
+    using ResultType = std::invoke_result_t<Func>;
+    auto style = Detail::GetButtonStyle(style_type);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
@@ -95,14 +107,21 @@ void Button(std::string const& label, auto&& func, ButtonStyles style_type = But
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(6);
 
-    if (opened) {
-        func();
+    if constexpr (std::is_void_v<ResultType>) {
+        if (opened) {
+            func();
+        }
+    } else {
+        if (opened) {
+            return std::optional<ResultType>{ func() };
+        }
+        return std::optional<ResultType>{};
     }
 }
 
 void ImageButton(Ref<Fussion::Texture2D> const& texture, Vector2 size, auto&& func, ButtonStyles style_type = ButtonStyleImageButton, f32 alignment = 0.0f)
 {
-    auto style = Editor::Get().GetStyle().ButtonStyles[style_type];
+    auto style = Detail::GetButtonStyle(style_type);
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
@@ -142,9 +161,35 @@ void Popup(const char* title, auto&& func)
     }
 }
 
+struct ModalWindowParams {
+    ImGuiPopupFlags Flags = 0;
+    bool* Opened{ nullptr };
+};
+
+template<typename Func>
+auto ModalWindow(const char* title, Func&& func, ModalWindowParams params = {})
+{
+    using ResultType = std::invoke_result_t<Func>;
+    bool opened = ImGui::BeginPopupModal(title, params.Opened, params.Flags);
+
+    if constexpr (std::is_void_v<ResultType>) {
+        if (opened) {
+            func();
+            ImGui::EndPopup();
+        }
+    } else {
+        if (opened) {
+            auto&& ret = func();
+            ImGui::EndPopup();
+            return std::optional<ResultType>{ ret };
+        }
+        return std::optional<ResultType>{};
+    }
+}
+
 void Window(const char* title, auto&& func, bool* opened = nullptr, ImGuiWindowFlags flags = 0)
 {
-    auto style = Editor::Get().GetStyle().WindowStyles[WindowStyleGeneric];
+    auto style = Detail::GetWindowStyle(WindowStyleGeneric);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.Padding);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.Rounding);

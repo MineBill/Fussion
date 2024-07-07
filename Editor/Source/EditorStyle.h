@@ -4,6 +4,10 @@
 
 #include <imgui.h>
 
+namespace Fussion {
+class Texture2D;
+}
+
 constexpr auto AccentColor = 0xFF6300FF;
 
 struct ImFont;
@@ -84,11 +88,29 @@ struct EditorFonts {
     ImFont* BoldSmall{ nullptr };
 };
 
+enum class EditorIcon {
+    // ContentBrowser
+    Folder = 0,
+    FolderBack,
+    GenericAsset,
+
+    // Other
+    Dots,
+    Search,
+
+    Error,
+    Warning,
+    Info,
+    CogWheel,
+};
+
 struct EditorStyle {
     EditorFonts Fonts;
 
     std::array<ButtonStyle, ButtonStyleCount> ButtonStyles{};
-    std::array<ButtonStyle, WindowStyleCount> WindowStyles{};
+    std::array<WindowStyle, WindowStyleCount> WindowStyles{};
+
+    std::unordered_map<EditorIcon, Ref<Fussion::Texture2D>> EditorIcons{};
 
     void Init();
 };

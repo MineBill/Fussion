@@ -23,6 +23,8 @@ class AssetSerializer;
 
 class EditorAssetManager final : public Fussion::AssetManagerBase {
 public:
+    using Registry = std::unordered_map<Fsn::AssetHandle, AssetMetadata>;
+
     EditorAssetManager();
 
     auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
@@ -33,6 +35,8 @@ public:
     auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;
     auto GetMetadata(Fsn::AssetHandle handle) const -> AssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
+
+    auto GetRegistry() const -> Registry const& { return m_Registry; }
 
     template<std::derived_from<Fsn::Asset> T>
     auto CreateAsset(std::filesystem::path const& path) -> Fsn::AssetRef<T>
@@ -73,7 +77,7 @@ public:
     void Deserialize();
 
 private:
-    std::unordered_map<Fsn::AssetHandle, AssetMetadata> m_Registry{};
+    Registry m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};

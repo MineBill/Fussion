@@ -12,12 +12,7 @@
 #include "Layers/Editor.h"
 #include "Layers/ImGuiLayer.h"
 
-void ConsoleWindow::OnStart()
-{
-    m_ErrorIcon = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png");
-    m_InfoIcon = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png");
-    m_WarningIcon = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png");
-}
+void ConsoleWindow::OnStart() {}
 
 void ConsoleWindow::OnDraw()
 {
@@ -30,16 +25,22 @@ void ConsoleWindow::OnDraw()
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(5, 5));
 
-        ImGuiH::ImageToggleButton("##info_toggle", m_InfoIcon->GetImage(), m_InfoEnable, Vector2(15, 15)); ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##warn_toggle", m_WarningIcon->GetImage(), m_WarningEnabled, Vector2(15, 15)); ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##error_toggle", m_ErrorIcon->GetImage(), m_ErrorEnabled, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##info_toggle", m_Editor->GetStyle().EditorIcons[EditorIcon::Info]->GetImage(), m_InfoEnable, Vector2(15, 15));
+        ImGui::SameLine();
+        ImGuiH::ImageToggleButton("##warn_toggle", m_Editor->GetStyle().EditorIcons[EditorIcon::Warning]->GetImage(), m_WarningEnabled, Vector2(15, 15));
+        ImGui::SameLine();
+        ImGuiH::ImageToggleButton("##error_toggle", m_Editor->GetStyle().EditorIcons[EditorIcon::Error]->GetImage(), m_ErrorEnabled, Vector2(15, 15));
 
         ImGui::PopStyleVar();
 
-        ImGui::SameLine(); ImGui::Spacing(); ImGui::SameLine();
+        ImGui::SameLine();
+        ImGui::Spacing();
+        ImGui::SameLine();
 
-        ImGui::TextUnformatted("Auto Scroll"); ImGui::SameLine();
-        ImGui::Checkbox("##auto_scroll", &m_AutoScroll); ImGui::SameLine();
+        ImGui::TextUnformatted("Auto Scroll");
+        ImGui::SameLine();
+        ImGui::Checkbox("##auto_scroll", &m_AutoScroll);
+        ImGui::SameLine();
 
         ImGui::TextUnformatted("Search:");
         ImGui::SameLine();
@@ -59,18 +60,21 @@ void ConsoleWindow::OnDraw()
                 if (entry.Message.find(search_term) != std::string::npos) {
                     Vector4 text_color{};
                     switch (entry.Level) {
-                    using enum Fsn::LogLevel;
+                        using enum Fsn::LogLevel;
                     case Debug:
                     case Info:
-                        if (!m_InfoEnable) continue;
+                        if (!m_InfoEnable)
+                            continue;
                         text_color = Vector4(1, 1, 1, 1);
                         break;
                     case Warning:
-                        if (!m_WarningEnabled) continue;
+                        if (!m_WarningEnabled)
+                            continue;
                         text_color = Vector4(1, 1, 0, 1);
                         break;
                     case Error:
-                        if (!m_ErrorEnabled) continue;
+                        if (!m_ErrorEnabled)
+                            continue;
                     case Fatal:
                         text_color = Vector4(1, 0, 0, 1);
                         break;

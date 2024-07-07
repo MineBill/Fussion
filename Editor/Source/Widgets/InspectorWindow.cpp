@@ -1,7 +1,8 @@
 ﻿#include "InspectorWindow.h"
 #include "Layers/Editor.h"
 #include "ImGuiHelpers.h"
-#include "EditorApplication.h"
+#include "EditorUI.h"
+#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/Mesh.h"
 #include "Fussion/Math/Color.h"
 
@@ -15,12 +16,44 @@
 
 using namespace Fussion;
 
-std::tuple<f32, f32> ParseRangeMeta(std::string value)
+void AssetPicker::Update()
 {
-    auto comma = value.find_first_of('|');
-    auto min = std::stof(value.substr(0, comma));
-    auto max = std::stof(value.substr(comma + 1));
-    return { min, max };
+    if (m_Show) {
+        ImGui::OpenPopup("Asset Picker");
+        m_Show = false;
+    }
+
+    bool was_open = m_Opened;
+
+    EUI::ModalWindow("Asset Picker", [&] {
+        ImGuiH::Text("Asset Picker for {}", magic_enum::enum_name(m_Type));
+
+        for (auto const& handle : m_ViableHandles) {
+            EUI::Button(std::format("Asset: {}", handle), [&] {
+                m_Member.set(m_Instance, handle);
+                m_Opened = false;
+            });
+        }
+    }, { .Flags = ImGuiPopupFlags_None, .Opened = &m_Opened });
+
+    if (was_open && !m_Opened) {
+        m_ViableHandles.clear();
+    }
+}
+
+void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& instance, Fussion::AssetType type)
+{
+    m_Show = true;
+    m_Member = member;
+    m_Type = type;
+    m_Opened = true;
+    m_Instance = instance.copy();
+
+    for (auto const& [handle, metadata] : Project::ActiveProject()->GetAssetManager()->GetRegistry()) {
+        if (metadata.Type == type) {
+            m_ViableHandles.push_back(handle);
+        }
+    }
 }
 
 void InspectorWindow::OnStart()
@@ -44,6 +77,8 @@ void InspectorWindow::OnDraw()
                 ImGui::Text("Multiple entities selected");
             }
         }
+
+        m_AssetPicker.Update();
     }
     ImGui::End();
 }
@@ -119,9 +154,10 @@ bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type compone
 
                         ImGui::SetCursorPos(pos + Vector2(2, 2));
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-                        if (ImGui::Button("o", Vector2(16, 16))) {
-
-                        }
+                        EUI::ImageButton(m_Editor->GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
+                            auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
+                            m_AssetPicker.Show(m_Handle, value, asset_type);
+                        });
                         ImGui::PopStyleVar();
                     }
                     // if (class_type.get_arity() > 0) {
@@ -158,7 +194,8 @@ bool InspectorWindow::DrawEntity(Entity& e)
     bool modified{ false };
     auto& style = Editor::Get().GetStyle();
 
-    ImGuiH::InputText("Name", e.GetNameRef());
+    e.IsEnabled();
+    EUI::Property("Name", &e.Name);
 
     ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts.BoldSmall);
     ImGui::TextUnformatted("Position");

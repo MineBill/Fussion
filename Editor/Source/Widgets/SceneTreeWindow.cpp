@@ -59,7 +59,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
     ImGui::PushID(handle);
     defer(ImGui::PopID());
 
-    auto opened = ImGui::TreeNodeEx(entity->GetName().c_str(), flags);
+    auto opened = ImGui::TreeNodeEx(entity->Name.c_str(), flags);
 
     if (ImGui::IsItemClicked()) {
         SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl));

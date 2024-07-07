@@ -7,7 +7,6 @@ namespace Fussion
 {
     class ScriptComponent: public Component
     {
-        META_HPP_ENABLE_POLY_INFO(Component)
     public:
         COMPONENT_DEFAULT(ScriptComponent)
 

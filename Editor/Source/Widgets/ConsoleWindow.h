@@ -10,8 +10,6 @@ public:
     void OnStart() override;
     void OnDraw() override;
 private:
-    Ref<Fussion::Texture2D> m_ErrorIcon{}, m_InfoIcon{}, m_WarningIcon{};
-
     bool m_InfoEnable{true}, m_WarningEnabled{true}, m_ErrorEnabled{true};
     bool m_AutoScroll{true};
     std::vector<Fsn::LogEntry> m_LogEntries;

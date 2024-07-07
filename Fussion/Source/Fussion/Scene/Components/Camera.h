@@ -4,7 +4,6 @@
 namespace Fussion {
     class Camera: public Component
     {
-        META_HPP_ENABLE_POLY_INFO(Component)
     public:
         Camera();
         ~Camera() override;

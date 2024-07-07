@@ -108,7 +108,8 @@ void ReflRegistrar::Register()
             ("Name"s, "AssetRefBase"s))
         .method_("Handle"s, &AssetRefBase::Handle)
         .method_("SetHandle"s, &AssetRefBase::SetHandle)
-        .member_("m_Handle"s, &AssetRefBase::m_Handle);
+        .member_("m_Handle"s, &AssetRefBase::m_Handle)
+        .method_("GetType", &AssetRefBase::GetType);
 }
 
 }

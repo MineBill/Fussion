@@ -138,7 +138,7 @@ void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
         if (handle == 0) continue;
 
         json en = {
-            {"Name", entity.m_Name},
+            {"Name", entity.Name},
             {"Handle", entity.m_Handle},
             {"Parent", entity.m_Parent},
             {"Transform", {

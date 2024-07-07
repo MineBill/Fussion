@@ -7,7 +7,6 @@
 
 namespace Fussion {
 class MeshRenderer : public Component {
-    META_HPP_ENABLE_POLY_INFO(Component)
     struct PushConstantData {
         Mat4 Model;
     } m_Data;

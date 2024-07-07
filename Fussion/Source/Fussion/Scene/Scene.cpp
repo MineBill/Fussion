@@ -10,7 +10,7 @@ Scene::Scene()
     m_Name = "Cool Scene";
     m_Entities[UUID(0)] = Entity(0, this);
     auto root = m_Entities[0];
-    root.m_Name = "Root";
+    root.Name = "Root";
 }
 
 void Scene::OnUpdate(f32 delta)
@@ -30,7 +30,7 @@ Entity* Scene::CreateEntityWithID(UUID id, std::string const& name, UUID parent)
     LOG_INFOF("Creating entity {} with parent {}", CAST(u64, id), CAST(u64, parent));
     m_Entities[id] = Entity(id, this);
     auto& entity = m_Entities[id];
-    entity.m_Name = name;
+    entity.Name = name;
     entity.SetParent(m_Entities[parent]);
     return &entity;
 }
