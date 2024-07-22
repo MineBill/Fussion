@@ -29,7 +29,7 @@ namespace Fussion::Dialogs
     class LinuxDialog
     {
     public:
-        virtual std::filesystem::path OpenFilePicker(std::string_view name, std::vector<std::string_view> supported_files) = 0;
+        virtual std::filesystem::path OpenFilePicker(std::vector<FilePickerFilter> const& filter) = 0;
         virtual std::filesystem::path OpenDirectoryPicker() = 0;
         virtual void ShowMessageBox(MessageBox box) = 0;
 
@@ -49,14 +49,14 @@ namespace Fussion::Dialogs
             return ShellExecute(std::format("{} --getexistingdirectory", m_Path));
         }
 
-        std::filesystem::path OpenFilePicker(std::string_view name, std::vector<std::string_view> supported_files) override
+        std::filesystem::path OpenFilePicker(std::vector<FilePickerFilter> const& filter) override
         {
-            std::string filter;
-            for (auto const& file : supported_files) {
+            std::string filter_string;
+            for (auto const& file : filter.FilePatterns) {
                 filter += file;
                 filter += " ";
             }
-            std::string arg = std::format("{} ({})", name, filter);
+            std::string arg = std::format("{} ({})", filter.Name, filter_string);
 
             return ShellExecute(std::format("{} --getopenfilename . \"{}\"", m_Path, arg));
         }
@@ -75,7 +75,7 @@ namespace Fussion::Dialogs
             return {};
         }
 
-        std::filesystem::path OpenFilePicker(std::string_view name, std::vector<std::string_view> supported_files) override
+        std::filesystem::path OpenFilePicker(std::vector<FilePickerFilter> const& filter) override
         {
             return {};
         }
@@ -89,7 +89,6 @@ namespace Fussion::Dialogs
     namespace
     {
         Ptr<LinuxDialog> g_NativeDialog{nullptr};
-
     }
 
     auto GetBinaryLocation(const char* name) -> std::optional<std::filesystem::path>
@@ -149,13 +148,26 @@ namespace Fussion::Dialogs
         CreateNativeDialog();
     }
 
-    std::filesystem::path ShowFilePicker(std::string_view name, std::vector<std::string_view> supported_files)
+    std::filesystem::path ShowFilePicker(std::string_view name, FilePatternList const& supported_files)
+    {
+        return ShowFilePicker(FilePickerFilter {
+            .Name = std::string(name),
+            .FilePatterns = supported_files,
+        });
+    }
+
+    auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path
+    {
+        return ShowFilePicker(std::vector{filter});
+    }
+
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path
     {
         CreateNativeDialog();
         return g_NativeDialog->OpenFilePicker(name, supported_files);
     }
 
-    std::filesystem::path ShowDirectoryPicker()
+    auto ShowDirectoryPicker() -> std::filesystem::path
     {
         CreateNativeDialog();
         return g_NativeDialog->OpenDirectoryPicker();

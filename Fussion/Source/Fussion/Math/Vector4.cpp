@@ -1,4 +1,4 @@
-﻿#include "W:\source\projects\Fussion\build\.gens\Fussion\windows\x64\debug\Fussion\Source\e5pch.h"
+﻿#include "e5pch.h"
 #include "Vector4.h"
 
 namespace Fussion {

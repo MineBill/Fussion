@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cstring>
 
 class UndoRedo {
     struct Item {

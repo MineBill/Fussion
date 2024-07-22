@@ -3,6 +3,7 @@
 #include "Fussion/Core/Core.h"
 
 #include <fstream>
+#include <iterator>
 
 namespace Fussion
 {

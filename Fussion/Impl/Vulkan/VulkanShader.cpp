@@ -2,6 +2,7 @@
 #include "VulkanShader.h"
 
 #include <magic_enum/magic_enum.hpp>
+#include <algorithm>
 
 namespace Fussion::RHI {
 Ref<VulkanShader> VulkanShader::Create(

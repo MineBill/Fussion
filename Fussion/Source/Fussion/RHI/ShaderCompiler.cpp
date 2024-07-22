@@ -9,6 +9,7 @@
 #include <sstream>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
+#include <cstring>
 
 namespace Fussion::RHI {
 ElementType SpirvTypeToElementType(spirv_cross::SPIRType::BaseType base_type, u32 size)
