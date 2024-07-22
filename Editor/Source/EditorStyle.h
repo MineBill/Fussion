@@ -98,6 +98,11 @@ enum class EditorIcon {
     Dots,
     Search,
 
+    Play,
+    Stop,
+    Pause,
+    StepFrame,
+
     Error,
     Warning,
     Info,

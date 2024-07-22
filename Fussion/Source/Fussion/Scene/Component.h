@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/Renderer/RenderContext.h"
+#include "Fussion/RHI/RenderContext.h"
 
 namespace Fussion
 {
@@ -17,12 +17,12 @@ namespace Fussion
 
         virtual void OnCreate() {}
         virtual void OnDestroy() {}
-        virtual void OnUpdate(f32 delta) {}
+        virtual void OnUpdate([[maybe_unused]] f32 delta) {}
 
         virtual void OnEnabled() {}
         virtual void OnDisabled() {}
 
-        virtual void OnDraw(RenderContext& context) {}
+        virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
 
         Entity* GetOwner() const { return m_Owner; }
     protected:

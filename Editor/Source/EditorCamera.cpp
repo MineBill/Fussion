@@ -25,15 +25,15 @@ void EditorCamera::OnUpdate(const f32 delta)
         glm::radians(m_EulerAngles.Y));
 
     if (m_CapturedMouse) {
-        const auto x = Input::GetAxis(KeyboardKey::D, KeyboardKey::A);
-        const auto y = Input::GetAxis(KeyboardKey::Space, KeyboardKey::LeftControl);
-        const auto z = Input::GetAxis(KeyboardKey::S, KeyboardKey::W);
+        auto const x = Input::GetAxis(KeyboardKey::D, KeyboardKey::A);
+        auto const y = Input::GetAxis(KeyboardKey::Space, KeyboardKey::LeftControl);
+        auto const z = Input::GetAxis(KeyboardKey::S, KeyboardKey::W);
         auto input = Vector3(x, y, z);
 
         Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * Speed;
     }
 
-    m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, 0.1f, 1000.0f);
+    m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, Near, Far);
 
     m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, Position)));
 }

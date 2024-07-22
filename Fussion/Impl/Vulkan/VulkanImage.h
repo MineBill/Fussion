@@ -1,40 +1,38 @@
 ﻿#pragma once
-#include "Fussion/Renderer/Image.h"
+#include "Fussion/RHI/Image.h"
 #include "VulkanDevice.h"
 
 #include "volk.h"
 #include "VulkanSampler.h"
 
-namespace Fussion
-{
-    class VulkanImageView;
-    VkFormat ImageFormatToVulkan(ImageFormat format);
-    VkSampleCountFlagBits SampleCountToVulkan(s32 count);
-    VkImageUsageFlags ImageUsageToVulkan(ImageUsageFlags flags);
-    VkImageLayout ImageLayoutToVulkan(ImageLayout layout);
+namespace Fussion::RHI {
+class VulkanImageView;
+VkFormat ImageFormatToVulkan(ImageFormat format);
+VkSampleCountFlagBits SampleCountToVulkan(s32 count);
+VkImageUsageFlags ImageUsageToVulkan(ImageUsageFlags flags);
+VkImageLayout ImageLayoutToVulkan(ImageLayout layout);
 
-    class VulkanImage: public Image
-    {
-    public:
-        VulkanImage(VulkanDevice* device, ImageSpecification spec);
-        VulkanImage(VulkanDevice* device, VkImage existing_image, ImageSpecification spec);
+class VulkanImage : public Image {
+public:
+    VulkanImage(VulkanDevice* device, ImageSpecification spec);
+    VulkanImage(VulkanDevice* device, VkImage existing_image, ImageSpecification spec);
 
-        void Destroy() override;
+    void Destroy() override;
 
-        ImageSpecification const& GetSpec() const override { return Specification; }
-        void SetData(std::span<u8>) override;
-        void TransitionLayout(ImageLayout new_layout) override;
+    ImageSpecification const& GetSpec() const override { return Specification; }
+    void SetData(std::span<u8>) override;
+    void TransitionLayout(ImageLayout new_layout) override;
 
-        void* GetRawHandle() override { return Handle; }
+    void* GetRawHandle() override { return Handle; }
 
-        Ref<VulkanImageView> View{};
-        Ref<VulkanSampler> Sampler{};
-        ImageSpecification Specification;
+    Ref<VulkanImageView> View{};
+    Ref<VulkanSampler> Sampler{};
+    ImageSpecification Specification;
 
-        VmaAllocation Allocation;
-        VkImage Handle{};
+    VmaAllocation Allocation;
+    VkImage Handle{};
 
-    private:
-        bool m_DestroyHandle{false};
-    };
+private:
+    bool m_DestroyHandle{ false };
+};
 }

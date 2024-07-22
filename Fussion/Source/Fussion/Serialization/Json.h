@@ -12,34 +12,60 @@ using ordered_json = nlohmann::ordered_json;
 inline json ToJson(Vector3 const& vec)
 {
     return json{
-        { "x", vec.X },
-        { "y", vec.Y },
-        { "z", vec.Z },
+        { "X", vec.X },
+        { "Y", vec.Y },
+        { "Z", vec.Z },
     };
 }
 
 inline Vector3 Vec3FromJson(const json& j)
 {
+    if (!j.contains("X") || !j.contains("Y") || !j.contains("Z")) {
+        return {};
+    }
     Vector3 vec;
-    j.at("x").get_to(vec.X);
-    j.at("y").get_to(vec.Y);
-    j.at("z").get_to(vec.Z);
+    j.at("X").get_to(vec.X);
+    j.at("Y").get_to(vec.Y);
+    j.at("Z").get_to(vec.Z);
+    return vec;
+}
+
+inline json ToJson(Vector4 const& vec)
+{
+    return json{
+        { "X", vec.X },
+        { "Y", vec.Y },
+        { "Z", vec.Z },
+        { "W", vec.W },
+    };
+}
+
+inline Vector4 Vec4FromJson(const json& j)
+{
+    if (!j.contains("X") || !j.contains("Y") || !j.contains("Z") || !j.contains("W")) {
+        return {};
+    }
+    Vector4 vec;
+    j.at("X").get_to(vec.X);
+    j.at("Y").get_to(vec.Y);
+    j.at("Z").get_to(vec.Z);
+    j.at("W").get_to(vec.W);
     return vec;
 }
 
 inline json ToJson(Vector2 const& vec)
 {
     return json{
-        { "x", vec.X },
-        { "y", vec.Y },
+        { "X", vec.X },
+        { "Y", vec.Y },
     };
 }
 
 inline Vector2 Vec2FromJson(const json& j)
 {
     Vector2 vec;
-    j.at("x").get_to(vec.X);
-    j.at("y").get_to(vec.Y);
+    j.at("X").get_to(vec.X);
+    j.at("Y").get_to(vec.Y);
     return vec;
 }
 
@@ -63,14 +89,14 @@ inline Color ColorFromJson(const json& j)
     return col;
 }
 
-inline void to_json(json& j, UUID const& id)
+inline void to_json(json& j, Uuid const& id)
 {
     j = CAST(u64, id);
 }
 
-inline void from_json(const json& j, UUID& id)
+inline void from_json(const json& j, Uuid& id)
 {
-    id = UUID(j.get<u64>());
+    id = Uuid(j.get<u64>());
 }
 
 inline void to_json(Fussion::json& j, Fussion::Color const& v)
@@ -85,20 +111,62 @@ inline void to_json(Fussion::json& j, Fussion::Color const& v)
 
 inline void from_json(const Fussion::json& j, Fussion::Color& v)
 {
-    v = Fussion::Color(j.value("R", 0.0), j.value("G", 0.0), j.value("B", 0.0), j.value("A", 0.0));
-}
+    v = Fussion::Color(j.value("R", 0.0f), j.value("G", 0.0f), j.value("B", 0.0f), j.value("A", 0.0f));
 }
 
-inline void to_json(Fussion::json& j, Vector3 const& v)
+inline void from_json(const Fussion::json& j, Vector2& v)
 {
-    j = Fussion::json{
-        { "x", v.X },
-        { "y", v.Y },
-        { "z", v.Z },
-    };
+    if (!j.contains("X") || !j.contains("Y")) {
+        v = Vector2{};
+        return;
+    }
+    v = Vector2(j.value("X", 0.0), j.value("Y", 0.0));
 }
 
 inline void from_json(const Fussion::json& j, Vector3& v)
 {
-    v = Vector3(j.value("x", 0.0), j.value("y", 0.0), j.value("z", 0.0));
+    if (!j.contains("X") || !j.contains("Y") || !j.contains("Z")) {
+        v = Vector3{};
+        return;
+    }
+    v = Vector3(j.value("X", 0.0), j.value("Y", 0.0), j.value("Z", 0.0));
+}
+
+inline void from_json(const Fussion::json& j, Vector4& v)
+{
+    if (!j.contains("X") || !j.contains("Y") || !j.contains("Z") || !j.contains("W")) {
+        v = Vector4{};
+        return;
+    }
+    v = Vector4(j.value("X", 0.0), j.value("Y", 0.0), j.value("Z", 0.0), j.value("W", 0.0));
+}
+
+inline void to_json(Fussion::json& j, Vector2 const& v)
+{
+    j = Fussion::json{
+        { "X", v.X },
+        { "Y", v.Y },
+    };
+}
+
+inline void to_json(Fussion::json& j, Vector3 const& v)
+{
+
+    j = Fussion::json{
+        { "X", v.X },
+        { "Y", v.Y },
+        { "Z", v.Z },
+    };
+}
+
+inline void to_json(Fussion::json& j, Vector4 const& v)
+{
+    j = Fussion::json{
+        { "X", v.X },
+        { "Y", v.Y },
+        { "Z", v.Z },
+        { "W", v.Z },
+    };
+}
+
 }

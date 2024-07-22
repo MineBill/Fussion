@@ -1,20 +1,21 @@
 ﻿#include "Editor.h"
+#include "Widgets/AssetWindows/AssetWindow.h"
 
 #include "Fussion/Input/Input.h"
 #include "Fussion/Core/Application.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
-
-#include "Fussion/OS/Dialog.h"
-#include "Fussion/Scripting/ScriptingEngine.h"
+#include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Debug/Debug.h"
+#include "Fussion/Events/ApplicationEvents.h"
+#include "Fussion/Events/KeyboardEvents.h"
+#include "Fussion/RHI/FrameAllocator.h"
+#include "Serialization/SceneSerializer.h"
 
 #include <imgui.h>
-#include "ImGuizmo.h"
+#include <imgui_internal.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
-
-#include "EditorApplication.h"
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Events/KeyboardEvents.h"
+#include <ranges>
 
 Editor* Editor::s_EditorInstance = nullptr;
 using namespace Fussion;
@@ -55,6 +56,22 @@ void Editor::OnStart()
 
     m_ScriptsInspector->OnStart();
     m_ScriptsInspector->Hide();
+
+    OnBeginPlay += [] {
+        LOG_DEBUG("On Begin Play");
+    };
+
+    OnStopPlay += [] {
+        LOG_DEBUG("On Stop Play");
+    };
+
+    OnPaused += [] {
+        LOG_DEBUG("On Paused");
+    };
+
+    OnResumePlay += [] {
+        LOG_DEBUG("On Resume Play");
+    };
 }
 
 void Editor::OnEnable() {}
@@ -65,9 +82,17 @@ void Editor::OnUpdate(const f32 delta)
 {
     ZoneScoped;
 
-    if (auto scene = m_ActiveScene.Get()) {
-        scene->OnUpdate(delta);
+    switch (m_State) {
+    case PlayState::Editing: {}
+    break;
+    case PlayState::Playing: {}
+    break;
+    case PlayState::Paused: {}
+    break;
     }
+
+    if (m_ActiveScene)
+        m_ActiveScene->OnUpdate(delta);
 
     m_Camera.SetFocus(m_ViewportWindow->IsFocused());
     m_Camera.OnUpdate(delta);
@@ -80,7 +105,7 @@ void Editor::OnUpdate(const f32 delta)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::BeginMenu("New..")) {
                 if (ImGui::MenuItem("Create Scene")) {
-                    m_ActiveScene = Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.fsn");
+                    ChangeScene(Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.fsn"));
                 }
                 ImGui::EndMenu();
             }
@@ -92,7 +117,12 @@ void Editor::OnUpdate(const f32 delta)
 
             if (ImGui::MenuItem("Save..", "Ctrl+S")) {
                 Project::ActiveProject()->Save();
-                Project::ActiveProject()->GetAssetManager()->SaveAsset(m_ActiveScene.Handle());
+
+                auto serializer = MakePtr<SceneSerializer>();
+                AssetMetadata meta{};
+                meta.Path = m_ActiveScenePath;
+                serializer->Save(meta, m_ActiveScene);
+                m_ActiveScene->SetDirty(false);
             }
 
             if (!m_ActiveScene)
@@ -125,6 +155,67 @@ void Editor::OnUpdate(const f32 delta)
     }
     ImGui::EndMainMenuBar();
 
+    auto flags =
+        ImGuiDockNodeFlags_NoTabBar |
+        ImGuiDockNodeFlags_HiddenTabBar |
+        ImGuiDockNodeFlags_NoDockingOverMe |
+        ImGuiDockNodeFlags_NoDockingOverOther;
+
+    ImGuiWindowClass klass;
+    klass.DockNodeFlagsOverrideSet = flags;
+
+    ImGui::SetNextWindowClass(&klass);
+    EUI::Window("##toolbar", [this] {
+        constexpr auto y = 4;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2{ 0, y });
+        defer(ImGui::PopStyleVar());
+        auto height = ImGui::GetWindowHeight() - y * 2;
+        auto pos = ImGui::GetWindowContentRegionMax().x * 0.5f - 3.f * height * 0.5f;
+        ImGui::SetCursorPosX(pos);
+        ImGui::SetCursorPosY(y + 1);
+
+        auto list = ImGui::GetWindowDrawList();
+        list->ChannelsSplit(2);
+        list->ChannelsSetCurrent(1);
+
+        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Play], Vector2{ height, height }, [this] {
+            SetPlayState(PlayState::Playing);
+        }, { .Disabled = m_State == PlayState::Playing });
+
+        auto min = ImGui::GetItemRectMin();
+
+        ImGui::SetItemTooltip("Begin Play mode. This will simulate the game with the in-game camera.");
+
+        ImGui::SameLine();
+
+        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Stop], Vector2{ height, height }, [this] {
+            SetPlayState(PlayState::Editing);
+        }, { .Disabled = m_State != PlayState::Playing });
+
+        ImGui::SameLine();
+
+        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Pause], Vector2{ height, height }, [this] {
+            SetPlayState(PlayState::Paused);
+        }, { .Disabled = m_State != PlayState::Playing });
+
+        ImGui::SetItemTooltip("Pause");
+
+        auto min_step_button = ImGui::GetItemRectMin();
+        auto max = ImGui::GetItemRectMax();
+
+        list->ChannelsSetCurrent(0);
+
+        Color color = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
+        color = color.Lighten(0.2f);
+
+        // auto middle = (max.x - min_step_button.x) / 2.0f;
+        list->AddRectFilled(min, max, color.ToABGR(), 3);
+
+        // imgui.DrawList_AddLine(list, min_step_button + vec2{middle, 0}, max - vec2{middle, 0}, color_to_abgr(line_color))
+        // list->AddLine()
+        list->ChannelsMerge();
+    }, { .Flags = ImGuiWindowFlags_NoDecoration });
+
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
     }
@@ -135,6 +226,14 @@ void Editor::OnUpdate(const f32 delta)
     m_SceneWindow->OnDraw();
     m_ScriptsInspector->OnDraw();
     m_ContentBrowser->OnDraw();
+
+    for (auto const& asset_window : m_AssetWindows | std::views::values) {
+        asset_window->OnDraw(delta);
+    }
+
+    std::erase_if(m_AssetWindows, [](auto const& pair) {
+        return !pair.second->IsOpen();
+    });
 
     Undo.Commit();
 }
@@ -151,7 +250,33 @@ void Editor::OnEvent(Event& event)
             LOG_DEBUG("FUCK SHIT REDO");
             Undo.Redo();
         }
+
+        if (e.Key == KeyboardKey::L) {
+            Debug::DrawLine(Vector3{}, Vector3{ 2, 2, 2 }, 2.0f);
+        }
         return false;
+    });
+
+    dispatcher.Dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
+        if (m_ActiveScene->IsDirty()) {
+            Dialogs::MessageBox data{};
+            data.Message = "The current scene has unsaved modifications. Are you sure you want to quit?";
+            data.Action = Dialogs::MessageAction::OkCancel;
+            switch (Dialogs::ShowMessageBox(data)) {
+            case Dialogs::MessageButton::Ok:
+                Application::Instance()->Quit();
+                break;
+            case Dialogs::MessageButton::Yes:
+                break;
+            case Dialogs::MessageButton::No:
+                break;
+            case Dialogs::MessageButton::Cancel:
+                break;
+            }
+        } else {
+            Application::Instance()->Quit();
+        }
+        return true;
     });
 
     m_Camera.HandleEvent(event);
@@ -164,21 +289,74 @@ void Editor::OnEvent(Event& event)
     m_ContentBrowser->OnEvent(event);
 }
 
-void Editor::OnDraw(Ref<CommandBuffer> cmd)
+void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
 {
+    if (Input::IsKeyPressed(KeyboardKey::K)) {
+        Debug::DrawLine(Vector3{}, Vector3{ 2, 2, 2 });
+    }
+
     m_SceneRenderer.Render(cmd, {
         .Camera = RenderCamera{
             .Perspective = m_Camera.GetPerspective(),
             .View = m_Camera.GetView(),
             .Position = m_Camera.Position,
+            .Near = m_Camera.Near,
+            .Far = m_Camera.Far,
         },
-        .Scene = m_ActiveScene.Get(),
+        .Scene = m_ActiveScene.get(),
     });
 }
 
 void Editor::Quit()
 {
     LOG_DEBUG("Quitting application");
+}
+
+void Editor::SetPlayState(PlayState new_state)
+{
+    ZoneScoped;
+    switch (m_State) {
+    case PlayState::Editing:
+        switch (new_state) {
+        case PlayState::Editing:
+            // noop
+            return;
+        case PlayState::Playing:
+            OnBeginPlay.Fire();
+            break;
+        case PlayState::Paused:
+            // noop
+            return;
+        }
+        break;
+    case PlayState::Playing:
+        switch (new_state) {
+        case PlayState::Editing:
+            OnStopPlay.Fire();
+            break;
+        case PlayState::Playing:
+            // noop
+            return;
+        case PlayState::Paused:
+            OnPaused.Fire();
+            break;
+        }
+        break;
+    case PlayState::Paused:
+        switch (new_state) {
+        case PlayState::Editing:
+            OnStopPlay.Fire();
+            break;
+        case PlayState::Playing:
+            OnResumePlay.Fire();
+            break;
+        case PlayState::Paused:
+            // noop
+            return;
+        }
+        break;
+    }
+    m_State = new_state;
 }
 
 void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
@@ -192,7 +370,12 @@ void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source
 
 void Editor::ChangeScene(AssetRef<Scene> scene)
 {
-    s_EditorInstance->m_ActiveScene = scene;
+    s_EditorInstance->m_SceneWindow->ClearSelection();
+
+    auto serializer = MakePtr<SceneSerializer>();
+    auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(scene.Handle());
+    s_EditorInstance->m_ActiveScene = serializer->Load(meta)->As<Scene>();
+    s_EditorInstance->m_ActiveScenePath = meta.Path;
 }
 
 void Editor::OnViewportResized(Vector2 new_size)

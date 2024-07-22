@@ -2,19 +2,23 @@
 #include "Vector3.h"
 
 namespace Fussion {
-Vector3::Real Vector3::LengthSquared() const {
+Vector3::Real Vector3::LengthSquared() const
+{
     return X * X + Y * Y + Z * Z;
 }
 
-Vector3::Real Vector3::Length() const {
+Vector3::Real Vector3::Length() const
+{
     return std::sqrt(LengthSquared());
 }
 
-Vector3 Vector3::Normalized() const {
+Vector3 Vector3::Normalized() const
+{
     return *this / Length();
 }
 
-void Vector3::Normalize() {
+void Vector3::Normalize()
+{
     *this = this->Normalized();
 }
 
@@ -61,4 +65,11 @@ Vector3 Vector3::operator/=(Vector3 const& other)
     *this = *this / other;
     return *this;
 }
+
+Vector3 const Vector3::Up{ 0, 1, 0 };
+Vector3 const Vector3::Down{ 0, -1, 0 };
+Vector3 const Vector3::Left{ -1, 0, 0 };
+Vector3 const Vector3::Right{ 1, 0, 0 };
+Vector3 const Vector3::Forward{ 0, 0, 1 };
+
 }

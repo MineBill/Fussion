@@ -1,12 +1,11 @@
 ﻿#pragma once
 #include "EditorWindow.h"
+#include "Project/EditorAssetManager.h"
 
 #include "Fussion/OS/Dialog.h"
 
 #include <filesystem>
 #include <unordered_map>
-
-#include "Project/EditorAssetManager.h"
 
 class ContentBrowser : public EditorWindow {
 public:
@@ -40,4 +39,5 @@ private:
 
     Fsn::Dialogs::FilePickerFilter m_ImportFilter;
     std::unordered_map<std::string, Fsn::AssetType> m_FileTypes;
+
 };

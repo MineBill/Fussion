@@ -31,8 +31,10 @@ target "Editor"
     add_sysincludedirs("Vendor/imgui")
     add_files("Vendor/imgui/*.cpp")
 
-    add_deps("Fussion", "kdl")
+    add_deps("Fussion")
     add_packages("glfw")
+
+    -- add_rules("c++.unity_build")
 
     if is_plat("windows") then
         set_runtimes("MDd")

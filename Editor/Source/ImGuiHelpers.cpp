@@ -1,5 +1,4 @@
-﻿#define IMGUI_DEFINE_MATH_OPERATORS
-#include "ImGuiHelpers.h"
+﻿#include "ImGuiHelpers.h"
 
 #include "Fussion/Core/Core.h"
 #include <imgui_internal.h>
@@ -24,10 +23,10 @@ void ImGuiHelpers::EndProperty()
     ImGui::EndTable();
 }
 
-void ImGuiHelpers::BeginGroupPanel(const char *name, const ImVec2 &size, ImFont* font)
+void ImGuiHelpers::BeginGroupPanel(const char* name, const ImVec2& size, ImFont* font)
 {
     ImGui::PushFont(font);
-    defer (ImGui::PopFont());
+    defer(ImGui::PopFont());
 
     ImGui::BeginGroup();
 
@@ -95,20 +94,20 @@ void ImGuiHelpers::EndGroupPanel()
     ImGui::EndGroup();
 
     ImGui::SameLine(0.0f, 0.0f);
-    ImGui::Dummy(ImVec2(frameHeight * 0.5f, 0.0f));
-    ImGui::Dummy(ImVec2(0.0, frameHeight - frameHeight * 0.5f - itemSpacing.y));
+    ImGui::Dummy(Vector2(frameHeight * 0.5f, 0.0f));
+    ImGui::Dummy(Vector2(0.0, frameHeight - frameHeight * 0.5f - itemSpacing.y));
 
     ImGui::EndGroup();
 
-    auto itemMin = ImGui::GetItemRectMin();
-    auto itemMax = ImGui::GetItemRectMax();
+    Vector2 item_min = ImGui::GetItemRectMin();
+    Vector2 item_max = ImGui::GetItemRectMax();
     // ImGui::GetWindowDrawList()->AddRectFilled(itemMin, itemMax, IM_COL32(255, 0, 0, 64), 4.0f);
 
     auto labelRect = s_GroupPanelLabelStack.back();
     s_GroupPanelLabelStack.pop_back();
 
-    ImVec2 halfFrame = ImVec2(frameHeight * 0.25f, frameHeight) * 0.5f;
-    ImRect frameRect = ImRect(itemMin + halfFrame, itemMax - ImVec2(halfFrame.x, 0.0f));
+    Vector2 half_frame = Vector2(frameHeight * 0.25f, frameHeight) * 0.5f;
+    ImRect frame_rect = ImRect(item_min + half_frame, item_max - Vector2(half_frame.X, 0.0f));
     labelRect.Min.x -= itemSpacing.x;
     labelRect.Max.x += itemSpacing.x;
     for (int i = 0; i < 4; ++i) {
@@ -131,8 +130,8 @@ void ImGuiHelpers::EndGroupPanel()
             break;
         }
 
-        ImGui::GetWindowDrawList()->AddRect(frameRect.Min, frameRect.Max,
-                                            ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Border)), halfFrame.x);
+        ImGui::GetWindowDrawList()->AddRect(frame_rect.Min, frame_rect.Max,
+            ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Border)), half_frame.X);
 
         ImGui::PopClipRect();
     }
@@ -153,8 +152,9 @@ void ImGuiHelpers::EndGroupPanel()
     ImGui::EndGroup();
 }
 
-void ImGuiHelpers::DragVec3(const char *id, Vector3 *value, f32 speed, f32 min, f32 max, const char *format, ImFont* font, ImFont* font2)
+bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, f32 max, const char* format, ImFont* font, ImFont* font2)
 {
+    bool modified{ false };
     ImGui::PushID(id);
     constexpr auto X_COLOR = ImVec4(0.92f, 0.24f, 0.27f, 1.0);
     constexpr auto X_COLOR_HOVER = ImVec4(0.76f, 0.20f, 0.22f, 1.0);
@@ -186,7 +186,7 @@ void ImGuiHelpers::DragVec3(const char *id, Vector3 *value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, X_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, X_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##x", &value->X, speed, min, max, format);
+    modified |= ImGui::DragFloat("##x", &value->X, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -199,7 +199,7 @@ void ImGuiHelpers::DragVec3(const char *id, Vector3 *value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, Y_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Y_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##y", &value->Y, speed, min, max, format);
+    modified |= ImGui::DragFloat("##y", &value->Y, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -212,18 +212,19 @@ void ImGuiHelpers::DragVec3(const char *id, Vector3 *value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, Z_COLOR);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Z_COLOR_HOVER);
     ImGui::PushFont(font2);
-    ImGui::DragFloat("##z", &value->Z, speed, min, max, format);
+    modified |= ImGui::DragFloat("##z", &value->Z, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
 
     ImGui::PopStyleVar();
     ImGui::PopID();
+    return modified;
 }
 
-bool ImGuiHelpers::ButtonCenteredOnLine(const char *label, float alignment)
+bool ImGuiHelpers::ButtonCenteredOnLine(const char* label, float alignment)
 {
-    ImGuiStyle &style = ImGui::GetStyle();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     float size = ImGui::CalcTextSize(label).x + style.FramePadding.x * 2.0f;
     float avail = ImGui::GetContentRegionAvail().x;
@@ -235,8 +236,8 @@ bool ImGuiHelpers::ButtonCenteredOnLine(const char *label, float alignment)
     return ImGui::Button(label);
 }
 
-void ImGuiHelpers::RenderSimpleRect(ImDrawList *draw_list, Vector2 const &position, Vector2 const &size, u32 color,
-                                    f32 width)
+void ImGuiHelpers::RenderSimpleRect(ImDrawList* draw_list, Vector2 const& position, Vector2 const& size, u32 color,
+    f32 width)
 {
     ImGui::RenderRectFilledWithHole(
         draw_list, ImRect(position.X, position.Y, position.X + size.X, position.Y + size.Y),
@@ -247,7 +248,7 @@ void ImGuiHelpers::RenderSimpleRect(ImDrawList *draw_list, Vector2 const &positi
 void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTextFlags flags)
 {
     BeginProperty(label);
-    defer (EndProperty());
+    defer(EndProperty());
 
     if (flags & ImGuiInputTextFlags_ReadOnly)
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -261,7 +262,7 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::Image> const& image, bool& toggled, Vector2 size)
+bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> const& image, bool& toggled, Vector2 size)
 {
     auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
     // auto button = Vector4(0, 1, 0, 1);

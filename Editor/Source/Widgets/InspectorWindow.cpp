@@ -2,7 +2,6 @@
 #include "Layers/Editor.h"
 #include "ImGuiHelpers.h"
 #include "EditorUI.h"
-#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/Mesh.h"
 #include "Fussion/Math/Color.h"
 
@@ -26,8 +25,9 @@ void AssetPicker::Update()
     bool was_open = m_Opened;
 
     EUI::ModalWindow("Asset Picker", [&] {
-        ImGuiH::Text("Asset Picker for {}", magic_enum::enum_name(m_Type));
+        ImGuiH::Text("Please pick an asset for '{}':", m_Member.get_name());
 
+        ImGui::Separator();
         for (auto const& handle : m_ViableHandles) {
             EUI::Button(std::format("Asset: {}", handle), [&] {
                 m_Member.set(m_Instance, handle);
@@ -71,10 +71,11 @@ void InspectorWindow::OnDraw()
             if (selection.size() == 1) {
                 auto const entity = selection.begin()->second;
                 if (DrawEntity(*entity)) {
-                    Editor::GetActiveScene().Get()->SetDirty();
+                    LOG_DEBUG("Entity was modified, setting scene to dirty");
+                    Editor::GetActiveScene()->SetDirty();
                 }
             } else {
-                ImGui::Text("Multiple entities selected");
+                ImGui::Text("Unsupported: Multiple entities selected");
             }
         }
 
@@ -83,7 +84,7 @@ void InspectorWindow::OnDraw()
     ImGui::End();
 }
 
-bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
+bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
 {
     ZoneScoped;
     bool modified{ false };
@@ -129,6 +130,12 @@ bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type compone
                     }
                 } else if (value.is<Color*>()) {
                     modified |= ImGui::ColorEdit4("", value.as<Color*>()->Raw);
+                } else if (value.is<Vector2*>()) {
+                    modified |= ImGui::DragFloat2("", value.as<Vector2*>()->Raw);
+                } else if (value.is<Vector3*>()) {
+                    modified |= ImGui::DragFloat3("", value.as<Vector3*>()->Raw);
+                } else if (value.is<Vector4*>()) {
+                    modified |= ImGui::DragFloat4("", value.as<Vector4*>()->Raw);
                 } else if (data_type.is_class()) {
                     auto class_type = data_type.as_class();
                     if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
@@ -159,16 +166,9 @@ bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type compone
                             m_AssetPicker.Show(m_Handle, value, asset_type);
                         });
                         ImGui::PopStyleVar();
+                    } else {
+                        ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                     }
-                    // if (class_type.get_arity() > 0) {
-                    //     meta_hpp::resolve_type<Fsn::AssetRef<_>>();
-                    //     ImGui::Text("Template type!");
-                    // } else {
-                    //     ImGui::Text("Normal class type!");
-                    // }
-                    // // if (ImGui::InputText("", value.as<std::string*>())) {
-                    // //     modified = true;
-                    // // }
                 } else {
                     ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                 }
@@ -176,14 +176,7 @@ bool InspectorWindow::DrawComponent(Entity& entity, meta_hpp::class_type compone
         }
         ImGui::Separator();
     }
-    // if (ImGui::BeginPopupContextItem()) {
-    //     if (ImGui::MenuItem("Remove Component")) {
-    //         LOG_WARN("Remove component");
-    //         entity.RemoveComponent(component_type);
-    //     }
-    //
-    //     ImGui::EndPopup();
-    // }
+
     return modified;
 }
 
@@ -194,21 +187,34 @@ bool InspectorWindow::DrawEntity(Entity& e)
     bool modified{ false };
     auto& style = Editor::Get().GetStyle();
 
-    e.IsEnabled();
-    EUI::Property("Name", &e.Name);
+    if (ImGui::TreeNode("Debug")) {
+        auto m = meta_hpp::resolve_type(e);
+        auto parent = m.get_member("m_Parent").get(e).as<Uuid>();
+        ImGui::BeginDisabled();
+
+        auto id = e.GetId();
+        EUI::Property("ID", &id);
+        EUI::Property("Parent", &parent);
+
+        ImGui::EndDisabled();
+        ImGui::TreePop();
+    }
+
+    modified |= EUI::Property("Enabled", e.GetEnabled());
+    modified |= EUI::Property("Name", &e.Name);
 
     ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts.BoldSmall);
     ImGui::TextUnformatted("Position");
-    ImGuiHelpers::DragVec3("##position", &e.Transform.Position, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##position", &e.Transform.Position, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
 
     ImGui::TextUnformatted("Euler Angles");
-    ImGuiHelpers::DragVec3("##euler_angles", &e.Transform.EulerAngles, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##euler_angles", &e.Transform.EulerAngles, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
 
     ImGui::TextUnformatted("Scale");
-    ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01, 0, 0, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
     ImGuiHelpers::EndGroupPanel();
 
-    for (const auto& [id, component] : e.GetComponents()) {
+    for (const auto& component : e.GetComponents() | std::views::values) {
         auto ptr = component->meta_poly_ptr();
 
         auto type = ptr.get_type().as_pointer().get_data_type().as_class();
@@ -231,18 +237,3 @@ bool InspectorWindow::DrawEntity(Entity& e)
     }
     return modified;
 }
-
-//
-// template<std::derived_from<Fussion::Component> T>
-// static void DrawComponent(Fsn::Entity& e, auto&& callback) {
-//     if (e.HasComponent<T>()) {
-//         ZoneScopedN("Drawing Component");
-//
-//         auto type = meta_hpp::resolve_type<T>();
-//         auto name = type.get_metadata().at("Name").template as<std::string>();
-//         if (ImGui::CollapsingHeader(name.c_str())) {
-//             callback(e.GetComponent<T>());
-//             ImGui::Separator();
-//         }
-//     }
-// };

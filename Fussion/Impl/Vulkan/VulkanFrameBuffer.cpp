@@ -4,98 +4,117 @@
 #include "VulkanImage.h"
 #include "Common.h"
 
-namespace Fussion
+namespace Fussion::RHI {
+VulkanFrameBuffer::VulkanFrameBuffer([[maybe_unused]] VulkanDevice* device, Ref<RenderPass> render_pass, FrameBufferSpecification spec)
+    : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
 {
-    VulkanFrameBuffer::VulkanFrameBuffer(VulkanDevice* device, Ref<RenderPass> render_pass, FrameBufferSpecification spec)
-        : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
-    {
-        for (const auto attachment : spec.Attachments) {
-            if (Image::IsDepthFormat(attachment.Format)) {
-                m_DepthFormat = attachment;
-            } else {
-                m_ColorFormats.push_back(attachment);
-            }
+    for (const auto attachment : spec.Attachments) {
+        if (Image::IsDepthFormat(attachment.Format)) {
+            m_DepthFormat = attachment;
+        } else {
+            m_ColorFormats.push_back(attachment);
         }
-        Invalidate();
     }
+    Invalidate();
+}
 
-    VulkanFrameBuffer::VulkanFrameBuffer(
-        VulkanDevice* device,
-        Ref<RenderPass> render_pass,
-        std::vector<Ref<Image>> images,
-        FrameBufferSpecification spec)
-        : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
-    {
-        m_Specification.DontCreateImages = true;
-        for (const auto image : images) {
-            if (Image::IsDepthFormat(image->GetSpec().Format)) {
-                m_DepthImage = image->As<VulkanImage>();
-            } else {
-                m_ColorAttachments.push_back(image->As<VulkanImage>());
-            }
+VulkanFrameBuffer::VulkanFrameBuffer(
+    [[maybe_unused]] VulkanDevice* device,
+    Ref<RenderPass> render_pass,
+    std::vector<Ref<Image>> images,
+    FrameBufferSpecification spec)
+    : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
+{
+    m_Specification.DontCreateImages = true;
+    for (const auto image : images) {
+        if (Image::IsDepthFormat(image->GetSpec().Format)) {
+            m_DepthImage = image->As<VulkanImage>();
+        } else {
+            m_ColorAttachments.push_back(image->As<VulkanImage>());
         }
-
-        Invalidate();
     }
 
-    void VulkanFrameBuffer::Destroy()
-    {
-        auto device = Device::Instance()->As<VulkanDevice>();
+    Invalidate();
+}
 
-        if (!m_Specification.DontCreateImages) {
-            for (const auto& attachment : m_ColorAttachments) {
-                device->DestroyImage(attachment);
-            }
-            m_ColorAttachments.clear();
-
-            device->DestroyImage(m_DepthImage);
-            m_DepthImage = nullptr;
+VulkanFrameBuffer::VulkanFrameBuffer(
+    [[maybe_unused]] VulkanDevice* device,
+    Ref<RenderPass> render_pass,
+    std::vector<Ref<ImageView>> images,
+    FrameBufferSpecification spec)
+    : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
+{
+    m_Specification.DontCreateImages = true;
+    for (const auto image : images) {
+        if (Image::IsDepthFormat(image->GetSpec().Format)) {
+            m_DepthImageView = image->As<VulkanImageView>();
+        } else {
+            m_ColorAttachmentViews.push_back(image->As<VulkanImageView>());
         }
-
-        vkDestroyFramebuffer(device->Handle, m_Handle, nullptr);
     }
 
-    FrameBufferSpecification VulkanFrameBuffer::GetSpec()
-    {
-        return m_Specification;
+    Invalidate();
+}
+
+void VulkanFrameBuffer::Destroy()
+{
+    auto device = Device::Instance()->As<VulkanDevice>();
+
+    if (!m_Specification.DontCreateImages) {
+        for (const auto& attachment : m_ColorAttachments) {
+            device->DestroyImage(attachment);
+        }
+        m_ColorAttachments.clear();
+
+        device->DestroyImage(m_DepthImage);
+        m_DepthImage = nullptr;
     }
 
-    void VulkanFrameBuffer::Invalidate()
-    {
-        auto device = Device::Instance()->As<VulkanDevice>();
+    vkDestroyFramebuffer(device->Handle, m_Handle, nullptr);
+}
 
-        if (!m_Specification.DontCreateImages) {
-            if (!m_ColorFormats.empty()) {
-                for (const auto& format : m_ColorFormats) {
-                    const auto spec = ImageSpecification {
-                        .Label = "FrameBuffer Color Image",
-                        .Width = m_Specification.Width,
-                        .Height = m_Specification.Height,
-                        .Samples = format.Samples,
-                        .Format = format.Format,
-                        .Usage = format.Usage,
-                        .FinalLayout = ImageLayout::ColorAttachmentOptimal,
-                    };
-                    m_ColorAttachments.push_back(device->CreateImage(spec)->As<VulkanImage>());
-                }
-            }
+FrameBufferSpecification VulkanFrameBuffer::GetSpec()
+{
+    return m_Specification;
+}
 
-            if (m_DepthFormat) {
-                const auto spec = ImageSpecification {
-                    .Label = "FrameBuffer Depth Image",
+void VulkanFrameBuffer::Invalidate()
+{
+    auto device = Device::Instance()->As<VulkanDevice>();
+
+    if (!m_Specification.DontCreateImages) {
+        if (!m_ColorFormats.empty()) {
+            for (const auto& format : m_ColorFormats) {
+                const auto spec = ImageSpecification{
+                    .Label = "FrameBuffer Color Image",
                     .Width = m_Specification.Width,
                     .Height = m_Specification.Height,
-                    .Samples = m_DepthFormat->Samples,
-                    .Format = m_DepthFormat->Format,
-                    .Usage = m_DepthFormat->Usage,
+                    .Samples = format.Samples,
+                    .Format = format.Format,
+                    .Usage = format.Usage,
+                    .FinalLayout = ImageLayout::ColorAttachmentOptimal,
                 };
-
-                m_DepthImage = device->CreateImage(spec)->As<VulkanImage>();
+                m_ColorAttachments.push_back(device->CreateImage(spec)->As<VulkanImage>());
             }
         }
 
-        std::vector<VkImageView> attachments{};
+        if (m_DepthFormat) {
+            const auto spec = ImageSpecification{
+                .Label = "FrameBuffer Depth Image",
+                .Width = m_Specification.Width,
+                .Height = m_Specification.Height,
+                .Samples = m_DepthFormat->Samples,
+                .Format = m_DepthFormat->Format,
+                .Usage = m_DepthFormat->Usage,
+            };
 
+            m_DepthImage = device->CreateImage(spec)->As<VulkanImage>();
+        }
+    }
+
+    std::vector<VkImageView> attachments{};
+
+    if (!m_Specification.DontCreateImages) {
         for (const auto& attachment : m_ColorAttachments) {
             attachments.push_back(attachment->View->GetRenderHandle<VkImageView>());
         }
@@ -103,30 +122,61 @@ namespace Fussion
         if (m_DepthImage != nullptr) {
             attachments.push_back(m_DepthImage->View->GetRenderHandle<VkImageView>());
         }
+    } else {
+        if (m_ColorAttachments.empty()) {
+            for (const auto& attachment : m_ColorAttachmentViews) {
+                attachments.push_back(attachment->GetRenderHandle<VkImageView>());
+            }
 
-        auto fb_ci = VkFramebufferCreateInfo {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .renderPass = m_RenderPass->GetRenderHandle<VkRenderPass>(),
-            .attachmentCount = CAST(u32, attachments.size()),
-            .pAttachments = attachments.data(),
-            .width = CAST(u32, m_Specification.Width),
-            .height = CAST(u32, m_Specification.Height),
-            .layers = 1,
-        };
+            if (m_DepthImageView != nullptr) {
+                attachments.push_back(m_DepthImageView->GetRenderHandle<VkImageView>());
+            }
+        } else {
+            for (const auto& attachment : m_ColorAttachments) {
+                attachments.push_back(attachment->View->GetRenderHandle<VkImageView>());
+            }
 
-        VK_CHECK(vkCreateFramebuffer(device->Handle, &fb_ci, nullptr, &m_Handle))
+            if (m_DepthImage != nullptr) {
+                attachments.push_back(m_DepthImage->View->GetRenderHandle<VkImageView>());
+            }
+        }
+
     }
 
-    void VulkanFrameBuffer::Resize(Vector2 new_size)
-    {
-        m_Specification.Width = CAST(s32, new_size.X);
-        m_Specification.Height = CAST(s32, new_size.Y);
+    auto fb_ci = VkFramebufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .renderPass = m_RenderPass->GetRenderHandle<VkRenderPass>(),
+        .attachmentCount = CAST(u32, attachments.size()),
+        .pAttachments = attachments.data(),
+        .width = CAST(u32, m_Specification.Width),
+        .height = CAST(u32, m_Specification.Height),
+        .layers = 1,
+    };
 
-        Destroy();
-        Invalidate();
-    }
+    VK_CHECK(vkCreateFramebuffer(device->Handle, &fb_ci, nullptr, &m_Handle))
+}
 
-    Ref<Image> VulkanFrameBuffer::GetColorAttachment(u32 index) {
-        return m_ColorAttachments[index];
-    }
+void VulkanFrameBuffer::Resize(Vector2 new_size)
+{
+    m_Specification.Width = CAST(s32, new_size.X);
+    m_Specification.Height = CAST(s32, new_size.Y);
+
+    Destroy();
+    Invalidate();
+}
+
+Ref<Image> VulkanFrameBuffer::GetColorAttachment(u32 index)
+{
+    return m_ColorAttachments[index];
+}
+
+Ref<ImageView> VulkanFrameBuffer::GetColorAttachmentAsView(u32 index)
+{
+    return m_ColorAttachmentViews[index];
+}
+
+Ref<ImageView> VulkanFrameBuffer::GetDepthAttachmentAsView()
+{
+    return m_DepthImageView;
+}
 }

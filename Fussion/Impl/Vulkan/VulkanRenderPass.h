@@ -1,22 +1,21 @@
 ﻿#pragma once
 #include "VulkanDevice.h"
-#include "Fussion/Renderer/RenderPass.h"
+#include "Fussion/RHI/RenderPass.h"
 
-namespace Fussion
-{
-    class VulkanRenderPass: public RenderPass
-    {
-    public:
-        VulkanRenderPass(VulkanDevice* device, RenderPassSpecification spec);
+namespace Fussion::RHI {
+class VulkanRenderPass : public RenderPass {
+public:
+    VulkanRenderPass(VulkanDevice* device, RenderPassSpecification spec);
 
-        void Begin() override;
-        void End() override;
+    void Begin() override;
+    void End() override;
 
-        RenderPassSpecification GetSpec() override;
-        void* GetRawHandle() override { return m_Handle; }
-    private:
-        VkRenderPass m_Handle;
+    RenderPassSpecification GetSpec() override;
+    void* GetRawHandle() override { return m_Handle; }
 
-        RenderPassSpecification m_Specification;
-    };
+private:
+    VkRenderPass m_Handle;
+
+    RenderPassSpecification m_Specification;
+};
 }

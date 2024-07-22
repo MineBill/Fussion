@@ -1,12 +1,11 @@
 ﻿#pragma once
 #include "Fussion/Core/Layer.h"
-#include "Fussion/Renderer/CommandBuffer.h"
+#include "Fussion/RHI/CommandBuffer.h"
 
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.h>
 
-class ImGuiLayer: public Fussion::Layer
-{
+class ImGuiLayer : public Fussion::Layer {
 public:
     ImGuiLayer();
 
@@ -17,13 +16,24 @@ public:
     void OnUpdate(f32) override;
 
     void Begin();
-    void End(const Ref<Fussion::CommandBuffer>&);
+    void End(const Ref<Fussion::RHI::CommandBuffer>&);
 
     // @Todo The VkDescriptorSet could be changed to void*.
     std::map<u64, VkDescriptorSet> ImageToVkSet;
+
 private:
     static ImGuiLayer* s_Instance;
 };
 
 // @todo This should probably be replaced with a function??
 #define IMGUI_IMAGE(image) ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())]
+
+inline void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image)
+{
+    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())];
+}
+
+inline void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view)
+{
+    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())];
+}

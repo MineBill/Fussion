@@ -112,7 +112,7 @@ namespace Fussion::Dialogs
         arg.lStructSize = sizeof(OPENFILENAMEW);
         arg.hwndOwner = handle;
         arg.lpstrFile = file.data();
-        arg.nMaxFile = file.size();
+        arg.nMaxFile = CAST(DWORD, file.size());
         arg.lpstrFilter = w_filter.c_str();
         arg.nFilterIndex = 1;
         arg.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;

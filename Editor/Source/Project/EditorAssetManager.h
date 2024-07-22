@@ -14,6 +14,7 @@ struct AssetMetadata {
 
     bool IsVirtual = false;
     bool DontSerialize = false;
+    bool Dirty = false;
 
     Fussion::AssetHandle Handle;
     bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
@@ -28,8 +29,11 @@ public:
     EditorAssetManager();
 
     auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
+    auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
+
     bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
     bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
+    auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset) -> Fussion::AssetHandle override;
 
     bool IsPathAnAsset(std::filesystem::path const& path) const;
     auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;
@@ -72,6 +76,7 @@ public:
     }
 
     void SaveAsset(Fussion::AssetHandle handle);
+    void SaveAsset(Ref<Fussion::Asset> const& asset);
 
     void Serialize();
     void Deserialize();

@@ -1,5 +1,5 @@
 ﻿#include "e5pch.h"
-#include "UUID.h"
+#include "Uuid.h"
 
 #include <random>
 
@@ -11,7 +11,7 @@ namespace
 
 namespace Fussion
 {
-    UUID::UUID()
+    Uuid::Uuid()
         : m_Id(g_Engine())
     {
     }

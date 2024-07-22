@@ -11,6 +11,10 @@ struct Vector3 final {
     using Real = f32;
 #endif
 
+#if OS_WINDOWS
+#pragma warning(push)
+#pragma warning(disable: 4201)
+#endif
     union {
         struct {
             Real X, Y, Z;
@@ -18,11 +22,14 @@ struct Vector3 final {
 
         Real Raw[3];
     };
+#if OS_WINDOWS
+#pragma warning(pop)
+#endif
 
     Vector3(): X(0), Y(0), Z(0) {}
-    explicit Vector3(ScalarType auto x): X(x), Y(0), Z(0) {}
-    Vector3(ScalarType auto x, ScalarType auto y): X(x), Y(y), Z(0) {}
-    Vector3(ScalarType auto x, ScalarType auto y, ScalarType auto z): X(x), Y(y), Z(z) {}
+    explicit Vector3(ScalarType auto x): X(CAST(Real, x)), Y(0), Z(0) {}
+    Vector3(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)), Z(0) {}
+    Vector3(ScalarType auto x, ScalarType auto y, ScalarType auto z): X(CAST(Real, x)), Y(CAST(Real, y)), Z(CAST(Real, z)) {}
 
     explicit Vector3(Vector2 const& v): X(v.X), Y(v.Y), Z(0) {}
     explicit Vector3(Vector2 const& v, ScalarType auto z): X(v.X), Y(v.Y), Z(z) {}
@@ -110,6 +117,12 @@ struct Vector3 final {
     {
         return { X, Y, Z };
     }
+
+    static const Vector3 Up;
+    static const Vector3 Down;
+    static const Vector3 Left;
+    static const Vector3 Right;
+    static const Vector3 Forward;
 };
 }
 

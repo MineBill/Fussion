@@ -13,7 +13,7 @@ public:
 
     virtual void OnStart() {}
     virtual void OnDraw() = 0;
-    virtual void OnEvent(Fussion::Event& event) {}
+    virtual void OnEvent([[maybe_unused]] Fussion::Event& event) {}
 
     /// Returns if the current window is focused or not, whatever that means for the
     /// current window.

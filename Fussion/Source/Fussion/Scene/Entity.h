@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Component.h"
 #include "Fussion/Core/Core.h"
-#include "Fussion/Core/UUID.h"
+#include "Fussion/Core/Uuid.h"
 #include "Fussion/Math/Vector3.h"
 
 #include <glm/ext/matrix_transform.hpp>
@@ -35,13 +35,19 @@ class Entity {
     friend class Scene;
     friend SceneSerializer;
     friend class SceneBinarySerializer;
+    friend class ReflRegistrar;
 
 public:
     Transform Transform;
-    std::string Name{"Entity"};
+    std::string Name{ "Entity" };
 
     Entity() = default;
-    Entity(UUID const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+    Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+
+    Entity(const Entity& other);
+    Entity(Entity&& other) noexcept;
+    Entity& operator=(const Entity& other);
+    Entity& operator=(Entity&& other) noexcept;
 
     void SetParent(Entity const& new_parent);
     void AddChild(Entity const& child);
@@ -49,6 +55,7 @@ public:
 
     void SetEnabled(bool enabled);
     bool IsEnabled() const;
+    bool* GetEnabled() { return &m_Enabled; }
 
     auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
 
@@ -93,31 +100,31 @@ public:
     }
 
     [[nodiscard]]
-    auto GetId() const -> UUID { return m_Handle; }
+    auto GetId() const -> Uuid { return m_Handle; }
 
     [[nodiscard]]
-    auto GetComponents() const -> std::map<UUID, Ref<Component>> const& { return m_Components; }
+    auto GetComponents() const -> std::map<Uuid, Ref<Component>> const& { return m_Components; }
 
     [[nodiscard]]
-    auto GetChildren() const -> std::vector<UUID> const& { return m_Children; }
+    auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
 
-    void OnDraw(RenderContext& context);
+    void OnDraw(RHI::RenderContext& context);
 
 private:
     void OnUpdate(f32 delta);
     void OnDestroy();
 
-    bool IsGrandchild(UUID handle) const;
+    bool IsGrandchild(Uuid handle) const;
 
-    UUID m_Parent;
-    std::vector<UUID> m_Children{};
+    Uuid m_Parent;
+    std::vector<Uuid> m_Children{};
 
-    std::map<UUID, Ref<Component>> m_Components{};
-    std::vector<UUID> m_RemovedComponents{};
+    std::map<Uuid, Ref<Component>> m_Components{};
+    std::vector<Uuid> m_RemovedComponents{};
 
-    UUID m_Handle;
+    Uuid m_Handle;
     Scene* m_Scene{};
 
-    bool m_Enabled{true};
+    bool m_Enabled{ true };
 };
 }

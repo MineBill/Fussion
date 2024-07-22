@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Types.h"
-#include "Fussion/Renderer/CommandBuffer.h"
-#include "Fussion/Renderer/FrameBuffer.h"
-#include "Fussion/Renderer/RenderPass.h"
-#include "Fussion/Renderer/UniformBuffer.h"
+#include "Fussion/RHI/CommandBuffer.h"
+#include "Fussion/RHI/FrameBuffer.h"
+#include "Fussion/RHI/RenderPass.h"
+#include "Fussion/RHI/UniformBuffer.h"
 #include "Fussion/Scene/Scene.h"
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Math/Vector2.h"
@@ -41,11 +41,13 @@ struct SceneData {
 struct RenderCamera {
     Mat4 Perspective, View;
     Vector3 Position;
+    f32 Near, Far;
 };
 
 struct RenderPacket {
     RenderCamera Camera;
     Fussion::Scene* Scene = nullptr;
+    Vector2 Size{};
 };
 
 class SceneRenderer {
@@ -53,29 +55,40 @@ public:
     void Init();
     void Resize(Vector2 new_size);
 
-    void Render(const Ref<Fussion::CommandBuffer>& cmd, RenderPacket const& packet);
+    void Render(const Ref<Fussion::RHI::CommandBuffer>& cmd, RenderPacket const& packet);
 
     [[nodiscard]]
-    Ref<Fussion::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
+    Ref<Fussion::RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
+
+    [[nodiscard]]
+    auto GetShadowFrameBuffers() const -> std::array<Ref<Fussion::RHI::FrameBuffer>, 4> { return m_ShadowFrameBuffers; }
+
+    [[nodiscard]]
+    auto GetDepthImage() const -> Ref<Fussion::RHI::Image> { return m_DepthImage; }
 
 private:
     // static SceneRenderer* s_Instance;
 
-    Ref<Fussion::Shader> m_PbrShader{}, m_GridShader;
-    Ref<Fussion::ResourcePool> m_ResourcePool{};
-    Ref<Fussion::Resource> m_GlobalResource{};
+    Ref<Fussion::RHI::Shader> m_PbrShader{}, m_GridShader;
+    Ref<Fussion::RHI::ResourcePool> m_ResourcePool{};
+    Ref<Fussion::RHI::Resource> m_GlobalResource{};
     Ref<Fussion::Texture2D> m_TestTexture;
 
-    Fussion::UniformBuffer<ViewData> m_ViewData;
-    Fussion::UniformBuffer<DebugOptions> m_DebugOptions;
-    Fussion::UniformBuffer<GlobalData> m_GlobalData;
+    Fussion::RHI::UniformBuffer<ViewData> m_ViewData;
+    Fussion::RHI::UniformBuffer<DebugOptions> m_DebugOptions;
+    Fussion::RHI::UniformBuffer<GlobalData> m_GlobalData;
 
-    Fussion::UniformBuffer<SceneData> m_SceneData;
-    Ref<Fussion::Resource> m_SceneResource;
+    Fussion::RHI::UniformBuffer<SceneData> m_SceneData;
+    Ref<Fussion::RHI::Resource> m_SceneResource;
 
     Vector2 m_RenderArea{};
-    Ref<Fussion::RenderPass> m_SceneRenderPass{};
-    Ref<Fussion::FrameBuffer> m_FrameBuffer{};
+    Ref<Fussion::RHI::RenderPass> m_SceneRenderPass{};
+    Ref<Fussion::RHI::FrameBuffer> m_FrameBuffer{};
 
-    Fussion::RenderContext m_RenderContext;
+    Ref<Fussion::RHI::RenderPass> m_DepthPass{};
+    Ref<Fussion::RHI::Shader> m_DepthShader{};
+    Ref<Fussion::RHI::Image> m_DepthImage{};
+    std::array<Ref<Fussion::RHI::FrameBuffer>, 4> m_ShadowFrameBuffers{};
+
+    Fussion::RHI::RenderContext m_RenderContext;
 };

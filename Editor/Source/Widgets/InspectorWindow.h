@@ -2,6 +2,7 @@
 #include "EditorUI.h"
 #include "EditorWindow.h"
 #include "ImGuiHelpers.h"
+#include "AssetWindows/AssetWindow.h"
 #include "Fussion/Scene/Entity.h"
 
 #include <magic_enum/magic_enum.hpp>

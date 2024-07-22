@@ -16,6 +16,7 @@ void EditorStyle::Init()
 
     {
         auto style = ButtonStyle::Default();
+        style.Padding = Vector2::Zero;
         style.Border = false;
         style.NormalColor = Color::Transparent;
         style.HoverColor = Color::Black;
@@ -48,4 +49,9 @@ void EditorStyle::Init()
     EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png");
     EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png");
     EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png");
+
+    EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png");
+    EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png");
+    EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png");
+    EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png");
 }

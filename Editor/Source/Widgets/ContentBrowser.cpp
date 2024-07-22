@@ -6,6 +6,8 @@
 #include "Assets/Importers/TextureImporter.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
+#include "AssetWindows/AssetWindow.h"
+#include "AssetWindows/MaterialWindow.h"
 
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"
@@ -36,7 +38,6 @@ void ContentBrowser::OnStart()
 
 void ContentBrowser::OnDraw()
 {
-
     EUI::Window("Content", [&] {
 
         m_IsFocused = ImGui::IsWindowFocused();
@@ -89,7 +90,7 @@ void ContentBrowser::OnDraw()
         }
 
         auto item_size = m_Padding + m_ThumbnailSize + CAST(s32, ImGui::GetStyle().FramePadding.x);
-        auto columns = CAST(s32, ImGui::GetContentRegionAvail().x) / item_size;
+        auto columns = CAST(s32, ImGui::GetContentRegionAvail().x / item_size);
         if (columns <= 0)
             columns = 1;
 
@@ -132,7 +133,13 @@ void ContentBrowser::OnDraw()
                 }
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                    LOG_DEBUGF("Double clicked asset");
+                    switch (entry.Type) {
+                    case AssetType::PbrMaterial:
+                        m_Editor->CreateAssetWindow<MaterialWindow>(entry.Metadata.Handle);
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 if (ImGui::BeginDragDropSource()) {
                     ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.Metadata.Handle, sizeof(Fussion::AssetHandle));

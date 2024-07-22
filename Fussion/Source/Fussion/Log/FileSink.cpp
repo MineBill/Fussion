@@ -44,7 +44,7 @@ namespace Fussion
         VERIFY(fopen_err == 0, "Could not open/create log file '{}'", file_name);
     }
 
-    void FileSink::Write(LogLevel level, std::string_view message, std::source_location const& loc)
+    void FileSink::Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
     {
         static const char* prefixes[] = {"[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]"};
 

@@ -3,7 +3,7 @@
 
 #include "Fussion/Core/Core.h"
 #include "Fussion/Log/Log.h"
-#include "Renderer/FrameBuffer.h"
+#include "RHI/FrameBuffer.h"
 
 namespace Fussion
 {

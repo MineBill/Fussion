@@ -3,7 +3,7 @@
 
 #include <magic_enum/magic_enum.hpp>
 
-namespace Fussion {
+namespace Fussion::RHI {
 Ref<VulkanShader> VulkanShader::Create(
     VulkanDevice* device,
     Ref<RenderPass> render_pass,
@@ -34,23 +34,48 @@ Ref<VulkanShader> VulkanShader::Create(
 
     spec.PushConstants = metadata.PushConstants;
 
-    std::vector<ResourceUsage> resources = {};
+    std::vector<std::vector<ResourceUsage>> resources = {};
 
     for (const auto& [set, bindings] : metadata.Uniforms) {
+        resources.emplace_back();
         for (const auto& [binding, usage] : bindings) {
-            resources.push_back(usage);
+            LOG_DEBUGF("Pushing set {}, binding {}", set, binding);
+            resources[set].push_back(usage);
         }
     }
 
-    const auto resource_layout = device->CreateResourceLayout(resources);
-    const auto layout = device->CreatePipelineLayout({ resource_layout }, spec)->As<VulkanPipelineLayout>();
+    std::vector<Ref<ResourceLayout>> resource_layouts;
+    std::ranges::transform(resources, std::back_inserter(resource_layouts), [&](std::vector<ResourceUsage>& resource_usage) {
+        return device->CreateResourceLayout(resource_usage);
+    });
+    const auto layout = device->CreatePipelineLayout(resource_layouts, spec)->As<VulkanPipelineLayout>();
 
-    const auto pipeline_spec = PipelineSpecification{
+    auto pipeline_spec = PipelineSpecification{
         .Label = "",
         .AttributeLayout = VertexAttributeLayout::Create(metadata.VertexAttributes),
         .ShaderStages = stages,
         .UseBlending = metadata.UseBlending,
+        .Samples = metadata.Samples,
     };
+
+    for (auto const& a : pipeline_spec.AttributeLayout.Attributes) {
+        LOG_DEBUGF("VertexAttribute: {} | Type: {}", a.Name, magic_enum::enum_name(a.Type));
+    }
+
+    using namespace std::string_literals;
+
+    if (auto pragma = std::ranges::find_if(metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
+        return pragma.Key == "topology";
+    }); pragma != metadata.ParsedPragmas.end()) {
+        if (pragma->Value == "triangles"s) {
+            pipeline_spec.Topology = PipelineTopology::Triangles;
+        } else if (pragma->Value == "lines"s) {
+            pipeline_spec.Topology = PipelineTopology::Lines;
+        } else {
+            // Default is triangle list.
+            pipeline_spec.Topology = PipelineTopology::Triangles;
+        }
+    }
     self->m_Pipeline = device->CreatePipeline(render_pass, self, layout, pipeline_spec)->As<VulkanPipeline>();
 
     return self;

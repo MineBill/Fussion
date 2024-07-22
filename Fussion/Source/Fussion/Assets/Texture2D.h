@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Asset.h"
-#include "Fussion/Renderer/Image.h"
+#include "Fussion/RHI/Image.h"
 
 namespace Fussion {
 struct Texture2DSpec {
@@ -13,14 +13,15 @@ class Texture2D : public Asset {
 public:
     static Ref<Texture2D> Create(u8* data, Texture2DSpec spec);
 
-    Ref<Image>& GetImage() { return m_Image; }
+    Ref<RHI::Image>& GetImage() { return m_Image; }
 
     Texture2DSpec Spec() const { return m_Spec; }
 
     static AssetType GetStaticType() { return AssetType::Texture2D; }
+    AssetType GetType() const override { return GetStaticType(); }
 
 private:
-    Ref<Image> m_Image{};
+    Ref<RHI::Image> m_Image{};
     Texture2DSpec m_Spec{};
 };
 }

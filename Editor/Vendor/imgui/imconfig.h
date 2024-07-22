@@ -12,7 +12,7 @@
 // Call IMGUI_CHECKVERSION() from your .cpp file to verify that the data structures your files are using are matching the ones imgui.cpp is using.
 //-----------------------------------------------------------------------------
 
-#pragma onceA
+#pragma once
 
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"

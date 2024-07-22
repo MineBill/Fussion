@@ -8,6 +8,58 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
+Entity::Entity(const Entity& other): Transform(other.Transform),
+                                     Name(other.Name),
+                                     m_Parent(other.m_Parent),
+                                     m_Children(other.m_Children),
+                                     m_Components(other.m_Components),
+                                     m_RemovedComponents(other.m_RemovedComponents),
+                                     m_Handle(other.m_Handle),
+                                     m_Scene(other.m_Scene),
+                                     m_Enabled(other.m_Enabled) {}
+
+Entity::Entity(Entity&& other) noexcept: Transform(std::move(other.Transform)),
+                                         Name(std::move(other.Name)),
+                                         m_Parent(std::move(other.m_Parent)),
+                                         m_Children(std::move(other.m_Children)),
+                                         m_Components(std::move(other.m_Components)),
+                                         m_RemovedComponents(std::move(other.m_RemovedComponents)),
+                                         m_Handle(std::move(other.m_Handle)),
+                                         m_Scene(other.m_Scene),
+                                         m_Enabled(other.m_Enabled) {}
+
+Entity& Entity::operator=(const Entity& other)
+{
+    if (this == &other)
+        return *this;
+    Transform = other.Transform;
+    Name = other.Name;
+    m_Parent = other.m_Parent;
+    m_Children = other.m_Children;
+    m_Components = other.m_Components;
+    m_RemovedComponents = other.m_RemovedComponents;
+    m_Handle = other.m_Handle;
+    m_Scene = other.m_Scene;
+    m_Enabled = other.m_Enabled;
+    return *this;
+}
+
+Entity& Entity::operator=(Entity&& other) noexcept
+{
+    if (this == &other)
+        return *this;
+    Transform = std::move(other.Transform);
+    Name = std::move(other.Name);
+    m_Parent = std::move(other.m_Parent);
+    m_Children = std::move(other.m_Children);
+    m_Components = std::move(other.m_Components);
+    m_RemovedComponents = std::move(other.m_RemovedComponents);
+    m_Handle = std::move(other.m_Handle);
+    m_Scene = other.m_Scene;
+    m_Enabled = other.m_Enabled;
+    return *this;
+}
+
 void Entity::SetParent(Entity const& new_parent)
 {
     if (IsGrandchild(new_parent.m_Handle))
@@ -97,7 +149,7 @@ void Entity::RemoveComponent(meta_hpp::class_type type)
     m_RemovedComponents.push_back(type.get_hash());
 }
 
-void Entity::OnDraw(RenderContext& context)
+void Entity::OnDraw(RHI::RenderContext& context)
 {
     ZoneScoped;
     for (auto& [id, component] : m_Components) {
@@ -129,7 +181,7 @@ void Entity::OnUpdate(f32 const delta)
     m_RemovedComponents.clear();
 }
 
-bool Entity::IsGrandchild(UUID handle) const
+bool Entity::IsGrandchild(Uuid handle) const
 {
     if (m_Children.empty()) {
         return false;

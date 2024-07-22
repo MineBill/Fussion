@@ -17,7 +17,7 @@ struct Color {
             auto max = Math::Max(color.R, color.G, color.B);
             auto min = Math::Min(color.R, color.G, color.B);
 
-            hsl.L = (min + max) / 2.0;
+            hsl.L = (min + max) / 2.0f;
 
             if (max == min) {
                 return hsl;
@@ -25,14 +25,14 @@ struct Color {
 
             auto d = max - min;
 
-            hsl.S = (hsl.L > 0.5) ? d / (2.0 - max - min) : d / (max + min);
+            hsl.S = (hsl.L > 0.5f) ? d / (2.0f - max - min) : d / (max + min);
 
             if (color.R > color.G && color.R > color.B) {
-                hsl.H = (color.G - color.B) / d + (color.G < color.B ? 6.0 : 0.0);
+                hsl.H = (color.G - color.B) / d + (color.G < color.B ? 6.0f : 0.0f);
             } else if (color.G > color.B) {
                 hsl.H = (color.B - color.R) / +2.0f;
             } else {
-                hsl.H = (color.R - color.G) / d + 4.0;
+                hsl.H = (color.R - color.G) / d + 4.0f;
             }
 
             hsl.H /= 6.0f;
@@ -40,6 +40,10 @@ struct Color {
         }
     };
 
+#if OS_WINDOWS
+#pragma warning(push)
+#pragma warning(disable: 4201)
+#endif
     union {
         struct {
             f32 R, G, B, A;
@@ -47,8 +51,11 @@ struct Color {
 
         f32 Raw[4]{};
     };
+#if OS_WINDOWS
+#pragma warning(pop)
+#endif
 
-    Color() = default;
+    Color(): R(0), G(0), B(0), A(1) {}
     Color(f32 r, f32 g, f32 b, f32 a): R(r), G(g), B(b), A(a) {}
     Color(Vector4 v): R(v.X), G(v.Y), B(v.Z), A(v.W) {}
 
@@ -77,13 +84,13 @@ struct Color {
             }
 
             if (t < 1. / 6.f) {
-                return p + (q - p) * 6. * t;
+                return p + (q - p) * 6.f * t;
             }
             if (t < 1. / 2.f) {
                 return q;
             }
             if (t < 2. / 3.f) {
-                return p + (q - p) * (2. / 3. - t) * 6.;
+                return p + (q - p) * (2.f / 3.f - t) * 6.f;
             }
             return p;
         };
@@ -91,11 +98,11 @@ struct Color {
         if (hsl.S == 0) {
             return { hsl.L, hsl.L, hsl.L, hsl.A };
         } else {
-            auto q = hsl.L < 0.5 ? hsl.L * (1 + hsl.S) : hsl.L + hsl.S - hsl.L * hsl.S;
+            auto q = hsl.L < 0.5f ? hsl.L * (1.f + hsl.S) : hsl.L + hsl.S - hsl.L * hsl.S;
             auto p = 2 * hsl.L - q;
-            color.R = HueToRGB(p, q, hsl.H + 1. / 3.);
+            color.R = HueToRGB(p, q, hsl.H + 1.f / 3.f);
             color.G = HueToRGB(p, q, hsl.H);
-            color.B = HueToRGB(p, q, hsl.H - 1. / 3.);
+            color.B = HueToRGB(p, q, hsl.H - 1.f / 3.f);
             color.A = hsl.A;
         }
         return color;
@@ -122,6 +129,8 @@ struct Color {
     {
         return HSL::FromRGB(*this);
     }
+
+    u32 ToABGR();
 
     static Color White;
     static Color Red;

@@ -3,7 +3,7 @@
 #include "EditorApplication.h"
 #include "Layers/ImGuiLayer.h"
 
-#include "Fussion/Renderer/Renderer.h"
+#include "Fussion/RHI/Renderer.h"
 #include "Fussion/Input/Input.h"
 #include "imgui.h"
 
@@ -57,7 +57,7 @@ void EditorApplication::OnUpdate(const f32 delta)
     Application::OnUpdate(delta);
     m_Editor->OnUpdate(delta);
 
-    auto [cmd, image] = Renderer::Begin();
+    auto [cmd, image] = RHI::Renderer::Begin();
     if (cmd == nullptr) {
         m_ImGuiLayer->End(cmd);
         return;
@@ -68,8 +68,8 @@ void EditorApplication::OnUpdate(const f32 delta)
 
     m_Editor->OnDraw(cmd);
 
-    const auto main = Renderer::GetInstance()->GetMainRenderPass();
-    cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
+    const auto main = RHI::Renderer::GetInstance()->GetMainRenderPass();
+    cmd->BeginRenderPass(main, RHI::Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
     cmd->SetViewport({window_size.X, -window_size.Y});
     cmd->SetScissor({0, 0, window_size.X, window_size.Y});
 
@@ -79,7 +79,7 @@ void EditorApplication::OnUpdate(const f32 delta)
 
     cmd->End();
 
-    Renderer::End(cmd);
+    RHI::Renderer::End(cmd);
 }
 
 void EditorApplication::OnEvent(Fussion::Event& event)

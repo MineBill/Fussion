@@ -9,7 +9,8 @@
 #include "VulkanShader.h"
 #include "Resources/VulkanResourcePool.h"
 
-Fussion::VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec)
+namespace Fussion::RHI {
+VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec)
 {
     Specification = spec;
 
@@ -23,7 +24,7 @@ Fussion::VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandB
     VK_CHECK(vkAllocateCommandBuffers(device->Handle, &ci, &Handle))
 }
 
-void Fussion::VulkanCommandBuffer::Begin(CommandBufferType type)
+void VulkanCommandBuffer::Begin(CommandBufferType type)
 {
     auto begin_info = VkCommandBufferBeginInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -36,18 +37,18 @@ void Fussion::VulkanCommandBuffer::Begin(CommandBufferType type)
     VK_CHECK(vkBeginCommandBuffer(Handle, &begin_info))
 }
 
-void Fussion::VulkanCommandBuffer::End(const CommandBufferType type)
+void VulkanCommandBuffer::End(const CommandBufferType type)
 {
     (void)type;
     VK_CHECK(vkEndCommandBuffer(Handle))
 }
 
-void Fussion::VulkanCommandBuffer::Reset()
+void VulkanCommandBuffer::Reset()
 {
     vkResetCommandBuffer(Handle, {});
 }
 
-void Fussion::VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_pass, Ref<FrameBuffer> frame_buffer)
+void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_pass, Ref<FrameBuffer> frame_buffer)
 {
     RenderPassStack.push(render_pass.get());
 
@@ -89,7 +90,7 @@ void Fussion::VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_
     vkCmdBeginRenderPass(Handle, &info, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void Fussion::VulkanCommandBuffer::EndRenderPass(const Ref<RenderPass> render_pass)
+void VulkanCommandBuffer::EndRenderPass(const Ref<RenderPass> render_pass)
 {
     if (!RenderPassStack.top()->Equals(render_pass)) {
         LOG_ERRORF("Ended RenderPass('{}') out of order!", render_pass->GetSpec().Label);
@@ -98,14 +99,14 @@ void Fussion::VulkanCommandBuffer::EndRenderPass(const Ref<RenderPass> render_pa
     vkCmdEndRenderPass(Handle);
 }
 
-void Fussion::VulkanCommandBuffer::UseShader(Ref<Shader> const& shader)
+void VulkanCommandBuffer::UseShader(Ref<RHI::Shader> const& shader)
 {
     auto s = shader->As<VulkanShader>();
     auto handle = CAST(VkPipeline, shader->GetPipeline()->GetRenderHandle<VkPipeline>());
     vkCmdBindPipeline(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, handle);
 }
 
-void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
+void VulkanCommandBuffer::SetScissor(const Vector4 size)
 {
     auto scissor = VkRect2D{
         .offset = VkOffset2D{
@@ -121,7 +122,7 @@ void Fussion::VulkanCommandBuffer::SetScissor(const Vector4 size)
     vkCmdSetScissor(Handle, 0, 1, &scissor);
 }
 
-void Fussion::VulkanCommandBuffer::SetViewport(const Vector2 size)
+void VulkanCommandBuffer::SetViewport(const Vector2 size)
 {
     auto viewport = VkViewport{
         .x = 0,
@@ -135,17 +136,17 @@ void Fussion::VulkanCommandBuffer::SetViewport(const Vector2 size)
     vkCmdSetViewport(Handle, 0, 1, &viewport);
 }
 
-void Fussion::VulkanCommandBuffer::Draw(u32 vertex_count, u32 instance_count)
+void VulkanCommandBuffer::Draw(u32 vertex_count, u32 instance_count)
 {
     vkCmdDraw(Handle, vertex_count, instance_count, 0, 0);
 }
 
-void Fussion::VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count)
+void VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count)
 {
     vkCmdDrawIndexed(Handle, index_count, instance_count, 0, 0, 0);
 }
 
-void Fussion::VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
+void VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
 {
     const auto spec = buffer->GetSpec();
     if (spec.Usage.Test(BufferUsage::Index)) {
@@ -157,7 +158,7 @@ void Fussion::VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
     }
 }
 
-void Fussion::VulkanCommandBuffer::BindResource(Ref<Resource> const& resource, Ref<Shader> const& shader, u32 location)
+void VulkanCommandBuffer::BindResource(Ref<Resource> const& resource, Ref<RHI::Shader> const& shader, u32 location)
 {
     const auto layout = shader->As<VulkanShader>()->GetPipeline()->GetLayout()->GetRenderHandle<VkPipelineLayout>();
     const VkDescriptorSet sets[] = {
@@ -166,7 +167,7 @@ void Fussion::VulkanCommandBuffer::BindResource(Ref<Resource> const& resource, R
     vkCmdBindDescriptorSets(Handle, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, location, 1, sets, 0, nullptr);
 }
 
-void Fussion::VulkanCommandBuffer::BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location)
+void VulkanCommandBuffer::BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location)
 {
     auto vk_image = image->As<VulkanImage>();
     auto image_info = VkDescriptorImageInfo{
@@ -189,7 +190,7 @@ void Fussion::VulkanCommandBuffer::BindImage(Ref<Image> const& image, Ref<Resour
     vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
 }
 
-void Fussion::VulkanCommandBuffer::BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location)
+void VulkanCommandBuffer::BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location)
 {
     auto buffer_info = VkDescriptorBufferInfo{
         .buffer = buffer->GetRenderHandle<VkBuffer>(),
@@ -210,8 +211,10 @@ void Fussion::VulkanCommandBuffer::BindUniformBuffer(Ref<Buffer> const& buffer, 
     vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
 }
 
-void Fussion::VulkanCommandBuffer::PushConstants(Ref<Shader> const& shader, void* data, size_t size)
+void VulkanCommandBuffer::PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size)
 {
     auto layout = shader->GetPipeline()->GetLayout()->GetRenderHandle<VkPipelineLayout>();
     vkCmdPushConstants(Handle, layout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, CAST(u32, size), data);
+}
+
 }

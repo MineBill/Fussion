@@ -11,7 +11,7 @@ namespace Fussion {
 
         void OnCreate() override;
 
-        f32 FieldOfView{10.22};
+        f32 FieldOfView{10.22f};
         s32 SignedType = 0;
         u32 UnsignedType = 0;
         std::string AStringToo{"Pepegas"};

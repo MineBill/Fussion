@@ -75,6 +75,12 @@ ordered_json SerializeNativeComponent(meta_hpp::class_type component_type, meta_
             m = *value.as<bool*>();
         } else if (value.is<std::string*>()) {
             m = *value.as<std::string*>();
+        } else if (value.is<Vector2*>()) {
+            m = ToJson(*value.as<Vector2*>());
+        } else if (value.is<Vector3*>()) {
+            m = ToJson(*value.as<Vector3*>());
+        } else if (value.is<Vector4*>()) {
+            m = ToJson(*value.as<Vector4*>());
         } else if (data_type.is_class()) {
             auto class_type = data_type.as_class();
             if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
@@ -89,34 +95,44 @@ ordered_json SerializeNativeComponent(meta_hpp::class_type component_type, meta_
 void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
 {
     auto name = component_type.get_metadata().at("Name").as<std::string>();
-    for (auto const& member : component_type.get_members()) {
-        auto value = member.get(ptr);
-        auto data_type = value.get_type().as_pointer().get_data_type();
-        auto& m = j[member.get_name()];
+    for (auto const& xx : j.items()) {
+        auto& key = xx.key();
+        auto& value = xx.value();
 
-        // @note Is this retarded?
-        if (value.is<s8*>()) {
-            member.set(ptr, m.get<s8>());
-        } else if (value.is<s16*>()) {
-            member.set(ptr, m.get<s16>());
-        } else if (value.is<s32*>()) {
-            member.set(ptr, m.get<s32>());
-        } else if (value.is<s64*>()) {
-            member.set(ptr, m.get<s64>());
-        } else if (value.is<u8*>()) {
-            member.set(ptr, m.get<u8>());
-        } else if (value.is<u16*>()) {
-            member.set(ptr, m.get<u16>());
-        } else if (value.is<u32*>()) {
-            member.set(ptr, m.get<u32>());
-        } else if (value.is<f32*>()) {
-            member.set(ptr, m.get<f32>());
-        } else if (value.is<f64*>()) {
-            member.set(ptr, m.get<f64>());
-        } else if (value.is<bool*>()) {
-            member.set(ptr, m.get<bool>());
-        } else if (value.is<std::string*>()) {
-            member.set(ptr, m.get<std::string>());
+        if (auto member = component_type.get_member(key); member.is_valid()) {
+            auto mem_value = member.get(ptr);
+            LOG_DEBUGF("Deserialize member {}", member.get_name());
+
+            // @note Is this retarded?
+            if (mem_value.is<s8*>()) {
+                member.set(ptr, value.get<s8>());
+            } else if (mem_value.is<s16*>()) {
+                member.set(ptr, value.get<s16>());
+            } else if (mem_value.is<s32*>()) {
+                member.set(ptr, value.get<s32>());
+            } else if (mem_value.is<s64*>()) {
+                member.set(ptr, value.get<s64>());
+            } else if (mem_value.is<u8*>()) {
+                member.set(ptr, value.get<u8>());
+            } else if (mem_value.is<u16*>()) {
+                member.set(ptr, value.get<u16>());
+            } else if (mem_value.is<u32*>()) {
+                member.set(ptr, value.get<u32>());
+            } else if (mem_value.is<f32*>()) {
+                member.set(ptr, value.get<f32>());
+            } else if (mem_value.is<f64*>()) {
+                member.set(ptr, value.get<f64>());
+            } else if (mem_value.is<bool*>()) {
+                member.set(ptr, value.get<bool>());
+            } else if (mem_value.is<std::string*>()) {
+                member.set(ptr, value.get<std::string>());
+            } else if (mem_value.is<Vector2*>()) {
+                member.set(ptr, value.get<Vector2>());
+            } else if (mem_value.is<Vector3*>()) {
+                member.set(ptr, value.get<Vector3>());
+            } else if (mem_value.is<Vector4*>()) {
+                member.set(ptr, value.get<Vector4>());
+            }
         }
     }
 }
@@ -127,25 +143,27 @@ void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
     VERIFY(scene != nullptr);
 
     ordered_json j = {
-        {"$Type", "Scene"},
-        {"Name", scene->m_Name},
+        { "$Type", "Scene" },
+        { "Name", scene->m_Name },
     };
 
     j["Entities"] = json::array();
 
     u32 i = 0;
     for (auto const& [handle, entity] : scene->m_Entities) {
-        if (handle == 0) continue;
+        if (handle == 0)
+            continue;
 
         json en = {
-            {"Name", entity.Name},
-            {"Handle", entity.m_Handle},
-            {"Parent", entity.m_Parent},
-            {"Transform", {
-                {"Position", ToJson(entity.Transform.Position)},
-                {"Rotation", ToJson(entity.Transform.EulerAngles)},
-                {"Scale", ToJson(entity.Transform.Scale)},
-            }}
+            { "Name", entity.Name },
+            { "Handle", entity.m_Handle },
+            { "Parent", entity.m_Parent },
+            { "Enabled", entity.m_Enabled },
+            { "Transform", {
+                  { "Position", ToJson(entity.Transform.Position) },
+                  { "Rotation", ToJson(entity.Transform.EulerAngles) },
+                  { "Scale", ToJson(entity.Transform.Scale) },
+              } }
         };
 
         for (auto const& [id, component] : entity.GetComponents()) {
@@ -175,15 +193,17 @@ Ref<Asset> SceneSerializer::Load(AssetMetadata metadata)
 
         auto entities = j["Entities"];
         VERIFY(entities.is_array());
-        for (auto const& jentity: entities) {
+        for (auto const& jentity : entities) {
             if (!jentity.contains("Name") || !jentity.contains("Handle"))
                 continue;
 
             auto name = jentity["Name"].get<std::string>();
-            auto handle = jentity["Handle"].get<Fsn::UUID>();
-            auto parent = jentity["Parent"].get<Fsn::UUID>();
+            auto handle = jentity["Handle"].get<Uuid>();
+            auto parent = jentity["Parent"].get<Uuid>();
+            auto enabled = jentity.value("Enabled", true);
 
-            auto e = scene->CreateEntityWithID(handle, name, parent);
+            auto e = scene->CreateEntityWithId(handle, name, parent);
+            e->SetEnabled(enabled);
 
             if (jentity.contains("Transform")) {
                 if (jentity["Transform"].contains("Position"))
@@ -210,7 +230,7 @@ Ref<Asset> SceneSerializer::Load(AssetMetadata metadata)
             }
         }
 
-    } catch(std::exception const& e) {
+    } catch (std::exception const& e) {
         LOG_ERRORF("Exception while loading json scene: {}", e.what());
     }
     return scene;

@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "VulkanDevice.h"
-#include "Fussion/Renderer/Buffer.h"
+#include "Fussion/RHI/Buffer.h"
 
-namespace Fussion {
+namespace Fussion::RHI {
 VkBufferUsageFlags BufferUsageToVulkan(BufferUsageFlags usage);
 
 class VulkanBuffer final : public Buffer {
@@ -11,6 +11,8 @@ public:
 
     void SetData(void* data, size_t size) override;
     void SetData(void const* data, size_t size) override;
+
+    void SetData(void const* data, size_t size, size_t offset) override;
 
     void CopyToImage(Ref<Image> const& image) override;
 

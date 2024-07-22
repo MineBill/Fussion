@@ -2,57 +2,52 @@
 #include "Fussion/Core/Types.h"
 #include <source_location>
 
-namespace Fussion
-{
-    enum class LogLevel
-    {
-        Debug,
-        Info,
-        Warning,
-        Error,
-        Fatal,
-    };
+namespace Fussion {
+enum class LogLevel {
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Fatal,
+};
 
-    struct LogEntry
-    {
-        LogLevel Level;
-        std::string Message;
-        std::source_location Location;
-    };
+struct LogEntry {
+    LogLevel Level;
+    std::string Message;
+    std::source_location Location;
+};
 
-    class LogSink
-    {
-        friend class Log;
+class LogSink {
+    friend class Log;
 
-    public:
-        virtual ~LogSink() = default;
-        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
+public:
+    virtual ~LogSink() = default;
+    virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
 
-    protected:
-        class Log* m_Logger;
-    };
+protected:
+    class Log* m_Logger;
+};
 
-    class Log
-    {
-        LogLevel m_Priority{};
+class Log {
+    LogLevel m_Priority{};
 
-    public:
-        explicit Log(LogLevel default_level = LogLevel::Info);
-        ~Log();
+public:
+    explicit Log(LogLevel default_level = LogLevel::Info);
+    ~Log();
 
-        void SetLogLevel(LogLevel level);
-        void Write(LogLevel level, std::string_view message,
-                   const std::source_location& loc = std::source_location::current()) const;
+    void SetLogLevel(LogLevel level);
+    void Write(LogLevel level, std::string_view message,
+        const std::source_location& loc = std::source_location::current()) const;
 
-        void RegisterSink(Ref<LogSink> const& sink);
+    void RegisterSink(Ref<LogSink> const& sink);
 
-        LogLevel GetPriority() const { return m_Priority; }
+    LogLevel GetPriority() const { return m_Priority; }
 
-        static Log* DefaultLogger();
+    static Log* DefaultLogger();
 
-    private:
-        std::vector<Ref<LogSink>> m_Sinks{};
-    };
+private:
+    std::vector<Ref<LogSink>> m_Sinks{};
+};
 }
 
 namespace Fsn = Fussion;

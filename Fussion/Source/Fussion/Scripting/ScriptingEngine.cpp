@@ -14,9 +14,8 @@ namespace Fussion
 {
     ScriptingEngine* ScriptingEngine::s_Instance = nullptr;
 
-    void MessageCallback(const asSMessageInfo *msg, void *param)
+    void MessageCallback(const asSMessageInfo *msg, [[maybe_unused]] void *param)
     {
-        (void)param;
         if (msg->type == asMSGTYPE_ERROR)
             LOG_ERRORF("{}({}, {}): {}", msg->section, msg->row, msg->col, msg->message);
         else if( msg->type == asMSGTYPE_WARNING )
@@ -30,7 +29,7 @@ namespace Fussion
         LOG_INFOF("[Script]: {}", message);
     }
 
-    void LogDebug(std::string const& message, ScriptingEngine* engine)
+    void LogDebug(std::string const& message, [[maybe_unused]] ScriptingEngine* engine)
     {
         LOG_DEBUGF("[Script]: {}", message);
     }

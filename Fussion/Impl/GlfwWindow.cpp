@@ -44,6 +44,13 @@ GlfwWindow::GlfwWindow(WindowOptions const& options)
 
     glfwSetWindowUserPointer(m_Window, this);
 
+    glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+        auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+        VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
+        auto event = WindowCloseRequest();
+        me->m_EventCallback(event);
+    });
+
     glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
         auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
         VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)

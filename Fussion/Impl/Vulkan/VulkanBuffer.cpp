@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-namespace Fussion {
+namespace Fussion::RHI {
 VulkanBuffer::VulkanBuffer(VulkanDevice* device, BufferSpecification spec)
     : m_Specification(spec)
 {
@@ -40,6 +40,13 @@ void VulkanBuffer::SetData(void const* data, size_t size)
     if (!m_Specification.Mapped)
         return;
     memcpy(m_AllocationInfo.pMappedData, data, size);
+}
+
+void VulkanBuffer::SetData(void const* data, size_t size, size_t offset)
+{
+    if (!m_Specification.Mapped)
+        return;
+    memcpy(CAST(char*, m_AllocationInfo.pMappedData) + offset, data, size);
 }
 
 void VulkanBuffer::CopyToImage(Ref<Image> const& image)

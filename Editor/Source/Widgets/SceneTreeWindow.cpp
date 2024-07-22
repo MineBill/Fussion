@@ -11,12 +11,18 @@
 void SceneTreeWindow::OnDraw()
 {
     ZoneScoped;
-    if (ImGui::Begin("Scene Entities")) {
+    ImGuiWindowFlags flags{};
+
+    if (auto& scene = Editor::GetActiveScene()) {
+        if (scene->IsDirty()) {
+            flags |= ImGuiWindowFlags_UnsavedDocument;
+        }
+    }
+
+    EUI::Window("Scene Entities", [this, &flags] {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        if (auto scene_ref = Editor::GetActiveScene()) {
-            auto scene = scene_ref.Get();
-
+        if (auto& scene = Editor::GetActiveScene()) {
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::BeginMenu("New")) {
                     if (ImGui::MenuItem("Empty Entity")) {
@@ -38,13 +44,12 @@ void SceneTreeWindow::OnDraw()
         } else {
             ImGui::TextUnformatted("No scene loaded");
         }
-    }
-    ImGui::End();
+    }, { .Flags = flags });
 }
 
-void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
+void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
 {
-    auto scene = Editor::GetActiveScene().Get();
+    auto& scene = Editor::GetActiveScene();
     auto entity = scene->GetEntity(handle);
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -56,7 +61,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
         flags |= ImGuiTreeNodeFlags_Selected;
     }
 
-    ImGui::PushID(handle);
+    ImGui::PushID(CAST(s32, CAST(u64, handle)));
     defer(ImGui::PopID());
 
     auto opened = ImGui::TreeNodeEx(entity->Name.c_str(), flags);
@@ -92,7 +97,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::UUID handle)
 
     if (ImGui::BeginDragDropTarget()) {
         if (auto const payload = ImGui::AcceptDragDropPayload("SCENE_TREE_NODE"); payload != nullptr) {
-            Fsn::UUID const source_handle = *CAST(Fsn::UUID*, payload->Data);
+            Fsn::Uuid const source_handle = *CAST(Fsn::Uuid*, payload->Data);
             auto const source = scene->GetEntity(source_handle);
             source->SetParent(*entity);
         }

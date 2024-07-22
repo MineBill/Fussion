@@ -28,4 +28,13 @@ Color Color::ForestGreen{ 0.2f, 0.5, 0.2f, 1 };
 Color Color::DarkGoldenRod{ 0.72f, 0.52f, 0.04f, 1 };
 Color Color::Indigo{ 0.29f, 0, 0.51f, 1 };
 Color Color::Transparent{ 0, 0, 0, 0 };
+
+u32 Color::ToABGR()
+{
+    auto r = CAST(u8, R * 255);
+    auto g = CAST(u8, G * 255);
+    auto b = CAST(u8, B * 255);
+    auto a = CAST(u8, A * 255);
+    return (CAST(u32, a) << 24) | (CAST(u32, b) << 16) | (CAST(u32, g) << 8) | CAST(u32, r);
+}
 }

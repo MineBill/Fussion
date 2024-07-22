@@ -2,35 +2,50 @@
 #include "Fussion/Assets/AssetManagerBase.h"
 #include "Fussion/Assets/AssetRef.h"
 
-namespace Fussion
-{
-    class AssetManager
+namespace Fussion {
+class AssetManager {
+public:
+    static void SetActive(Ref<AssetManagerBase>);
+
+    static AssetHandle CreateVirtualAsset(Ref<Asset> const& asset)
     {
-    public:
-        static void SetActive(Ref<AssetManagerBase>);
+        return s_Active->CreateVirtualAsset(asset);
+    }
 
-        static bool IsAssetHandleValid(AssetHandle const handle)
-        {
-            return s_Active->IsAssetHandleValid(handle);
-        }
+    template<std::derived_from<Asset> T>
+    static AssetRef<T> CreateVirtualAssetRef(Ref<Asset> const& asset)
+    {
+        return AssetRef<T>(s_Active->CreateVirtualAsset(asset));
+    }
 
-        static bool IsAssetLoaded(AssetHandle handle)
-        {
-            return s_Active->IsAssetLoaded(handle);
-        }
+    static bool IsAssetHandleValid(AssetHandle const handle)
+    {
+        return s_Active->IsAssetHandleValid(handle);
+    }
 
-        static Asset* GetAsset(AssetHandle handle, AssetType type)
-        {
-            return s_Active->GetAsset(handle, type);
-        }
+    static bool IsAssetLoaded(AssetHandle handle)
+    {
+        return s_Active->IsAssetLoaded(handle);
+    }
 
-        template<typename T>
-        static AssetRef<T> GetAsset(AssetHandle handle)
-        {
-            return AssetRef<T>(handle);
-        }
-    private:
-        static Ref<AssetManagerBase> s_Active;
-    };
+    static Asset* GetAsset(AssetHandle handle, AssetType type)
+    {
+        return s_Active->GetAsset(handle, type);
+    }
+
+    template<typename T>
+    static AssetRef<T> GetAsset(AssetHandle handle)
+    {
+        return AssetRef<T>(handle);
+    }
+
+    template<typename T>
+    static T* GetAsset(std::string const& path)
+    {
+        return CAST(T*, s_Active->GetAsset(path, T::GetStaticType()));
+    }
+
+private:
+    static Ref<AssetManagerBase> s_Active;
+};
 }
-

@@ -1,14 +1,14 @@
 ﻿#pragma once
-#include "Types.h"
+#include "Fussion/Core/Types.h"
 #include "Fussion/Log/Formatters.h"
 
 namespace Fussion
 {
-    class UUID
+    class Uuid
     {
     public:
-        UUID();
-        UUID(const u64 id) : m_Id(id) {}
+        Uuid();
+        Uuid(const u64 id) : m_Id(id) {}
 
         operator u64() const
         {
@@ -21,9 +21,9 @@ namespace Fussion
 }
 
 template <>
-struct std::hash<Fussion::UUID>
+struct std::hash<Fussion::Uuid>
 {
-    std::size_t operator()(const Fussion::UUID& id) const noexcept
+    std::size_t operator()(const Fussion::Uuid& id) const noexcept
     {
         using std::hash;
         return hash<u64>()(id);
@@ -32,4 +32,4 @@ struct std::hash<Fussion::UUID>
 
 namespace Fsn = Fussion;
 
-FSN_MAKE_FORMATTABLE(Fussion::UUID, "{}", static_cast<u64>(v))
+FSN_MAKE_FORMATTABLE(Fussion::Uuid, "{}", static_cast<u64>(v))

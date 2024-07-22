@@ -1,19 +1,26 @@
 ﻿#pragma once
 #include "Fussion/Assets/Asset.h"
-#include "Fussion/Core/UUID.h"
+#include "Fussion/Core/Uuid.h"
 
-namespace Fussion
-{
-    class AssetManagerBase
-    {
-    public:
-        virtual ~AssetManagerBase() = default;
+namespace Fussion {
+class AssetManagerBase {
+public:
+    virtual ~AssetManagerBase() = default;
 
-        virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
-        virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
+    [[nodiscard]]
+    virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
 
-        virtual Asset* GetAsset(AssetHandle handle, AssetType type) = 0;
-    };
+    [[nodiscard]]
+    virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
+
+    [[nodiscard]]
+    virtual Asset* GetAsset(AssetHandle handle, AssetType type) = 0;
+
+    [[nodiscard]]
+    virtual Asset* GetAsset(std::string const& path, AssetType type) = 0;
+
+    virtual AssetHandle CreateVirtualAsset(Ref<Asset> const& asset) = 0;
+};
 }
 
 namespace Fsn = Fussion;

@@ -82,31 +82,31 @@ target("magic_enum", function()
     add_sysincludedirs("Vendor/magic_enum/include", {public = true})
 end)
 
-target("kdl", function()
-    set_kind "static"
-    set_group "Vendor"
-    set_languages("c++20", "c11")
+-- target("kdl", function()
+--     set_kind "static"
+--     set_group "Vendor"
+--     set_languages("c++20", "c11")
 
-    add_files(
-        "Editor/Vendor/ckdl/src/**.c",
-        "Editor/Vendor/ckdl/bindings/cpp/src/kdlpp.cpp"
-    )
+--     add_files(
+--         "Editor/Vendor/ckdl/src/**.c",
+--         "Editor/Vendor/ckdl/bindings/cpp/src/kdlpp.cpp"
+--     )
 
-    add_headerfiles("Editor/Vendor/ckdl/src/**.h")
+--     add_headerfiles("Editor/Vendor/ckdl/src/**.h")
 
-    add_sysincludedirs(
-        "Editor/Vendor/ckdl/include",
-        "Editor/Vendor/ckdl/bindings/cpp/include",
-        {public = true}
-    )
+--     add_sysincludedirs(
+--         "Editor/Vendor/ckdl/include",
+--         "Editor/Vendor/ckdl/bindings/cpp/include",
+--         {public = true}
+--     )
 
-    add_defines("KDLPP_STATIC_LIB", "KDL_STATIC_LIB", {public = true})
+--     add_defines("KDLPP_STATIC_LIB", "KDL_STATIC_LIB", {public = true})
 
-    add_rules("CompilerFlags")
-    if is_plat("windows") then
-        set_runtimes("MDd")
-    end
-end)
+--     add_rules("CompilerFlags")
+--     if is_plat("windows") then
+--         set_runtimes("MDd")
+--     end
+-- end)
 
 if is_plat("linux") then
     add_requires("spirv-cross")

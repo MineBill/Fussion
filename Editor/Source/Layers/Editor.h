@@ -13,13 +13,52 @@
 
 #include "Fussion/Core/Layer.h"
 #include "Fussion/Core/Types.h"
-#include "Fussion/Renderer/CommandBuffer.h"
+#include "Fussion/RHI/CommandBuffer.h"
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Scene/Scene.h"
 
+class AssetWindow;
+
+template<typename Signature = void()>
+class Delegate {
+public:
+    using Function = std::function<Signature>;
+
+    void Subscribe(Function const& function)
+    {
+        m_Subscribers.push_back(function);
+    }
+
+    template<typename... Args>
+    void Fire(Args&&... args)
+    {
+        for (auto const& sub : m_Subscribers) {
+            sub(std::forward<Args>(args)...);
+        }
+    }
+
+    friend void operator+=(Delegate& lhs, Function const& func)
+    {
+        lhs.m_Subscribers.push_back(func);
+    }
+
+private:
+    std::vector<Function> m_Subscribers{};
+};
+
 class Editor : public Fsn::Layer {
 public:
+    enum class PlayState {
+        Editing,
+        Playing,
+        Paused,
+    };
+
     UndoRedo Undo;
+    Delegate<> OnBeginPlay;
+    Delegate<> OnStopPlay;
+    Delegate<> OnResumePlay;
+    Delegate<> OnPaused;
 
     Editor();
 
@@ -30,11 +69,21 @@ public:
     void OnUpdate(f32) override;
     void OnEvent(Fsn::Event&) override;
 
-    void OnDraw(Ref<Fsn::CommandBuffer> cmd);
+    void OnDraw(Ref<Fsn::RHI::CommandBuffer> cmd);
     void Quit();
 
     EditorStyle& GetStyle() { return m_Style; }
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
+
+    template<std::derived_from<AssetWindow> T, typename... Args>
+    void CreateAssetWindow(Fussion::AssetHandle handle, Args&&... args)
+    {
+        if (m_AssetWindows.contains(handle))
+            return;
+        m_AssetWindows[handle] = MakePtr<T>(handle, std::forward<Args>(args)...);
+    }
+
+    void SetPlayState(PlayState new_state);
 
     void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc);
 
@@ -53,7 +102,7 @@ public:
 
     static EditorCamera& GetCamera() { return s_EditorInstance->m_Camera; }
     static Project& GetProject() { return s_EditorInstance->m_Project; }
-    static Fsn::AssetRef<Fsn::Scene> GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
+    static Ref<Fsn::Scene>& GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
 
     // Editor Windows
     static ViewportWindow& GetViewport() { return *s_EditorInstance->m_ViewportWindow.get(); }
@@ -68,7 +117,8 @@ private:
     static Editor* s_EditorInstance;
     std::vector<Fsn::LogEntry> m_LogEntries{};
 
-    Fsn::AssetRef<Fsn::Scene> m_ActiveScene;
+    Ref<Fsn::Scene> m_ActiveScene;
+    std::filesystem::path m_ActiveScenePath;
     SceneRenderer m_SceneRenderer;
 
     Project m_Project;
@@ -82,4 +132,8 @@ private:
     Ptr<ContentBrowser> m_ContentBrowser;
 
     Ptr<ScriptsInspector> m_ScriptsInspector;
+
+    std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows{};
+
+    PlayState m_State{ PlayState::Editing };
 };

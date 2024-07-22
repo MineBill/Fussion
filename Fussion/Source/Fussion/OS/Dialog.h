@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#ifdef OS_WINDOWS
+#undef MessageBox
+#endif
+
 namespace Fussion::Dialogs
 {
     enum class MessageAction

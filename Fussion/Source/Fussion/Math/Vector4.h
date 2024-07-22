@@ -12,6 +12,10 @@ struct Vector4 final {
     using Real = f32;
 #endif
 
+#if OS_WINDOWS
+#pragma warning(push)
+#pragma warning(disable: 4201)
+#endif
     union {
         struct {
             Real X, Y, Z, W;
@@ -19,12 +23,15 @@ struct Vector4 final {
 
         Real Raw[4];
     };
+#if OS_WINDOWS
+#pragma warning(pop)
+#endif
 
     Vector4(): X(0), Y(0), Z(0), W(0) {}
-    explicit Vector4(ScalarType auto x): X(x), Y(0), Z(0), W(0) {}
-    Vector4(ScalarType auto x, ScalarType auto y): X(x), Y(y), Z(0), W(0) {}
-    Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z): X(x), Y(y), Z(z), W(0) {}
-    Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z, ScalarType auto w): X(x), Y(y), Z(z), W(w) {}
+    explicit Vector4(ScalarType auto x): X(CAST(Real, x)), Y(0), Z(0), W(0) {}
+    Vector4(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)), Z(0), W(0) {}
+    Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z): X(CAST(Real, x)), Y(CAST(Real, y)), Z(CAST(Real, z)), W(0) {}
+    Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z, ScalarType auto w): X(CAST(Real, x)), Y(CAST(Real, y)), Z(CAST(Real, z)), W(CAST(Real, w)) {}
 
     explicit Vector4(Vector2 v): X(v.X), Y(v.Y), Z(0), W(0) {}
     Vector4(Vector2 v, ScalarType auto z, ScalarType auto w): X(v.X), Y(v.Y), Z(z), W(w) {}

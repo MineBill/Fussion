@@ -2,7 +2,6 @@
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Log/Formatters.h"
-#include <cmath>
 
 namespace Fussion {
 struct Vector2 {
@@ -12,6 +11,10 @@ struct Vector2 {
     using Real = f32;
 #endif
 
+#if OS_WINDOWS
+#pragma warning(push)
+#pragma warning(disable: 4201)
+#endif
     union {
         struct {
             Real X, Y;
@@ -19,19 +22,32 @@ struct Vector2 {
 
         Real Raw[2];
     };
+#if OS_WINDOWS
+#pragma warning(pop)
+#endif
 
     Vector2() = default;
-    Vector2(ScalarType auto x, ScalarType auto y): X(x), Y(y) {}
+    Vector2(f32 x, f32 y): X(x), Y(y) {}
+    Vector2(f64 x, f64 y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
+    Vector2(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
 
-    // Vector2(Vector2 const& v): X(v.X), Y(v.Y) {}
+    [[nodiscard]]
+    Real Length() const;
 
-    [[nodiscard]] Real Length() const;
+    [[nodiscard]]
+    Real LengthSquared() const;
 
-    [[nodiscard]] Real LengthSquared() const;
+    [[nodiscard]]
+    Real DistanceTo(Vector2 const& other) const;
 
-    [[nodiscard]] Real DistanceTo(Vector2 const& other) const;
+    [[nodiscard]]
+    Real DistanceToSquared(Vector2 const& other) const;
 
-    [[nodiscard]] Real DistanceToSquared(Vector2 const& other) const;
+    [[nodiscard]]
+    bool IsZero() const;
+
+    [[nodiscard]]
+    f32 Aspect() const;
 
     Real& operator[](std::size_t i)
     {
@@ -98,6 +114,9 @@ struct Vector2 {
     {
         return { X, Y };
     }
+
+    static const Vector2 Zero;
+    static const Vector2 One;
 };
 }
 

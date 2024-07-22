@@ -37,9 +37,20 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
         m_LoadedAssets[handle] = {};
 
         m_LoadedAssets[handle] = m_AssetSerializers[type]->Load(metadata);
+        m_LoadedAssets[handle]->SetHandle(handle);
         LOG_DEBUGF("Loading requested asset {} from '{}' of type {}", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));
     }
     return m_LoadedAssets[handle].get();
+}
+
+auto EditorAssetManager::GetAsset(std::string const& path, AssetType type) -> Asset*
+{
+    for (auto const& [handle, asset] : m_Registry) {
+        if (asset.Path == path && asset.Type == type) {
+            return GetAsset(handle, type);
+        }
+    }
+    return nullptr;
 }
 
 bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
@@ -50,6 +61,21 @@ bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
 bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
 {
     return m_Registry.contains(handle);
+}
+
+AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset)
+{
+    auto handle = AssetHandle();
+    m_Registry[handle] = AssetMetadata{
+        .Type = asset->GetType(),
+        .Path = "",
+        .IsVirtual = true,
+        .DontSerialize = true,
+        .Handle = handle,
+    };
+    m_LoadedAssets[handle] = asset;
+
+    return handle;
 }
 
 bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path) const
@@ -96,7 +122,7 @@ void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, Fussio
 
     LOG_INFOF("Registering '{}' of type '{}'", path.string(), magic_enum::enum_name(type));
 
-    Fsn::UUID id;
+    Fsn::Uuid id;
     m_Registry[id] = AssetMetadata{
         .Type = type,
         .Path = path,
@@ -111,6 +137,18 @@ void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, Fussio
 void EditorAssetManager::SaveAsset(AssetHandle handle)
 {
     m_AssetSerializers[m_Registry[handle].Type]->Save(m_Registry[handle], m_LoadedAssets[handle]);
+
+    m_LoadedAssets[handle] = m_AssetSerializers[m_Registry[handle].Type]->Load(m_Registry[handle]);
+    m_LoadedAssets[handle]->SetHandle(handle);
+}
+
+void EditorAssetManager::SaveAsset(Ref<Asset> const& asset)
+{
+    auto const handle = asset->GetHandle();
+    m_AssetSerializers[m_Registry[handle].Type]->Save(m_Registry[handle], asset);
+
+    m_LoadedAssets[handle] = m_AssetSerializers[m_Registry[handle].Type]->Load(m_Registry[handle]);
+    m_LoadedAssets[handle]->SetHandle(handle);
 }
 
 void EditorAssetManager::Serialize()
@@ -150,21 +188,21 @@ void EditorAssetManager::Deserialize()
 
     try {
         auto j = json::parse(*data);
-        auto type = j["$Type"].get<std::string>();
-        if (type != "AssetRegistry") {
-            LOG_WARNF("The provided file file is not an AssetRegistry but: {}", type);
+        auto file_type = j["$Type"].get<std::string>();
+        if (file_type != "AssetRegistry") {
+            LOG_WARNF("The provided file file is not an AssetRegistry but: {}", file_type);
             return;
         }
 
         for (auto const& asset : j["Assets"]) {
-            auto const handle = asset["Handle"].get<Fsn::UUID>();
+            auto const handle = asset["Handle"].get<Fsn::Uuid>();
             auto const type = asset["Type"].get<std::string>();
-            auto const path = asset["Path"].get<std::string>();
+            auto const asset_path = asset["Path"].get<std::string>();
 
-            Fsn::UUID h{ handle };
+            Fsn::Uuid h{ handle };
             m_Registry[h] = AssetMetadata{
                 .Type = *magic_enum::enum_cast<AssetType>(type),
-                .Path = path,
+                .Path = asset_path,
                 .Handle = h,
             };
         }
