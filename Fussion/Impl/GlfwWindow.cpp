@@ -6,6 +6,14 @@
 #include "Fussion/Events/KeyboardEvents.h"
 
 #include "GLFW/glfw3.h"
+#include "OS/System.h"
+
+#ifdef OS_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include "Glfw/glfw3native.h"
+#include <dwmapi.h>
+#pragma comment(lib,"dwmapi.lib")
+#endif
 
 namespace Fussion {
 KeyboardKey GlfwKeyToFussion(int key);
@@ -39,6 +47,14 @@ GlfwWindow::GlfwWindow(WindowOptions const& options)
             CAST(f32, mode->height) / 2.0 - CAST(f32, options.InitialHeight) / 2.0
         });
     }
+
+#if OS_WINDOWS
+    if (System::PrefersDark()) {
+        constexpr auto dwmwa_use_immersive_dark_mode = 20;
+        BOOL value = TRUE;
+        (void)DwmSetWindowAttribute(glfwGetWin32Window(m_Window), dwmwa_use_immersive_dark_mode, &value, sizeof(value));
+    }
+#endif
 
     glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, 1);
 
