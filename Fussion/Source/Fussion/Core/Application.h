@@ -23,23 +23,41 @@ public:
         }
     }
 
-    virtual void OnEvent(Event&) {}
+    virtual void OnEvent(Event& event)
+    {
+        for (auto const& layer : m_Layers) {
+            layer->OnEvent(event);
+        }
+    }
 
     virtual void OnLogReceived(
-        [[maybe_unused]] LogLevel level,
-        [[maybe_unused]] std::string_view message,
-        [[maybe_unused]] std::source_location const& loc) {}
+        LogLevel level,
+        std::string_view message,
+        std::source_location const& loc)
+    {
+        for (auto const& layer : m_Layers) {
+            layer->OnLogReceived(level, message, loc);
+        }
+    }
 
     Window& GetWindow() const { return *m_Window.get(); }
     static Application* Instance() { return s_Instance; }
 
     void Run();
 
-    void PushLayer(Layer* layer);
+    Layer* PushLayer(Ptr<Layer> layer);
+
+    template<std::derived_from<Layer> T>
+    T* PushLayer()
+    {
+        auto layer = MakePtr<T>();
+        return dynamic_cast<T*>(PushLayer(std::move(layer)));
+    }
+
     void Quit();
 
 protected:
-    std::vector<Layer*> m_Layers{};
+    std::vector<Ptr<Layer>> m_Layers{};
     Ptr<Window> m_Window{};
     bool m_Quit{ false };
 

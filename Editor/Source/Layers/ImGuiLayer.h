@@ -12,11 +12,11 @@ public:
     static ImGuiLayer* This() { return s_Instance; }
 
     void Init();
-    void OnStart() override;
-    void OnUpdate(f32) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32) override;
 
     void Begin();
-    void End(const Ref<Fussion::RHI::CommandBuffer>&);
+    void End(Ref<Fussion::RHI::CommandBuffer> const&);
 
     // @Todo The VkDescriptorSet could be changed to void*.
     std::map<u64, VkDescriptorSet> ImageToVkSet;

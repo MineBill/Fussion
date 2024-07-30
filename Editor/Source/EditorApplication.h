@@ -18,6 +18,6 @@ public:
 private:
     static EditorApplication* s_EditorInstance;
 
-    Ptr<ImGuiLayer> m_ImGuiLayer{};
-    Ptr<Editor> m_Editor{};
+    ImGuiLayer* m_ImGuiLayer{};
+    // Ptr<Editor> m_Editor{};
 };

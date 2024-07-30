@@ -18,11 +18,10 @@
 #include "Fussion/Core/Delegate.h"
 #include "Fussion/OS/FileWatcher.h"
 #include "Fussion/Scene/Scene.h"
-#include <memory_resource>
 
 class AssetWindow;
 
-class Editor : public Fsn::Layer {
+class Editor final : public Fsn::Layer {
 public:
     enum class PlayState {
         Editing,
@@ -38,15 +37,17 @@ public:
 
     Editor();
 
-    void OnStart() override;
-    void OnEnable() override;
-    void OnDisable() override;
+    virtual void OnStart() override;
+    virtual void OnEnable() override;
+    virtual void OnDisable() override;
+
+    virtual void OnUpdate(f32) override;
+    virtual void OnEvent(Fsn::Event&) override;
+
+    virtual void OnDraw(Ref<Fsn::RHI::CommandBuffer> cmd) override;
+    virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
+
     void Save();
-
-    void OnUpdate(f32) override;
-    void OnEvent(Fsn::Event&) override;
-
-    void OnDraw(Ref<Fsn::RHI::CommandBuffer> cmd);
     void Quit();
 
     EditorStyle& GetStyle() { return m_Style; }
@@ -62,7 +63,6 @@ public:
 
     void SetPlayState(PlayState new_state);
 
-    void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc);
 
     std::vector<Fsn::LogEntry> GetLogEntries()
     {
