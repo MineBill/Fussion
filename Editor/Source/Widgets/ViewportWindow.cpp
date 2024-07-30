@@ -114,10 +114,6 @@ void ViewportWindow::OnDraw()
                         auto scene = AssetManager::GetAsset<Scene>(*handle);
                         Editor::ChangeScene(scene);
                     }
-                } else if (metadata.Type == AssetType::Texture2D) {
-                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                        Editor::Get().TextureRef = AssetManager::GetAsset<Texture2D>(*handle);
-                    }
                 }
             }
 

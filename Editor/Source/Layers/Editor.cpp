@@ -19,7 +19,6 @@
 #include <ranges>
 
 Editor* Editor::s_EditorInstance = nullptr;
-std::pmr::monotonic_buffer_resource Editor::ArenaAllocator{};
 
 using namespace Fussion;
 
