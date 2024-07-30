@@ -8,21 +8,21 @@ namespace Fussion
     class GlfwWindow: public Window
     {
     public:
-        GlfwWindow(const WindowOptions& options);
+        explicit GlfwWindow(WindowOptions const& options);
 
-        void Update() override;
-        bool ShouldClose() override;
-        void SetTitle(const std::string& title) override;
-        void OnEvent(EventFnType callback) override;
+        virtual void Update() override;
+        virtual bool ShouldClose() override;
+        virtual void SetTitle(std::string const& title) override;
+        virtual void OnEvent(EventFnType callback) override;
 
-        void SetMouseMode(MouseMode mode) const override;
+        virtual void SetMouseMode(MouseMode mode) const override;
 
-        u32 GetHeight() const override;
-        u32 GetWidth() const override;
+        virtual u32 GetHeight() const override;
+        virtual u32 GetWidth() const override;
 
-        void SetPosition(Vector2 position) const override;
+        virtual void SetPosition(Vector2 position) const override;
 
-        void* NativeHandle() const override;
+        virtual void* NativeHandle() const override;
 
     private:
         bool m_IsMinimized{false};

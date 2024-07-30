@@ -35,6 +35,12 @@ GlfwWindow::GlfwWindow(WindowOptions const& options)
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     }
 
+    if (options.Flags.Test(WindowFlag::Decorated)) {
+        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    } else {
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+    }
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     m_Window = glfwCreateWindow(options.InitialWidth, options.InitialHeight, options.InitialTitle.c_str(), nullptr, nullptr);
