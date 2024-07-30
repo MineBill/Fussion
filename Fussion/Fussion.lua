@@ -66,3 +66,5 @@ target("Fussion")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end
+
+includes("Tests/FussionTests.lua")
