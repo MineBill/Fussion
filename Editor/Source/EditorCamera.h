@@ -17,14 +17,16 @@ public:
 
     void SetFocus(bool focused);
 
-    Mat4 const& GetPerspective() const { return m_Perspective; }
-    Mat4 const& GetView() const { return m_View; }
+    auto GetPerspective() const -> Mat4 const& { return m_Perspective; }
+    auto GetView() const -> Mat4 const& { return m_View; }
+    auto GetDirection() const -> Vector3 { return m_Direction; };
 
 private:
     Mat4 m_Perspective{ 1.0f }, m_View{ 1.0f };
 
     Vector2 m_ScreenSize{};
     Vector3 m_EulerAngles{};
+    Vector3 m_Direction{};
     f32 m_FOV{ 50.0f };
     bool m_HasFocus{ false };
     bool m_HadFocus{ false };

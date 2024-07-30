@@ -17,16 +17,14 @@ void DirectionalLight::OnDisabled()
     Component::OnDisabled();
 }
 
-void DirectionalLight::OnUpdate(f32 delta)
+void DirectionalLight::OnUpdate([[maybe_unused]] f32 delta) {}
+
+void DirectionalLight::OnDebugDraw()
 {
-    auto rotation = glm::mat3(glm::eulerAngleZXY(
-        glm::radians(m_Owner->Transform.EulerAngles.Z),
-        glm::radians(m_Owner->Transform.EulerAngles.X),
-        glm::radians(m_Owner->Transform.EulerAngles.Y)));
-
-    auto direction = rotation * Vector3::Forward;
-
-    Debug::DrawLine(m_Owner->Transform.Position, m_Owner->Transform.Position + direction, 0.0f, Color::Green);
+    auto start = m_Owner->Transform.Position;
+    auto end = start + m_Owner->Transform.GetForward();
+    Debug::DrawLine(start, end, 0.0f, Color::Green);
+    Debug::DrawCube(end, m_Owner->Transform.EulerAngles, Vector3::One * 0.1f);
 }
 
 void DirectionalLight::OnDraw(RHI::RenderContext& context)
@@ -34,15 +32,8 @@ void DirectionalLight::OnDraw(RHI::RenderContext& context)
     if (!context.RenderFlags.Test(RHI::RenderState::LightCollection))
         return;
 
-    auto rotation = glm::mat3(glm::eulerAngleZXY(
-        glm::radians(m_Owner->Transform.EulerAngles.Z),
-        glm::radians(m_Owner->Transform.EulerAngles.X),
-        glm::radians(m_Owner->Transform.EulerAngles.Y)));
-
-    auto direction = rotation * Vector3::Forward;
-
     context.DirectionalLights.push_back(RHI::DirectionalLightData{
-        .Direction = Vector4{ direction },
+        .Direction = Vector4{ m_Owner->Transform.GetForward() },
         .Color = Color::White,
     });
 }

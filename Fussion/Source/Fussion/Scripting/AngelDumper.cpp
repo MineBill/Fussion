@@ -64,7 +64,7 @@ namespace Fussion
                 asEBehaviours behaviours;
                 const auto f = t->GetBehaviourByIndex(j, &behaviours);
                 if (behaviours == asBEHAVE_CONSTRUCT
-                    || behaviours == asBEHAVE_DESTRUCT)
+                    || behaviours == asBEHAVE_DESTRUCT || behaviours == asBEHAVE_FACTORY)
                 {
                     out << std::format("\t{};\n", f->GetDeclaration(false, true, true));
                 }

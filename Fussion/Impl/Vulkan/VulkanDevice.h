@@ -19,12 +19,14 @@ struct QueueFamilyIndices {
     std::optional<u32> GraphicsFamily;
     std::optional<u32> PresentFamily;
 
-    require_results bool IsComplete() const
+    [[nodiscard]]
+    bool IsComplete() const
     {
         return GraphicsFamily.has_value() && PresentFamily.has_value();
     }
 
-    require_results std::vector<u32> GetUniqueIndex() const;
+    [[nodiscard]]
+    std::vector<u32> GetUniqueIndex() const;
 };
 
 struct SwapChainSupportDetails {
@@ -32,7 +34,8 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> Formats;
     std::vector<VkPresentModeKHR> PresentModes;
 
-    require_results VkPresentModeKHR ChooseOptimalPresentMode() const
+    [[nodiscard]]
+    VkPresentModeKHR ChooseOptimalPresentMode() const
     {
         for (auto mode : PresentModes) {
             if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -42,7 +45,8 @@ struct SwapChainSupportDetails {
         return VK_PRESENT_MODE_IMMEDIATE_KHR;
     }
 
-    require_results VkSurfaceFormatKHR ChooseOptimalFormat() const
+    [[nodiscard]]
+    VkSurfaceFormatKHR ChooseOptimalFormat() const
     {
         for (auto format : Formats) {
             if (format.format == VK_FORMAT_R8G8B8A8_SRGB && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR) {
@@ -54,7 +58,7 @@ struct SwapChainSupportDetails {
     }
 };
 
-class VulkanDevice : public Device {
+class VulkanDevice final : public Device {
 public:
     VkDevice Handle{};
     VkDebugUtilsMessengerEXT DebugMessenger{};
@@ -66,68 +70,68 @@ public:
     VmaAllocator Allocator{};
 
     explicit VulkanDevice(RHI::Instance* instance);
-    ~VulkanDevice() override;
+    virtual ~VulkanDevice() override;
 
-    Ref<RenderPass> CreateRenderPass(RenderPassSpecification spec) override;
-    Ref<CommandBuffer> CreateCommandBuffer(CommandBufferSpecification spec) override;
-    std::vector<Ref<CommandBuffer>> CreateCommandBuffers(s32 count, CommandBufferSpecification spec) override;
+    virtual auto CreateRenderPass(RenderPassSpecification spec) -> Ref<RenderPass> override;
+    virtual auto CreateCommandBuffer(CommandBufferSpecification spec) -> Ref<CommandBuffer> override;
+    virtual auto CreateCommandBuffers(s32 count, CommandBufferSpecification spec) -> std::vector<Ref<CommandBuffer>> override;
 
-    Ref<Sampler> CreateSampler(SamplerSpecification spec) override;
-    Ref<Image> CreateImage(ImageSpecification spec) override;
-    Ref<ImageView> CreateImageView(Ref<Image> image, ImageViewSpecification spec) override;
-    Ref<Swapchain> CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec) override;
-    Ref<FrameBuffer> CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec) override;
-    Ref<FrameBuffer> CreateFrameBufferFromImages(
+    virtual auto CreateSampler(SamplerSpecification spec) -> Ref<Sampler> override;
+    virtual auto CreateImage(ImageSpecification spec) -> Ref<Image> override;
+    virtual auto CreateImageView(Ref<Image> image, ImageViewSpecification spec) -> Ref<ImageView> override;
+    virtual auto CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec) -> Ref<Swapchain> override;
+    virtual auto CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec) -> Ref<FrameBuffer> override;
+    virtual auto CreateFrameBufferFromImages(
         Ref<RenderPass> render_pass,
         std::vector<Ref<Image>> images,
-        FrameBufferSpecification spec) override;
-    Ref<FrameBuffer> CreateFrameBufferFromImageViews(
+        FrameBufferSpecification spec) -> Ref<FrameBuffer> override;
+    virtual auto CreateFrameBufferFromImageViews(
         Ref<RenderPass> render_pass,
         std::vector<Ref<ImageView>> images,
-        FrameBufferSpecification spec) override;
+        FrameBufferSpecification spec) -> Ref<FrameBuffer> override;
 
-    Ref<ResourceLayout> CreateResourceLayout(std::span<ResourceUsage> resources) override;
-    Ref<Buffer> CreateBuffer(BufferSpecification spec) override;
-    Ref<Shader> CreateShader(Ref<RenderPass> render_pass, std::span<ShaderStage> stages, ShaderMetadata metadata) override;
-    Ref<ResourcePool> CreateResourcePool(ResourcePoolSpecification spec) override;
+    virtual auto CreateResourceLayout(std::span<ResourceUsage> resources) -> Ref<ResourceLayout> override;
+    virtual auto CreateBuffer(BufferSpecification spec) -> Ref<Buffer> override;
+    virtual auto CreateShader(Ref<RenderPass> render_pass, std::span<ShaderStage> stages, ShaderMetadata metadata) -> Ref<Shader> override;
+    virtual auto CreateResourcePool(ResourcePoolSpecification spec) -> Ref<ResourcePool> override;
 
-    void WaitIdle() override;
+    virtual void WaitIdle() override;
 
-    Ref<CommandBuffer> BeginSingleTimeCommand() override;
-    void EndSingleTimeCommand(Ref<CommandBuffer> cmd) override;
+    virtual auto BeginSingleTimeCommand() -> Ref<CommandBuffer> override;
+    virtual void EndSingleTimeCommand(Ref<CommandBuffer> cmd) override;
 
-    void* GetRawHandle() override { return Handle; }
+    virtual void* GetRawHandle() override { return Handle; }
 
-    void RegisterImageCallback(ImageCreationCallback const& callback) override;
-    void RegisterImageViewCallback(ImageViewCreationCallback const& callback);
+    virtual void RegisterImageCallback(ImageCreationCallback const& callback) override;
+    virtual void RegisterImageViewCallback(ImageViewCreationCallback const& callback) override;
 
-    void DestroyImage(Ref<Image> const& image) override;
-    void DestroyImageView(Ref<ImageView> const& image_view) override;
-    void DestroySampler(Ref<Sampler> const& sampler) override;
-    void DestroyFrameBuffer(Ref<Image> const& frame_buffer) override;
+    virtual void DestroyImage(Ref<Image> const& image) override;
+    virtual void DestroyImageView(Ref<ImageView> const& image_view) override;
+    virtual void DestroySampler(Ref<Sampler> const& sampler) override;
+    virtual void DestroyFrameBuffer(Ref<Image> const& frame_buffer) override;
 
     // ======================
     //    Vulkan Specific
     // ======================
 
-    Ref<PipelineLayout> CreatePipelineLayout(std::vector<Ref<ResourceLayout>> layouts, PipelineLayoutSpecification spec);
-    Ref<Pipeline> CreatePipeline(
+    auto CreatePipelineLayout(std::vector<Ref<ResourceLayout>> layouts, PipelineLayoutSpecification spec) -> Ref<PipelineLayout>;
+    auto CreatePipeline(
         Ref<RenderPass> const& render_pass,
         Ref<Shader> const& shader,
         Ref<PipelineLayout> const& layout,
-        const PipelineSpecification& spec);
+        PipelineSpecification const& spec) -> Ref<Pipeline>;
 
-    VkFence CreateFence(bool signaled = true) const;
-    VkSemaphore CreateSemaphore() const;
-    std::vector<VkFence> CreateFences(s32 count, bool signaled = true) const;
-    std::vector<VkSemaphore> CreateSemaphores(s32 count) const;
+    auto CreateFence(bool signaled = true) const -> VkFence;
+    auto CreateSemaphore() const -> VkSemaphore;
+    auto CreateFences(s32 count, bool signaled = true) const -> std::vector<VkFence>;
+    auto CreateSemaphores(s32 count) const -> std::vector<VkSemaphore>;
 
     void DestroyFences(std::span<VkFence> fences);
     void DestroySemaphores(std::span<VkSemaphore> semaphores);
 
-    void SetHandleName(u64 handle, VkObjectType type, const std::string& name);
+    void SetHandleName(u64 handle, VkObjectType type, std::string const& name);
 
-    SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device) const;
+    auto QuerySwapChainSupport(VkPhysicalDevice device) const -> SwapChainSupportDetails;
 
     VulkanInstance* Instance{};
 
@@ -136,8 +140,8 @@ private:
     void PickPhysicalDevice();
     void CreateLogicalDevice();
     void CreateCommandPool();
-    bool IsDeviceSuitable(VkPhysicalDevice device);
-    QueueFamilyIndices GetQueueFamilies(VkPhysicalDevice device) const;
+    auto IsDeviceSuitable(VkPhysicalDevice device) -> bool;
+    auto GetQueueFamilies(VkPhysicalDevice device) const -> QueueFamilyIndices;
 
     std::vector<ImageCreationCallback> m_ImageCallbacks{};
     std::vector<ImageViewCreationCallback> m_ImageViewCallbacks{};

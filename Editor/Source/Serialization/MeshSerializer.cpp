@@ -2,6 +2,7 @@
 #include "Project/Project.h"
 
 #include "Fussion/Assets/Mesh.h"
+#include "mikktspace.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
@@ -37,6 +38,7 @@ Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
         LOG_DEBUGF("No meshes found in glTF file, ignoring..");
         return nullptr;
     }
+
     auto mesh = model.meshes[0];
     auto primitive = mesh.primitives[0];
 
@@ -62,18 +64,70 @@ Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
 
     auto idx_data = TRANSMUTE(const u32*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]);
 
+    bool has_tangent = primitive.attributes.contains("TANGENT");
+    u32 const* tangent_data{ nullptr };
+    if (has_tangent) {
+        LOG_DEBUGF("Mesh {} has tangents.", mesh.name);
+        auto accessor = model.accessors[primitive.attributes.find("TANGENT")->second];
+        auto view = model.bufferViews[accessor.bufferView];
+        auto buffer = model.buffers[view.buffer];
+        tangent_data = TRANSMUTE(const u32*, &buffer.data[view.byteOffset + accessor.byteOffset]);
+    }
+
     std::vector<Vertex> vertices;
     for (size_t i = 0; i < pos_accessor.count; i++) {
         Vertex vertex;
 
         std::copy_n(pos_data + i * 3, 3, &vertex.Position[0]);
         std::copy_n(norm_data + i * 3, 3, &vertex.Normal[0]);
-        std::copy_n(uv_data + i * 2, 2, &vertex.Normal[0]);
+        std::copy_n(uv_data + i * 2, 2, &vertex.TextureCoords[0]);
+        if (has_tangent) {
+            std::copy_n(tangent_data + i * 3, 3, &vertex.Tangent[0]);
+        }
         vertices.push_back(vertex);
     }
 
     std::vector<u32> indices;
     indices.assign(idx_data, idx_data + idx_accessor.count);
+
+    if (!primitive.attributes.contains("TANGENT")) {
+        LOG_WARNF("Mesh primitive[0] does not contain tangents.");
+
+        // struct UserData {
+        //     std::vector<u32>* Indices;
+        //     std::vector<Vertex>* Vertices;
+        //     tinygltf::Primitive* Primitive;
+        // } context {
+        //     .Indices = &indices,
+        //     .Vertices = &vertices,
+        //     .Primitive = &primitive,
+        // };
+        //
+        // SMikkTSpaceContext ctx;
+        // ctx.m_pUserData = &context;
+        // ctx.m_pInterface->m_getNormal = [](SMikkTSpaceContext const* pContext, float fvNormOut[], const int iFace, const int iVert) {
+        //     auto data = CAST(UserData*, pContext->m_pUserData);
+        // };
+        //
+        // ctx.m_pInterface->m_getPosition = [](SMikkTSpaceContext const* pContext, float fvPosOut[], const int iFace, const int iVert) {
+        //     auto data = CAST(UserData*, pContext->m_pUserData);
+        // };
+        //
+        // ctx.m_pInterface->m_getNumFaces = [](SMikkTSpaceContext const* pContext) -> int {
+        //     auto data = CAST(UserData*, pContext->m_pUserData);
+        //     return data->Indices->size() / 3;
+        // };
+        //
+        // ctx.m_pInterface->m_getTexCoord = [](SMikkTSpaceContext const* pContext, float fvTexcOut[], const int iFace, const int iVert) {
+        //     auto data = CAST(UserData*, pContext->m_pUserData);
+        //
+        // };
+        //
+        // ctx.m_pInterface->m_setTSpaceBasic = [](const SMikkTSpaceContext * pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert) {
+        //     auto data = CAST(UserData*, pContext->m_pUserData);
+        //
+        // };
+    }
 
     auto the_mesh = Mesh::Create(vertices, indices);
     return the_mesh;

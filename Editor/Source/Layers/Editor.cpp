@@ -8,7 +8,8 @@
 #include "Fussion/Debug/Debug.h"
 #include "Fussion/Events/ApplicationEvents.h"
 #include "Fussion/Events/KeyboardEvents.h"
-#include "Fussion/RHI/FrameAllocator.h"
+#include "Fussion/OS/FileSystem.h"
+#include "Fussion/Scripting/ScriptingEngine.h"
 #include "Serialization/SceneSerializer.h"
 
 #include <imgui.h>
@@ -18,14 +19,13 @@
 #include <ranges>
 
 Editor* Editor::s_EditorInstance = nullptr;
-using namespace Fussion;
+std::pmr::monotonic_buffer_resource Editor::ArenaAllocator{};
 
+using namespace Fussion;
 
 Editor::Editor()
 {
-    if (s_EditorInstance != nullptr) {
-        PANIC("EditorLayer already exists!");
-    }
+    VERIFY(s_EditorInstance == nullptr, "EditorLayer already exists!")
     s_EditorInstance = this;
 }
 
@@ -39,11 +39,23 @@ void Editor::OnStart()
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
     m_ContentBrowser = MakePtr<ContentBrowser>(this);
 
+    ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
+    FileSystem::WriteEntireFile(Project::ActiveProject()->GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
+
+    m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
+    m_Watcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
+        using namespace std::chrono_literals;
+        // Wait a bit for the file lock to be released.
+        std::this_thread::sleep_for(100ms);
+        ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
+    });
+    m_Watcher->Start();
+
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
     m_Style.Init();
 
     m_Camera.Resize(Application::Instance()->GetWindow().GetSize());
-    m_Camera.Position = Vector3(0, 2, 0);
+    m_Camera.Position = Vector3(0, 3, 5);
     m_SceneRenderer.Init();
 
     OnViewportResized(Vector2(300, 300));
@@ -57,12 +69,22 @@ void Editor::OnStart()
     m_ScriptsInspector->OnStart();
     m_ScriptsInspector->Hide();
 
-    OnBeginPlay += [] {
+    OnBeginPlay += [this] {
         LOG_DEBUG("On Begin Play");
+        auto serializer = MakePtr<SceneSerializer>();
+        auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(m_ActiveScene->GetHandle());
+        m_PlayScene = serializer->Load(meta)->As<Scene>();
+
+        if (m_PlayScene)
+            m_PlayScene->OnStart();
     };
 
-    OnStopPlay += [] {
+    OnStopPlay += [this] {
         LOG_DEBUG("On Stop Play");
+        // m_SceneWindow->ClearSelection();
+        if (m_PlayScene) {
+            m_PlayScene = nullptr;
+        }
     };
 
     OnPaused += [] {
@@ -78,21 +100,36 @@ void Editor::OnEnable() {}
 
 void Editor::OnDisable() {}
 
-void Editor::OnUpdate(const f32 delta)
+void Editor::Save()
+{
+    Project::ActiveProject()->Save();
+
+    auto serializer = MakePtr<SceneSerializer>();
+    AssetMetadata meta{};
+    meta.Path = m_ActiveScenePath;
+    serializer->Save(meta, m_ActiveScene);
+    m_ActiveScene->SetDirty(false);
+}
+
+void Editor::OnUpdate(f32 delta)
 {
     ZoneScoped;
 
     switch (m_State) {
     case PlayState::Editing: {}
     break;
-    case PlayState::Playing: {}
+    case PlayState::Playing: {
+        if (m_PlayScene)
+            m_PlayScene->OnUpdate(delta);
+    }
     break;
     case PlayState::Paused: {}
     break;
     }
 
-    if (m_ActiveScene)
-        m_ActiveScene->OnUpdate(delta);
+    if (m_ActiveScene) {
+        m_ActiveScene->OnDebugDraw();
+    }
 
     m_Camera.SetFocus(m_ViewportWindow->IsFocused());
     m_Camera.OnUpdate(delta);
@@ -116,13 +153,7 @@ void Editor::OnUpdate(const f32 delta)
                 ImGui::BeginDisabled();
 
             if (ImGui::MenuItem("Save..", "Ctrl+S")) {
-                Project::ActiveProject()->Save();
-
-                auto serializer = MakePtr<SceneSerializer>();
-                AssetMetadata meta{};
-                meta.Path = m_ActiveScenePath;
-                serializer->Save(meta, m_ActiveScene);
-                m_ActiveScene->SetDirty(false);
+                Save();
             }
 
             if (!m_ActiveScene)
@@ -242,23 +273,22 @@ void Editor::OnEvent(Event& event)
 {
     EventDispatcher dispatcher(event);
     dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
-        if (e.Key == KeyboardKey::Z && e.Mods.Test(KeyMod::Control)) {
-            LOG_DEBUG("FUCK SHIT UNDO");
+        if (e.Key == Keys::Z && e.Mods.Test(KeyMod::Control)) {
             Undo.Undo();
         }
-        if (e.Key == KeyboardKey::Y && e.Mods.Test(KeyMod::Control)) {
-            LOG_DEBUG("FUCK SHIT REDO");
+
+        if (e.Key == Keys::Y && e.Mods.Test(KeyMod::Control)) {
             Undo.Redo();
         }
 
-        if (e.Key == KeyboardKey::L) {
-            Debug::DrawLine(Vector3{}, Vector3{ 2, 2, 2 }, 2.0f);
+        if (e.Key == Keys::S && e.Mods.Test(KeyMod::Control)) {
+            Save();
         }
         return false;
     });
 
     dispatcher.Dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
-        if (m_ActiveScene->IsDirty()) {
+        if (m_ActiveScene != nullptr && m_ActiveScene->IsDirty()) {
             Dialogs::MessageBox data{};
             data.Message = "The current scene has unsaved modifications. Are you sure you want to quit?";
             data.Action = Dialogs::MessageAction::OkCancel;
@@ -291,7 +321,7 @@ void Editor::OnEvent(Event& event)
 
 void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
 {
-    if (Input::IsKeyPressed(KeyboardKey::K)) {
+    if (Input::IsKeyPressed(Keys::K)) {
         Debug::DrawLine(Vector3{}, Vector3{ 2, 2, 2 });
     }
 
@@ -302,8 +332,9 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
             .Position = m_Camera.Position,
             .Near = m_Camera.Near,
             .Far = m_Camera.Far,
+            .Direction = m_Camera.GetDirection(),
         },
-        .Scene = m_ActiveScene.get(),
+        .Scene = m_State == PlayState::Editing ? m_ActiveScene.get() : m_PlayScene.get(),
     });
 }
 
@@ -370,12 +401,34 @@ void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source
 
 void Editor::ChangeScene(AssetRef<Scene> scene)
 {
-    s_EditorInstance->m_SceneWindow->ClearSelection();
+    auto LoadScene = [&scene] {
+        s_EditorInstance->m_SceneWindow->ClearSelection();
 
-    auto serializer = MakePtr<SceneSerializer>();
-    auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(scene.Handle());
-    s_EditorInstance->m_ActiveScene = serializer->Load(meta)->As<Scene>();
-    s_EditorInstance->m_ActiveScenePath = meta.Path;
+        auto serializer = MakePtr<SceneSerializer>();
+        auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(scene.Handle());
+        s_EditorInstance->m_ActiveScene = serializer->Load(meta)->As<Scene>();
+        s_EditorInstance->m_ActiveScene->SetHandle(scene.Handle());
+        s_EditorInstance->m_ActiveScenePath = meta.Path;
+    };
+    if (s_EditorInstance->m_ActiveScene != nullptr && s_EditorInstance->m_ActiveScene->IsDirty()) {
+        Dialogs::MessageBox data{};
+        data.Message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
+        data.Action = Dialogs::MessageAction::YesNoCancel;
+        switch (Dialogs::ShowMessageBox(data)) {
+        case Dialogs::MessageButton::No: { s_EditorInstance->Save(); }
+        case Dialogs::MessageButton::Yes: {
+            LoadScene();
+        }
+        break;
+        case Dialogs::MessageButton::Cancel:
+            break;
+        default:
+            UNIMPLEMENTED;
+            break;
+        }
+    } else {
+        LoadScene();
+    }
 }
 
 void Editor::OnViewportResized(Vector2 new_size)

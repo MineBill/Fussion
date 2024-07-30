@@ -3,20 +3,21 @@
 #include "Fussion/Core/Types.h"
 
 #include <cstdio>
+#include <fstream>
 
-namespace Fussion
-{
-    class FileSink: public LogSink
-    {
-        explicit FileSink(std::string const& file_name);
-    public:
-        FileSink() = default;
-        ~FileSink() override;
-        static Ref<FileSink> Create(std::string const& file_name);
+namespace Fussion {
+class FileSink : public LogSink {
+    explicit FileSink(std::string const& file_name);
 
-        void Write(LogLevel level, std::string_view message, std::source_location const& loc) override;
+public:
+    FileSink() = default;
+    virtual ~FileSink() override;
+    static Ref<FileSink> Create(std::filesystem::path const& file_name);
 
-    private:
-        FILE* m_OutputFile{};
-    };
+    virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override;
+
+private:
+    FILE* m_OutputFile{};
+    std::ofstream m_OutFile{};
+};
 }

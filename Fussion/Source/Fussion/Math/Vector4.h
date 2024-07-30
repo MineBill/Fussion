@@ -61,6 +61,8 @@ struct Vector4 final {
         return Raw[i];
     }
 
+    Vector4& operator=(Vector3 const& other);
+
     Vector4 operator+(Vector4 const& other) const;
     Vector4 operator-(Vector4 const& other) const;
     Vector4 operator*(Vector4 const& other) const;

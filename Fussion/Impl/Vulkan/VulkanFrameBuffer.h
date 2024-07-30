@@ -21,16 +21,16 @@ public:
         std::vector<Ref<ImageView>> images,
         FrameBufferSpecification spec);
 
-    void Destroy() override;
-    void* GetRawHandle() override { return m_Handle; }
+    virtual void Destroy() override;
+    virtual auto GetRawHandle() -> void* override { return m_Handle; }
 
-    void Resize(Vector2 new_size) override;
+    virtual void Resize(Vector2 new_size) override;
 
-    Ref<Image> GetColorAttachment(u32 index) override;
-    Ref<ImageView> GetColorAttachmentAsView(u32 index) override;
-    Ref<ImageView> GetDepthAttachmentAsView() override;
+    virtual auto GetColorAttachment(u32 index) -> Ref<Image> override;
+    virtual auto GetColorAttachmentAsView(u32 index) -> Ref<ImageView> override;
+    virtual auto GetDepthAttachmentAsView() -> Ref<ImageView> override;
 
-    FrameBufferSpecification GetSpec() override;
+    virtual auto GetSpec() -> FrameBufferSpecification const& override;
 
 private:
     void Invalidate();

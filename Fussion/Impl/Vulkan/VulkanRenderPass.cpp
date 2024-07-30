@@ -236,7 +236,7 @@ void VulkanRenderPass::Begin() {}
 
 void VulkanRenderPass::End() {}
 
-RenderPassSpecification VulkanRenderPass::GetSpec()
+auto VulkanRenderPass::GetSpec() -> RenderPassSpecification const&
 {
     return m_Specification;
 }

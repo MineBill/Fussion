@@ -14,7 +14,7 @@ DECLARE_FLAGS(KeyMod, KeyMods)
 
 DECLARE_OPERATORS_FOR_FLAGS(KeyMods)
 
-enum class KeyboardKey {
+enum class Keys {
     None,
     Space,
     Apostrophe,

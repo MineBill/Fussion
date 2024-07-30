@@ -67,9 +67,9 @@ auto VulkanResourcePool::Allocate(Ref<ResourceLayout> layout, const std::string&
     auto result = vkAllocateDescriptorSets(device->Handle, &alloc_info, &resource->m_Handle);
     switch (result) {
     case VK_ERROR_OUT_OF_POOL_MEMORY:
-        return Err(AllocationError::OutOfMemory);
+        return AllocationError::OutOfMemory;
     case VK_ERROR_FRAGMENTED_POOL:
-        return Err(AllocationError::FragmentedPool);
+        return AllocationError::FragmentedPool;
     }
 
     if (!name.empty()) {
@@ -80,7 +80,7 @@ auto VulkanResourcePool::Allocate(Ref<ResourceLayout> layout, const std::string&
             std::format("Layout - {}", name));
     }
 
-    return Ok(resource->As<Resource>());
+    return resource->As<Resource>();
 }
 
 void VulkanResourcePool::Reset()

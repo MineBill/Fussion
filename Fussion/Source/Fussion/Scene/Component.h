@@ -3,31 +3,42 @@
 #include "Fussion/meta.hpp/meta_all.hpp"
 #include "Fussion/RHI/RenderContext.h"
 
-namespace Fussion
-{
-    class Entity;
+#define USE_DEBUG_DRAW 1
 
-    class Component
+namespace Fussion {
+class Entity;
+
+class Component {
+    META_HPP_ENABLE_POLY_INFO()
+public:
+    Component() = default;
+    explicit Component(Entity* owner): m_Owner(owner) {}
+    virtual ~Component() = default;
+
+    virtual void OnCreate()
     {
-        META_HPP_ENABLE_POLY_INFO()
-    public:
-        Component() = default;
-        explicit Component(Entity* owner): m_Owner(owner) {}
-        virtual ~Component() = default;
+        OnStart();
+    }
 
-        virtual void OnCreate() {}
-        virtual void OnDestroy() {}
-        virtual void OnUpdate([[maybe_unused]] f32 delta) {}
+    virtual void OnDestroy() {}
 
-        virtual void OnEnabled() {}
-        virtual void OnDisabled() {}
+    virtual void OnStart() {}
+    virtual void OnUpdate([[maybe_unused]] f32 delta) {}
 
-        virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
+#if USE_DEBUG_DRAW
+    virtual void OnDebugDraw() {}
+#endif
 
-        Entity* GetOwner() const { return m_Owner; }
-    protected:
-        Entity* m_Owner;
-    };
+    virtual void OnEnabled() {}
+    virtual void OnDisabled() {}
+
+    virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
+
+    Entity* GetOwner() const { return m_Owner; }
+
+protected:
+    Entity* m_Owner;
+};
 }
 
 #define COMPONENT(name)                               \

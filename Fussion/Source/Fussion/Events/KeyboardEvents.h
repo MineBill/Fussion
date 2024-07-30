@@ -7,61 +7,54 @@
 #include <format>
 #include <magic_enum/magic_enum.hpp>
 
-namespace Fussion
-{
+namespace Fussion {
 
-    class OnKeyDown final : public Event
+class OnKeyDown final : public Event {
+public:
+    EVENT(OnKeyDown)
+
+    explicit OnKeyDown(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
+
+    [[nodiscard]]
+    virtual std::string ToString() const override
     {
-    public:
-        EVENT(OnKeyDown)
+        return std::format("OnKeyDown({})", magic_enum::enum_name(Key));
+    }
 
-        explicit OnKeyDown(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
-        {
-        }
+    Keys Key{};
+    KeyMods Mods{};
+};
 
-        require_results std::string ToString() const override
-        {
-            return std::format("OnKeyDown({})", magic_enum::enum_name(Key));
-        }
+class OnKeyPressed final : public Event {
+public:
+    EVENT(OnKeyPressed)
 
-        KeyboardKey Key{};
-        KeyMods Mods{};
-    };
+    explicit OnKeyPressed(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
 
-    class OnKeyPressed final : public Event
+    [[nodiscard]]
+    virtual std::string ToString() const override
     {
-    public:
-        EVENT(OnKeyPressed)
+        return std::format("OnKeyPressed({})", magic_enum::enum_name(Key));
+    }
 
-        explicit OnKeyPressed(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
-        {
-        }
+    Keys Key{};
+    KeyMods Mods{};
+};
 
-        require_results std::string ToString() const override
-        {
-            return std::format("OnKeyPressed({})", magic_enum::enum_name(Key));
-        }
+class OnKeyReleased final : public Event {
+public:
+    EVENT(OnKeyReleased)
 
-        KeyboardKey Key{};
-        KeyMods Mods{};
-    };
+    explicit OnKeyReleased(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
 
-    class OnKeyReleased final : public Event
+    [[nodiscard]]
+    virtual std::string ToString() const override
     {
-    public:
-        EVENT(OnKeyReleased)
+        return std::format("OnKeyReleased({})", magic_enum::enum_name(Key));
+    }
 
-        explicit OnKeyReleased(KeyboardKey key, KeyMods mods) : Key(key), Mods(mods)
-        {
-        }
-
-        require_results std::string ToString() const override
-        {
-            return std::format("OnKeyReleased({})", magic_enum::enum_name(Key));
-        }
-
-        KeyboardKey Key{};
-        KeyMods Mods{};
-    };
+    Keys Key{};
+    KeyMods Mods{};
+};
 
 }

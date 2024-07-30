@@ -25,10 +25,10 @@ public:
 
     virtual void Resize(Vector2 new_size) = 0;
 
-    virtual Ref<Image> GetColorAttachment(u32 index) = 0;
-    virtual Ref<ImageView> GetColorAttachmentAsView(u32 index) = 0;
-    virtual Ref<ImageView> GetDepthAttachmentAsView() = 0;
+    virtual auto GetColorAttachment(u32 index) -> Ref<Image> = 0;
+    virtual auto GetColorAttachmentAsView(u32 index) -> Ref<ImageView> = 0;
+    virtual auto GetDepthAttachmentAsView() -> Ref<ImageView> = 0;
 
-    virtual FrameBufferSpecification GetSpec() = 0;
+    virtual auto GetSpec() -> FrameBufferSpecification const& = 0;
 };
 }

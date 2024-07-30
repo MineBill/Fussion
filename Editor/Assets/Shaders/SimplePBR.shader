@@ -1,8 +1,9 @@
 #version 450 core
 
 #include "Global.glsl"
+#include "Lighting.glsl"
 
-layout (std140, set = 1, binding = 0) uniform Material {
+layout (std140, set = 2, binding = 0) uniform Material {
     vec4 albedo_color;
 } u_Material;
 

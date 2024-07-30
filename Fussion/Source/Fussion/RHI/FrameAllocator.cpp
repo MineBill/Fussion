@@ -27,7 +27,7 @@ Ref<Resource> FrameAllocator::Alloc(Ref<ResourceLayout> layout)
     if (result.IsError()) {
         using enum ResourcePool::AllocationError;
 
-        if (auto err = result.TakeError();
+        if (auto err = result.Error();
             err == FragmentedPool || err == OutOfMemory) {
             auto pool = GetAvailablePool(DEFAULT_MAX_RESOURCES);
             m_CurrentFramePools[m_CurrentFrame] = pool;
@@ -35,10 +35,10 @@ Ref<Resource> FrameAllocator::Alloc(Ref<ResourceLayout> layout)
 
             auto new_result = pool->Allocate(layout);
             VERIFY(new_result.IsValue());
-            return new_result.TakeValue();
+            return new_result.Value();
         }
     }
-    return result.TakeValue();
+    return result.Value();
 }
 
 void FrameAllocator::Reset()

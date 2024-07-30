@@ -171,7 +171,7 @@ void SceneRenderer::Init()
         // auto shader = AssetManager::GetAsset<ShaderAsset>("Assets/Shaders/SimplePBR.shader");
         // shader->GetShader();
 
-        const auto data = FileSystem::ReadEntireFile("Assets/Shaders/SimplePBR.shader");
+        auto const data = FileSystem::ReadEntireFile("Assets/Shaders/PBR.shader");
         auto [stages, metadata] = ShaderCompiler::Compile(*data);
         metadata.Samples = 8;
         m_PbrShader = Device::Instance()->CreateShader(m_SceneRenderPass, stages, metadata);
@@ -188,6 +188,8 @@ void SceneRenderer::Init()
     m_ViewData = UniformBuffer<ViewData>::Create("View Data");
     m_DebugOptions = UniformBuffer<DebugOptions>::Create("Debug Options");
     m_GlobalData = UniformBuffer<GlobalData>::Create("Global Data");
+    m_SceneData = UniformBuffer<SceneData>::Create("Scene Data");
+    m_LightData = UniformBuffer<LightData>::Create("Light Data");
 
     const auto pool_spec = ResourcePoolSpecification::Default(100);
     m_ResourcePool = Device::Instance()->CreateResourcePool(pool_spec);
@@ -217,13 +219,18 @@ void SceneRenderer::Init()
             return;
         }
 
-        m_GlobalResource = result.TakeValue();
+        m_GlobalResource = result.Value();
     }
 
     {
         std::vector resource_usages = {
             ResourceUsage{
                 .Label = "SceneData",
+                .Type = ResourceType::UniformBuffer,
+                .Stages = ShaderType::Vertex | ShaderType::Fragment,
+            },
+            ResourceUsage{
+                .Label = "LightData",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
             },
@@ -235,14 +242,14 @@ void SceneRenderer::Init()
             return;
         }
 
-        m_SceneResource = result.TakeValue();
+        m_SceneResource = result.Value();
     }
 
     Debug::Initialize(m_SceneRenderPass);
     m_TestTexture = TextureImporter::LoadTextureFromFile(std::filesystem::current_path() / "Assets" / "coords.png");
 }
 
-void SceneRenderer::Resize(const Vector2 new_size)
+void SceneRenderer::Resize(Vector2 const& new_size)
 {
     ZoneScoped;
     Device::Instance()->WaitIdle();
@@ -292,6 +299,11 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     m_ViewData.Data.View = packet.Camera.View;
     m_ViewData.Flush();
 
+    m_SceneData.Data.ViewPosition = packet.Camera.Position;
+    m_SceneData.Data.ViewDirection = packet.Camera.Direction;
+    m_SceneData.Data.AmbientColor = Color::White;
+    m_SceneData.Flush();
+
     m_RenderContext.Cmd = cmd;
     m_RenderContext.DirectionalLights.clear();
     m_RenderContext.PointLights.clear();
@@ -305,6 +317,11 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             });
         }
     }
+
+    if (m_RenderContext.DirectionalLights.size() > 0) {
+        m_LightData.Data.DirectionalLight = m_RenderContext.DirectionalLights[0];
+    }
+    m_LightData.Flush();
 
     {
         ZoneScopedN("Depth Pass");
@@ -394,6 +411,10 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             cmd->UseShader(m_PbrShader);
             cmd->BindResource(m_GlobalResource, m_PbrShader, 0);
             cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+
+            cmd->BindResource(m_SceneResource, m_PbrShader, 1);
+            cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);
+            cmd->BindUniformBuffer(m_LightData.GetBuffer(), m_SceneResource, 1);
 
             m_RenderContext.CurrentShader = m_PbrShader;
             if (packet.Scene) {

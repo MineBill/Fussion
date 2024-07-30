@@ -1,7 +1,6 @@
 #pragma once
-#include "e5pch.h"
-
-#define EVENT_BIND_FN(fn) [this](auto &&PH1) { return fn(std::forward<decltype(PH1)>(PH1)); }
+#include <string>
+#include <functional>
 
 #define EVENT(name)                 \
     static EventType StaticType()  \

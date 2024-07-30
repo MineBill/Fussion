@@ -22,7 +22,6 @@ public:
     template<class T>
     Ref<T> As()
     {
-        VERIFY(this != nullptr, "*this is a nullptr");
         return std::dynamic_pointer_cast<T>(shared_from_this());
     }
 

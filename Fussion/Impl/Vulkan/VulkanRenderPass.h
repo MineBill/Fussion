@@ -7,11 +7,11 @@ class VulkanRenderPass : public RenderPass {
 public:
     VulkanRenderPass(VulkanDevice* device, RenderPassSpecification spec);
 
-    void Begin() override;
-    void End() override;
+    virtual void Begin() override;
+    virtual void End() override;
 
-    RenderPassSpecification GetSpec() override;
-    void* GetRawHandle() override { return m_Handle; }
+    virtual auto GetSpec() -> RenderPassSpecification const& override;
+    virtual auto GetRawHandle() -> void* override { return m_Handle; }
 
 private:
     VkRenderPass m_Handle;

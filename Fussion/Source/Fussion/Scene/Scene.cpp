@@ -67,19 +67,35 @@ Scene& Scene::operator=(Scene&& other) noexcept
     return *this;
 }
 
+void Scene::OnStart()
+{
+    for (auto& [id, entity] : m_Entities) {
+        entity.OnStart();
+    }
+}
+
 void Scene::OnUpdate(f32 delta)
 {
     for (auto& [id, entity] : m_Entities) {
+        (void)id;
         entity.OnUpdate(delta);
     }
 }
 
-Entity* Scene::CreateEntity(std::string const& name, Uuid parent)
+void Scene::OnDebugDraw()
+{
+    for (auto& [id, entity] : m_Entities) {
+        (void)id;
+        entity.OnDebugDraw();
+    }
+}
+
+auto Scene::CreateEntity(std::string const& name, Uuid parent) -> Entity*
 {
     return CreateEntityWithId(Uuid(), name, parent);
 }
 
-Entity* Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent)
+auto Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent) -> Entity*
 {
     LOG_INFOF("Creating entity {} with parent {}", CAST(u64, id), CAST(u64, parent));
     m_Entities[id] = Entity(id, this);
@@ -89,11 +105,16 @@ Entity* Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent)
     return &entity;
 }
 
-Entity* Scene::GetEntity(Uuid const handle)
+auto Scene::GetEntity(Uuid const handle) -> Entity*
 {
     if (!IsHandleValid(handle))
         return nullptr;
     return &m_Entities[handle];
+}
+
+auto Scene::GetEntity(Entity const& entity) -> Entity*
+{
+    return GetEntity(entity.m_Handle);
 }
 
 bool Scene::IsHandleValid(Uuid parent) const
@@ -119,7 +140,7 @@ void Scene::Destroy(Entity const* entity)
     Destroy(entity->GetId());
 }
 
-Entity* Scene::GetRoot()
+auto Scene::GetRoot() -> Entity*
 {
     return &m_Entities[0];
 }

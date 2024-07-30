@@ -6,8 +6,11 @@
 namespace Fussion::Math {
 
 constexpr f64 Pi = 3.14159265358979323846264338327950288;
+constexpr f32 F32Epsilon = 1.192092896e-07F;
+constexpr f64 F64Epsilon = 2.2204460492503131e-016;
 
-auto Min(ScalarType auto first, ScalarType auto second) -> decltype(first)
+template<ScalarType T>
+auto Min(T first, T second)
 {
     if (first < second)
         return first;
@@ -23,7 +26,8 @@ auto Min(First first, Second second, T... rest) -> First
     return min_rest;
 }
 
-auto Max(ScalarType auto first, ScalarType auto second) -> decltype(first)
+template<ScalarType T>
+auto Max(T first, T second)
 {
     if (first > second)
         return first;
@@ -39,7 +43,8 @@ auto Max(First first, Second second, T... rest) -> First
     return max_rest;
 }
 
-auto Clamp(ScalarType auto value, ScalarType auto min, ScalarType auto max) -> decltype(value)
+template<ScalarType T>
+auto Clamp(T value, T min, T max)
 {
     if (value < min)
         value = min;
@@ -52,12 +57,17 @@ template<std::floating_point Real>
 bool IsZero(Real value)
 {
     if constexpr (std::is_same_v<Real, f32>) {
-        constexpr f32 epsilon = FLT_EPSILON;
-        return value <= epsilon;
+        return value <= F32Epsilon;
     } else {
-        constexpr f64 epsilon = DBL_EPSILON;
-        return value <= epsilon;
+        return value <= F64Epsilon;
     }
+}
+
+auto Abs(ScalarType auto value)
+{
+    if (value < 0)
+        return -value;
+    return value;
 }
 
 auto Sin(ScalarType auto value) -> decltype(value)
@@ -70,7 +80,8 @@ auto Cos(ScalarType auto value) -> decltype(value)
     return std::cos(value);
 }
 
-auto Pow(ScalarType auto value, ScalarType auto power) -> decltype(value)
+template<ScalarType T>
+auto Pow(T value, T power) -> decltype(value)
 {
     return std::pow(value, power);
 }

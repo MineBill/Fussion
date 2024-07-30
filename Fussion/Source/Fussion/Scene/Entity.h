@@ -27,11 +27,21 @@ struct Transform {
         auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
         return translation * rotation * scale;
     }
+
+    auto GetForward() const -> Vector3
+    {
+        auto rotation = glm::mat3(glm::eulerAngleZXY(
+            glm::radians(EulerAngles.Z),
+            glm::radians(EulerAngles.X),
+            glm::radians(EulerAngles.Y)));
+
+        return rotation * Vector3::Forward;
+    }
 };
 
 class Scene;
 
-class Entity {
+class Entity final {
     friend class Scene;
     friend SceneSerializer;
     friend class SceneBinarySerializer;
@@ -44,14 +54,12 @@ public:
     Entity() = default;
     Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
 
-    Entity(const Entity& other);
+    Entity(Entity const& other);
     Entity(Entity&& other) noexcept;
-    Entity& operator=(const Entity& other);
+    Entity& operator=(Entity const& other);
     Entity& operator=(Entity&& other) noexcept;
 
     void SetParent(Entity const& new_parent);
-    void AddChild(Entity const& child);
-    void RemoveChild(Entity const& child);
 
     void SetEnabled(bool enabled);
     bool IsEnabled() const;
@@ -111,10 +119,18 @@ public:
     void OnDraw(RHI::RenderContext& context);
 
 private:
+    void OnStart();
     void OnUpdate(f32 delta);
+
+#if USE_DEBUG_DRAW
+    void OnDebugDraw();
+#endif
+
     void OnDestroy();
 
     bool IsGrandchild(Uuid handle) const;
+    void AddChild(Entity const& child);
+    void RemoveChild(Entity const& child);
 
     Uuid m_Parent;
     std::vector<Uuid> m_Children{};

@@ -6,7 +6,7 @@
 #include "RHI/FrameAllocator.h"
 
 namespace Fussion {
-class MeshRenderer : public Component {
+class MeshRenderer final : public Component {
     struct PushConstantData {
         Mat4 Model;
     } m_Data;
@@ -18,9 +18,9 @@ class MeshRenderer : public Component {
 public:
     COMPONENT_DEFAULT(MeshRenderer)
 
-    void OnCreate() override;
-    void OnUpdate(f32 delta) override;
-    void OnDraw(RHI::RenderContext& ctx) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32 delta) override;
+    virtual void OnDraw(RHI::RenderContext& ctx) override;
 
     AssetRef<Mesh> Mesh;
     AssetRef<PbrMaterial> Material;

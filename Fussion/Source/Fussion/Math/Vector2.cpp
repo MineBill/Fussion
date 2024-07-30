@@ -43,6 +43,16 @@ Vector2 Vector2::operator/(Vector2 const& right) const
     return { X / right.X, Y / right.Y };
 }
 
+bool operator==(Vector2 const& lhs, Vector2 const& rhs)
+{
+    return Math::IsZero(Math::Abs(lhs.X - rhs.X)) && Math::IsZero(Math::Abs(lhs.Y - rhs.Y));
+}
+
+bool operator!=(Vector2 const& lhs, Vector2 const& rhs)
+{
+    return !(lhs == rhs);
+}
+
 bool Vector2::IsZero() const
 {
     return Math::IsZero(X) && Math::IsZero(Y);

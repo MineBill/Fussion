@@ -19,7 +19,7 @@ struct PropTypeRange {
 };
 
 template<typename T, typename TypeKind = PropTypeGeneric>
-bool Property(std::string const& name, T* data, TypeKind kind = {})
+bool Property(std::string_view name, T* data, TypeKind kind = {})
 {
     bool modified{ false };
     constexpr auto table_flags =
@@ -27,9 +27,9 @@ bool Property(std::string const& name, T* data, TypeKind kind = {})
         ImGuiTableFlags_Resizable |
         ImGuiTableFlags_NoSavedSettings |
         ImGuiTableFlags_SizingStretchSame;
-    ImGui::BeginTable(name.c_str(), 2, table_flags);
+    ImGui::BeginTable(name.data(), 2, table_flags);
     ImGui::TableNextColumn();
-    ImGui::TextUnformatted(name.c_str());
+    ImGui::TextUnformatted(name.data());
 
     ImGui::TableNextColumn();
 
@@ -63,18 +63,16 @@ bool Property(std::string const& name, T* data, TypeKind kind = {})
     return modified;
 }
 
-void Property(std::string const& name, auto&& data)
+void Property(std::string_view name, auto&& data)
 {
-    using Type = std::remove_reference_t<decltype(data)>;
-
     constexpr auto table_flags =
         ImGuiTableFlags_BordersInnerV |
         ImGuiTableFlags_Resizable |
         ImGuiTableFlags_NoSavedSettings |
         ImGuiTableFlags_SizingStretchSame;
-    ImGui::BeginTable(name.c_str(), 2, table_flags);
+    ImGui::BeginTable(name.data(), 2, table_flags);
     ImGui::TableNextColumn();
-    ImGui::TextUnformatted(name.c_str());
+    ImGui::TextUnformatted(name.data());
 
     ImGui::TableNextColumn();
 
@@ -86,7 +84,7 @@ void Property(std::string const& name, auto&& data)
 }
 
 template<typename Func>
-auto Button(std::string const& label, Func&& func, ButtonStyles style_type = ButtonStyleGeneric, [[maybe_unused]] Vector2 size = Vector2(), f32 alignment = 0)
+auto Button(std::string_view label, Func&& func, ButtonStyles style_type = ButtonStyleGeneric, [[maybe_unused]] Vector2 size = Vector2(), f32 alignment = 0)
 {
     using ResultType = std::invoke_result_t<Func>;
     auto style = Detail::GetButtonStyle(style_type);
@@ -103,14 +101,14 @@ auto Button(std::string const& label, Func&& func, ButtonStyles style_type = But
     ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
     ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
 
-    auto s = ImGui::CalcTextSize(label.c_str()).x + style.Padding.X * 2.0f;
+    auto s = ImGui::CalcTextSize(label.data()).x + style.Padding.X * 2.0f;
     auto avail = ImGui::GetContentRegionAvail().x;
     auto off = (avail - s) * alignment;
     if (off > 0) {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
     }
 
-    bool opened = ImGui::Button(label.c_str());
+    bool opened = ImGui::Button(label.data());
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(6);
 
@@ -186,10 +184,10 @@ struct ModalWindowParams {
 };
 
 template<typename Func>
-auto ModalWindow(std::string const& title, Func&& func, ModalWindowParams params = {})
+auto ModalWindow(std::string_view title, Func&& func, ModalWindowParams params = {})
 {
     using ResultType = std::invoke_result_t<Func>;
-    bool opened = ImGui::BeginPopupModal(title.c_str(), params.Opened, params.Flags);
+    bool opened = ImGui::BeginPopupModal(title.data(), params.Opened, params.Flags);
 
     if constexpr (std::is_void_v<ResultType>) {
         if (opened) {

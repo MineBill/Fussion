@@ -12,6 +12,7 @@
 
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Component.h"
+#include "Fussion/Scene/Components/ScriptComponent.h"
 
 using namespace Fussion;
 
@@ -67,9 +68,10 @@ void InspectorWindow::OnDraw()
     if (ImGui::Begin("Inspector")) {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        if (auto const selection = m_Editor->GetSceneTree().GetSelection(); !selection.empty()) {
+        if (auto const& selection = m_Editor->GetSceneTree().GetSelection(); !selection.empty()) {
             if (selection.size() == 1) {
-                auto const entity = selection.begin()->second;
+                auto const handle = selection.begin()->first;
+                auto entity = m_Editor->GetActiveScene()->GetEntity(handle);
                 if (DrawEntity(*entity)) {
                     LOG_DEBUG("Entity was modified, setting scene to dirty");
                     Editor::GetActiveScene()->SetDirty();
@@ -88,8 +90,8 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 {
     ZoneScoped;
     bool modified{ false };
-    auto const name = component_type.get_metadata().at("Name").as<std::string>();
-    if (ImGui::CollapsingHeader(name.c_str())) {
+
+    auto DrawProps = [&] {
         for (auto const& member : component_type.get_members()) {
             auto value = member.get(ptr);
 
@@ -174,6 +176,27 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                 }
             });
         }
+    };
+
+    auto const name = component_type.get_metadata().at("Name").as<std::string>();
+    if (ImGui::CollapsingHeader(name.c_str())) {
+        // Special case gui for some components.
+        if (component_type == meta_hpp::resolve_type<ScriptComponent>()) {
+            if (ImGui::TreeNode("Classes")) {
+
+                ImGui::TreePop();
+            }
+
+            if (ImGuiHelpers::ButtonCenteredOnLine("Test")) {
+                ptr.as<ScriptComponent*>()->Test();
+            }
+
+            DrawProps();
+        } else {
+            // Generic case
+            DrawProps();
+        }
+
         ImGui::Separator();
     }
 

@@ -62,10 +62,10 @@ struct Vector3 final {
     Vector3 operator*(Vector3 const& other) const;
     Vector3 operator/(Vector3 const& other) const;
 
-    Vector3 operator+=(Vector3 const& other);
-    Vector3 operator-=(Vector3 const& other);
-    Vector3 operator*=(Vector3 const& other);
-    Vector3 operator/=(Vector3 const& other);
+    Vector3& operator+=(Vector3 const& other);
+    Vector3& operator-=(Vector3 const& other);
+    Vector3& operator*=(Vector3 const& other);
+    Vector3& operator/=(Vector3 const& other);
 
     Vector3 operator+(ScalarType auto scalar) const
     {
@@ -87,25 +87,25 @@ struct Vector3 final {
         return { X / CAST(Real, scalar), Y / CAST(Real, scalar), Z / CAST(Real, scalar) };
     }
 
-    Vector3 operator+=(ScalarType auto scalar)
+    Vector3& operator+=(ScalarType auto scalar)
     {
         *this = *this + CAST(Real, scalar);
         return *this;
     }
 
-    Vector3 operator-=(ScalarType auto scalar)
+    Vector3& operator-=(ScalarType auto scalar)
     {
         *this = *this - CAST(Real, scalar);
         return *this;
     }
 
-    Vector3 operator*=(ScalarType auto scalar)
+    Vector3& operator*=(ScalarType auto scalar)
     {
         *this = *this * CAST(Real, scalar);
         return *this;
     }
 
-    Vector3 operator/=(ScalarType auto scalar)
+    Vector3& operator/=(ScalarType auto scalar)
     {
         *this = *this / CAST(Real, scalar);
         return *this;
@@ -118,12 +118,16 @@ struct Vector3 final {
         return { X, Y, Z };
     }
 
+    static const Vector3 One;
     static const Vector3 Up;
     static const Vector3 Down;
     static const Vector3 Left;
     static const Vector3 Right;
     static const Vector3 Forward;
 };
+
+bool operator==(Vector3 const& lhs, Vector3 const& rhs);
+bool operator!=(Vector3 const& lhs, Vector3 const& rhs);
 }
 
 #if defined(FSN_MATH_USE_GLOBALLY)

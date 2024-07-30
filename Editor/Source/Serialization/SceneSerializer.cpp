@@ -3,6 +3,7 @@
 
 #include "Fussion/Scene/Scene.h"
 #include "Fussion/OS/FileSystem.h"
+#include "Fussion/Scene/Components/ScriptComponent.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
 #include "Fussion/Serialization/Json.h"
 
@@ -85,6 +86,7 @@ ordered_json SerializeNativeComponent(meta_hpp::class_type component_type, meta_
             auto class_type = data_type.as_class();
             if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
                 auto m_Handle = class_type.get_member("m_Handle");
+                LOG_DEBUGF("Serializing asset handle {}", m_Handle.get(value).as<AssetHandle>());
                 m = CAST(u64, m_Handle.get(value).as<AssetHandle>());
             }
         }
@@ -101,7 +103,7 @@ void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, met
 
         if (auto member = component_type.get_member(key); member.is_valid()) {
             auto mem_value = member.get(ptr);
-            LOG_DEBUGF("Deserialize member {}", member.get_name());
+            auto data_type = mem_value.get_type().as_pointer().get_data_type();
 
             // @note Is this retarded?
             if (mem_value.is<s8*>()) {
@@ -132,6 +134,12 @@ void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, met
                 member.set(ptr, value.get<Vector3>());
             } else if (mem_value.is<Vector4*>()) {
                 member.set(ptr, value.get<Vector4>());
+            } else if (data_type.is_class()) {
+                auto class_type = data_type.as_class();
+                if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
+                    auto handle = class_type.get_member("m_Handle");
+                    handle.set(mem_value, AssetHandle(value.get<u64>()));
+                }
             }
         }
     }
@@ -166,7 +174,7 @@ void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
               } }
         };
 
-        for (auto const& [id, component] : entity.GetComponents()) {
+        for (auto const& component : entity.GetComponents() | std::views::values) {
             auto ptr = component->meta_poly_ptr();
             auto component_type = ptr.get_type().as_pointer().get_data_type().as_class();
             auto name = component_type.get_metadata().at("Name").as<std::string>();
@@ -231,7 +239,7 @@ Ref<Asset> SceneSerializer::Load(AssetMetadata metadata)
         }
 
     } catch (std::exception const& e) {
-        LOG_ERRORF("Exception while loading json scene: {}", e.what());
+        LOG_ERRORF("Exception while loading scene: {}", e.what());
     }
     return scene;
 }

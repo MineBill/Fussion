@@ -7,16 +7,18 @@
 #include "Fussion/Input/Input.h"
 #include "imgui.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
 #include "Fussion/Events/ApplicationEvents.h"
 #include "Fussion/Log/FileSink.h"
+#include "Fussion/OS/Args.h"
 #include "Fussion/OS/Dialog.h"
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Scene/Entity.h"
 #include "Project/Project.h"
+#include <Fussion/Core/Clap.h>
+#include <chrono>
 
 EditorApplication* EditorApplication::s_EditorInstance;
 
@@ -26,12 +28,25 @@ void EditorApplication::OnStart()
     using namespace Fussion;
 
     s_EditorInstance = this;
-    Log::DefaultLogger()->RegisterSink(FileSink::Create("Pepegas.log"));
-    LOG_DEBUGF("Current path is: {}", std::filesystem::current_path().string());
 
-    auto path = Dialogs::ShowFilePicker("Project File", {"*.fsnproj"});
-    auto loaded = Project::Load(path);
+    Clap clap(Args::AsSingleLine());
+    clap.Option<std::string>("Project");
+
+    clap.Parse();
+
+    bool loaded;
+    if (auto project = clap.Get<std::string>("Project")) {
+        loaded = Project::Load(*project);
+    } else {
+        auto path = Dialogs::ShowFilePicker("Project File", { "*.fsnproj" });
+        loaded = Project::Load(path);
+    }
     VERIFY(loaded, "Project loading must not fail, for now.");
+
+    auto now = std::chrono::system_clock::now();
+    auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
+
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
 
     s_EditorInstance = this;
     m_Editor = MakePtr<Editor>();
@@ -64,14 +79,14 @@ void EditorApplication::OnUpdate(const f32 delta)
     }
 
     cmd->Begin();
-    auto window_size = Vector2{CAST(f32, m_Window->GetWidth()), CAST(f32, m_Window->GetHeight())};
+    auto window_size = Vector2{ CAST(f32, m_Window->GetWidth()), CAST(f32, m_Window->GetHeight()) };
 
     m_Editor->OnDraw(cmd);
 
     const auto main = RHI::Renderer::GetInstance()->GetMainRenderPass();
     cmd->BeginRenderPass(main, RHI::Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
-    cmd->SetViewport({window_size.X, -window_size.Y});
-    cmd->SetScissor({0, 0, window_size.X, window_size.Y});
+    cmd->SetViewport({ window_size.X, -window_size.Y });
+    cmd->SetScissor({ 0, 0, window_size.X, window_size.Y });
 
     m_ImGuiLayer->End(cmd);
 

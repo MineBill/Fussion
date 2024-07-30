@@ -11,14 +11,14 @@ public:
 
     virtual void OnStart()
     {
-        for (const auto& layer : m_Layers) {
+        for (auto const& layer : m_Layers) {
             layer->OnStart();
         }
     }
 
-    virtual void OnUpdate(const f32 delta)
+    virtual void OnUpdate(f32 delta)
     {
-        for (const auto& layer : m_Layers) {
+        for (auto const& layer : m_Layers) {
             layer->OnUpdate(delta);
         }
     }

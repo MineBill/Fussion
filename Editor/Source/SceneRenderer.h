@@ -33,7 +33,13 @@ struct GlobalData {
 struct SceneData {
     Vector4 ViewPosition{};
     Vector4 ViewDirection{};
-    Vector4 AmbientColor{};
+    Color AmbientColor{};
+};
+
+struct LightData {
+    Fussion::RHI::DirectionalLightData DirectionalLight{};
+
+    Vector4 ShadowSplitDistances{};
 };
 
 // == == //
@@ -42,6 +48,7 @@ struct RenderCamera {
     Mat4 Perspective, View;
     Vector3 Position;
     f32 Near, Far;
+    Vector3 Direction;
 };
 
 struct RenderPacket {
@@ -53,7 +60,7 @@ struct RenderPacket {
 class SceneRenderer {
 public:
     void Init();
-    void Resize(Vector2 new_size);
+    void Resize(Vector2 const& new_size);
 
     void Render(const Ref<Fussion::RHI::CommandBuffer>& cmd, RenderPacket const& packet);
 
@@ -79,6 +86,7 @@ private:
     Fussion::RHI::UniformBuffer<GlobalData> m_GlobalData;
 
     Fussion::RHI::UniformBuffer<SceneData> m_SceneData;
+    Fussion::RHI::UniformBuffer<LightData> m_LightData;
     Ref<Fussion::RHI::Resource> m_SceneResource;
 
     Vector2 m_RenderArea{};

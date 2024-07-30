@@ -171,8 +171,9 @@ void ViewportWindow::OnDraw()
         ImGuizmo::SetRect(m_ContentOriginScreen.X, m_ContentOriginScreen.Y, m_Size.X, m_Size.Y);
 
         static bool activated = false;
-        if (auto selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1) {
-            for (auto const& [id, entity] : selection) {
+        if (auto& selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1) {
+            for (auto const& id : selection | std::views::keys) {
+                auto const& entity = m_Editor->GetActiveScene()->GetEntity(id);
 
                 auto m = entity->Transform.GetMatrix();
                 if (ImGuizmo::Manipulate(
@@ -222,16 +223,16 @@ void ViewportWindow::OnEvent(Event& event)
 
     dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
         if (m_IsFocused) {
-            if (e.Key == KeyboardKey::One) {
+            if (e.Key == Keys::One) {
                 m_GizmoMode = GizmoMode::Translation;
             }
-            if (e.Key == KeyboardKey::Two) {
+            if (e.Key == Keys::Two) {
                 m_GizmoMode = GizmoMode::Rotation;
             }
-            if (e.Key == KeyboardKey::Three) {
+            if (e.Key == Keys::Three) {
                 m_GizmoMode = GizmoMode::Scale;
             }
-            if (e.Key == KeyboardKey::T) {}
+            if (e.Key == Keys::T) {}
         }
         return false;
     });

@@ -79,6 +79,8 @@ void Entity::AddChild(Entity const& child)
 
 void Entity::RemoveChild(Entity const& child)
 {
+    ZoneScoped;
+
     if (auto const pos = std::ranges::find(m_Children, child.m_Handle); pos != std::end(m_Children)) {
         std::erase(m_Children, *pos);
     }
@@ -112,6 +114,8 @@ bool Entity::IsEnabled() const
 
 auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
 {
+    ZoneScoped;
+
     VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
         "Attempted to add a component that doesn't derive from Component, weird.");
 
@@ -130,11 +134,15 @@ auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
 
 auto Entity::HasComponent(meta_hpp::class_type type) const -> bool
 {
+    ZoneScoped;
+
     return m_Components.contains(type.get_hash());
 }
 
 auto Entity::GetComponent(meta_hpp::class_type type) -> Ref<Component>
 {
+    ZoneScoped;
+
     if (!HasComponent(type))
         return nullptr;
     auto component = m_Components[type.get_hash()];
@@ -158,9 +166,23 @@ void Entity::OnDraw(RHI::RenderContext& context)
     }
 }
 
+void Entity::OnStart()
+{
+    ZoneScoped;
+    for (auto& [id, component] : m_Components) {
+        component->OnStart();
+    }
+}
+
 void Entity::OnDestroy()
 {
+    ZoneScoped;
+
     LOG_DEBUGF("Destroying entity '{}'", Name);
+    for (auto& [id, component] : m_Components) {
+        component->OnDestroy();
+    }
+
     if (auto parent = m_Scene->GetEntity(m_Parent)) {
         parent->RemoveChild(*this);
     }
@@ -169,6 +191,8 @@ void Entity::OnDestroy()
 
 void Entity::OnUpdate(f32 const delta)
 {
+    ZoneScoped;
+
     if (m_Enabled) {
         for (auto& component : m_Components | std::views::values) {
             component->OnUpdate(delta);
@@ -181,8 +205,19 @@ void Entity::OnUpdate(f32 const delta)
     m_RemovedComponents.clear();
 }
 
+void Entity::OnDebugDraw()
+{
+    if (m_Enabled) {
+        for (auto& component : m_Components | std::views::values) {
+            component->OnDebugDraw();
+        }
+    }
+}
+
 bool Entity::IsGrandchild(Uuid handle) const
 {
+    ZoneScoped;
+
     if (m_Children.empty()) {
         return false;
     }

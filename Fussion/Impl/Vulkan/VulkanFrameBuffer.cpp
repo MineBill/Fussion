@@ -73,7 +73,7 @@ void VulkanFrameBuffer::Destroy()
     vkDestroyFramebuffer(device->Handle, m_Handle, nullptr);
 }
 
-FrameBufferSpecification VulkanFrameBuffer::GetSpec()
+FrameBufferSpecification const& VulkanFrameBuffer::GetSpec()
 {
     return m_Specification;
 }

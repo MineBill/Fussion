@@ -6,11 +6,16 @@ class DirectionalLight final : public Component {
 public:
     COMPONENT(DirectionalLight)
 
-    void OnEnabled() override;
-    void OnDisabled() override;
-    void OnUpdate(f32 delta) override;
+    virtual void OnEnabled() override;
+    virtual void OnDisabled() override;
+    virtual void OnUpdate(f32 delta) override;
 
-    void OnDraw(RHI::RenderContext& context) override;
+#if USE_DEBUG_DRAW
+    virtual void OnDebugDraw() override;
+#endif
+
+
+    virtual void OnDraw(RHI::RenderContext& context) override;
 };
 
 }

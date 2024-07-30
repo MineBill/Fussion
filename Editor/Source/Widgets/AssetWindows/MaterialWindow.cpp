@@ -19,6 +19,8 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
         }
         auto material = material_ref.Get();
         EUI::Property("Object Color", &material->ObjectColor);
+        EUI::Property("Metallic", &material->Metallic);
+        EUI::Property("Roughness", &material->Roughness);
     }, { .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar });
 }
 

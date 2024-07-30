@@ -52,9 +52,10 @@ void Log::SetLogLevel(const LogLevel level)
     m_Priority = level;
 }
 
-void Log::Write(const LogLevel level, const std::string_view message, std::source_location const& loc) const
+void Log::Write(LogLevel level, std::string_view message, std::source_location const& loc)
 {
-    for (const auto& sink : m_Sinks) {
+    std::scoped_lock lock(m_Mutex);
+    for (auto const& sink : m_Sinks) {
         sink->Write(level, message, loc);
     }
 }

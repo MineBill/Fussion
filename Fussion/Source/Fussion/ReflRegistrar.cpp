@@ -10,7 +10,10 @@
 #include <print>
 #include "ReflRegistrar.h"
 
+#include "Debug/Debug.h"
+#include "Scene/Scene.h"
 #include "Scene/Components/DirectionalLight.h"
+#include <angelscript.h>
 
 namespace Fussion {
 ReflRegistrar::ReflRegistrar()
@@ -41,7 +44,9 @@ void ReflRegistrar::Register()
             .method_("Lighten", &Color::Lighten);
 
         meta::class_<Vector2>(
-                meta::metadata_()("Name"s, "Vector2"s))
+                meta::metadata_()
+                ("Name"s, "Vector2"s)
+                ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
             .constructor_<f32, f32>()
             .constructor_<f64, f64>()
             .member_("X", &Vector2::X, as_pointer)
@@ -52,7 +57,9 @@ void ReflRegistrar::Register()
             .method_("DistanceToSquared", &Vector2::DistanceToSquared);
 
         meta::class_<Vector3>(
-                meta::metadata_()("Name"s, "Vector3"s))
+                meta::metadata_()
+                ("Name"s, "Vector3"s)
+                ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
             .constructor_<f32, f32, f32>()
             .constructor_<f64, f64, f64>()
             .member_("X"s, &Vector3::X, as_pointer)
@@ -83,7 +90,8 @@ void ReflRegistrar::Register()
         .member_("m_Handle"s, &Asset::m_Handle);
 
     meta::class_<Entity>(meta::metadata_()
-            ("Name"s, "Entity"s))
+            ("Name"s, "Entity"s)
+            ("ScriptFlags"s, asOBJ_APP_CLASS_CAK))
         .member_("m_Parent", &Entity::m_Parent)
         .member_("m_Handle", &Entity::m_Handle)
         .member_("m_Enabled", &Entity::m_Enabled);
@@ -124,7 +132,8 @@ void ReflRegistrar::Register()
         meta::class_<ScriptComponent>(meta::metadata_()
                 ("Name"s, "ScriptComponent"s))
             .constructor_<>(as_raw_pointer)
-            .constructor_<Entity*>(as_raw_pointer);
+            .constructor_<Entity*>(as_raw_pointer)
+            .member_("ClassName"s, &ScriptComponent::ClassName, as_pointer);
 
         meta::class_<MoverComponent>(meta::metadata_()
                 ("Name"s, "MoverComponent"s))
@@ -151,9 +160,12 @@ void ReflRegistrar::Register()
             .typedef_<PointLight>("PointLight"s)
             .typedef_<DebugDrawer>("DebugDrawer"s)
             .typedef_<DirectionalLight>("DirectionalLight"s);
-
     }
     // endregion Components
+
+    meta::class_<Scene>(meta::metadata_()
+            ("Name"s, "Scene"s))
+        .method_("CreateEntity"s, &Scene::CreateEntity);
 
     meta::class_<AssetRefBase>(meta::metadata_()
             ("Name"s, "AssetRefBase"s))
@@ -166,7 +178,27 @@ void ReflRegistrar::Register()
             ("Name"s, "PbrMaterial"s))
         .constructor_<>()
         .function_("GetStaticType", &PbrMaterial::GetStaticType)
-        .member_("ObjectColor", &PbrMaterial::ObjectColor, as_pointer);
+        .member_("ObjectColor", &PbrMaterial::ObjectColor, as_pointer)
+        .member_("Metallic", &PbrMaterial::Metallic, as_pointer)
+        .member_("Roughness", &PbrMaterial::Roughness, as_pointer);
+
+    meta::class_<Debug>(meta::metadata_()("Name"s, "Debug"s))
+        .function_("DrawLine"s, Debug::DrawLine)
+        .function_("DrawCube"s, Debug::DrawCube);
+
+    meta::static_scope_("Scripting")
+        .typedef_<Vector2>("Vector2"s)
+        .typedef_<Vector3>("Vector3"s)
+        .typedef_<Entity>("Entity"s)
+        .typedef_<Scene>("Scene"s)
+        .typedef_<Debug>("Debug"s)
+        .typedef_<MeshRenderer>("MeshRenderer"s)
+        .typedef_<ScriptComponent>("ScriptComponent"s)
+        .typedef_<Camera>("Camera"s)
+        .typedef_<MoverComponent>("MoverComponent"s)
+        .typedef_<PointLight>("PointLight"s)
+        .typedef_<DebugDrawer>("DebugDrawer"s)
+        .typedef_<DirectionalLight>("DirectionalLight"s);
 }
 
 }

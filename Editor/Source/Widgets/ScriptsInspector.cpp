@@ -1,6 +1,8 @@
 ﻿#include "ScriptsInspector.h"
 
 #include "Fussion/Scripting/ScriptingEngine.h"
+#include "Fussion/Scripting/Attributes/RangeAttribute.h"
+
 #include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
 
@@ -8,10 +10,10 @@
 
 void ScriptsInspector::OnDraw()
 {
-    if (!IsVisible()) return;
+    if (!IsVisible())
+        return;
 
-    if (ImGui::Begin("Scripts Inspector", &m_IsVisible))
-    {
+    if (ImGui::Begin("Scripts Inspector", &m_IsVisible)) {
         m_IsFocused = ImGui::IsWindowFocused();
 
         auto assembly = Fussion::ScriptingEngine::Get().GetAssembly("Game");
@@ -37,9 +39,22 @@ void ScriptsInspector::OnDraw()
 
             ImGui::Separator();
 
-            for (auto& [name, method] : m_SelectedClass->GetProperties()) {
+            for (auto& [name, prop] : m_SelectedClass->GetProperties()) {
+                auto range = Fussion::ScriptingEngine::GetAttribute<Fussion::Scripting::RangeAttribute>(prop.Uuid);
+                if (range != nullptr) {
+                    ImGui::Text("[%s]", range->ToString().c_str());
+                }
                 ImGui::TextUnformatted(name.c_str());
-                ImGui::TextUnformatted(magic_enum::enum_name(method.TypeId).data());
+                ImGui::TextUnformatted(magic_enum::enum_name(prop.TypeId).data());
+
+            }
+
+            for (auto const& name : m_SelectedClass->GetMethods() | std::views::keys) {
+                if (ImGui::Button(name.c_str())) {
+                    auto instance = m_SelectedClass->CreateInstance();
+                    LOG_DEBUGF("Calling {}", name);
+                    instance.CallMethod(name);
+                }
             }
         }
         ImGui::EndChild();

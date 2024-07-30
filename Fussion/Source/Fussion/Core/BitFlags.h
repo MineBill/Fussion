@@ -15,4 +15,4 @@
     inline Flags operator|(Flags a, Flags::EnumType b) { return Flags(Flags::EnumType(a.value | int(b))); }          \
     inline Flags operator|(Flags::EnumType a, Flags b) { return Flags(Flags::EnumType(int(a) | b.value)); }          \
     inline Flags operator|(Flags a, Flags b) { return Flags(Flags::EnumType(a.value | b.value)); }                   \
-    inline Flags operator|=(Flags a, Flags::EnumType b) { return a = Flags(Flags::EnumType(a.value | int(b))); }
+    inline Flags operator|=(Flags& a, Flags::EnumType b) { return a = Flags(Flags::EnumType(a.value | int(b))); }

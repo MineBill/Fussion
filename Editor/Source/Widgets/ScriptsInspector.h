@@ -2,12 +2,12 @@
 #include "EditorWindow.h"
 #include "Fussion/Scripting/ScriptAssembly.h"
 
-class ScriptsInspector: public EditorWindow
+class ScriptsInspector final : public EditorWindow
 {
 public:
     EDITOR_WINDOW(ScriptsInspector)
 
-    void OnDraw() override;
+    virtual void OnDraw() override;
 
 private:
     Fussion::ScriptClass* m_SelectedClass{nullptr};

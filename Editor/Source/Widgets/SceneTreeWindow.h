@@ -4,11 +4,11 @@
 
 class SceneTreeWindow final : public EditorWindow {
 public:
-    using SelectionList = std::unordered_map<Fussion::Uuid, Fussion::Entity*>;
+    using SelectionList = std::unordered_map<Fussion::Uuid, std::monostate>;
 
     EDITOR_WINDOW(SceneTreeWindow)
 
-    void OnDraw() override;
+    virtual void OnDraw() override;
 
     [[nodiscard]] SelectionList const& GetSelection() const { return m_Selection; }
     void ClearSelection() { m_Selection.clear(); }

@@ -1,6 +1,8 @@
 ﻿#include "e5pch.h"
 #include "Vector3.h"
 
+#include "Math.h"
+
 namespace Fussion {
 Vector3::Real Vector3::LengthSquared() const
 {
@@ -42,30 +44,41 @@ Vector3 Vector3::operator/(Vector3 const& other) const
     return { X / other.X, Y / other.Y, Z / other.Z };
 }
 
-Vector3 Vector3::operator+=(Vector3 const& other)
+Vector3& Vector3::operator+=(Vector3 const& other)
 {
     *this = *this + other;
     return *this;
 }
 
-Vector3 Vector3::operator-=(Vector3 const& other)
+Vector3& Vector3::operator-=(Vector3 const& other)
 {
     *this = *this - other;
     return *this;
 }
 
-Vector3 Vector3::operator*=(Vector3 const& other)
+Vector3& Vector3::operator*=(Vector3 const& other)
 {
     *this = *this * other;
     return *this;
 }
 
-Vector3 Vector3::operator/=(Vector3 const& other)
+Vector3& Vector3::operator/=(Vector3 const& other)
 {
     *this = *this / other;
     return *this;
 }
 
+bool operator==(Vector3 const& lhs, Vector3 const& rhs)
+{
+    return Math::IsZero(Math::Abs(lhs.X - rhs.X)) && Math::IsZero(Math::Abs(lhs.Y - rhs.Y)) && Math::IsZero(Math::Abs(lhs.Z - rhs.Z));
+}
+
+bool operator!=(Vector3 const& lhs, Vector3 const& rhs)
+{
+    return !(lhs == rhs);
+}
+
+Vector3 const Vector3::One{ 1, 1, 1 };
 Vector3 const Vector3::Up{ 0, 1, 0 };
 Vector3 const Vector3::Down{ 0, -1, 0 };
 Vector3 const Vector3::Left{ -1, 0, 0 };

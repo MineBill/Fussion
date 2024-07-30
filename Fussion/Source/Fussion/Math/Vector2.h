@@ -5,6 +5,7 @@
 
 namespace Fussion {
 struct Vector2 {
+
 #if USE_VECTOR_F64
     using Real = f64;
 #else
@@ -30,6 +31,7 @@ struct Vector2 {
     Vector2(f32 x, f32 y): X(x), Y(y) {}
     Vector2(f64 x, f64 y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
     Vector2(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
+    Vector2(Vector2 const& other): X(other.X), Y(other.Y) {}
 
     [[nodiscard]]
     Real Length() const;
@@ -59,6 +61,20 @@ struct Vector2 {
         return Raw[i];
     }
 
+    Vector2& operator=(Vector2 const& other)
+    {
+        X = other.X;
+        Y = other.Y;
+        return *this;
+    }
+
+    Vector2& operator+=(Vector2 const& other)
+    {
+        X += other.X;
+        Y += other.Y;
+        return *this;
+    }
+
     Vector2 operator+(Vector2 const& right) const;
     Vector2 operator-(Vector2 const& right) const;
     Vector2 operator*(Vector2 const& right) const;
@@ -84,25 +100,31 @@ struct Vector2 {
         return { X / CAST(Real, scalar), Y / CAST(Real, scalar) };
     }
 
-    Vector2 operator+=(ScalarType auto scalar)
+    Vector2& operator+=(ScalarType auto scalar)
     {
         *this = *this + CAST(Real, scalar);
         return *this;
     }
 
-    Vector2 operator-=(ScalarType auto scalar)
+    Vector2& operator-=(ScalarType auto scalar)
     {
         *this = *this - CAST(Real, scalar);
         return *this;
     }
 
-    Vector2 operator*=(ScalarType auto scalar)
+    Vector2& operator*=(ScalarType auto scalar)
     {
         *this = *this * CAST(Real, scalar);
         return *this;
     }
 
-    Vector2 operator/=(ScalarType auto scalar)
+    // Vector2 operator*=(Real scalar)
+    // {
+    //     *this = *this * CAST(Real, scalar);
+    //     return *this;
+    // }
+
+    Vector2& operator/=(ScalarType auto scalar)
     {
         *this = *this / CAST(Real, scalar);
         return *this;
@@ -118,6 +140,10 @@ struct Vector2 {
     static const Vector2 Zero;
     static const Vector2 One;
 };
+
+bool operator==(Vector2 const& lhs, Vector2 const& rhs);
+bool operator!=(Vector2 const& lhs, Vector2 const& rhs);
+
 }
 
 #if defined(FSN_MATH_USE_GLOBALLY)

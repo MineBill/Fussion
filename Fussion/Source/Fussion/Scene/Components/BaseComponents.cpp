@@ -26,6 +26,5 @@ void DebugDrawer::OnUpdate(f32)
 void MoverComponent::OnUpdate(f32 delta)
 {
     m_Owner->Transform.Position.X += delta * Speed;
-    LOG_DEBUGF("Name: {}", m_Owner->Name);
 }
 }

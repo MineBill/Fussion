@@ -7,7 +7,7 @@
 #include "VulkanImageView.h"
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
-#include "Resources/VulkanResourcePool.h"
+#include <Fussion/Core/SmallVector.h>
 
 namespace Fussion::RHI {
 VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec)
@@ -37,7 +37,7 @@ void VulkanCommandBuffer::Begin(CommandBufferType type)
     VK_CHECK(vkBeginCommandBuffer(Handle, &begin_info))
 }
 
-void VulkanCommandBuffer::End(const CommandBufferType type)
+void VulkanCommandBuffer::End(CommandBufferType type)
 {
     (void)type;
     VK_CHECK(vkEndCommandBuffer(Handle))
@@ -48,28 +48,28 @@ void VulkanCommandBuffer::Reset()
     vkResetCommandBuffer(Handle, {});
 }
 
-void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_pass, Ref<FrameBuffer> frame_buffer)
+void VulkanCommandBuffer::BeginRenderPass(Ref<RenderPass> const render_pass, Ref<FrameBuffer> frame_buffer)
 {
     RenderPassStack.push(render_pass.get());
 
-    std::vector<VkClearValue> clear_values;
-    for (const auto& attachment : render_pass->GetSpec().Attachments) {
+    SmallVector<VkClearValue, 5> clear_values;
+    for (auto const& attachment : render_pass->GetSpec().Attachments) {
         if (Image::IsDepthFormat(attachment.Format)) {
-            clear_values.push_back(VkClearValue{
+            (void)clear_values.PushBack(VkClearValue{
                 .depthStencil = VkClearDepthStencilValue{
                     .depth = attachment.ClearDepth,
                     .stencil = attachment.ClearStencil,
                 },
             });
         } else {
-            clear_values.push_back(VkClearValue{
+            (void)clear_values.PushBack(VkClearValue{
                 .color = VkClearColorValue{
                     .float32 = { attachment.ClearColor[0], attachment.ClearColor[1], attachment.ClearColor[2], attachment.ClearColor[3] },
                 },
             });
         }
     }
-    const auto fb_spec = frame_buffer->GetSpec();
+    auto const& fb_spec = frame_buffer->GetSpec();
     auto info = VkRenderPassBeginInfo{
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .renderPass = render_pass->GetRenderHandle<VkRenderPass>(),
@@ -83,8 +83,8 @@ void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass> render_pass, Ref
                 .height = CAST(u32, fb_spec.Height),
             },
         },
-        .clearValueCount = CAST(u32, clear_values.size()),
-        .pClearValues = clear_values.data(),
+        .clearValueCount = CAST(u32, clear_values.Size()),
+        .pClearValues = clear_values.Data(),
     };
 
     vkCmdBeginRenderPass(Handle, &info, VK_SUBPASS_CONTENTS_INLINE);
@@ -148,7 +148,7 @@ void VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count)
 
 void VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
 {
-    const auto spec = buffer->GetSpec();
+    auto const& spec = buffer->GetSpec();
     if (spec.Usage.Test(BufferUsage::Index)) {
         vkCmdBindIndexBuffer(Handle, buffer->GetRenderHandle<VkBuffer>(), 0, VK_INDEX_TYPE_UINT16);
     } else if (spec.Usage.Test(BufferUsage::Vertex)) {

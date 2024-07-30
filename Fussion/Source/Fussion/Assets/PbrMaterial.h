@@ -12,9 +12,13 @@ public:
     AssetType GetType() const override { return GetStaticType(); }
 
     Color ObjectColor{};
+    f32 Metallic{};
+    f32 Roughness{};
 
     struct MaterialBlock {
         Color ObjectColor;
+        f32 Metallic;
+        f32 Roughness;
     };
 
     RHI::UniformBuffer<MaterialBlock> MaterialUniformBuffer;

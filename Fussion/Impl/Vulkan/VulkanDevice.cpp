@@ -45,7 +45,7 @@ VulkanDevice::VulkanDevice(RHI::Instance* instance)
     CreateLogicalDevice();
     CreateCommandPool();
 
-    const auto functions = VmaVulkanFunctions{
+    auto const functions = VmaVulkanFunctions{
         .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
         .vkGetDeviceProcAddr = vkGetDeviceProcAddr,
         .vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties,
@@ -95,12 +95,12 @@ Ref<RenderPass> VulkanDevice::CreateRenderPass(RenderPassSpecification spec)
     return std::make_shared<VulkanRenderPass>(this, spec);
 }
 
-Ref<CommandBuffer> VulkanDevice::CreateCommandBuffer(CommandBufferSpecification spec)
+auto VulkanDevice::CreateCommandBuffer(CommandBufferSpecification spec) -> Ref<CommandBuffer>
 {
     return std::make_shared<VulkanCommandBuffer>(this, spec);
 }
 
-std::vector<Ref<CommandBuffer>> VulkanDevice::CreateCommandBuffers(s32 count, CommandBufferSpecification spec)
+auto VulkanDevice::CreateCommandBuffers(s32 count, CommandBufferSpecification spec) -> std::vector<Ref<CommandBuffer>>
 {
     std::vector<Ref<CommandBuffer>> ret;
     for (s32 i = 0; i < count; i++) {
@@ -109,89 +109,89 @@ std::vector<Ref<CommandBuffer>> VulkanDevice::CreateCommandBuffers(s32 count, Co
     return ret;
 }
 
-Ref<Sampler> VulkanDevice::CreateSampler(SamplerSpecification spec)
+auto VulkanDevice::CreateSampler(SamplerSpecification spec) -> Ref<Sampler>
 {
     return std::make_shared<VulkanSampler>(this, spec);
 }
 
-Ref<Image> VulkanDevice::CreateImage(ImageSpecification spec)
+auto VulkanDevice::CreateImage(ImageSpecification spec) -> Ref<Image>
 {
     auto image = MakeRef<VulkanImage>(this, spec);
 
-    for (const auto& cb : m_ImageCallbacks) {
+    for (auto const& cb : m_ImageCallbacks) {
         cb(image, true);
     }
 
     return image;
 }
 
-Ref<ImageView> VulkanDevice::CreateImageView(Ref<Image> image, ImageViewSpecification spec)
+auto VulkanDevice::CreateImageView(Ref<Image> image, ImageViewSpecification spec) -> Ref<ImageView>
 {
     auto view = MakeRef<VulkanImageView>(this, dynamic_cast<VulkanImage*>(image.get()), spec);
 
-    for (const auto& cb : m_ImageViewCallbacks) {
+    for (auto const& cb : m_ImageViewCallbacks) {
         cb(view, image, true);
     }
 
     return view;
 }
 
-Ref<Swapchain> VulkanDevice::CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec)
+auto VulkanDevice::CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec) -> Ref<Swapchain>
 {
     return std::make_shared<VulkanSwapchain>(this, render_pass, spec);
 }
 
-Ref<FrameBuffer> VulkanDevice::CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec)
+auto VulkanDevice::CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec) -> Ref<FrameBuffer>
 {
     return std::make_shared<VulkanFrameBuffer>(this, render_pass, spec);
 }
 
-Ref<FrameBuffer> VulkanDevice::CreateFrameBufferFromImages(
+auto VulkanDevice::CreateFrameBufferFromImages(
     Ref<RenderPass> render_pass,
     std::vector<Ref<Image>> images,
-    FrameBufferSpecification spec)
+    FrameBufferSpecification spec) -> Ref<FrameBuffer>
 {
     return std::make_shared<VulkanFrameBuffer>(this, render_pass, images, spec);
 }
 
-Ref<FrameBuffer> VulkanDevice::CreateFrameBufferFromImageViews(
+auto VulkanDevice::CreateFrameBufferFromImageViews(
     Ref<RenderPass> render_pass,
     std::vector<Ref<ImageView>> images,
-    FrameBufferSpecification spec)
+    FrameBufferSpecification spec) -> Ref<FrameBuffer>
 {
     return MakeRef<VulkanFrameBuffer>(this, render_pass, images, spec);
 }
 
-Ref<ResourceLayout> VulkanDevice::CreateResourceLayout(std::span<ResourceUsage> resources)
+auto VulkanDevice::CreateResourceLayout(std::span<ResourceUsage> resources) -> Ref<ResourceLayout>
 {
     return std::make_shared<VulkanResourceLayout>(this, resources);
 }
 
-Ref<Buffer> VulkanDevice::CreateBuffer(BufferSpecification spec)
+auto VulkanDevice::CreateBuffer(BufferSpecification spec) -> Ref<Buffer>
 {
     return MakeRef<VulkanBuffer>(this, spec);
 }
 
-Ref<PipelineLayout> VulkanDevice::CreatePipelineLayout(const std::vector<Ref<ResourceLayout>> layouts, PipelineLayoutSpecification spec)
+auto VulkanDevice::CreatePipelineLayout(std::vector<Ref<ResourceLayout>> const layouts, PipelineLayoutSpecification spec) -> Ref<PipelineLayout>
 {
     return VulkanPipelineLayout::Create(this, layouts, spec);
 }
 
-Ref<Pipeline> VulkanDevice::CreatePipeline(
+auto VulkanDevice::CreatePipeline(
     Ref<RenderPass> const& render_pass,
     Ref<Shader> const& shader,
     Ref<PipelineLayout> const& layout,
-    const PipelineSpecification& spec)
+    const PipelineSpecification& spec) -> Ref<Pipeline>
 {
     return VulkanPipeline::Create(this, shader, layout, render_pass, spec);
 }
 
-Ref<Shader> VulkanDevice::CreateShader(Ref<RenderPass> render_pass, std::span<ShaderStage> stages, ShaderMetadata metadata)
+auto VulkanDevice::CreateShader(Ref<RenderPass> render_pass, std::span<ShaderStage> stages, ShaderMetadata metadata) -> Ref<Shader>
 {
     return VulkanShader::Create(this, render_pass, stages, metadata);
 }
 
-Ref<ResourcePool> VulkanDevice::CreateResourcePool(ResourcePoolSpecification spec)
+auto VulkanDevice::CreateResourcePool(ResourcePoolSpecification spec) -> Ref<ResourcePool>
 {
     return MakeRef<VulkanResourcePool>(this, spec);
 }
@@ -201,7 +201,7 @@ void VulkanDevice::WaitIdle()
     VK_CHECK(vkDeviceWaitIdle(Handle))
 }
 
-Ref<CommandBuffer> VulkanDevice::BeginSingleTimeCommand()
+auto VulkanDevice::BeginSingleTimeCommand() -> Ref<CommandBuffer>
 {
     auto cmd = CreateCommandBuffer({
         .Label = "Single Time Command"
@@ -212,7 +212,7 @@ Ref<CommandBuffer> VulkanDevice::BeginSingleTimeCommand()
 
 void VulkanDevice::EndSingleTimeCommand(Ref<CommandBuffer> cmd)
 {
-    const auto vk_cmd = dynamic_cast<VulkanCommandBuffer*>(cmd.get());
+    auto const vk_cmd = dynamic_cast<VulkanCommandBuffer*>(cmd.get());
     vk_cmd->End(CommandBufferType::None);
 
     auto submit_info = VkSubmitInfo{
@@ -225,7 +225,7 @@ void VulkanDevice::EndSingleTimeCommand(Ref<CommandBuffer> cmd)
     vkQueueWaitIdle(GraphicsQueue);
 }
 
-VkFence VulkanDevice::CreateFence(bool signaled) const
+auto VulkanDevice::CreateFence(bool signaled) const -> VkFence
 {
     auto ci = VkFenceCreateInfo{
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -240,7 +240,7 @@ VkFence VulkanDevice::CreateFence(bool signaled) const
     return handle;
 }
 
-VkSemaphore VulkanDevice::CreateSemaphore() const
+auto VulkanDevice::CreateSemaphore() const -> VkSemaphore
 {
     auto ci = VkSemaphoreCreateInfo{
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -251,7 +251,7 @@ VkSemaphore VulkanDevice::CreateSemaphore() const
     return handle;
 }
 
-std::vector<VkFence> VulkanDevice::CreateFences(s32 count, bool signaled) const
+auto VulkanDevice::CreateFences(s32 count, bool signaled) const -> std::vector<VkFence>
 {
     std::vector<VkFence> ret;
     for (s32 i = 0; i < count; i++) {
@@ -260,7 +260,7 @@ std::vector<VkFence> VulkanDevice::CreateFences(s32 count, bool signaled) const
     return ret;
 }
 
-std::vector<VkSemaphore> VulkanDevice::CreateSemaphores(s32 count) const
+auto VulkanDevice::CreateSemaphores(s32 count) const -> std::vector<VkSemaphore>
 {
     std::vector<VkSemaphore> ret;
     for (s32 i = 0; i < count; i++) {
@@ -271,16 +271,16 @@ std::vector<VkSemaphore> VulkanDevice::CreateSemaphores(s32 count) const
 
 void VulkanDevice::DestroyFences(std::span<VkFence> fences)
 {
-    const auto device = Device::Instance()->As<VulkanDevice>();
-    for (const auto fence : fences) {
+    auto const device = Device::Instance()->As<VulkanDevice>();
+    for (auto const fence : fences) {
         vkDestroyFence(device->Handle, fence, nullptr);
     }
 }
 
 void VulkanDevice::DestroySemaphores(std::span<VkSemaphore> semaphores)
 {
-    const auto device = Device::Instance()->As<VulkanDevice>();
-    for (const auto semaphore : semaphores) {
+    auto const device = Device::Instance()->As<VulkanDevice>();
+    for (auto const semaphore : semaphores) {
         vkDestroySemaphore(device->Handle, semaphore, nullptr);
     }
 }
@@ -309,7 +309,7 @@ void VulkanDevice::PickPhysicalDevice()
 
     vkEnumeratePhysicalDevices(Instance->Instance, &count, physical_devices.data());
 
-    for (const auto device : physical_devices) {
+    for (auto const device : physical_devices) {
         if (IsDeviceSuitable(device)) {
             PhysicalDevice = device;
             VkPhysicalDeviceProperties properties;
@@ -326,11 +326,11 @@ void VulkanDevice::PickPhysicalDevice()
 
 void VulkanDevice::CreateLogicalDevice()
 {
-    const auto unique_families = FamilyIndices.GetUniqueIndex();
+    auto const unique_families = FamilyIndices.GetUniqueIndex();
 
     std::vector<VkDeviceQueueCreateInfo> queue_infos{};
 
-    for (const auto& family : unique_families) {
+    for (auto const& family : unique_families) {
         constexpr f32 queue_priority[]{ 1.0f };
         queue_infos.emplace_back(VkDeviceQueueCreateInfo{
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -343,7 +343,7 @@ void VulkanDevice::CreateLogicalDevice()
     VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT }; // Partial binding is required for descriptor aliasing.
     descriptor_indexing_features.descriptorBindingPartiallyBound = VK_TRUE;
 
-    const VkDeviceCreateInfo device_create_info{
+    VkDeviceCreateInfo const device_create_info{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &descriptor_indexing_features,
         .queueCreateInfoCount = CAST(u32, queue_infos.size()),
@@ -361,7 +361,7 @@ void VulkanDevice::CreateLogicalDevice()
 
 void VulkanDevice::CreateCommandPool()
 {
-    const auto pool_create_info = VkCommandPoolCreateInfo{
+    auto const pool_create_info = VkCommandPoolCreateInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
         .queueFamilyIndex = CAST(u32, FamilyIndices.GraphicsFamily.value()),
@@ -370,7 +370,7 @@ void VulkanDevice::CreateCommandPool()
     VK_CHECK(vkCreateCommandPool(Handle, &pool_create_info, nullptr, &CommandPool))
 }
 
-bool CheckDeviceExtensionSupport(const VkPhysicalDevice device)
+bool CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
     u32 count;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
@@ -396,10 +396,10 @@ bool CheckDeviceExtensionSupport(const VkPhysicalDevice device)
     return true;
 }
 
-bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
+bool VulkanDevice::IsDeviceSuitable(VkPhysicalDevice device)
 {
-    const auto indices = GetQueueFamilies(device);
-    const bool extensions_supported = CheckDeviceExtensionSupport(device);
+    auto const indices = GetQueueFamilies(device);
+    bool const extensions_supported = CheckDeviceExtensionSupport(device);
 
     bool swapchain_good = false;
     if (extensions_supported) {
@@ -409,7 +409,7 @@ bool VulkanDevice::IsDeviceSuitable(const VkPhysicalDevice device)
     return indices.IsComplete() && extensions_supported && swapchain_good;
 }
 
-QueueFamilyIndices VulkanDevice::GetQueueFamilies(const VkPhysicalDevice device) const
+QueueFamilyIndices VulkanDevice::GetQueueFamilies(VkPhysicalDevice device) const
 {
     u32 count;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
@@ -440,7 +440,7 @@ QueueFamilyIndices VulkanDevice::GetQueueFamilies(const VkPhysicalDevice device)
     return indices;
 }
 
-SwapChainSupportDetails VulkanDevice::QuerySwapChainSupport(const VkPhysicalDevice device) const
+auto VulkanDevice::QuerySwapChainSupport(VkPhysicalDevice device) const -> SwapChainSupportDetails
 {
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, Instance->Surface, &details.Capabilities);
@@ -475,7 +475,7 @@ void VulkanDevice::RegisterImageViewCallback(ImageViewCreationCallback const& ca
 
 void VulkanDevice::DestroyImage(Ref<Image> const& image)
 {
-    for (const auto& cb : m_ImageCallbacks) {
+    for (auto const& cb : m_ImageCallbacks) {
         cb(image, false);
     }
     image->Destroy();
@@ -484,7 +484,7 @@ void VulkanDevice::DestroyImage(Ref<Image> const& image)
 void VulkanDevice::DestroyImageView(Ref<ImageView> const& image_view)
 {
     if (image_view) {
-        for (const auto& cb : m_ImageViewCallbacks) {
+        for (auto const& cb : m_ImageViewCallbacks) {
             cb(image_view, nullptr, false);
         }
         vkDestroyImageView(Handle, image_view->GetRenderHandle<VkImageView>(), nullptr);

@@ -19,7 +19,7 @@ void SceneTreeWindow::OnDraw()
         }
     }
 
-    EUI::Window("Scene Entities", [this, &flags] {
+    EUI::Window("Scene Entities", [this] {
         m_IsFocused = ImGui::IsWindowFocused();
 
         if (auto& scene = Editor::GetActiveScene()) {
@@ -40,7 +40,6 @@ void SceneTreeWindow::OnDraw()
             for (auto const& child : root->GetChildren()) {
                 DrawEntityHierarchy(child);
             }
-
         } else {
             ImGui::TextUnformatted("No scene loaded");
         }
@@ -67,11 +66,11 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     auto opened = ImGui::TreeNodeEx(entity->Name.c_str(), flags);
 
     if (ImGui::IsItemClicked()) {
-        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl));
+        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
     }
 
     if (ImGui::BeginPopupContextItem()) {
-        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::KeyboardKey::LeftControl));
+        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
         if (ImGui::BeginMenu("New")) {
             if (ImGui::MenuItem("Entity")) {
                 scene->CreateEntity("Entity", handle);
@@ -117,5 +116,5 @@ void SceneTreeWindow::SelectEntity(Fussion::Entity* entity, bool clear)
     if (clear) {
         m_Selection.clear();
     }
-    m_Selection[entity->GetId()] = entity;
+    m_Selection[entity->GetId()] = {};
 }

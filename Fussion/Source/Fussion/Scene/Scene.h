@@ -19,19 +19,19 @@ public:
     Scene& operator=(const Scene& other);
     Scene& operator=(Scene&& other) noexcept;
 
+    void OnStart();
     void OnUpdate(f32 delta);
+#if USE_DEBUG_DRAW
+    void OnDebugDraw();
+#endif
 
-    Entity* CreateEntity(std::string const& name = "Entity", Uuid parent = Uuid(0));
-    Entity* CreateEntityWithId(Uuid id, std::string const& name = "Entity", Uuid parent = Uuid(0));
+    auto CreateEntity(std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
+    auto CreateEntityWithId(Uuid id, std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
 
-    Entity* GetEntity(Uuid handle);
+    auto GetEntity(Uuid handle) -> Entity*;
+    auto GetEntity(Entity const& entity) -> Entity*;
 
-    Entity* GetEntity(Entity const& entity)
-    {
-        return GetEntity(entity.m_Handle);
-    }
-
-    Entity* GetRoot();
+    auto GetRoot() -> Entity*;
 
     template<typename Callback>
     void ForEachEntity(Callback callback)
@@ -42,18 +42,19 @@ public:
     }
 
     /// @return If the given handle is entity that exists or not in the scene.
-    [[nodiscard]] bool IsHandleValid(Uuid parent) const;
+    [[nodiscard]]
+    bool IsHandleValid(Uuid parent) const;
 
     /// Marks the scene as modified.
     /// Mainly used by the editor.
     void SetDirty(bool dirty = true) { m_Dirty = dirty; }
-    bool IsDirty() { return m_Dirty; }
+    bool IsDirty() const { return m_Dirty; }
 
     void Destroy(Uuid handle);
     void Destroy(Entity const* entity);
 
-    static AssetType GetStaticType() { return AssetType::Scene; }
-    AssetType GetType() const override { return GetStaticType(); }
+    static auto GetStaticType() -> AssetType { return AssetType::Scene; }
+    auto GetType() const -> AssetType override { return GetStaticType(); }
 
 private:
     std::string m_Name{};

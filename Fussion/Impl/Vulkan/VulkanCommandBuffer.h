@@ -6,33 +6,33 @@
 #include <stack>
 
 namespace Fussion::RHI {
-class VulkanCommandBuffer : public CommandBuffer {
+class VulkanCommandBuffer final : public CommandBuffer {
 public:
     VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec);
 
-    void Begin(CommandBufferType type) override;
-    void End(CommandBufferType type) override;
-    void Reset() override;
-    void BeginRenderPass(Ref<RenderPass> render_pass, Ref<FrameBuffer> frame_buffer) override;
-    void EndRenderPass(Ref<RenderPass> render_pass) override;
+    virtual void Begin(CommandBufferType type) override;
+    virtual void End(CommandBufferType type) override;
+    virtual void Reset() override;
+    virtual void BeginRenderPass(Ref<RenderPass> render_pass, Ref<FrameBuffer> frame_buffer) override;
+    virtual void EndRenderPass(Ref<RenderPass> render_pass) override;
 
-    void UseShader(Ref<RHI::Shader> const& shader) override;
+    virtual void UseShader(Ref<RHI::Shader> const& shader) override;
 
-    void SetScissor(Vector4) override;
-    void SetViewport(Vector2) override;
+    virtual void SetScissor(Vector4) override;
+    virtual void SetViewport(Vector2) override;
 
-    void Draw(u32 vertex_count, u32 instance_count) override;
-    void DrawIndexed(u32 index_count, u32 instance_count) override;
+    virtual void Draw(u32 vertex_count, u32 instance_count) override;
+    virtual void DrawIndexed(u32 index_count, u32 instance_count) override;
 
-    void BindBuffer(Ref<Buffer> const& buffer) override;
-    void BindResource(Ref<Resource> const& resource, Ref<RHI::Shader> const& shader, u32 location) override;
+    virtual void BindBuffer(Ref<Buffer> const& buffer) override;
+    virtual void BindResource(Ref<Resource> const& resource, Ref<RHI::Shader> const& shader, u32 location) override;
 
-    void BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location) override;
-    void BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) override;
+    virtual void BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location) override;
+    virtual void BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) override;
 
-    void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) override;
+    virtual void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) override;
 
-    void* GetRawHandle() override { return Handle; }
+    virtual void* GetRawHandle() override { return Handle; }
 
     VkCommandBuffer Handle{};
     std::stack<RenderPass*> RenderPassStack{};

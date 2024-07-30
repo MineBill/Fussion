@@ -11,8 +11,8 @@ struct PointLightData {
 };
 
 struct DirectionalLightData {
-    Vector4 Direction;
-    Color Color;
+    Vector4 Direction{};
+    Color Color{};
 
     std::array<Mat4, 4> LightSpaceMatrix{};
 };

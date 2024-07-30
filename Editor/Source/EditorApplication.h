@@ -8,10 +8,10 @@ class Editor;
 class EditorApplication: public Fussion::Application
 {
 public:
-    void OnStart() override;
-    void OnUpdate(f32 delta) override;
-    void OnEvent(Fussion::Event&) override;
-    void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32 delta) override;
+    virtual void OnEvent(Fussion::Event&) override;
+    virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     static EditorApplication* Instance() { return s_EditorInstance; }
 

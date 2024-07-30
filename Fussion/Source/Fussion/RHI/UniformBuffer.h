@@ -26,6 +26,7 @@ public:
 
     void Flush()
     {
+        VERIFY(m_Buffer != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
         m_Buffer->SetData(&Data, sizeof(T));
     }
 

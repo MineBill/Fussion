@@ -6,9 +6,11 @@
 namespace Fussion {
 
 struct Vertex {
-    Vector3 Position;
-    Vector3 Normal;
-    Vector2 TextureCoords;
+    Vector3 Position{};
+    Vector3 Normal{};
+    Vector3 Tangent{1, 1, 1};
+    Vector2 TextureCoords{};
+    Vector3 Color{ 1, 1, 1 };
 };
 
 class Mesh final : public Asset {

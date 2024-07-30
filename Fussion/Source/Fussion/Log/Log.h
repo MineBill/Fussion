@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
 #include <source_location>
+#include <mutex>
 
 namespace Fussion {
 enum class LogLevel {
@@ -37,7 +38,7 @@ public:
 
     void SetLogLevel(LogLevel level);
     void Write(LogLevel level, std::string_view message,
-        const std::source_location& loc = std::source_location::current()) const;
+        std::source_location const& loc = std::source_location::current());
 
     void RegisterSink(Ref<LogSink> const& sink);
 
@@ -46,6 +47,7 @@ public:
     static Log* DefaultLogger();
 
 private:
+    std::mutex m_Mutex{};
     std::vector<Ref<LogSink>> m_Sinks{};
 };
 }

@@ -15,36 +15,12 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/RHI/CommandBuffer.h"
 #include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Core/Delegate.h"
+#include "Fussion/OS/FileWatcher.h"
 #include "Fussion/Scene/Scene.h"
+#include <memory_resource>
 
 class AssetWindow;
-
-template<typename Signature = void()>
-class Delegate {
-public:
-    using Function = std::function<Signature>;
-
-    void Subscribe(Function const& function)
-    {
-        m_Subscribers.push_back(function);
-    }
-
-    template<typename... Args>
-    void Fire(Args&&... args)
-    {
-        for (auto const& sub : m_Subscribers) {
-            sub(std::forward<Args>(args)...);
-        }
-    }
-
-    friend void operator+=(Delegate& lhs, Function const& func)
-    {
-        lhs.m_Subscribers.push_back(func);
-    }
-
-private:
-    std::vector<Function> m_Subscribers{};
-};
 
 class Editor : public Fsn::Layer {
 public:
@@ -55,16 +31,17 @@ public:
     };
 
     UndoRedo Undo;
-    Delegate<> OnBeginPlay;
-    Delegate<> OnStopPlay;
-    Delegate<> OnResumePlay;
-    Delegate<> OnPaused;
+    Fussion::Delegate<> OnBeginPlay;
+    Fussion::Delegate<> OnStopPlay;
+    Fussion::Delegate<> OnResumePlay;
+    Fussion::Delegate<> OnPaused;
 
     Editor();
 
     void OnStart() override;
     void OnEnable() override;
     void OnDisable() override;
+    void Save();
 
     void OnUpdate(f32) override;
     void OnEvent(Fsn::Event&) override;
@@ -102,7 +79,14 @@ public:
 
     static EditorCamera& GetCamera() { return s_EditorInstance->m_Camera; }
     static Project& GetProject() { return s_EditorInstance->m_Project; }
-    static Ref<Fsn::Scene>& GetActiveScene() { return s_EditorInstance->m_ActiveScene; }
+
+    static Ref<Fsn::Scene>& GetActiveScene()
+    {
+        if (s_EditorInstance->m_State == PlayState::Playing) {
+            return s_EditorInstance->m_PlayScene;
+        }
+        return s_EditorInstance->m_ActiveScene;
+    }
 
     // Editor Windows
     static ViewportWindow& GetViewport() { return *s_EditorInstance->m_ViewportWindow.get(); }
@@ -113,16 +97,22 @@ public:
 
     Fsn::AssetRef<Fsn::Texture2D> TextureRef;
 
+    static std::pmr::monotonic_buffer_resource ArenaAllocator;
+
 private:
     static Editor* s_EditorInstance;
     std::vector<Fsn::LogEntry> m_LogEntries{};
 
     Ref<Fsn::Scene> m_ActiveScene;
+    Ref<Fsn::Scene> m_PlayScene;
+
     std::filesystem::path m_ActiveScenePath;
     SceneRenderer m_SceneRenderer;
 
     Project m_Project;
     EditorCamera m_Camera;
+
+    Ptr<Fussion::FileWatcher> m_Watcher;
 
     EditorStyle m_Style{};
     Ptr<ViewportWindow> m_ViewportWindow;

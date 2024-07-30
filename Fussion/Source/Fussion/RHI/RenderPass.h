@@ -96,6 +96,6 @@ namespace Fussion::RHI
         virtual void Begin() = 0;
         virtual void End() = 0;
 
-        virtual RenderPassSpecification GetSpec() = 0;
+        virtual RenderPassSpecification const& GetSpec() = 0;
     };
 }

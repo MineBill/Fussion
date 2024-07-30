@@ -36,6 +36,7 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
         // ??
         m_LoadedAssets[handle] = {};
 
+        // TODO: What about assets that failed to load?
         m_LoadedAssets[handle] = m_AssetSerializers[type]->Load(metadata);
         m_LoadedAssets[handle]->SetHandle(handle);
         LOG_DEBUGF("Loading requested asset {} from '{}' of type {}", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));

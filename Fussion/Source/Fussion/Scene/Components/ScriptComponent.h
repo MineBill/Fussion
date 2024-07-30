@@ -3,17 +3,22 @@
 #include "Fussion/Scripting/ScriptAssembly.h"
 #include "Fussion/Scripting/ScriptingEngine.h"
 
-namespace Fussion
-{
-    class ScriptComponent: public Component
-    {
-    public:
-        COMPONENT_DEFAULT(ScriptComponent)
+namespace Fussion {
+class ScriptComponent final : public Component {
+public:
+    COMPONENT_DEFAULT(ScriptComponent)
 
-        void OnUpdate(f32) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32) override;
 
-    private:
-        ScriptClass* m_ScriptClass{nullptr};
-        ScriptInstance* m_Instance{nullptr};
-    };
+    virtual void OnDestroy() override;
+
+    void Test() const;
+
+    std::string ClassName{};
+
+private:
+    ScriptClass* m_ScriptClass{ nullptr };
+    ScriptInstance m_Instance{};
+};
 }
