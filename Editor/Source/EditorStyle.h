@@ -3,6 +3,7 @@
 #include "Fussion/Math/Vector2.h"
 
 #include <imgui.h>
+#include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
 class Texture2D;
@@ -12,6 +13,16 @@ constexpr auto AccentColor = 0xFF6300FF;
 
 struct ImFont;
 
+enum class EditorFont {
+    None = 0,
+    RegularNormal,
+    RegularBig,
+    RegularSmall,
+    RegularHuge,
+
+    Bold,
+    BoldSmall,
+};
 
 struct CommonStyle {
     Vector2 Padding{ 2, 2 };
@@ -39,6 +50,9 @@ enum ButtonStyles {
     ButtonStyleImageButton,
     ButtonStyleViewportButton,
 
+    ButtonStyleProjectCreator,
+    ButtonStyleProjectCreatorSmall,
+
     ButtonStyleCount,
 };
 
@@ -46,15 +60,14 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
     Color TextColor{};
     Color BorderColor{};
     Color BorderShadowColor{};
+    EditorFont Font{};
 
     static ButtonStyle Default()
     {
         ButtonStyle style;
-        auto& imgui_style = ImGui::GetStyle();
-
         style.Padding = Vector2(3, 3);
         style.NormalColor = Color::FromHex(AccentColor);
-        style.TextColor = CAST(Vector4, imgui_style.Colors[ImGuiCol_Text]);
+        style.TextColor = Color::White;
         style.BorderColor = style.NormalColor.Darken(0.1f);
         style.BorderShadowColor = Color::Transparent;
         style.Border = true;
@@ -67,6 +80,7 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
 
 enum WindowStyles {
     WindowStyleGeneric,
+    WindowStyleCreator,
 
     WindowStyleCount,
 };
@@ -79,14 +93,6 @@ struct WindowStyle : CommonStyle {
     }
 };
 
-struct EditorFonts {
-    ImFont* RegularNormal{ nullptr };
-    ImFont* RegularSmall{ nullptr };
-    ImFont* RegularHuge{ nullptr };
-
-    ImFont* Bold{ nullptr };
-    ImFont* BoldSmall{ nullptr };
-};
 
 enum class EditorIcon {
     // ContentBrowser
@@ -110,12 +116,14 @@ enum class EditorIcon {
 };
 
 struct EditorStyle {
-    EditorFonts Fonts;
+    std::unordered_map<EditorFont, ImFont*> Fonts;
 
-    std::array<ButtonStyle, ButtonStyleCount> ButtonStyles{};
-    std::array<WindowStyle, WindowStyleCount> WindowStyles{};
+    std::array<ButtonStyle, ButtonStyleCount> ButtonStyles;
+    std::array<WindowStyle, WindowStyleCount> WindowStyles;
 
-    std::unordered_map<EditorIcon, Ref<Fussion::Texture2D>> EditorIcons{};
+    std::unordered_map<EditorIcon, Ref<Fussion::Texture2D>> EditorIcons;
 
-    void Init();
+    void Initialize();
+
+    static EditorStyle& GetStyle();
 };

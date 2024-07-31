@@ -12,6 +12,7 @@ public:
         return s_ActiveProject;
     }
 
+    static void Initialize();
     static void Save(std::filesystem::path path = {});
     static bool Load(std::filesystem::path const& path);
 

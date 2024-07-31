@@ -16,8 +16,8 @@ public:
     virtual void OnEnable() {}
     virtual void OnDisable() {}
 
-    virtual void OnUpdate(f32) {}
-    virtual void OnEvent(Event&) {}
+    virtual void OnUpdate([[maybe_unused]] f32 delta) {}
+    virtual void OnEvent([[maybe_unused]] Event& event) {}
 
     virtual void OnDraw([[maybe_unused]] Ref<RHI::CommandBuffer> cmd) {}
 

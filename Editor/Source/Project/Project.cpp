@@ -9,6 +9,15 @@
 #include "Fussion/Serialization/Json.h"
 
 Ref<Project> Project::s_ActiveProject;
+using namespace Fussion;
+
+void Project::Initialize()
+{
+    s_ActiveProject = MakeRef<Project>();
+    s_ActiveProject->m_AssetManager = MakeRef<EditorAssetManager>();
+
+    AssetManager::SetActive(s_ActiveProject->m_AssetManager);
+}
 
 void Project::Save(std::filesystem::path path)
 {
@@ -17,9 +26,6 @@ void Project::Save(std::filesystem::path path)
 
 bool Project::Load(std::filesystem::path const& path)
 {
-    using namespace Fussion;
-    s_ActiveProject = MakeRef<Project>();
-
     auto const data = FileSystem::ReadEntireFile(path);
 
     auto j = json::parse(*data, nullptr, true, true);
@@ -27,6 +33,7 @@ bool Project::Load(std::filesystem::path const& path)
     s_ActiveProject->m_ProjectPath = path;
     auto const base = path.parent_path();
 
+    // TODO: Check that all the paths exist.
     if (j.contains("AssetsFolder")) {
         s_ActiveProject->m_AssetsFolderPath = base / j["AssetsFolder"].get<std::string>();
     }
@@ -58,11 +65,6 @@ bool Project::Load(std::filesystem::path const& path)
     if (!exists(s_ActiveProject->m_LogsFolderPath)) {
         LOG_ERRORF("Logs folder '{}' does not exist", s_ActiveProject->m_LogsFolderPath.string());
     }
-    // @todo Check that all the paths exist.
-
-    s_ActiveProject->m_AssetManager = MakeRef<EditorAssetManager>();
     s_ActiveProject->m_AssetManager->Deserialize();
-
-    AssetManager::SetActive(s_ActiveProject->m_AssetManager);
     return true;
 }

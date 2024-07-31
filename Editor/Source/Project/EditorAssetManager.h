@@ -28,12 +28,12 @@ public:
 
     EditorAssetManager();
 
-    auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
-    auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
+    virtual auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
+    virtual auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
 
-    bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
-    bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
-    auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset) -> Fussion::AssetHandle override;
+    virtual bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
+    virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
+    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset) -> Fussion::AssetHandle override;
 
     bool IsPathAnAsset(std::filesystem::path const& path) const;
     auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;

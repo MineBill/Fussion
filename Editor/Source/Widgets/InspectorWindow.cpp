@@ -163,7 +163,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
                         ImGui::SetCursorPos(pos + Vector2(2, 2));
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-                        EUI::ImageButton(m_Editor->GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
+                        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
                             auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
                             m_AssetPicker.Show(m_Handle, value, asset_type);
                         });
@@ -208,7 +208,7 @@ bool InspectorWindow::DrawEntity(Entity& e)
     ZoneScoped;
 
     bool modified{ false };
-    auto& style = Editor::Get().GetStyle();
+    auto& style = EditorStyle::GetStyle();
 
     if (ImGui::TreeNode("Debug")) {
         auto m = meta_hpp::resolve_type(e);
@@ -226,15 +226,15 @@ bool InspectorWindow::DrawEntity(Entity& e)
     modified |= EUI::Property("Enabled", e.GetEnabled());
     modified |= EUI::Property("Name", &e.Name);
 
-    ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts.BoldSmall);
+    ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts[EditorFont::BoldSmall]);
     ImGui::TextUnformatted("Position");
-    modified |= ImGuiHelpers::DragVec3("##position", &e.Transform.Position, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##position", &e.Transform.Position, 0.01f, 0.f, 0.f, "%.2f", style.Fonts[EditorFont::Bold], style.Fonts[EditorFont::RegularSmall]);
 
     ImGui::TextUnformatted("Euler Angles");
-    modified |= ImGuiHelpers::DragVec3("##euler_angles", &e.Transform.EulerAngles, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##euler_angles", &e.Transform.EulerAngles, 0.01f, 0.f, 0.f, "%.2f", style.Fonts[EditorFont::Bold], style.Fonts[EditorFont::RegularSmall]);
 
     ImGui::TextUnformatted("Scale");
-    modified |= ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01f, 0.f, 0.f, "%.2f", style.Fonts.Bold, style.Fonts.RegularSmall);
+    modified |= ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01f, 0.f, 0.f, "%.2f", style.Fonts[EditorFont::Bold], style.Fonts[EditorFont::RegularSmall]);
     ImGuiHelpers::EndGroupPanel();
 
     for (const auto& component : e.GetComponents() | std::views::values) {

@@ -95,7 +95,7 @@ void ViewportWindow::OnDraw()
 
             ImGui::SetNextWindowBgAlpha(0.35f);
             if (ImGui::Begin("No Scene Warning", nullptr, window_flags)) {
-                ImGui::PushFont(m_Editor->GetStyle().Fonts.RegularHuge);
+                ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::RegularHuge]);
                 defer(ImGui::PopFont());
 
                 ImGui::TextUnformatted("No scene loaded!");

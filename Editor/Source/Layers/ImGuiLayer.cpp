@@ -36,6 +36,21 @@ ImGuiLayer::ImGuiLayer()
     s_Instance = this;
 }
 
+void ImGuiLayer::LoadFonts()
+{
+    auto& io = ImGui::GetIO();
+    auto& style = EditorStyle::GetStyle();
+    using enum EditorFont;
+    style.Fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 14.0f);
+    style.Fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
+    style.Fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 12.0f);
+    style.Fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
+    style.Fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
+    style.Fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
+
+    io.FontDefault = style.Fonts[RegularNormal];
+}
+
 void ImGuiLayer::Init()
 {
     ZoneScoped;
@@ -45,16 +60,10 @@ void ImGuiLayer::Init()
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+
     auto& io = ImGui::GetIO();
+
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable;
-
-    auto& style = Editor::Get().GetStyle();
-    style.Fonts.RegularNormal = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 14.0f);
-    style.Fonts.RegularSmall = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 12.0f);
-    style.Fonts.RegularHuge = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
-    style.Fonts.Bold = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
-    io.FontDefault = style.Fonts.RegularNormal;
-
 #if !defined(OS_LINUX)
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
@@ -242,8 +251,8 @@ void SetupImGuiStyle()
     ImVec4* colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.27f);
+    colors[ImGuiCol_WindowBg] = ImVec4(0.125f, 0.125f, 0.125f, 1.000f);
+    colors[ImGuiCol_ChildBg] = ImVec4(0.145f, 0.145f, 0.145f, 1.000f);
     colors[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
     colors[ImGuiCol_Border] = ImVec4(0.26f, 0.26f, 0.26f, 0.66f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);

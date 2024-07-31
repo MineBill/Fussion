@@ -5,11 +5,15 @@
 void ButtonStyle::SetButtonColor(Color color)
 {
     NormalColor = color;
-    HoverColor = NormalColor.Darken(0.1f);
-    PressedColor = NormalColor.Lighten(0.1f);
+    HoverColor = NormalColor.Lighten(0.1f);
+    PressedColor = NormalColor.Darken(0.1f);
+    BorderColor = PressedColor;
+    BorderShadowColor = HoverColor;
 }
 
-void EditorStyle::Init()
+EditorStyle g_Style;
+
+void EditorStyle::Initialize()
 {
     ButtonStyles[ButtonStyleGeneric] = ButtonStyle::Default();
     ButtonStyles[ButtonStyleDisabled] = ButtonStyle::Default();
@@ -38,6 +42,36 @@ void EditorStyle::Init()
         ButtonStyles[ButtonStyleViewportButton] = style;
     }
 
+    {
+        auto style = ButtonStyle::Default();
+        style.Border = false;
+        style.Rounding = 3.0f;
+        style.Font = EditorFont::RegularBig;
+
+        style.SetButtonColor(Color::FromHex(0x568af2FF));
+
+        ButtonStyles[ButtonStyleProjectCreator] = style;
+    }
+
+    {
+        auto style = ButtonStyle::Default();
+        style.Border = false;
+        style.Rounding = 3.0f;
+        style.Font = EditorFont::RegularNormal;
+
+        style.SetButtonColor(Color::FromHex(0x568af2FF));
+
+        ButtonStyles[ButtonStyleProjectCreatorSmall] = style;
+    }
+
+    {
+        auto style = WindowStyle();
+        style.Border = false;
+        style.Padding = { 10, 10 };
+        style.Rounding = 0.0;
+        WindowStyles[WindowStyleCreator] = style;
+    }
+
     using enum EditorIcon;
     EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png");
     EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png");
@@ -54,4 +88,9 @@ void EditorStyle::Init()
     EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png");
     EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png");
     EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png");
+}
+
+EditorStyle& EditorStyle::GetStyle()
+{
+    return g_Style;
 }

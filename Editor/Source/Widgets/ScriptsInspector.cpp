@@ -33,7 +33,7 @@ void ScriptsInspector::OnDraw()
 
         ImGui::BeginChild("Information", Vector2{}, ImGuiChildFlags_Border);
         if (m_SelectedClass) {
-            ImGui::PushFont(Editor::Get().GetStyle().Fonts.BoldSmall);
+            ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
             ImGui::TextUnformatted(m_SelectedClass->GetName().c_str());
             ImGui::PopFont();
 

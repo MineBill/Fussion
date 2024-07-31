@@ -50,7 +50,6 @@ public:
     void Save();
     void Quit();
 
-    EditorStyle& GetStyle() { return m_Style; }
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 
     template<std::derived_from<AssetWindow> T, typename... Args>
@@ -110,7 +109,6 @@ private:
 
     Ptr<Fussion::FileWatcher> m_Watcher;
 
-    EditorStyle m_Style{};
     Ptr<ViewportWindow> m_ViewportWindow;
     Ptr<InspectorWindow> m_InspectorWindow;
     Ptr<SceneTreeWindow> m_SceneWindow;

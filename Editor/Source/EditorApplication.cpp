@@ -16,6 +16,7 @@
 #include "Fussion/OS/Dialog.h"
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Scene/Entity.h"
+#include "Layers/ProjectCreatorLayer.h"
 #include "Project/Project.h"
 #include <Fussion/Core/Clap.h>
 #include <chrono>
@@ -29,30 +30,33 @@ void EditorApplication::OnStart()
 
     s_EditorInstance = this;
 
+    Project::Initialize();
+
+    m_ImGuiLayer = PushLayer<ImGuiLayer>();
+    m_ImGuiLayer->Init();
+
+    EditorStyle::GetStyle().Initialize();
+
     Clap clap(Args::AsSingleLine());
     clap.Option<std::string>("Project");
 
     clap.Parse();
 
-    bool loaded;
     if (auto project = clap.Get<std::string>("Project")) {
-        loaded = Project::Load(*project);
+        bool loaded = Project::Load(*project);
+        VERIFY(loaded, "Project loading must not fail, for now.");
+
+        PushLayer<Editor>();
+
+        auto now = std::chrono::system_clock::now();
+        auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
+
+        Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
     } else {
-        auto path = Dialogs::ShowFilePicker("Project File", { "*.fsnproj" });
-        loaded = Project::Load(path);
+        PushLayer<ProjectCreatorLayer>();
     }
-    VERIFY(loaded, "Project loading must not fail, for now.");
 
-    auto now = std::chrono::system_clock::now();
-    auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
-
-    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
-
-    s_EditorInstance = this;
-    PushLayer<Editor>();
-
-    m_ImGuiLayer = PushLayer<ImGuiLayer>();
-    m_ImGuiLayer->Init();
+    m_ImGuiLayer->LoadFonts();
 
     Application::OnStart();
 }

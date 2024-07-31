@@ -60,7 +60,9 @@ void ContentBrowser::OnDraw()
         ImGui::Dummy({ width, 0 });
 
         ImGui::SameLine();
-        EUI::ImageButton(m_Editor->GetStyle().EditorIcons[EditorIcon::Dots], Vector2(16, 16), [&] {
+
+        auto& style = EditorStyle::GetStyle();
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], Vector2(16, 16), [&] {
             ImGui::OpenPopup("ContentBrowserOptions");
         });
         if (ImGui::BeginItemTooltip()) {
@@ -101,8 +103,8 @@ void ContentBrowser::OnDraw()
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            size.X = m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
-            ImGui::ImageButton(IMGUI_IMAGE(m_Editor->GetStyle().EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
+            size.X = style.EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+            ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                 ChangeDirectory(m_CurrentPath.parent_path());
             }
@@ -113,8 +115,8 @@ void ContentBrowser::OnDraw()
             defer(ImGui::PopID());
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
             if (entry.IsDirectory) {
-                size.X = m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
-                ImGui::ImageButton(IMGUI_IMAGE(m_Editor->GetStyle().EditorIcons[EditorIcon::Folder]->GetImage()), size);
+                size.X = style.EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+                ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     ChangeDirectory(entry.Path);
@@ -127,7 +129,7 @@ void ContentBrowser::OnDraw()
                         ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
                     }
                 } else {
-                    Ref<Fsn::Texture2D> texture = m_Editor->GetStyle().EditorIcons[EditorIcon::GenericAsset];
+                    auto& texture = style.EditorIcons[EditorIcon::GenericAsset];
                     size.X = texture->Spec().Aspect() * size.Y;
                     ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
                 }

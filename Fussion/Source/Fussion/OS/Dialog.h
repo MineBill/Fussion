@@ -52,5 +52,5 @@ namespace Fussion::Dialogs
     auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path;
     auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path;
 
-    auto ShowDirectoryPicker() -> std::filesystem::path;
+    auto ShowDirectoryPicker(std::filesystem::path const& base = std::filesystem::current_path()) -> std::filesystem::path;
 }

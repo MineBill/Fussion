@@ -101,16 +101,20 @@ auto Button(std::string_view label, Func&& func, ButtonStyles style_type = Butto
     ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
     ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
 
-    auto s = ImGui::CalcTextSize(label.data()).x + style.Padding.X * 2.0f;
+    ImGui::PushFont(EditorStyle::GetStyle().Fonts[style.Font]);
+
+    auto s = size.IsZero() ? ImGui::CalcTextSize(label.data()).x : size.X + style.Padding.X * 2.0f;
     auto avail = ImGui::GetContentRegionAvail().x;
     auto off = (avail - s) * alignment;
     if (off > 0) {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
     }
 
-    bool opened = ImGui::Button(label.data());
+    bool opened = ImGui::Button(label.data(), size);
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(6);
+
+    ImGui::PopFont();
 
     if constexpr (std::is_void_v<ResultType>) {
         if (opened) {
@@ -205,6 +209,7 @@ auto ModalWindow(std::string_view title, Func&& func, ModalWindowParams params =
 }
 
 struct WindowParams {
+    WindowStyles Style = WindowStyleGeneric;
     bool* Opened{ nullptr };
     ImGuiWindowFlags Flags = 0;
     Vector2 Size{ 400, 400 };
@@ -213,7 +218,7 @@ struct WindowParams {
 
 void Window(const char* title, auto&& func, WindowParams params = {})
 {
-    auto style = Detail::GetWindowStyle(WindowStyleGeneric);
+    auto style = Detail::GetWindowStyle(params.Style);
 
     if (params.Dirty)
         params.Flags |= ImGuiWindowFlags_UnsavedDocument;

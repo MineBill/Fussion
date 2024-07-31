@@ -5,12 +5,12 @@ namespace EUI {
 namespace Detail {
 ButtonStyle& GetButtonStyle(ButtonStyles style)
 {
-    return Editor::Get().GetStyle().ButtonStyles[style];
+    return EditorStyle::GetStyle().ButtonStyles[style];
 }
 
 WindowStyle& GetWindowStyle(WindowStyles style)
 {
-    return Editor::Get().GetStyle().WindowStyles[style];
+    return EditorStyle::GetStyle().WindowStyles[style];
 }
 }
 }

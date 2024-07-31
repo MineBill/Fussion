@@ -51,7 +51,6 @@ void Editor::OnStart()
     m_Watcher->Start();
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
-    m_Style.Init();
 
     m_Camera.Resize(Application::Instance()->GetWindow().GetSize());
     m_Camera.Position = Vector3(0, 3, 5);
@@ -208,7 +207,8 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSplit(2);
         list->ChannelsSetCurrent(1);
 
-        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Play], Vector2{ height, height }, [this] {
+        auto& style = EditorStyle::GetStyle();
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Play], Vector2{ height, height }, [this] {
             SetPlayState(PlayState::Playing);
         }, { .Disabled = m_State == PlayState::Playing });
 
@@ -218,13 +218,13 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Stop], Vector2{ height, height }, [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], Vector2{ height, height }, [this] {
             SetPlayState(PlayState::Editing);
         }, { .Disabled = m_State != PlayState::Playing });
 
         ImGui::SameLine();
 
-        EUI::ImageButton(m_Style.EditorIcons[EditorIcon::Pause], Vector2{ height, height }, [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], Vector2{ height, height }, [this] {
             SetPlayState(PlayState::Paused);
         }, { .Disabled = m_State != PlayState::Playing });
 
