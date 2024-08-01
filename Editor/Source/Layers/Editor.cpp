@@ -114,19 +114,22 @@ void Editor::OnUpdate(f32 delta)
     ZoneScoped;
 
     switch (m_State) {
-    case PlayState::Editing: {}
+    case PlayState::Editing: {
+        if (m_ActiveScene) {
+            m_ActiveScene->Tick();
+            m_ActiveScene->OnDebugDraw();
+        }
+    }
     break;
     case PlayState::Playing: {
-        if (m_PlayScene)
+        if (m_PlayScene) {
             m_PlayScene->OnUpdate(delta);
+            m_PlayScene->OnDebugDraw();
+        }
     }
     break;
     case PlayState::Paused: {}
     break;
-    }
-
-    if (m_ActiveScene) {
-        m_ActiveScene->OnDebugDraw();
     }
 
     m_Camera.SetFocus(m_ViewportWindow->IsFocused());

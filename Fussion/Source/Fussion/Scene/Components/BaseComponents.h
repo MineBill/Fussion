@@ -9,8 +9,8 @@ class PointLight : public Component {
 public:
     COMPONENT_DEFAULT(PointLight)
 
-    void OnUpdate(f32 delta) override;
-    void OnDraw(RHI::RenderContext& context) override;
+    virtual void OnUpdate(f32 delta) override;
+    virtual void OnDraw(RHI::RenderContext& context) override;
 
     f32 Radius{ 10.0f };
     Vector3 Offset{};
@@ -25,7 +25,7 @@ public:
 
     COMPONENT_DEFAULT(DebugDrawer)
 
-    void OnUpdate(f32 delta) override;
+    virtual void OnDebugDraw() override;
 
     Type DrawType{};
 
@@ -36,7 +36,7 @@ class MoverComponent : public Component {
 public:
     COMPONENT_DEFAULT(MoverComponent)
 
-    void OnUpdate(f32 delta) override;
+    virtual void OnUpdate(f32 delta) override;
 
     f32 Speed{ 0.1f };
 };

@@ -21,6 +21,8 @@ public:
 
     void OnStart();
     void OnUpdate(f32 delta);
+
+    void Tick();
 #if USE_DEBUG_DRAW
     void OnDebugDraw();
 #endif

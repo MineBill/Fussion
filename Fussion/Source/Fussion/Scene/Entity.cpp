@@ -186,7 +186,6 @@ void Entity::OnDestroy()
     if (auto parent = m_Scene->GetEntity(m_Parent)) {
         parent->RemoveChild(*this);
     }
-    // m_Scene->Destroy()
 }
 
 void Entity::OnUpdate(f32 const delta)
@@ -198,6 +197,11 @@ void Entity::OnUpdate(f32 const delta)
             component->OnUpdate(delta);
         }
     }
+}
+
+void Entity::Tick()
+{
+    ZoneScoped;
 
     for (auto const& id : m_RemovedComponents) {
         m_Components.erase(id);
@@ -233,4 +237,5 @@ bool Entity::IsGrandchild(Uuid handle) const
     }
     return false;
 }
+
 }

@@ -82,6 +82,14 @@ void Scene::OnUpdate(f32 delta)
     }
 }
 
+void Scene::Tick()
+{
+    for (auto& [id, entity] : m_Entities) {
+        (void)id;
+        entity.Tick();
+    }
+}
+
 void Scene::OnDebugDraw()
 {
     for (auto& [id, entity] : m_Entities) {

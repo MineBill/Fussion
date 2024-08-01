@@ -18,9 +18,9 @@ void PointLight::OnDraw(RHI::RenderContext& context)
     context.PointLights.push_back(light);
 }
 
-void DebugDrawer::OnUpdate(f32)
+void DebugDrawer::OnDebugDraw()
 {
-    Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3{ 1, 1, 1 } * Size);
+    Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3::One * Size);
 }
 
 void MoverComponent::OnUpdate(f32 delta)
