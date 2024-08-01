@@ -22,7 +22,8 @@ target "Editor"
         "REFLECT_TYPE_INFO_ENABLED",
         "GLM_ENABLE_EXPERIMENTAL",
         "USE_EDITOR",
-        "FSN_MATH_USE_GLOBALLY"
+        "FSN_MATH_USE_GLOBALLY",
+        "FSN_CORE_USE_GLOBALLY"
     )
 
     add_extrafiles("Assets/**.shader", "Assets/**.glsl")
