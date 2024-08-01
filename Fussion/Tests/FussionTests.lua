@@ -5,7 +5,7 @@ target("FussionTests")
     set_group("Tests")
 
     add_files("Source/**.cpp")
-    add_headerfiles("Source/**.hpp")
+    add_headerfiles("Source/**.h")
 
     add_rules("CompilerFlags")
 
