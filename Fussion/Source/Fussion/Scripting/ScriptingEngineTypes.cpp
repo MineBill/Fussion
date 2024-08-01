@@ -76,12 +76,12 @@ void LogError(std::string const& message, [[maybe_unused]] ScriptingEngine* engi
     LOG_ERRORF("[Script]: {}", message);
 }
 
-f32 ASMax(f32 x, f32 y)
+f32 AsMax(f32 x, f32 y)
 {
     return Math::Max(x, y);
 }
 
-f32 ASMin(f32 x, f32 y)
+f32 AsMin(f32 x, f32 y)
 {
     return Math::Min(x, y);
 }
@@ -112,8 +112,8 @@ void ScriptingEngine::RegisterTypes()
         r = m_ScriptEngine->RegisterGlobalFunction("float Abs(float)", asFUNCTION(Math::Abs<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterGlobalFunction("float Sin(float)", asFUNCTION(Math::Sin<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterGlobalFunction("float Cos(float)", asFUNCTION(Math::Cos<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-        r = m_ScriptEngine->RegisterGlobalFunction("float Max(float, float)", asFUNCTION(ASMax), asCALL_CDECL, this); VERIFY(r >= 0);
-        r = m_ScriptEngine->RegisterGlobalFunction("float Min(float, float)", asFUNCTION(ASMin), asCALL_CDECL, this); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterGlobalFunction("float Max(float, float)", asFUNCTION(AsMax), asCALL_CDECL, this); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterGlobalFunction("float Min(float, float)", asFUNCTION(AsMin), asCALL_CDECL, this); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterGlobalFunction("float Clamp(float value, float min, float max)", asFUNCTION(Math::Clamp<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterGlobalFunction("float Pow(float value, float power)", asFUNCTION(Math::Pow<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterGlobalFunction("bool IsZero(float value)", asFUNCTION(Math::IsZero<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
@@ -144,7 +144,7 @@ void ScriptingEngine::RegisterTypes()
     r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float LengthSquared() const", asMETHOD(Vector2, LengthSquared), asCALL_THISCALL); VERIFY( r >= 0 );
     r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float DistanceTo(const Vector2 &in) const", asMETHOD(Vector2, DistanceTo), asCALL_THISCALL); VERIFY( r >= 0 );
     r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float DistanceToSquared(const Vector2 &in) const", asMETHOD(Vector2, DistanceToSquared), asCALL_THISCALL); VERIFY( r >= 0 );
-    r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float Aspect() const", asMETHODPR(Vector2, Aspect, (void) const, f32), asCALL_THISCALL); VERIFY( r >= 0 );
+    r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float Aspect() const", asMETHODPR(Vector2, Aspect, () const, f32), asCALL_THISCALL); VERIFY( r >= 0 );
     r = m_ScriptEngine->RegisterObjectMethod("Vector2", "bool IsZero() const", asMETHOD(Vector2, IsZero), asCALL_THISCALL); VERIFY( r >= 0 );
 
     r = m_ScriptEngine->RegisterObjectType("Vector3", sizeof(Vector3), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Vector3>()); VERIFY(r >= 0);
@@ -177,7 +177,6 @@ void ScriptingEngine::RegisterTypes()
     r = m_ScriptEngine->RegisterObjectType("Mat4", sizeof(Mat4), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Mat4>()); VERIFY(r >= 0);
     r = m_ScriptEngine->RegisterObjectBehaviour("Mat4", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(Mat4Constructor), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
     r = m_ScriptEngine->RegisterObjectBehaviour("Mat4", asBEHAVE_CONSTRUCT, "void f(float)", asFUNCTION(Mat4ConstructorSingle), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
-    // r = m_ScriptEngine->RegisterObjectMethod("Mat4", "", asFUNCTIONPR(glm::rotate));
 
     r = m_ScriptEngine->RegisterObjectType("Transform", sizeof(Transform), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Transform>()); VERIFY(r >= 0);
     r = m_ScriptEngine->RegisterObjectProperty("Transform", "Vector3 Position", asOFFSET(Transform, Position)); VERIFY(r >= 0);

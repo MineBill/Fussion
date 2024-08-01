@@ -323,10 +323,6 @@ void Editor::OnEvent(Event& event)
 
 void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
 {
-    if (Input::IsKeyPressed(Keys::K)) {
-        Debug::DrawLine(Vector3{}, Vector3{ 2, 2, 2 });
-    }
-
     m_SceneRenderer.Render(cmd, {
         .Camera = RenderCamera{
             .Perspective = m_Camera.GetPerspective(),
