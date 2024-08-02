@@ -3,6 +3,8 @@
 #include "EditorStyle.h"
 
 #include "Fussion/Assets/Texture2D.h"
+#include "Fussion/Core/Maybe.h"
+
 #include <misc/cpp/imgui_stdlib.h>
 #include <string>
 
@@ -83,16 +85,24 @@ namespace EUI {
         ImGui::EndTable();
     }
 
+    struct ButtonParams {
+        ButtonStyles Style{ ButtonStyleGeneric };
+        f32 Alignment{ 0.0f };
+        Maybe<Vector2> Size{};
+        Maybe<ButtonStyle> Override{};
+    };
+
     /// Draws a button.
     /// @param label The button name.
     /// @param func A callback that will be called if the button was pressed.
+    /// @param params Parameters.
     /// @return If the @p func return type is non-void, then this function will return whatever @p func returns.
     template<typename Func>
-    auto Button(std::string_view label, Func&& func, ButtonStyles style_type = ButtonStyleGeneric, [[maybe_unused]] Vector2 size = Vector2(), f32 alignment = 0)
+    auto Button(std::string_view label, Func&& func, ButtonParams params = {})
     {
         using ResultType = std::invoke_result_t<Func>;
-        auto style = Detail::GetButtonStyle(style_type);
 
+        auto const& style = params.Override.ValueOr(Detail::GetButtonStyle(params.Style));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
@@ -107,14 +117,15 @@ namespace EUI {
 
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[style.Font]);
 
-        auto s = size.IsZero() ? ImGui::CalcTextSize(label.data()).x : size.X + style.Padding.X * 2.0f;
+        auto s = !params.Size.HasValue() ? ImGui::CalcTextSize(label.data()).x : params.Size->X + style.Padding.X * 2.0f;
+        // auto s = params.Size.ValueOr(Vector2(ImGui::CalcTextSize(label.data()).x, 0)).X + style.Padding.X * 2.0f;
         auto avail = ImGui::GetContentRegionAvail().x;
-        auto off = (avail - s) * alignment;
+        auto off = (avail - s) * params.Alignment;
         if (off > 0) {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
         }
 
-        bool opened = ImGui::Button(label.data(), size);
+        bool opened = ImGui::Button(label.data(), params.Size.ValueOr(Vector2::Zero));
         ImGui::PopStyleVar(3);
         ImGui::PopStyleColor(6);
 

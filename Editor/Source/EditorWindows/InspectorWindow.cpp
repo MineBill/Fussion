@@ -160,7 +160,12 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     auto const name = component_type.get_metadata().at("Name").as<std::string>();
 
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, Vector2::Zero);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(15, 5));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
     auto opened = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_AllowOverlap);
+    ImGui::PopStyleVar(4);
 
     auto width = ImGui::GetContentRegionMax().x;
 
@@ -205,6 +210,17 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     return modified;
 }
 
+constexpr auto MakeAddComponentButtonStyle() -> ButtonStyle
+{
+    auto style = ButtonStyle::Default();
+    // style.SetButtonColor(Color::FromHex(0x405070FF));
+    style.BorderShadowColor = Color::Transparent;
+    style.Padding = Vector2{10, 5};
+    style.Rounding = 1;
+    style.Border = true;
+    return style;
+}
+
 bool InspectorWindow::DrawEntity(Entity& e)
 {
     ZoneScoped;
@@ -246,9 +262,11 @@ bool InspectorWindow::DrawEntity(Entity& e)
         modified |= DrawComponent(e, type, std::move(ptr));
     }
 
-    if (ImGuiH::ButtonCenteredOnLine("Add Component")) {
+    static constexpr auto button_style = MakeAddComponentButtonStyle();
+
+    EUI::Button("Add Component", [] {
         ImGui::OpenPopup("Popup::AddComponent");
-    }
+    }, { .Alignment = 0.5f, .Override = button_style });
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
         auto scope = meta_hpp::resolve_scope("Components");

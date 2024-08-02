@@ -6,10 +6,10 @@
 #include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
-class Texture2D;
+    class Texture2D;
 }
 
-constexpr auto AccentColor = 0xFF6300FF;
+constexpr auto AccentColor = 0x568af2FF;
 
 struct ImFont;
 
@@ -35,7 +35,7 @@ struct InteractiveStyle {
     Color HoverColor;
     Color PressedColor;
 
-    InteractiveStyle()
+    constexpr InteractiveStyle()
     {
         auto accent = Color::FromHex(AccentColor);
         NormalColor = accent;
@@ -62,7 +62,7 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
     Color BorderShadowColor{};
     EditorFont Font{};
 
-    static ButtonStyle Default()
+    static constexpr ButtonStyle Default()
     {
         ButtonStyle style;
         style.Padding = Vector2(3, 3);
@@ -75,7 +75,14 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
         return style;
     }
 
-    void SetButtonColor(Color color);
+    constexpr void SetButtonColor(Color color)
+    {
+        NormalColor = color;
+        HoverColor = NormalColor.Lighten(0.1f);
+        PressedColor = NormalColor.Darken(0.1f);
+        BorderColor = PressedColor;
+        BorderShadowColor = HoverColor;
+    }
 };
 
 enum WindowStyles {
@@ -86,7 +93,7 @@ enum WindowStyles {
 };
 
 struct WindowStyle : CommonStyle {
-    WindowStyle(): CommonStyle()
+    constexpr WindowStyle(): CommonStyle()
     {
         Border = true;
         Rounding = 3.0f;

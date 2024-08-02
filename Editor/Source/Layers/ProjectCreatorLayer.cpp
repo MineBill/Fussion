@@ -44,7 +44,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         ImGui::BeginChild("Buttons", Vector2{ width, 0 }, 0, ImGuiWindowFlags_NoSavedSettings);
         EUI::Button("New", [&] {
             m_OpenNewProjectPopup = true;
-        }, ButtonStyleProjectCreator, Vector2{ 125, 0 }, 0.5);
+        }, { .Style = ButtonStyleProjectCreator, .Size = Vector2{ 125, 0 } });
         ImGui::EndChild();
 
         ImGui::SameLine();
@@ -82,7 +82,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
             EUI::Property("Project Folder", [] {
                 EUI::Button("Select", [] {
                     project_folder = Fussion::Dialogs::ShowDirectoryPicker().string();
-                }, ButtonStyleProjectCreatorSmall);
+                }, { .Style = ButtonStyleViewportButton });
 
                 ImGui::SameLine();
 
@@ -94,9 +94,9 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
             ImGui::Separator();
 
-            EUI::Button("Cancel", [] {}, ButtonStyleProjectCreator);
+            EUI::Button("Cancel", [] {}, { .Style = ButtonStyleProjectCreator });
             ImGui::SameLine();
-            EUI::Button("Create", [] {}, ButtonStyleProjectCreator, { 0, 0 });
+            EUI::Button("Create", [] {}, { .Style = ButtonStyleProjectCreator });
             ImGui::EndPopup();
         }
     }, { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {} });

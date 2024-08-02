@@ -2,14 +2,7 @@
 
 #include "Assets/Importers/TextureImporter.h"
 
-void ButtonStyle::SetButtonColor(Color color)
-{
-    NormalColor = color;
-    HoverColor = NormalColor.Lighten(0.1f);
-    PressedColor = NormalColor.Darken(0.1f);
-    BorderColor = PressedColor;
-    BorderShadowColor = HoverColor;
-}
+
 
 EditorStyle g_Style;
 
@@ -35,7 +28,7 @@ void EditorStyle::Initialize()
     {
         auto style = ButtonStyle::Default();
         style.Border = false;
-        style.Rounding = 5.0f;
+        style.Rounding = 3.0f;
 
         style.SetButtonColor(Color::FromHex(AccentColor));
 
@@ -48,7 +41,7 @@ void EditorStyle::Initialize()
         style.Rounding = 3.0f;
         style.Font = EditorFont::RegularBig;
 
-        style.SetButtonColor(Color::FromHex(0x568af2FF));
+        style.SetButtonColor(Color::FromHex(AccentColor));
 
         ButtonStyles[ButtonStyleProjectCreator] = style;
     }
@@ -59,7 +52,7 @@ void EditorStyle::Initialize()
         style.Rounding = 3.0f;
         style.Font = EditorFont::RegularNormal;
 
-        style.SetButtonColor(Color::FromHex(0x568af2FF));
+        style.SetButtonColor(Color::FromHex(AccentColor));
 
         ButtonStyles[ButtonStyleProjectCreatorSmall] = style;
     }

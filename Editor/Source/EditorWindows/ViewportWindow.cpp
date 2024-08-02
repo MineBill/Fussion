@@ -115,7 +115,7 @@ void ViewportWindow::OnDraw()
 
         EUI::Button("Camera", [&] {
             ImGui::OpenPopup("EditorCameraSettings");
-        }, ButtonStyleViewportButton);
+        }, { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("EditorCameraSettings", [&] {
             EUI::Property("Speed", &m_Editor->GetCamera().Speed);
@@ -127,7 +127,7 @@ void ViewportWindow::OnDraw()
 
         EUI::Button(std::format("Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode)), [&] {
             ImGui::OpenPopup("GizmoSelection");
-        }, ButtonStyleViewportButton);
+        }, { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("GizmoSelection", [&] {
             if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
@@ -149,7 +149,7 @@ void ViewportWindow::OnDraw()
             } else if (m_GizmoSpace == GizmoSpace::World) {
                 m_GizmoSpace = GizmoSpace::Local;
             }
-        }, ButtonStyleViewportButton);
+        }, { .Style = ButtonStyleViewportButton });
 
         ImGui::PopStyleVar();
 
