@@ -5,6 +5,7 @@
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/Types.h"
 #include "scriptbuilder/scriptbuilder.h"
+#include <cstring>
 
 namespace Fussion {
 class ScriptClass;

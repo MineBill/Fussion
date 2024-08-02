@@ -1,22 +1,11 @@
 ﻿#pragma once
 #include "RenderHandle.h"
 #include "VertexLayout.h"
-#include "Fussion/Core/BitFlags.h"
+#include "Resources/Resource.h"
+#include "Fussion/RHI/ShaderFlags.h"
 
 namespace Fussion::RHI {
-struct ResourceUsage;
 class Pipeline;
-
-enum class ShaderType {
-    None = 1 << 0,
-    Vertex = 1 << 1,
-    Fragment = 1 << 2,
-    Compute = 1 << 3,
-};
-
-DECLARE_FLAGS(ShaderType, ShaderTypeFlags)
-
-DECLARE_OPERATORS_FOR_FLAGS(ShaderTypeFlags)
 
 struct ShaderUniform {
     std::string Name{};

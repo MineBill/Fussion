@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "ResourcePool.h"
 #include "Fussion/RHI/RenderHandle.h"
-#include "Fussion/RHI/Shader.h"
+#include "Fussion/RHI/ShaderFlags.h"
 
 namespace Fussion::RHI {
 struct ResourceUsage {
