@@ -102,11 +102,13 @@ void Editor::Save()
 {
     Project::ActiveProject()->Save();
 
-    auto serializer = MakePtr<SceneSerializer>();
-    AssetMetadata meta{};
-    meta.Path = m_ActiveScenePath;
-    serializer->Save(meta, m_ActiveScene);
-    m_ActiveScene->SetDirty(false);
+    if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
+        auto serializer = MakePtr<SceneSerializer>();
+        AssetMetadata meta{};
+        meta.Path = m_ActiveScenePath;
+        serializer->Save(meta, m_ActiveScene);
+        m_ActiveScene->SetDirty(false);
+    }
 }
 
 void Editor::OnUpdate(f32 delta)
@@ -213,7 +215,7 @@ void Editor::OnUpdate(f32 delta)
         auto& style = EditorStyle::GetStyle();
         EUI::ImageButton(style.EditorIcons[EditorIcon::Play], Vector2{ height, height }, [this] {
             SetPlayState(PlayState::Playing);
-        }, { .Disabled = m_State == PlayState::Playing });
+        }, { .Disabled = m_ActiveScene == nullptr || m_State == PlayState::Playing });
 
         auto min = ImGui::GetItemRectMin();
 
