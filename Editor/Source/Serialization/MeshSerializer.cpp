@@ -2,8 +2,7 @@
 #include "Project/Project.h"
 
 #include "Fussion/Assets/Mesh.h"
-#include "mikktspace.h"
-
+    
 #define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
 #include "Fussion/OS/FileSystem.h"
