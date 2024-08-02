@@ -21,6 +21,7 @@ namespace Fussion
         virtual u32 GetWidth() const override;
 
         virtual void SetPosition(Vector2 position) const override;
+        virtual void SetIcon(Image const& image) override;
 
         virtual void* NativeHandle() const override;
 

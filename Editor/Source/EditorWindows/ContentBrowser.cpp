@@ -31,7 +31,7 @@ void ContentBrowser::OnStart()
     m_FileTypes[".gltf"] = AssetType::Mesh;
 
     m_ImportFilter.Name = "Supported Asset Files";
-    for (const auto& file_type : m_FileTypes | std::views::keys) {
+    for (auto const& file_type : m_FileTypes | std::views::keys) {
         m_ImportFilter.FilePatterns.push_back(std::format("*{}", file_type));
     }
 }
@@ -188,7 +188,7 @@ void ContentBrowser::ChangeDirectory(fs::path path) // NOLINT(performance-unnece
             return a.IsDirectory && !b.IsDirectory;
         }
 
-        auto to_lowercase = [](const std::string& str) {
+        auto to_lowercase = [](std::string const& str) {
             std::string result;
             std::ranges::transform(str, std::back_inserter(result), [](unsigned char c) { return std::tolower(c); });
             return result;

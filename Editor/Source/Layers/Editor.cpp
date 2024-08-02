@@ -1,16 +1,16 @@
 ﻿#include "Editor.h"
-#include "Widgets/AssetWindows/AssetWindow.h"
-
-#include "Fussion/Input/Input.h"
-#include "Fussion/Core/Application.h"
-#include "Fussion/Scene/Components/BaseComponents.h"
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Debug/Debug.h"
-#include "Fussion/Events/ApplicationEvents.h"
-#include "Fussion/Events/KeyboardEvents.h"
-#include "Fussion/OS/FileSystem.h"
-#include "Fussion/Scripting/ScriptingEngine.h"
+#include "EditorUI.h"
 #include "Serialization/SceneSerializer.h"
+
+#include <Fussion/Input/Input.h>
+#include <Fussion/Core/Application.h>
+#include <Fussion/Scene/Components/BaseComponents.h>
+#include <Fussion/Assets/AssetRef.h>
+#include <Fussion/Debug/Debug.h>
+#include <Fussion/Events/ApplicationEvents.h>
+#include <Fussion/Events/KeyboardEvents.h>
+#include <Fussion/OS/FileSystem.h>
+#include <Fussion/Scripting/ScriptingEngine.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>

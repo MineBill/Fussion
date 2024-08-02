@@ -6,6 +6,9 @@ target "Editor"
     add_rules("CompilerFlags")
     set_warnings("allextra")
 
+    add_rules("utils.bin2c", {extensions = {".png"}})
+    add_files("Assets/Icons/logo_*.png")
+
     add_includedirs (
         "Source"
     )

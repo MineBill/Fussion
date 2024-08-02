@@ -1,4 +1,5 @@
 ﻿#include "SceneTreeWindow.h"
+#include "EditorUI.h"
 
 #include <imgui.h>
 #include <tracy/Tracy.hpp>

@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <unordered_map>
 
-class ContentBrowser : public EditorWindow {
+class ContentBrowser final : public EditorWindow {
 public:
     struct Entry {
         std::filesystem::path Path;
@@ -20,10 +20,15 @@ public:
 
     EDITOR_WINDOW(ContentBrowser)
 
-    void OnStart() override;
-    void OnDraw() override;
+    virtual void OnStart() override;
+    virtual void OnDraw() override;
 
+    /// Change into the directory specified by @p path.
+    /// It \b MUST be a sub-path of the root project folder.
     void ChangeDirectory(std::filesystem::path path);
+
+    /// Refresh the content browser by iterating again all the files of the current path.
+    /// Useful after modifying a file.
     void Refresh();
 
 private:

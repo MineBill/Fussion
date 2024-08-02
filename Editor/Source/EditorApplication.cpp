@@ -6,6 +6,7 @@
 #include "Fussion/RHI/Renderer.h"
 #include "Fussion/Input/Input.h"
 #include "imgui.h"
+#include "Assets/Importers/TextureImporter.h"
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
@@ -21,6 +22,14 @@
 #include <Fussion/Core/Clap.h>
 #include <chrono>
 
+static unsigned char g_logo_32_data[] = {
+#include "logo_32.png.h"
+};
+
+static unsigned char g_logo_64_data[] = {
+#include "logo_64.png.h"
+};
+
 EditorApplication* EditorApplication::s_EditorInstance;
 
 void EditorApplication::OnStart()
@@ -31,6 +40,9 @@ void EditorApplication::OnStart()
     s_EditorInstance = this;
 
     Project::Initialize();
+
+    auto image = TextureImporter::LoadImageFromMemory({ g_logo_32_data });
+    m_Window->SetIcon(image);
 
     m_ImGuiLayer = PushLayer<ImGuiLayer>();
     m_ImGuiLayer->Init();

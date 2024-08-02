@@ -109,7 +109,7 @@ void ImGuiLayer::Init()
         return vkGetInstanceProcAddr(CAST(VulkanDevice*, device)->Instance->Instance, function_name);
     }, device.get());
     ImGui_ImplVulkan_Init(&info);
-    Device::Instance()->RegisterImageCallback([this](Ref<Image> const& image, bool create) {
+    Device::Instance()->RegisterImageCallback([this](Ref<RHI::Image> const& image, bool create) {
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
                 auto vk_image = image->As<VulkanImage>();
@@ -143,7 +143,7 @@ void ImGuiLayer::Init()
         }
     });
 
-    Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<Image> const& image, bool create) {
+    Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<RHI::Image> const& image, bool create) {
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
                 auto vk_image = image->As<VulkanImage>();

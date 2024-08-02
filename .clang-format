@@ -13,12 +13,13 @@ IndentPPDirectives: AfterHash
 IndentRequiresClause: false
 InsertNewlineAtEOF: true
 LineEnding: LF
-NamespaceIndentation: None
+NamespaceIndentation: All
 QualifierAlignment: Right
 RemoveSemicolon: true
 RequiresClausePosition: WithFollowing
 RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false
+IncludeBlocks: Regroup
 
 ---
 Language: ObjC

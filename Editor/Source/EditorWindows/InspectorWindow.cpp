@@ -16,47 +16,6 @@
 
 using namespace Fussion;
 
-void AssetPicker::Update()
-{
-    if (m_Show) {
-        ImGui::OpenPopup("Asset Picker");
-        m_Show = false;
-    }
-
-    bool was_open = m_Opened;
-
-    EUI::ModalWindow("Asset Picker", [&] {
-        ImGuiH::Text("Please pick an asset for '{}':", m_Member.get_name());
-
-        ImGui::Separator();
-        for (auto const& handle : m_ViableHandles) {
-            EUI::Button(std::format("Asset: {}", handle), [&] {
-                m_Member.set(m_Instance, handle);
-                m_Opened = false;
-            });
-        }
-    }, { .Flags = ImGuiPopupFlags_None, .Opened = &m_Opened });
-
-    if (was_open && !m_Opened) {
-        m_ViableHandles.clear();
-    }
-}
-
-void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& instance, Fussion::AssetType type)
-{
-    m_Show = true;
-    m_Member = member;
-    m_Type = type;
-    m_Opened = true;
-    m_Instance = instance.copy();
-
-    for (auto const& [handle, metadata] : Project::ActiveProject()->GetAssetManager()->GetRegistry()) {
-        if (metadata.Type == type) {
-            m_ViableHandles.push_back(handle);
-        }
-    }
-}
-
 void InspectorWindow::OnStart()
 {
     EditorWindow::OnStart();
@@ -98,7 +57,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
             ImGui::PushID(member.get_name().data());
             defer(ImGui::PopID());
 
-            DoProperty(member.get_name(), [&] {
+            EUI::Property(member.get_name(), [&] {
                 ZoneScoped;
                 if (auto const data_type = value.get_type().as_pointer().get_data_type(); data_type.is_number()) {
                     ImGuiDataType type = 0;
@@ -171,6 +130,27 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                     } else {
                         ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                     }
+                } else if (data_type.is_enum()) {
+                    auto enum_type = data_type.as_enum();
+
+                    auto GetName = [&enum_type](int i) -> std::string_view {
+                        for (auto const& evalue : enum_type.get_evalues()) {
+                            if (auto as_underlying_ptr = static_cast<int const*>(evalue.get_underlying_value().get_data()); *as_underlying_ptr == i) {
+                                return evalue.get_name();
+                            }
+                        }
+                        return std::string_view{ "Invalid" };
+                    };
+
+                    auto as_underlying_ptr = static_cast<int**>(value.get_data());
+                    if (ImGui::BeginCombo("", GetName(**as_underlying_ptr).data())) {
+                        for (auto const& evalue : enum_type.get_evalues()) {
+                            if (ImGui::Selectable(evalue.get_name().c_str())) {
+                                member.set(ptr, evalue.get_value());
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
                 } else {
                     ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                 }
@@ -179,7 +159,29 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     };
 
     auto const name = component_type.get_metadata().at("Name").as<std::string>();
-    if (ImGui::CollapsingHeader(name.c_str())) {
+
+    auto opened = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_AllowOverlap);
+
+    auto width = ImGui::GetContentRegionMax().x;
+
+    auto line_height = ImGui::GetFont()->FontSize + ImGui::GetStyle().FramePadding.y * 2.0;
+
+    ImGui::SameLine(width - line_height * 0.75);
+    ImGui::PushID(component_type.get_hash());
+    EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], Vector2(18, 18), [] {
+        ImGui::OpenPopup("ComponentSettings");
+    });
+
+    if (ImGui::BeginPopupContextItem("ComponentSettings")) {
+        if (ImGui::MenuItem("Remove Component")) {
+            entity.RemoveComponent(component_type);
+        }
+
+        ImGui::EndPopup();
+    }
+    ImGui::PopID();
+
+    if (opened) {
         // Special case gui for some components.
         if (component_type == meta_hpp::resolve_type<ScriptComponent>()) {
             if (ImGui::TreeNode("Classes")) {

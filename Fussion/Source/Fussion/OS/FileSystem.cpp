@@ -5,8 +5,7 @@
 #include <fstream>
 #include <iterator>
 
-namespace Fussion
-{
+namespace Fussion {
     std::optional<std::string> FileSystem::ReadEntireFile(std::filesystem::path const& path)
     {
         if (!std::filesystem::exists(path)) {
@@ -27,7 +26,7 @@ namespace Fussion
 
         std::vector<u8> buffer(size);
 
-        buffer.insert(buffer.begin(), std::istream_iterator<u8>(file), std::istream_iterator<u8>());
+        file.read(reinterpret_cast<char*>(buffer.data()), size);
         return buffer;
     }
 

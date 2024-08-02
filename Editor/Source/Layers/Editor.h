@@ -1,15 +1,16 @@
 ﻿#pragma once
 #include "EditorCamera.h"
 #include "EditorStyle.h"
-#include "Widgets/ViewportWindow.h"
-#include "Widgets/ConsoleWindow.h"
-#include "Widgets/InspectorWindow.h"
-#include "Widgets/SceneTreeWindow.h"
+#include "EditorWindows/ViewportWindow.h"
+#include "EditorWindows/ConsoleWindow.h"
+#include "EditorWindows/InspectorWindow.h"
+#include "EditorWindows/SceneTreeWindow.h"
 #include "Project/Project.h"
 #include "SceneRenderer.h"
-#include "Widgets/ScriptsInspector.h"
-#include "Widgets/ContentBrowser.h"
+#include "EditorWindows/ScriptsInspector.h"
+#include "EditorWindows/ContentBrowser.h"
 #include "Undo.h"
+#include "EditorWindows/AssetWindows/AssetWindow.h"
 
 #include "Fussion/Core/Layer.h"
 #include "Fussion/Core/Types.h"
@@ -18,8 +19,6 @@
 #include "Fussion/Core/Delegate.h"
 #include "Fussion/OS/FileWatcher.h"
 #include "Fussion/Scene/Scene.h"
-
-class AssetWindow;
 
 class Editor final : public Fsn::Layer {
 public:
