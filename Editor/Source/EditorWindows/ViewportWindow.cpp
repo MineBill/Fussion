@@ -78,16 +78,6 @@ void ViewportWindow::OnDraw()
             ImGuiWindowFlags_NoFocusOnAppearing |
             ImGuiWindowFlags_NoNav;
 
-        // ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
-        // if (ImGui::Begin("Debug Overlay", nullptr, window_flags)) {
-        //     ImGui::TextUnformatted("Debug Overlay");
-        //     ImGui::Separator();
-        //     auto pos = Editor::GetCamera().Position;
-        //     ImGuiH::Text("Mouse Position: {}", pos);
-        // }
-        // ImGui::End();
-        // ImGui::PopStyleVar();
-
         if (m_Editor->GetActiveScene() == nullptr) {
             ImGui::SetNextWindowPos(m_ContentOriginScreen + m_Size / 2.f + Vector2(0, m_Size.Y * 0.2f), 0, Vector2(0.5, 0.5));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(20, 20));
@@ -194,6 +184,8 @@ void ViewportWindow::OnDraw()
                             m_Editor->Undo.PushSingle(&entity->Transform.Scale, "Gizmo LocalScale");
                         }
                     }
+
+                    m_Editor->GetActiveScene()->SetDirty();
                 } else {
                     if (activated && !ImGuizmo::IsUsingAny()) {
                         activated = false;
