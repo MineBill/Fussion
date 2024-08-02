@@ -35,7 +35,6 @@ target("Fussion")
 
     set_pcxxheader("Source/e5pch.h")
 
-    add_defines("TRACY_ENABLE", {public = true})
     add_sysincludedirs("Vendor/tracy/public", {public = true})
 
     add_defines (
@@ -46,6 +45,7 @@ target("Fussion")
     )
 
     add_rules("CompilerFlags")
+    add_options("Tracy")
 
     if is_plat("windows") then
         add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR", {public = true})

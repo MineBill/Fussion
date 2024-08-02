@@ -23,6 +23,11 @@ option("LivePP")
     add_ldflags("/FUNCTIONPADMIN", "/OPT:NOREF", "/OPT:NOICF", "/Z7")
 option_end()
 
+option("Tracy")
+    set_showmenu(true)
+    add_defines("TRACY_ENABLE", {public = true})
+option_end();
+
 includes("Vendor.lua")
 includes("Fussion/Fussion.lua")
 includes("Editor/Editor.lua")
