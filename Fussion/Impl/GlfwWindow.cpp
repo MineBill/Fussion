@@ -195,6 +195,12 @@ namespace Fussion {
         });
     }
 
+    GlfwWindow::~GlfwWindow()
+    {
+        glfwDestroyWindow(m_Window);
+        glfwTerminate();
+    }
+
     void GlfwWindow::Update()
     {
         glfwPollEvents();

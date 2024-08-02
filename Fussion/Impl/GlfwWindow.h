@@ -9,6 +9,7 @@ namespace Fussion
     {
     public:
         explicit GlfwWindow(WindowOptions const& options);
+        virtual ~GlfwWindow() override;
 
         virtual void Update() override;
         virtual bool ShouldClose() override;
