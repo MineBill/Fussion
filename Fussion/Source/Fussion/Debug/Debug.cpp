@@ -164,8 +164,8 @@ void Debug::Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> global
 
     g_DebugData.Points.clear();
 
-    for (size_t i = g_DebugData.TimedPoints.size(); i > 0; i--) {
-        auto& timer = g_DebugData.Timers[i - 1];
+    for (s32 i = g_DebugData.TimedPoints.size() - 1; i >= 0; i--) {
+        auto& timer = g_DebugData.Timers[i];
         timer -= Time::DeltaTime();
         if (timer <= 0) {
             g_DebugData.TimedPoints.erase(g_DebugData.TimedPoints.begin() + i);
