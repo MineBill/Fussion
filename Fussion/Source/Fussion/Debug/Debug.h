@@ -6,14 +6,15 @@
 #include "Fussion/Math/Color.h"
 
 namespace Fussion {
-class Debug {
-public:
-    static void Initialize(Ref<RHI::RenderPass> const& render_pass);
+    class Debug {
+    public:
+        static void Initialize(Ref<RHI::RenderPass> const& render_pass);
 
-    static void DrawLine(Vector3 start, Vector3 end, f32 time = 0.0f, Color color = Color::Red);
-    static void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time = 0.0f, Color color = Color::Red);
-    static void DrawSphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time = 0.0f, Color color = Color::Red);
+        static void DrawLine(Vector3 start, Vector3 end, f32 time = 0.0f, Color color = Color::Red);
+        static void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time = 0.0f, Color color = Color::Red);
+        static void DrawSphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time = 0.0f, Color color = Color::Red);
 
-    static void Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> global_resource);
-};
+        static void Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> global_resource);
+        static void Reset();
+    };
 }

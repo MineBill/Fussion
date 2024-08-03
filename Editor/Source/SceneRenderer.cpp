@@ -428,6 +428,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         {
             ZoneScopedN("Debug Draw");
             Debug::Render(cmd, m_GlobalResource);
+            Debug::Reset();
         }
 
         {
