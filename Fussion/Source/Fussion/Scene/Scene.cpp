@@ -109,6 +109,11 @@ auto Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent) ->
     m_Entities[id] = Entity(id, this);
     auto& entity = m_Entities[id];
     entity.Name = name;
+
+    auto local_id = m_LocalIDCounter++;
+    entity.m_LocalID = local_id;
+    m_LocalIDToEntity[local_id] = id;
+
     entity.SetParent(m_Entities[parent]);
     return &entity;
 }
@@ -123,6 +128,12 @@ auto Scene::GetEntity(Uuid const handle) -> Entity*
 auto Scene::GetEntity(Entity const& entity) -> Entity*
 {
     return GetEntity(entity.m_Handle);
+}
+
+auto Scene::GetEntityFromLocalID(s32 local_id) -> Entity*
+{
+    if (!m_LocalIDToEntity.contains(local_id)) return nullptr;
+    return GetEntity(m_LocalIDToEntity[local_id]);
 }
 
 bool Scene::IsHandleValid(Uuid parent) const

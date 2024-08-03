@@ -111,6 +111,9 @@ public:
     auto GetId() const -> Uuid { return m_Handle; }
 
     [[nodiscard]]
+    auto GetLocalID() const -> s32 {return m_LocalID;}
+
+    [[nodiscard]]
     auto GetComponents() const -> std::map<Uuid, Ref<Component>> const& { return m_Components; }
 
     [[nodiscard]]
@@ -142,6 +145,7 @@ private:
 
     Uuid m_Handle;
     Scene* m_Scene{};
+    s32 m_LocalID{};
 
     bool m_Enabled{ true };
 };

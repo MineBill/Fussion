@@ -17,11 +17,6 @@
 
 using namespace Fussion;
 
-bool operator==(const Vector2& vec, const Vector2& rhs)
-{
-    return fabs(vec.X - rhs.X) <= FLT_EPSILON && fabs(vec.Y - rhs.Y) <= FLT_EPSILON;
-}
-
 ImGuizmo::MODE GizmoSpaceToImGuizmo(ViewportWindow::GizmoSpace space)
 {
     switch (space) {

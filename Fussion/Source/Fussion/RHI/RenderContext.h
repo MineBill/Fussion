@@ -22,6 +22,7 @@ enum class RenderState {
     LightCollection = 1 << 1,
     Mesh = 1 << 2,
     Depth = 1 << 3,
+    ObjectPicking = 1 << 4,
 };
 
 DECLARE_FLAGS(RenderState, RenderStateFlags)

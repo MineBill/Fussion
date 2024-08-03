@@ -1,6 +1,6 @@
 #version 450 core
 
-#include "global.glsl"
+#include "Global.glsl"
 
 layout(push_constant) uniform PushConstants {
     mat4 model;

@@ -15,6 +15,11 @@ class MeshRenderer final : public Component {
         Mat4 Model;
         Mat4 LightSpace;
     } m_DepthPushData;
+
+    struct ObjectPickingConstantData {
+        Mat4 Model;
+        s32 LocalID;
+    } m_ObjectPickingPushData;
 public:
     COMPONENT_DEFAULT(MeshRenderer)
 

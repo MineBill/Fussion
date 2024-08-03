@@ -234,7 +234,9 @@ bool InspectorWindow::DrawEntity(Entity& e)
         ImGui::BeginDisabled();
 
         auto id = e.GetId();
+        auto local_id = e.GetLocalID();
         EUI::Property("ID", &id);
+        EUI::Property("LocalID", &local_id);
         EUI::Property("Parent", &parent);
 
         ImGui::EndDisabled();

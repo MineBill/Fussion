@@ -43,7 +43,7 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
             },
         };
         auto object_layout = RHI::Device::Instance()->CreateResourceLayout(resource_usages);
-        auto resource = m_FrameAllocator.Alloc(object_layout);
+        auto resource = m_FrameAllocator.Alloc(object_layout, "MeshRenderer Material");
 
         material->MaterialUniformBuffer.Data.ObjectColor = material->ObjectColor;
         material->MaterialUniformBuffer.Data.Metallic = material->Metallic;
@@ -57,6 +57,10 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
         m_DepthPushData.Model = m_Owner->Transform.GetMatrix();
         m_DepthPushData.LightSpace = ctx.CurrentLightSpace;
         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
+    } else if (ctx.RenderFlags.Test(RHI::RenderState::ObjectPicking)) {
+        m_ObjectPickingPushData.Model = m_Owner->Transform.GetMatrix();
+        m_ObjectPickingPushData.LocalID = m_Owner->GetLocalID();
+        ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);
     } else {
         return;
     }

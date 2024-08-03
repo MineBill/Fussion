@@ -32,6 +32,7 @@ public:
 
     auto GetEntity(Uuid handle) -> Entity*;
     auto GetEntity(Entity const& entity) -> Entity*;
+    auto GetEntityFromLocalID(s32 local_id) -> Entity*;
 
     auto GetRoot() -> Entity*;
 
@@ -62,6 +63,11 @@ private:
     std::string m_Name{};
     std::unordered_map<Uuid, Entity> m_Entities{};
     bool m_Dirty{};
+
+    std::unordered_map<s32, Uuid> m_LocalIDToEntity{};
+    // We set this to 1 so that the first has an id of 1 because
+    // the object picking framebuffer is filled with 0s.
+    s32 m_LocalIDCounter{1};
 
     friend class Entity;
     friend SceneSerializer;

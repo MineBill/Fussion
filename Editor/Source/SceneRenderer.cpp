@@ -168,6 +168,69 @@ void SceneRenderer::Init()
     }
 
     {
+        const auto rp_spec = RenderPassSpecification{
+            .Label = "Object Picking RenderPass",
+            .Attachments = {
+                RenderPassAttachment{
+                    .Label = "Object Picking ID",
+                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
+                    .Format = ImageFormat::RED_SIGNED,
+                    .Samples = 1,
+                    .FinalLayout = ImageLayout::ColorAttachmentOptimal,
+                    .ClearColor = { 1, 1, 1, 1 },
+                },
+                RenderPassAttachment{
+                    .Label = "Object Picking Depth",
+                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
+                    .StoreOp = RenderPassAttachmentStoreOp::Store,
+                    .Format = ImageFormat::D32_SFLOAT_S8_UINT,
+                    .Samples = 1,
+                    .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
+                    .ClearDepth = 1.f,
+                }
+            },
+            .SubPasses = {
+                RenderPassSubPass{
+                    .ColorAttachments = {
+                        RenderPassAttachmentRef{
+                            .Attachment = 0,
+                            .Layout = ImageLayout::ColorAttachmentOptimal,
+                        }
+                    },
+                    .DepthStencilAttachment = RenderPassAttachmentRef{
+                        .Attachment = 1,
+                        .Layout = ImageLayout::DepthStencilAttachmentOptimal,
+                    }
+                },
+            }
+        };
+
+        m_ObjectPickingRenderPass = Device::Instance()->CreateRenderPass(rp_spec);
+        const auto data = FileSystem::ReadEntireFile("Assets/Shaders/ObjectPick.shader");
+        auto [stages, metadata] = ShaderCompiler::Compile(*data);
+        m_ObjectPickingShader = Device::Instance()->CreateShader(m_ObjectPickingRenderPass, stages, metadata);
+
+        auto fb_spec = RHI::FrameBufferSpecification{
+            .Width = 100,
+            .Height = 100,
+            .Attachments = {
+                FrameBufferAttachmentInfo{
+                    .Format = ImageFormat::RED_SIGNED,
+                    .Usage = ImageUsage::ColorAttachment | ImageUsage::Sampled | ImageUsage::TransferSrc,
+                    .Samples = 1
+                },
+                FrameBufferAttachmentInfo{
+                    .Format = ImageFormat::D32_SFLOAT_S8_UINT,
+                    .Usage = ImageUsage::DepthStencilAttachment | ImageUsage::Transient,
+                    .Samples = 1
+                }
+            }
+        };
+
+        m_ObjectPickingFrameBuffer = Device::Instance()->CreateFrameBuffer(m_ObjectPickingRenderPass, fb_spec);
+    }
+
+    {
         // auto shader = AssetManager::GetAsset<ShaderAsset>("Assets/Shaders/SimplePBR.shader");
         // shader->GetShader();
 
@@ -255,6 +318,7 @@ void SceneRenderer::Resize(Vector2 const& new_size)
     Device::Instance()->WaitIdle();
     m_RenderArea = new_size;
     m_FrameBuffer->Resize(new_size);
+    m_ObjectPickingFrameBuffer->Resize(new_size);
 }
 
 f32 GetSplitDepth(s32 current_split, s32 max_splits, f32 near, f32 far, f32 l = 1.0f)
@@ -323,7 +387,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     }
     m_LightData.Flush();
 
-    {
+    if constexpr (false) {
         ZoneScopedN("Depth Pass");
         m_RenderContext.RenderFlags = RenderState::Depth;
 
@@ -396,6 +460,30 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             cmd->EndRenderPass(m_DepthPass);
         }
     }
+
+    cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
+    {
+        ZoneScopedN("Object Picking Render Pass");
+
+        m_RenderContext.RenderFlags = RenderState::ObjectPicking;
+        m_RenderContext.CurrentPass = m_ObjectPickingRenderPass;
+        m_RenderContext.CurrentShader = m_ObjectPickingShader;
+
+        cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
+        cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
+
+        cmd->UseShader(m_ObjectPickingShader);
+        cmd->BindResource(m_GlobalResource, m_ObjectPickingShader, 0);
+        cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+
+        if (packet.Scene) {
+            packet.Scene->ForEachEntity([&](Entity* entity) {
+                ZoneScopedN("Object Picking Draw");
+                entity->OnDraw(m_RenderContext);
+            });
+        }
+    }
+    cmd->EndRenderPass(m_ObjectPickingRenderPass);
 
     cmd->BeginRenderPass(m_SceneRenderPass, m_FrameBuffer);
     {

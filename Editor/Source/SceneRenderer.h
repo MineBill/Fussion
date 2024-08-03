@@ -96,6 +96,11 @@ private:
     Ref<Fussion::RHI::RenderPass> m_DepthPass{};
     Ref<Fussion::RHI::Shader> m_DepthShader{};
     Ref<Fussion::RHI::Image> m_DepthImage{};
+
+    Ref<Fussion::RHI::RenderPass> m_ObjectPickingRenderPass{};
+    Ref<Fussion::RHI::Shader> m_ObjectPickingShader{};
+    Ref<Fussion::RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
+
     std::array<Ref<Fussion::RHI::FrameBuffer>, 4> m_ShadowFrameBuffers{};
 
     Fussion::RHI::RenderContext m_RenderContext;
