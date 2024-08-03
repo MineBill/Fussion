@@ -26,6 +26,7 @@ option_end()
 option("Tracy")
     set_showmenu(true)
     add_defines("TRACY_ENABLE", {public = true})
+    add_defines("TRACY_ON_DEMAND", {public = true})
 option_end();
 
 includes("Vendor.lua")

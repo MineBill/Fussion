@@ -4,6 +4,8 @@ target "Editor"
 	set_rundir("$(projectdir)/Editor")
     set_default(true)
     add_rules("CompilerFlags")
+    add_options("Tracy")
+
     set_warnings("allextra")
 
     add_rules("utils.bin2c", {extensions = {".png"}})
@@ -37,8 +39,6 @@ target "Editor"
 
     add_deps("Fussion")
     add_packages("glfw")
-
-    -- add_rules("c++.unity_build")
 
     if is_plat("windows") then
         set_runtimes("MDd")
