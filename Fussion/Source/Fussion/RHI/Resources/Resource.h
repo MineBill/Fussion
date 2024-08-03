@@ -11,7 +11,11 @@ struct ResourceUsage {
     ShaderTypeFlags Stages;
 };
 
-class ResourceLayout : public RenderHandle {};
+class ResourceLayout : public RenderHandle {
+public:
+
+    virtual void Destroy() = 0;
+};
 
 class Resource : public RenderHandle {};
 }

@@ -55,6 +55,7 @@ auto VulkanResourcePool::Allocate(Ref<ResourceLayout> layout, const std::string&
     VERIFY(resource != nullptr);
 
     auto handle = layout->GetRenderHandle<VkDescriptorSetLayout>();
+    resource->m_Layout = layout;
 
     auto alloc_info = VkDescriptorSetAllocateInfo{
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,

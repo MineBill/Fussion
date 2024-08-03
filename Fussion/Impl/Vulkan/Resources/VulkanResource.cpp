@@ -42,4 +42,18 @@ VulkanResourceLayout::VulkanResourceLayout(VulkanDevice* device, std::span<Resou
 
     VK_CHECK(vkCreateDescriptorSetLayout(device->Handle, &ci, nullptr, &m_Handle));
 }
+
+VulkanResourceLayout::~VulkanResourceLayout()
+{
+    VulkanResourceLayout::Destroy();
+}
+
+void VulkanResourceLayout::Destroy()
+{
+    vkDestroyDescriptorSetLayout(Device::Instance()->As<VulkanDevice>()->Handle, m_Handle, nullptr);
+}
+
+VulkanResource::~VulkanResource()
+{
+}
 }

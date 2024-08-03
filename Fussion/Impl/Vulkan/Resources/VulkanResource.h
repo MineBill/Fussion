@@ -11,6 +11,9 @@ class VulkanResourceLayout : public ResourceLayout {
 public:
     VulkanResourceLayout() = default;
     VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources);
+    virtual ~VulkanResourceLayout() override;
+
+    virtual void Destroy() override;
 
     void* GetRawHandle() override { return m_Handle; }
 
@@ -24,9 +27,12 @@ class VulkanResource : public Resource {
 public:
     VulkanResource() = default;
     VulkanResource(const VkDescriptorSet handle) : m_Handle(handle) {}
+    virtual ~VulkanResource() override;
+
     void* GetRawHandle() override { return m_Handle; }
 
 private:
     VkDescriptorSet m_Handle{};
+    Ref<ResourceLayout> m_Layout{};
 };
 }
