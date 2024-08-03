@@ -7,6 +7,8 @@
 
 #include <imgui_internal.h>
 
+using namespace Fussion;
+
 void ProjectCreatorLayer::OnStart()
 {
     LOG_INFOF("TestLayer::OnStart");
@@ -19,18 +21,6 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
-
-    // if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-    //     if (!m_StartedDragging) {
-    //         m_MouseDragStarPos = viewport->Pos;
-    //         m_Offset = Vector2(ImGui::GetMousePos()) - viewport->Pos;
-    //         m_StartedDragging = true;
-    //     }
-    //
-    //     Fussion::Application::Instance()->GetWindow().SetPosition(Vector2(ImGui::GetMousePos()) - m_Offset);
-    // } else {
-    //     m_StartedDragging = false;
-    // }
 
     EUI::Window("Window", [&] {
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::RegularHuge]);
@@ -81,7 +71,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
             EUI::Property("Project Folder", [] {
                 EUI::Button("Select", [] {
-                    project_folder = Fussion::Dialogs::ShowDirectoryPicker().string();
+                    project_folder = Dialogs::ShowDirectoryPicker().string();
                 }, { .Style = ButtonStyleViewportButton });
 
                 ImGui::SameLine();
@@ -94,12 +84,21 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
             ImGui::Separator();
 
-            EUI::Button("Cancel", [] {}, { .Style = ButtonStyleProjectCreator });
+            EUI::Button("Cancel", [] {
+                ImGui::CloseCurrentPopup();
+            }, { .Style = ButtonStyleProjectCreator });
             ImGui::SameLine();
-            EUI::Button("Create", [] {}, { .Style = ButtonStyleProjectCreator });
+            EUI::Button("Create", [] {
+                ImGui::CloseCurrentPopup();
+            }, { .Style = ButtonStyleProjectCreator });
             ImGui::EndPopup();
         }
     }, { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {} });
+}
 
-    // ImGui::ShowDemoWindow();
+void ProjectCreatorLayer::OnEvent(Event& event)
+{
+    if (event.Type() == EventType::WindowClose) {
+        Application::Instance()->Quit();
+    }
 }
