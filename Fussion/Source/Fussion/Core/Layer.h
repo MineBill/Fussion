@@ -19,7 +19,7 @@ public:
     virtual void OnUpdate([[maybe_unused]] f32 delta) {}
     virtual void OnEvent([[maybe_unused]] Event& event) {}
 
-    virtual void OnDraw([[maybe_unused]] Ref<RHI::CommandBuffer> cmd) {}
+    virtual void OnDraw([[maybe_unused]] Ref<RHI::CommandBuffer> const& cmd) {}
 
     virtual void OnLogReceived(
         [[maybe_unused]] LogLevel level,

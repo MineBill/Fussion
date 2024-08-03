@@ -65,7 +65,7 @@ void ViewportWindow::OnDraw()
 
         {
             ZoneScopedN("Get image from set");
-            const auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
+            auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
             ImGui::Image(IMGUI_IMAGE(image), m_Size);
         }
 

@@ -43,11 +43,10 @@ public:
     virtual void OnUpdate(f32) override;
     virtual void OnEvent(Fsn::Event&) override;
 
-    virtual void OnDraw(Ref<Fsn::RHI::CommandBuffer> cmd) override;
+    virtual void OnDraw(Ref<Fsn::RHI::CommandBuffer> const& cmd) override;
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     void Save();
-    void Quit();
 
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 

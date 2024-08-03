@@ -164,9 +164,7 @@ void Editor::OnUpdate(f32 delta)
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Quit")) {
-                Quit();
-            }
+            if (ImGui::MenuItem("Quit")) {}
 
             ImGui::EndMenu();
         }
@@ -323,7 +321,7 @@ void Editor::OnEvent(Event& event)
     m_ContentBrowser->OnEvent(event);
 }
 
-void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
+void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
 {
     m_SceneRenderer.Render(cmd, {
         .Camera = RenderCamera{
@@ -336,11 +334,6 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> cmd)
         },
         .Scene = m_State == PlayState::Editing ? m_ActiveScene.get() : m_PlayScene.get(),
     });
-}
-
-void Editor::Quit()
-{
-    LOG_DEBUG("Quitting application");
 }
 
 void Editor::SetPlayState(PlayState new_state)
