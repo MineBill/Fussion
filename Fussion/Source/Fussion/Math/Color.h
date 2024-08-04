@@ -70,6 +70,16 @@ namespace Fussion {
             };
         }
 
+        static constexpr Color FromRGBA(u8 r, u8 g, u8 b, u8 a = 255)
+        {
+            return {
+                CAST(f32, r) / 255.f,
+                CAST(f32, g) / 255.f,
+                CAST(f32, b) / 255.f,
+                CAST(f32, a) / 255.f
+            };
+        }
+
         [[nodiscard]]
         static constexpr Color FromHSL(HSL hsl)
         {
