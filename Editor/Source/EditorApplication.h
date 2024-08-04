@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Core/Application.h"
+#include "Fussion/Core/Maybe.h"
 #include "Fussion/Scene/Scene.h"
 #include "Layers/ImGuiLayer.h"
 #include "Layers/Editor.h"
@@ -14,6 +15,8 @@ public:
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     static EditorApplication* Instance() { return s_EditorInstance; }
+
+    static void CreateEditor(Maybe<std::filesystem::path> path);
 
 private:
     static EditorApplication* s_EditorInstance;

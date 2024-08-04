@@ -31,11 +31,11 @@ static unsigned char g_logo_64_data[] = {
 };
 
 EditorApplication* EditorApplication::s_EditorInstance;
+using namespace Fussion;
 
 void EditorApplication::OnStart()
 {
     ZoneScoped;
-    using namespace Fussion;
 
     s_EditorInstance = this;
 
@@ -55,15 +55,7 @@ void EditorApplication::OnStart()
     clap.Parse();
 
     if (auto project = clap.Get<std::string>("Project")) {
-        bool loaded = Project::Load(*project);
-        VERIFY(loaded, "Project loading must not fail, for now.");
-
-        PushLayer<Editor>();
-
-        auto now = std::chrono::system_clock::now();
-        auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
-
-        Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
+        CreateEditor(std::filesystem::path(*project));
     } else {
         PushLayer<ProjectCreatorLayer>();
     }
@@ -109,12 +101,31 @@ void EditorApplication::OnUpdate(f32 delta)
     RHI::Renderer::End(cmd);
 }
 
-void EditorApplication::OnEvent(Fussion::Event& event)
+void EditorApplication::OnEvent(Event& event)
 {
     Application::OnEvent(event);
 }
 
-void EditorApplication::OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc)
+void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
 {
     Application::OnLogReceived(level, message, loc);
+}
+
+void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
+{
+    if (path.IsEmpty()) {
+        path = Dialogs::ShowFilePicker("Fussion Project", {"*.fsnproj"});
+    }
+
+    bool loaded = Project::Load(*path);
+    VERIFY(loaded, "Project loading must not fail, for now.");
+
+    auto editor = s_EditorInstance->PushLayer<Editor>();
+    editor->OnStart();
+
+    auto now = std::chrono::system_clock::now();
+    auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
+
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
+
 }
