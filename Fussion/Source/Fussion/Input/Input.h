@@ -3,6 +3,7 @@
 #include "Fussion/Events/Event.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Events/MouseEvents.h"
+#include <Fussion/Math/Vector2.h>
 
 namespace Fussion {
     class Application;
@@ -18,19 +19,23 @@ namespace Fussion {
         friend Application;
 
     public:
-        static bool IsKeyDown(Keys key);
-        static bool IsKeyUp(Keys key);
-        static bool IsKeyPressed(Keys key);
-        static bool IsKeyReleased(Keys key);
-        static f32 GetAxis(Keys positive, Keys negative);
+        static auto IsKeyDown(Keys key) -> bool;
+        static auto IsKeyUp(Keys key) -> bool;
+        static auto IsKeyPressed(Keys key) -> bool;
+        static auto IsKeyReleased(Keys key) -> bool;
+        static auto GetAxis(Keys positive, Keys negative) -> f32;
 
-        static bool IsMouseButtonDown(MouseButton button);
-        static bool IsMouseButtonUp(MouseButton button);
-        static bool IsMouseButtonPressed(MouseButton button);
-        static bool IsMouseButtonReleased(MouseButton button);
+        static auto IsMouseButtonDown(MouseButton button) -> bool;
+        static auto IsMouseButtonUp(MouseButton button) -> bool;
+        static auto IsMouseButtonPressed(MouseButton button) -> bool;
+        static auto IsMouseButtonReleased(MouseButton button) -> bool;
+
+        /// Gets the mouse position in window coordinates, relative to the
+        /// top left of the window.
+        static auto GetMousePosition() -> Vector2;
 
         template<std::same_as<Keys>... K>
-        static bool IsAnyKeyDown(Keys const key, K... keys)
+        static auto IsAnyKeyDown(Keys const key, K... keys) -> bool
         {
             if (IsKeyDown(key))
                 return true;
