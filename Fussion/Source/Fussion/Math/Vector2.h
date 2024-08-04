@@ -154,4 +154,4 @@ namespace Fussion {
 using Fussion::Vector2;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2({:.2}, {:.2})", v.X, v.Y)
+FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2({:.2f}, {:.2f})", v.X, v.Y)

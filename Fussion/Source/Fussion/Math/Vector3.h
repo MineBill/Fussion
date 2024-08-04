@@ -134,4 +134,4 @@ bool operator!=(Vector3 const& lhs, Vector3 const& rhs);
 using Fussion::Vector3;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Vector3, "Vector3({:.2}, {:.2}, {:.2})", v.X, v.Y, v.Z)
+FSN_MAKE_FORMATTABLE(Fussion::Vector3, "Vector3({:.2f}, {:.2f}, {:.2f})", v.X, v.Y, v.Z)
