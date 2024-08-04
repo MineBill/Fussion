@@ -52,8 +52,10 @@ void ViewportWindow::OnDraw()
     static auto draw_gizmo = false;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(0, 0));
-    defer(ImGui::PopStyleVar());
-    if (ImGui::Begin("Viewport")) {
+    bool opened = ImGui::Begin("Viewport");
+    ImGui::PopStyleVar();
+
+    if (opened) {
         m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
         m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
@@ -84,16 +86,16 @@ void ViewportWindow::OnDraw()
             ImGui::Image(IMGUI_IMAGE(image), m_Size);
         }
 
-        ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-        ImGuiWindowFlags window_flags =
-            ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_NoDocking |
-            ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoSavedSettings |
-            ImGuiWindowFlags_NoFocusOnAppearing |
-            ImGuiWindowFlags_NoNav;
-
         if (m_Editor->GetActiveScene() == nullptr) {
+            ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+            ImGuiWindowFlags window_flags =
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoDocking |
+                ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoFocusOnAppearing |
+                ImGuiWindowFlags_NoNav;
+
             ImGui::SetNextWindowPos(m_ContentOriginScreen + m_Size / 2.f + Vector2(0, m_Size.Y * 0.2f), 0, Vector2(0.5, 0.5));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(20, 20));
             defer(ImGui::PopStyleVar());
@@ -133,7 +135,11 @@ void ViewportWindow::OnDraw()
         }, { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("EditorCameraSettings", [&] {
-            EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+            // EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+            if (ImGui::BeginMenu("Hello")) {
+                EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+                ImGui::EndMenu();
+            }
         });
 
         ImGui::SameLine();
