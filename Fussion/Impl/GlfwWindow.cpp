@@ -265,6 +265,13 @@ namespace Fussion {
         glfwSetWindowPos(m_Window, CAST(s32, position.X), CAST(s32, position.Y));
     }
 
+    auto GlfwWindow::GetPosition() const -> Vector2
+    {
+        s32 x, y;
+        glfwGetWindowPos(m_Window, &x, &y);
+        return { x, y };
+    }
+
     void GlfwWindow::SetIcon(Image const& image)
     {
         GLFWimage glfw_image;
