@@ -47,6 +47,8 @@ void ViewportWindow::OnDraw()
 {
     ZoneScoped;
     static bool gizmo_activated = false;
+
+    // This is used to track whether the gizmo was draw the previous frame or not.
     static auto draw_gizmo = false;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(0, 0));
