@@ -69,7 +69,7 @@ public:
     SwapChainSupportDetails SwapchainSupport{};
     VmaAllocator Allocator{};
 
-    explicit VulkanDevice(RHI::Instance* instance);
+    explicit VulkanDevice(Ref<RHI::Instance> const& instance);
     virtual ~VulkanDevice() override;
 
     virtual auto CreateRenderPass(RenderPassSpecification spec) -> Ref<RenderPass> override;
@@ -133,7 +133,7 @@ public:
 
     auto QuerySwapChainSupport(VkPhysicalDevice device) const -> SwapChainSupportDetails;
 
-    VulkanInstance* Instance{};
+    Ref<VulkanInstance> Instance{};
 
 private:
     void SetupDebugCallback();

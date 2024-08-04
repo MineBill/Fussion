@@ -28,6 +28,11 @@ public:
     }
 };
 
+Application::~Application()
+{
+    LOG_DEBUGF("Application terminating");
+}
+
 void Application::Run()
 {
     s_Instance = this;
@@ -74,6 +79,8 @@ void Application::Run()
         Input::Flush();
         FrameMark;
     }
+
+    RHI::Renderer::Shutdown();
 }
 
 Layer* Application::PushLayer(Ptr<Layer> layer)

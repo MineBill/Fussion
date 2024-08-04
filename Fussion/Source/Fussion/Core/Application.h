@@ -7,7 +7,7 @@
 namespace Fussion {
 class Application {
 public:
-    virtual ~Application() = default;
+    virtual ~Application();
 
     virtual void OnStart()
     {

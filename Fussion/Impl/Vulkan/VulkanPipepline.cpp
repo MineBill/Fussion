@@ -101,10 +101,15 @@ Ref<VulkanPipelineLayout> VulkanPipelineLayout::Create(
     std::vector<VkPushConstantRange> ranges(push_constant_count);
     for (size_t i = 0; i < push_constant_count; i++) {
         ranges[i] = VkPushConstantRange{
-            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
             .offset = 0,
             .size = CAST(u32, self->m_Specification.PushConstants[i].Size),
         };
+
+        if (self->m_Specification.PushConstants[i].Stage == ShaderType::Vertex) {
+            ranges[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        } else {
+            ranges[i].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
     }
     ci.pPushConstantRanges = ranges.data();
 

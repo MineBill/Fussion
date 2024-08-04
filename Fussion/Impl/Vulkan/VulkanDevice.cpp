@@ -19,7 +19,7 @@
 const char* g_RequiredDeviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 namespace Fussion::RHI {
-Device* Device::Create(RHI::Instance* instance)
+Device* Device::Create(Ref<RHI::Instance> const& instance)
 {
     return new VulkanDevice(instance);
 }
@@ -33,11 +33,10 @@ std::vector<u32> QueueFamilyIndices::GetUniqueIndex() const
     return {};
 }
 
-VulkanDevice::VulkanDevice(RHI::Instance* instance)
+VulkanDevice::VulkanDevice(Ref<RHI::Instance> const& instance)
 {
-    Instance = dynamic_cast<VulkanInstance*>(instance);
+    Instance = instance->As<VulkanInstance>();
 
-    SetupDebugCallback();
     PickPhysicalDevice();
 
     FamilyIndices = GetQueueFamilies(PhysicalDevice);
@@ -296,8 +295,6 @@ void VulkanDevice::SetHandleName(u64 handle, VkObjectType type, const std::strin
 
     VK_CHECK(vkSetDebugUtilsObjectNameEXT(Handle, &name_info))
 }
-
-void VulkanDevice::SetupDebugCallback() {}
 
 void VulkanDevice::PickPhysicalDevice()
 {

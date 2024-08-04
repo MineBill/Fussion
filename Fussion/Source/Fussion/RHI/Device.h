@@ -23,7 +23,7 @@ public:
     using ImageCreationCallback = std::function<void(Ref<Image> const&, bool create)>;
     using ImageViewCreationCallback = std::function<void(Ref<ImageView> const&, Ref<Image> const&, bool create)>;
 
-    static Device* Create(Instance* instance);
+    static Device* Create(Ref<Instance> const& instance);
 
     static Ref<Device>& Instance() { return s_Instance; }
 

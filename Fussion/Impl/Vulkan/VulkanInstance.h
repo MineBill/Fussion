@@ -4,14 +4,18 @@
 #include "volk.h"
 
 namespace Fussion::RHI {
-class VulkanInstance : public Instance {
-public:
-    explicit VulkanInstance(const Window& window);
-    ~VulkanInstance() override = default;
+    class VulkanInstance final : public Instance {
+    public:
+        explicit VulkanInstance(Window const& window);
+        virtual ~VulkanInstance() override;
 
-    bool CheckValidationLayers();
+        bool CheckValidationLayers();
 
-    VkInstance Instance{};
-    VkSurfaceKHR Surface{};
-};
+        static auto CreateDebugMessenger() -> VkDebugUtilsMessengerCreateInfoEXT;
+        virtual void* GetRawHandle() override { return Instance; }
+
+        VkDebugUtilsMessengerEXT DebugMessenger{};
+        VkInstance Instance{};
+        VkSurfaceKHR Surface{};
+    };
 }

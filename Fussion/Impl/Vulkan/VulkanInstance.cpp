@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <cstring>
 
-const char* g_RequiredVulkanLayers[] = {
+std::vector g_RequiredVulkanLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
 
@@ -18,6 +18,7 @@ std::vector<const char*> GetRequiredExtensions()
     auto required_extensions = glfwGetRequiredInstanceExtensions(&count);
     if (required_extensions == nullptr) {
         LOG_ERROR("Call to glfwGetRequiredInstanceExtensions failed");
+        return {};
     }
     std::vector<const char*> retval(count);
     for (u32 i = 0; i < count; i++) {
@@ -29,10 +30,10 @@ std::vector<const char*> GetRequiredExtensions()
 }
 
 namespace Fussion::RHI {
-VkBool32 DebugCallback(
+VkBool32 VkDebugMessengerCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     [[maybe_unused]] VkDebugUtilsMessageTypeFlagsEXT message_types,
-    const VkDebugUtilsMessengerCallbackDataEXT* p_callback_data,
+    VkDebugUtilsMessengerCallbackDataEXT const* p_callback_data,
     [[maybe_unused]] void* p_user_data)
 {
     switch (message_severity) {
@@ -54,26 +55,26 @@ VkBool32 DebugCallback(
     return true;
 }
 
-Instance* Instance::Create(const Window& window)
+Ref<Instance> Instance::Create(Window const& window)
 {
-    return new VulkanInstance(window);
+    return MakeRef<VulkanInstance>(window);
 }
 
-VulkanInstance::VulkanInstance(const Window& window)
+VulkanInstance::VulkanInstance(Window const& window)
 {
     VK_CHECK(volkInitialize())
 
     constexpr auto application_info = VkApplicationInfo{
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
-        .pApplicationName = "Fuck",
+        .pApplicationName = "Fussion Project",
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = "Fussion",
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),
         .apiVersion = VK_API_VERSION_1_3,
     };
 
-    const auto extensions = GetRequiredExtensions();
+    auto extensions = GetRequiredExtensions();
 
     auto instance_create_info = VkInstanceCreateInfo{
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -90,30 +91,24 @@ VulkanInstance::VulkanInstance(const Window& window)
 #ifdef USE_VALIDATION_LAYERS
     CheckValidationLayers();
     LOG_INFO("Setting up validation layers and debug messenger");
-    VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfoExt{
-        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-        .pNext = nullptr,
-        .flags = {},
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
-        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
-        .pfnUserCallback = DebugCallback,
-        .pUserData = nullptr,
-    };
+    auto debug_utils_messenger_create_info_ext = CreateDebugMessenger();
 
-    instance_create_info.enabledLayerCount = 1;
-    instance_create_info.ppEnabledLayerNames = g_RequiredVulkanLayers;
-    instance_create_info.pNext = &debugUtilsMessengerCreateInfoExt;
+    instance_create_info.enabledLayerCount = CAST(u32, g_RequiredVulkanLayers.size());
+    instance_create_info.ppEnabledLayerNames = g_RequiredVulkanLayers.data();
+    instance_create_info.pNext = &debug_utils_messenger_create_info_ext;
 #endif
 
     VK_CHECK(vkCreateInstance(&instance_create_info, nullptr, &Instance))
     volkLoadInstance(Instance);
 
+    vkCreateDebugUtilsMessengerEXT(Instance, &debug_utils_messenger_create_info_ext, nullptr, &DebugMessenger);
+
     VK_CHECK(glfwCreateWindowSurface(Instance, CAST(GLFWwindow*, window.NativeHandle()), nullptr, &Surface));
+}
+
+VulkanInstance::~VulkanInstance()
+{
+    LOG_DEBUGF("Destroying vulkan instance");
 }
 
 bool VulkanInstance::CheckValidationLayers()
@@ -126,10 +121,10 @@ bool VulkanInstance::CheckValidationLayers()
 
     vkEnumerateInstanceLayerProperties(&count, properties.data());
 
-    for (const auto required : g_RequiredVulkanLayers) {
+    for (auto const required : g_RequiredVulkanLayers) {
         bool found{ false };
 
-        for (const auto& prop : properties) {
+        for (auto const& prop : properties) {
             if (strcmp(required, prop.layerName) == 0) {
                 found = true;
             }
@@ -142,6 +137,24 @@ bool VulkanInstance::CheckValidationLayers()
     }
 
     return true;
+}
+
+auto VulkanInstance::CreateDebugMessenger() -> VkDebugUtilsMessengerCreateInfoEXT
+{
+    return VkDebugUtilsMessengerCreateInfoEXT {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        .pNext = nullptr,
+        .flags = {},
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT,
+        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT,
+        .pfnUserCallback = VkDebugMessengerCallback,
+        .pUserData = nullptr,
+    };
 }
 
 }

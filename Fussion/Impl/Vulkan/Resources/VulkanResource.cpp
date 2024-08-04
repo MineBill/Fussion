@@ -4,56 +4,54 @@
 #include "../Common.h"
 
 namespace Fussion::RHI {
-VkShaderStageFlags ShaderStagesToVulkan(const ShaderTypeFlags stages)
-{
-    VkShaderStageFlags flags = 0;
-    if (stages.Test(ShaderType::Vertex)) {
-        flags |= VK_SHADER_STAGE_VERTEX_BIT;
+    VkShaderStageFlags ShaderStagesToVulkan(ShaderTypeFlags const stages)
+    {
+        VkShaderStageFlags flags = 0;
+        if (stages.Test(ShaderType::Vertex)) {
+            flags |= VK_SHADER_STAGE_VERTEX_BIT;
+        }
+        if (stages.Test(ShaderType::Fragment)) {
+            flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+        if (stages.Test(ShaderType::Compute)) {
+            flags |= VK_SHADER_STAGE_COMPUTE_BIT;
+        }
+        return flags;
     }
-    if (stages.Test(ShaderType::Fragment)) {
-        flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
-    }
-    if (stages.Test(ShaderType::Compute)) {
-        flags |= VK_SHADER_STAGE_COMPUTE_BIT;
-    }
-    return flags;
-}
 
-VulkanResourceLayout::VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources)
-{
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    VulkanResourceLayout::VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources)
+    {
+        std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-    for (u32 i = 0; i < resources.size(); i++) {
-        const auto& resource = resources[i];
-        VkDescriptorSetLayoutBinding binding{
-            .binding = i,
-            .descriptorType = ResourceTypeToVulkan(resource.Type),
-            .descriptorCount = CAST(u32, resource.Count),
-            .stageFlags = ShaderStagesToVulkan(resource.Stages)
+        for (u32 i = 0; i < resources.size(); i++) {
+            auto const& resource = resources[i];
+            VkDescriptorSetLayoutBinding binding{
+                .binding = i,
+                .descriptorType = ResourceTypeToVulkan(resource.Type),
+                .descriptorCount = CAST(u32, resource.Count),
+                .stageFlags = ShaderStagesToVulkan(resource.Stages)
+            };
+            bindings.push_back(binding);
+        }
+
+        const auto ci = VkDescriptorSetLayoutCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .bindingCount = CAST(u32, bindings.size()),
+            .pBindings = bindings.data()
         };
-        bindings.push_back(binding);
+
+        VK_CHECK(vkCreateDescriptorSetLayout(device->Handle, &ci, nullptr, &m_Handle));
     }
 
-    const auto ci = VkDescriptorSetLayoutCreateInfo{
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = CAST(u32, bindings.size()),
-        .pBindings = bindings.data()
-    };
+    VulkanResourceLayout::~VulkanResourceLayout()
+    {
+        VulkanResourceLayout::Destroy();
+    }
 
-    VK_CHECK(vkCreateDescriptorSetLayout(device->Handle, &ci, nullptr, &m_Handle));
-}
+    void VulkanResourceLayout::Destroy()
+    {
+        vkDestroyDescriptorSetLayout(Device::Instance()->As<VulkanDevice>()->Handle, m_Handle, nullptr);
+    }
 
-VulkanResourceLayout::~VulkanResourceLayout()
-{
-    VulkanResourceLayout::Destroy();
-}
-
-void VulkanResourceLayout::Destroy()
-{
-    vkDestroyDescriptorSetLayout(Device::Instance()->As<VulkanDevice>()->Handle, m_Handle, nullptr);
-}
-
-VulkanResource::~VulkanResource()
-{
-}
+    VulkanResource::~VulkanResource() {}
 }

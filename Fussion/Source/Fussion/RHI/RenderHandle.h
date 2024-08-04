@@ -8,11 +8,8 @@ public:
     RenderHandle();
     virtual ~RenderHandle() = default;
 
-    // virtual void Destroy() = 0;
-
-
-    require_results bool Equals(const RenderHandle& other) const;
-    require_results bool Equals(const Ref<RenderHandle>& other) const;
+    require_results bool Equals(RenderHandle const& other) const;
+    require_results bool Equals(Ref<RenderHandle> const& other) const;
 
     /**
      * Helper function to downcast to backend-specific types.
@@ -21,6 +18,12 @@ public:
      */
     template<class T>
     Ref<T> As()
+    {
+        return std::dynamic_pointer_cast<T>(shared_from_this());
+    }
+
+    template<class T>
+    Ref<T> As() const
     {
         return std::dynamic_pointer_cast<T>(shared_from_this());
     }

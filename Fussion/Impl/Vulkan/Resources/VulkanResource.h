@@ -5,34 +5,34 @@
 #include "../VulkanDevice.h"
 
 namespace Fussion::RHI {
-VkShaderStageFlags ShaderStagesToVulkan(ShaderTypeFlags stages);
+    VkShaderStageFlags ShaderStagesToVulkan(ShaderTypeFlags stages);
 
-class VulkanResourceLayout : public ResourceLayout {
-public:
-    VulkanResourceLayout() = default;
-    VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources);
-    virtual ~VulkanResourceLayout() override;
+    class VulkanResourceLayout final : public ResourceLayout {
+    public:
+        VulkanResourceLayout() = default;
+        VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources);
+        virtual ~VulkanResourceLayout() override;
 
-    virtual void Destroy() override;
+        virtual void Destroy() override;
 
-    void* GetRawHandle() override { return m_Handle; }
+        virtual void* GetRawHandle() override { return m_Handle; }
 
-private:
-    VkDescriptorSetLayout m_Handle{};
-};
+    private:
+        VkDescriptorSetLayout m_Handle{};
+    };
 
-class VulkanResource : public Resource {
-    friend class VulkanResourcePool;
+    class VulkanResource final : public Resource {
+        friend class VulkanResourcePool;
 
-public:
-    VulkanResource() = default;
-    VulkanResource(const VkDescriptorSet handle) : m_Handle(handle) {}
-    virtual ~VulkanResource() override;
+    public:
+        VulkanResource() = default;
+        VulkanResource(VkDescriptorSet const handle) : m_Handle(handle) {}
+        virtual ~VulkanResource() override;
 
-    void* GetRawHandle() override { return m_Handle; }
+        virtual void* GetRawHandle() override { return m_Handle; }
 
-private:
-    VkDescriptorSet m_Handle{};
-    Ref<ResourceLayout> m_Layout{};
-};
+    private:
+        VkDescriptorSet m_Handle{};
+        Ref<ResourceLayout> m_Layout{};
+    };
 }

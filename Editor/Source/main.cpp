@@ -21,4 +21,5 @@ int main(int argc, char** argv)
 #if defined(FSN_LIVEPP_ENABLED)
     lpp::LppDestroyDefaultAgent(&lpp_agent);
 #endif
+    return 0;
 }

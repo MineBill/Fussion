@@ -277,6 +277,7 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
             auto struct_size = reflection_compiler.get_declared_struct_size(type);
             LOG_DEBUGF("Push constant '{}' with size '{}'", push.name, struct_size);
             metadata.PushConstants.push_back(PushConstant{
+                .Stage = ShaderType::Vertex,
                 .Name = push.name,
                 .Size = struct_size,
             });
@@ -354,6 +355,7 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
 
             if (pos != metadata.PushConstants.end()) {
                 metadata.PushConstants.push_back(PushConstant{
+                    .Stage = ShaderType::Fragment,
                     .Name = push.name,
                     .Size = struct_size,
                 });

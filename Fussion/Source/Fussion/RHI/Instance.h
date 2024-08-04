@@ -1,13 +1,10 @@
 ﻿#pragma once
 #include "Fussion/Window.h"
+#include <Fussion/RHI/RenderHandle.h>
 
-namespace Fussion::RHI
-{
-    class Instance
-    {
+namespace Fussion::RHI {
+    class Instance : public RenderHandle {
     public:
-        virtual ~Instance() = default;
-
-        static Instance* Create(const Window& window);
+        static Ref<Instance> Create(Window const& window);
     };
 }

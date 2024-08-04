@@ -12,6 +12,7 @@ struct ShaderUniform {
 };
 
 struct PushConstant {
+    ShaderType Stage{};
     std::string Name{};
     size_t Size{};
 };

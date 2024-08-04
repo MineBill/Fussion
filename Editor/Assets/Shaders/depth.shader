@@ -17,7 +17,7 @@ void Vertex() {
 
 #pragma type: fragment
 
-layout (location = 0) out vec4 o_Color;
+//layout (location = 0) out vec4 o_Color;
 
 float LinearizeDepth(float depth, float near, float far) {
     // float z = depth * 2.0 - 1.0; // Convert depth from [0,1] to [-1,1]
@@ -26,7 +26,7 @@ float LinearizeDepth(float depth, float near, float far) {
 }
 
 void Fragment() {
-    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 1000.0);
-    o_Color = vec4(z, z, z, 1.0);
+//    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 1000.0);
+//    o_Color = vec4(z, z, z, 1.0);
 }
 // vim:ft=glsl
