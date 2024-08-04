@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "Image.h"
 #include "RenderPass.h"
-#include "Fussion/Math/Vector2.h"
+#include <Fussion/Core/Result.h>
+#include <Fussion/Math/Vector2.h>
+#include <Fussion/Math/Color.h>
 
 namespace Fussion::RHI {
 constexpr s32 MAX_FRAME_BUFFER_ATTACHMENTS = 5;
@@ -21,6 +23,10 @@ struct FrameBufferSpecification {
 
 class FrameBuffer : public RenderHandle {
 public:
+    enum class Error {
+        PositionOutOfBounds,
+    };
+
     virtual void Destroy() = 0;
 
     virtual void Resize(Vector2 new_size) = 0;
@@ -30,5 +36,6 @@ public:
     virtual auto GetDepthAttachmentAsView() -> Ref<ImageView> = 0;
 
     virtual auto GetSpec() -> FrameBufferSpecification const& = 0;
+    virtual auto ReadPixel(Vector2 position, u32 attachment = 0) -> Result<std::array<u8, 4>, Error> = 0;
 };
 }

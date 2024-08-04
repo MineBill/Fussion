@@ -105,6 +105,7 @@ public:
     virtual void RegisterImageCallback(ImageCreationCallback const& callback) override;
     virtual void RegisterImageViewCallback(ImageViewCreationCallback const& callback) override;
 
+    virtual void DestroyBuffer(Ref<Buffer> const& buffer) override;
     virtual void DestroyImage(Ref<Image> const& image) override;
     virtual void DestroyImageView(Ref<ImageView> const& image_view) override;
     virtual void DestroySampler(Ref<Sampler> const& sampler) override;

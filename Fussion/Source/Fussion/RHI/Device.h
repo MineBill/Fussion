@@ -58,6 +58,7 @@ public:
     virtual void RegisterImageCallback(ImageCreationCallback const& callback) = 0;
     virtual void RegisterImageViewCallback(ImageViewCreationCallback const& callback) = 0;
 
+    virtual void DestroyBuffer(Ref<Buffer> const& buffer) = 0;
     virtual void DestroyImage(Ref<Image> const& image) = 0;
     virtual void DestroyImageView(Ref<ImageView> const& image_view) = 0;
     virtual void DestroySampler(Ref<Sampler> const& sampler) = 0;

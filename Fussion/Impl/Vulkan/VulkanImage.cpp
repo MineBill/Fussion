@@ -129,6 +129,11 @@ void VulkanImage::TransitionLayout(ImageLayout new_layout)
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         src_stage = VK_PIPELINE_STAGE_HOST_BIT;
         dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    } else if (old_layout == Undefined && new_layout == TransferSrcOptimal) {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+        dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     } else if (old_layout == TransferDstOptimal && new_layout == ShaderReadOnlyOptimal) {
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;

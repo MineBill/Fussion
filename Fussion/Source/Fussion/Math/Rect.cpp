@@ -13,6 +13,11 @@ namespace Fussion {
         return { Vector2::Zero, size };
     }
 
+    auto Rect::FromSize(f32 width, f32 height) -> Rect
+    {
+        return FromSize(Vector2(width, height));
+    }
+
     Rect Rect::FromStartEnd(Vector2 const& start, Vector2 const& end)
     {
         return { start, end - start };

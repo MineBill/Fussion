@@ -3,27 +3,28 @@
 #include "Fussion/RHI/Buffer.h"
 
 namespace Fussion::RHI {
-VkBufferUsageFlags BufferUsageToVulkan(BufferUsageFlags usage);
+    VkBufferUsageFlags BufferUsageToVulkan(BufferUsageFlags usage);
 
-class VulkanBuffer final : public Buffer {
-public:
-    VulkanBuffer(VulkanDevice* device, BufferSpecification spec);
+    class VulkanBuffer final : public Buffer {
+    public:
+        VulkanBuffer(VulkanDevice* device, BufferSpecification spec);
 
-    void SetData(void* data, size_t size) override;
-    void SetData(void const* data, size_t size) override;
+        virtual void SetData(void* data, size_t size) override;
+        virtual void SetData(void const* data, size_t size) override;
+        virtual void SetData(void const* data, size_t size, size_t offset) override;
 
-    void SetData(void const* data, size_t size, size_t offset) override;
+        virtual void* GetMappedData() override;
 
-    void CopyToImage(Ref<Image> const& image) override;
+        virtual void CopyToImage(Ref<Image> const& image) override;
 
-    BufferSpecification const& GetSpec() const override { return m_Specification; }
+        virtual BufferSpecification const& GetSpec() const override { return m_Specification; }
 
-    void* GetRawHandle() override { return m_Handle; }
+        virtual void* GetRawHandle() override { return m_Handle; }
 
-private:
-    BufferSpecification m_Specification{};
-    VmaAllocation m_Allocation;
-    VmaAllocationInfo m_AllocationInfo;
-    VkBuffer m_Handle{};
-};
+    private:
+        BufferSpecification m_Specification{};
+        VmaAllocation m_Allocation;
+        VmaAllocationInfo m_AllocationInfo;
+        VkBuffer m_Handle{};
+    };
 }

@@ -73,6 +73,9 @@ public:
     [[nodiscard]]
     auto GetDepthImage() const -> Ref<Fussion::RHI::Image> { return m_DepthImage; }
 
+    [[nodiscard]]
+    auto GetObjectPickingFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
+
 private:
     // static SceneRenderer* s_Instance;
 

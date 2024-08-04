@@ -461,6 +461,8 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         }
     }
 
+    cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+
     cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
     {
         ZoneScopedN("Object Picking Render Pass");
@@ -474,7 +476,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
         cmd->UseShader(m_ObjectPickingShader);
         cmd->BindResource(m_GlobalResource, m_ObjectPickingShader, 0);
-        cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+        // cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
 
         if (packet.Scene) {
             packet.Scene->ForEachEntity([&](Entity* entity) {
@@ -498,7 +500,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             m_RenderContext.RenderFlags = RenderState::Mesh;
             cmd->UseShader(m_PbrShader);
             cmd->BindResource(m_GlobalResource, m_PbrShader, 0);
-            cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+            // cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
 
             cmd->BindResource(m_SceneResource, m_PbrShader, 1);
             cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);

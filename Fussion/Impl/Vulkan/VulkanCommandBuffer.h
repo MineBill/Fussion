@@ -32,6 +32,8 @@ public:
 
     virtual void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) override;
 
+    virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region) override;
+
     virtual void* GetRawHandle() override { return Handle; }
 
     VkCommandBuffer Handle{};

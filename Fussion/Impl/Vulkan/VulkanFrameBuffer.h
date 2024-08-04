@@ -31,6 +31,7 @@ public:
     virtual auto GetDepthAttachmentAsView() -> Ref<ImageView> override;
 
     virtual auto GetSpec() -> FrameBufferSpecification const& override;
+    virtual auto ReadPixel(Vector2 position, u32 attachment) -> Result<std::array<u8, 4>, Error> override;
 
 private:
     void Invalidate();

@@ -470,6 +470,12 @@ void VulkanDevice::RegisterImageViewCallback(ImageViewCreationCallback const& ca
     m_ImageViewCallbacks.push_back(callback);
 }
 
+void VulkanDevice::DestroyBuffer(Ref<Buffer> const& buffer)
+{
+    auto buffer_handle = buffer->GetRenderHandle<VkBuffer>();
+    vkDestroyBuffer(Handle, buffer_handle, nullptr);
+}
+
 void VulkanDevice::DestroyImage(Ref<Image> const& image)
 {
     for (auto const& cb : m_ImageCallbacks) {

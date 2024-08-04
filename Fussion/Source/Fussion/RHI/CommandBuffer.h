@@ -43,6 +43,8 @@ public:
 
     virtual void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) = 0;
 
+    virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region = Vector2(0, 0)) = 0;
+
     template<typename T>
     void PushConstants(Ref<RHI::Shader> const& shader, T* data)
     {

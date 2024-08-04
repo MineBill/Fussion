@@ -217,4 +217,22 @@ void VulkanCommandBuffer::PushConstants(Ref<RHI::Shader> const& shader, void* da
     vkCmdPushConstants(Handle, layout, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT, 0, CAST(u32, size), data);
 }
 
+void VulkanCommandBuffer::CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region)
+{
+    VkBufferImageCopy copy {
+        .imageSubresource = VkImageSubresourceLayers {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .layerCount = 1,
+        },
+        .imageExtent = VkExtent3D {
+            .width = CAST(u32, region.X),
+            .height = CAST(u32, region.Y),
+            .depth = 1,
+        }
+    };
+
+
+    vkCmdCopyImageToBuffer(Handle, image->GetRenderHandle<VkImage>(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer->GetRenderHandle<VkBuffer>(), 1, &copy);
+}
+
 }

@@ -12,9 +12,13 @@ namespace Fussion {
         Rect(f32 x, f32 y, f32 width, f32 height);
         Rect(Vector2 const& position, Vector2 const& size);
 
-        /// Create a Rect only from size. The position is set to @ref Vector2 "test".
+        /// Create a Rect only from size. The position is set to (0, 0).
         /// @return The rect.
         static Rect FromSize(Vector2 const& size);
+
+        /// Create a Rect only from size. The position is set to (0, 0).
+        /// @return The rect.
+        static auto FromSize(f32 width, f32 height) -> Rect;
 
         /// Create a rect from two positions. The size is calculated automatically.
         /// @return The rect.

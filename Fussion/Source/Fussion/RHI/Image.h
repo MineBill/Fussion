@@ -63,7 +63,7 @@ namespace Fussion::RHI
     public:
         virtual void Destroy() = 0;
 
-        static bool IsDepthFormat(const ImageFormat format)
+        static bool IsDepthFormat(ImageFormat format)
         {
             using enum ImageFormat;
             switch (format) {

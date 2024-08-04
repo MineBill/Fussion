@@ -10,6 +10,8 @@
 #include <imgui.h>
 #include "ImGuizmo.h"
 #include "Fussion/Events/KeyboardEvents.h"
+#include "Fussion/Input/Input.h"
+#include "Fussion/Math/Rect.h"
 
 #include <tracy/Tracy.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -44,6 +46,8 @@ ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
 void ViewportWindow::OnDraw()
 {
     ZoneScoped;
+    static bool gizmo_activated = false;
+    static auto draw_gizmo = false;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(0, 0));
     defer(ImGui::PopStyleVar());
@@ -51,7 +55,21 @@ void ViewportWindow::OnDraw()
         m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
         m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
-        if (const auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
+        if (Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
+            auto mouse = Input::GetMousePosition() - (m_ContentOriginScreen - Application::Instance()->GetWindow().GetPosition());
+            if (Rect::FromSize(m_Size).Contains(mouse)) {
+                if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
+                    if (auto id = color.Value()[0]; id != 0) {
+                        auto entity = m_Editor->GetActiveScene()->GetEntityFromLocalID(id);
+                        m_Editor->GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
+                    } else {
+                        m_Editor->GetSceneTree().ClearSelection();
+                    }
+                }
+            }
+        }
+
+        if (auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
             Editor::OnViewportResized(size);
             m_Size = size;
         }
@@ -151,8 +169,9 @@ void ViewportWindow::OnDraw()
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
         ImGuizmo::SetRect(m_ContentOriginScreen.X, m_ContentOriginScreen.Y, m_Size.X, m_Size.Y);
 
-        static bool activated = false;
+        draw_gizmo = false;
         if (auto& selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1) {
+            draw_gizmo = true;
             for (auto const& id : selection | std::views::keys) {
                 auto const& entity = m_Editor->GetActiveScene()->GetEntity(id);
 
@@ -168,8 +187,8 @@ void ViewportWindow::OnDraw()
                         entity->Transform.Position.Raw,
                         entity->Transform.EulerAngles.Raw,
                         entity->Transform.Scale.Raw);
-                    if (!activated) {
-                        activated = true;
+                    if (!gizmo_activated) {
+                        gizmo_activated = true;
                         switch (m_GizmoMode) {
                         case GizmoMode::Translation:
                             m_Editor->Undo.PushSingle(&entity->Transform.Position, "Gizmo LocalPosition");
@@ -182,8 +201,8 @@ void ViewportWindow::OnDraw()
 
                     m_Editor->GetActiveScene()->SetDirty();
                 } else {
-                    if (activated && !ImGuizmo::IsUsingAny()) {
-                        activated = false;
+                    if (gizmo_activated && !ImGuizmo::IsUsingAny()) {
+                        gizmo_activated = false;
                         switch (m_GizmoMode) {
                         case GizmoMode::Translation:
                             m_Editor->Undo.CommitTag("Gizmo LocalPosition");

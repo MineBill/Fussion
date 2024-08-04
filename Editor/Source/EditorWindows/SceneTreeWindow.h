@@ -10,12 +10,13 @@ public:
 
     virtual void OnDraw() override;
 
-    [[nodiscard]] SelectionList const& GetSelection() const { return m_Selection; }
+    [[nodiscard]]
+    auto GetSelection() const -> SelectionList const& { return m_Selection; }
     void ClearSelection() { m_Selection.clear(); }
+    void SelectEntity(Fussion::Uuid entity, bool clear = true);
 
 private:
     void DrawEntityHierarchy(Fsn::Uuid handle);
-    void SelectEntity(Fussion::Entity* entity, bool clear = true);
 
     SelectionList m_Selection{};
 };

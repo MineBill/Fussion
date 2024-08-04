@@ -67,11 +67,11 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     auto opened = ImGui::TreeNodeEx(entity->Name.c_str(), flags);
 
     if (ImGui::IsItemClicked()) {
-        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
     }
 
     if (ImGui::BeginPopupContextItem()) {
-        SelectEntity(entity, Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
         if (ImGui::BeginMenu("New")) {
             if (ImGui::MenuItem("Entity")) {
                 scene->CreateEntity("Entity", handle);
@@ -112,10 +112,10 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     }
 }
 
-void SceneTreeWindow::SelectEntity(Fussion::Entity* entity, bool clear)
+void SceneTreeWindow::SelectEntity(Fussion::Uuid entity, bool clear)
 {
     if (clear) {
         m_Selection.clear();
     }
-    m_Selection[entity->GetId()] = {};
+    m_Selection[entity] = {};
 }
