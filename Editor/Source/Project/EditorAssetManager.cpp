@@ -26,7 +26,7 @@ EditorAssetManager::EditorAssetManager()
 
 Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 {
-    VERIFY(m_Registry.contains(handle));
+    VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}", handle);
     ZoneScoped;
     if (!IsAssetLoaded(handle)) {
         // Load asset first
