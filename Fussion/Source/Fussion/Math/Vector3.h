@@ -62,6 +62,11 @@ struct Vector3 final {
     Vector3 operator*(Vector3 const& other) const;
     Vector3 operator/(Vector3 const& other) const;
 
+    Vector3 operator-() const
+    {
+        return {-X, -Y, -Z};
+    }
+
     Vector3& operator+=(Vector3 const& other);
     Vector3& operator-=(Vector3 const& other);
     Vector3& operator*=(Vector3 const& other);

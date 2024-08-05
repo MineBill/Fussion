@@ -25,7 +25,9 @@ public:
 
     COMPONENT_DEFAULT(DebugDrawer)
 
-    virtual void OnDebugDraw() override;
+#if FSN_DEBUG_DRAW
+    virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+#endif
 
     Type DrawType{};
 

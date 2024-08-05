@@ -23,6 +23,9 @@ target("Fussion")
         "**.natvis"
     )
 
+    add_rules("utils.bin2c", {extensions = {".png"}})
+    add_files("Assets/Textures/**.png")
+
     add_includedirs("Source/Fussion")
     add_includedirs("Source", {public = true})
     add_includedirs("Impl", {public = true})

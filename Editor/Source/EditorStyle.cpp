@@ -1,8 +1,8 @@
 ﻿#include "EditorStyle.h"
 
-#include "Assets/Importers/TextureImporter.h"
+#include <Fussion/Util/TextureImporter.h>
 
-
+using namespace Fussion;
 
 EditorStyle g_Style;
 

@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "AssetRef.h"
+#include "Texture2D.h"
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Math/Color.h"
 #include "Fussion/RHI/UniformBuffer.h"
@@ -14,6 +16,8 @@ public:
     Color ObjectColor{};
     f32 Metallic{};
     f32 Roughness{};
+
+    AssetRef<Texture2D> AlbedoMap{};
 
     struct MaterialBlock {
         Color ObjectColor;

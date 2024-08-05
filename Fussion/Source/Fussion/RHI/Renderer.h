@@ -28,6 +28,15 @@ namespace Fussion::RHI {
         [[nodiscard]]
         static auto GetDefaultMaterial() -> AssetRef<PbrMaterial> { return s_Renderer->m_DefaultMaterial; }
 
+        [[nodiscard]]
+        static auto DefaultNormalMap() -> AssetRef<Texture2D>;
+
+        [[nodiscard]]
+        static auto WhiteTexture() -> AssetRef<Texture2D>;
+
+        [[nodiscard]]
+        static auto BlackTexture() -> AssetRef<Texture2D>;
+
         void CreateDefaultRenderpasses();
         void CreateDefaultResources();
 
@@ -40,6 +49,7 @@ namespace Fussion::RHI {
         u32 m_CurrentImage{};
 
         AssetRef<PbrMaterial> m_DefaultMaterial;
+        AssetRef<Texture2D> m_WhiteTexture, m_BlackTexture, m_NormalMap;
 
         Device* m_Device{};
     };

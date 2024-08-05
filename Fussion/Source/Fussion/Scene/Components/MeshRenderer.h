@@ -27,6 +27,10 @@ public:
     virtual void OnUpdate(f32 delta) override;
     virtual void OnDraw(RHI::RenderContext& ctx) override;
 
+#if FSN_DEBUG_DRAW
+    virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+#endif
+
     AssetRef<Mesh> Mesh;
     AssetRef<PbrMaterial> Material;
 

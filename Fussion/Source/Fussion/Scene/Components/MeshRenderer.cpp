@@ -1,6 +1,7 @@
 ﻿#include "e5pch.h"
 #include "MeshRenderer.h"
 
+#include "Debug/Debug.h"
 #include "OS/FileSystem.h"
 #include "RHI/Device.h"
 #include "RHI/FrameAllocator.h"
@@ -41,6 +42,12 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
                 .Count = 1,
                 .Stages = RHI::ShaderType::Vertex | RHI::ShaderType::Fragment,
             },
+            RHI::ResourceUsage{
+                .Label = "Albedo Map",
+                .Type = RHI::ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = RHI::ShaderType::Fragment,
+            }
         };
         auto object_layout = RHI::Device::Instance()->CreateResourceLayout(resource_usages);
         auto resource = m_FrameAllocator.Alloc(object_layout, "MeshRenderer Material");
@@ -52,6 +59,12 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
 
         ctx.Cmd->BindUniformBuffer(material->MaterialUniformBuffer.GetBuffer(), resource, 0);
         ctx.Cmd->BindResource(resource, ctx.CurrentShader, 2);
+        auto albedo = material->AlbedoMap.Get();
+        if (!albedo) {
+            albedo = RHI::Renderer::WhiteTexture().Get();
+        }
+        ctx.Cmd->BindImage(albedo->GetImage(), resource, 1);
+
         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_Data);
     } else if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
         m_DepthPushData.Model = m_Owner->Transform.GetMatrix();
@@ -66,4 +79,32 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
     }
 
     mesh->Draw(ctx);
+}
+
+void Fussion::MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
+{
+    auto draw_normals = ctx.Flags.Test(DebugDrawFlag::DrawMeshNormals);
+    auto draw_tangents = ctx.Flags.Test(DebugDrawFlag::DrawMeshTangents);
+    if (!draw_normals && !draw_tangents) {
+        return;
+    }
+    auto mesh = Mesh.Get();
+    if (!mesh)
+        return;
+
+    auto mat = glm::mat3(glm::eulerAngleZXY(
+        glm::radians(m_Owner->Transform.EulerAngles.Z),
+        glm::radians(m_Owner->Transform.EulerAngles.X),
+        glm::radians(m_Owner->Transform.EulerAngles.Y)) * glm::scale(Mat4(1.0), CAST(glm::vec3, m_Owner->Transform.Scale)));
+    for (auto const& vertex : mesh->Vertices) {
+
+        auto base = Vector3(mat * vertex.Position) + m_Owner->Transform.Position;
+
+        if (draw_normals) {
+            Debug::DrawLine(base, base + mat * vertex.Normal * 0.1f, 0, Color::Green);
+        }
+        if (draw_tangents) {
+            Debug::DrawLine(base, base + mat * vertex.Tangent * 0.1f, 0, Color::SkyBlue);
+        }
+    }
 }

@@ -1,7 +1,8 @@
 ﻿#include "e5pch.h"
 #include "Renderer.h"
 
-#include "Assets/AssetManager.h"
+#include "Fussion/Util/TextureImporter.h"
+#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Core/Application.h"
 #include "Fussion/Assets/PbrMaterial.h"
 
@@ -55,6 +56,12 @@ namespace Fussion::RHI {
         s_Renderer->m_Swapchain->SubmitCommandBuffer(cmd);
         s_Renderer->m_Swapchain->Present(s_Renderer->m_CurrentImage);
     }
+
+    auto Renderer::DefaultNormalMap() -> AssetRef<Texture2D> { return s_Renderer->m_NormalMap; }
+
+    auto Renderer::WhiteTexture() -> AssetRef<Texture2D> { return s_Renderer->m_WhiteTexture; }
+
+    auto Renderer::BlackTexture() -> AssetRef<Texture2D> { return s_Renderer->m_BlackTexture; }
 
     void Renderer::CreateDefaultRenderpasses()
     {
@@ -148,10 +155,27 @@ namespace Fussion::RHI {
 
     }
 
+    static unsigned char g_white_texture_png[] = {
+#include "white_texture.png.h"
+    };
+
+    static unsigned char g_black_texture_png[] = {
+#include "black_texture.png.h"
+    };
+
+    static unsigned char g_normal_map_png[] = {
+#include "default_normal_map.png.h"
+    };
+
     void Renderer::CreateDefaultResources()
     {
         auto material = MakeRef<PbrMaterial>();
         material->ObjectColor = Color(1, 1, 1, 1);
         s_Renderer->m_DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
+
+        s_Renderer->m_WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png));
+        s_Renderer->m_BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png));
+        s_Renderer->m_NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png));
+
     }
 }

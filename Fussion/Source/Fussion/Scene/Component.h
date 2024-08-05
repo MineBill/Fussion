@@ -3,7 +3,11 @@
 #include "Fussion/meta.hpp/meta_all.hpp"
 #include "Fussion/RHI/RenderContext.h"
 
-#define USE_DEBUG_DRAW 1
+#define FSN_DEBUG_DRAW 1
+
+#if FSN_DEBUG_DRAW
+#include <Fussion/Debug/Debug.h>
+#endif
 
 namespace Fussion {
 class Entity;
@@ -25,8 +29,8 @@ public:
     virtual void OnStart() {}
     virtual void OnUpdate([[maybe_unused]] f32 delta) {}
 
-#if USE_DEBUG_DRAW
-    virtual void OnDebugDraw() {}
+#if FSN_DEBUG_DRAW
+    virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) {}
 #endif
 
     virtual void OnEnabled() {}

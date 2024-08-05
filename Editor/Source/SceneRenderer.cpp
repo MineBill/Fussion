@@ -1,7 +1,7 @@
 ﻿#include "SceneRenderer.h"
 
-#include "Assets/Importers/TextureImporter.h"
 #include "Fussion/Debug/Debug.h"
+#include <Fussion/Util/TextureImporter.h>
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
@@ -462,6 +462,8 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     }
 
     cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+    cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);
+    cmd->BindUniformBuffer(m_LightData.GetBuffer(), m_SceneResource, 1);
 
     cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
     {
@@ -500,11 +502,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             m_RenderContext.RenderFlags = RenderState::Mesh;
             cmd->UseShader(m_PbrShader);
             cmd->BindResource(m_GlobalResource, m_PbrShader, 0);
-            // cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
-
             cmd->BindResource(m_SceneResource, m_PbrShader, 1);
-            cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);
-            cmd->BindUniformBuffer(m_LightData.GetBuffer(), m_SceneResource, 1);
 
             m_RenderContext.CurrentShader = m_PbrShader;
             if (packet.Scene) {

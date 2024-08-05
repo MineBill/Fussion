@@ -6,6 +6,18 @@
 #include "Fussion/Math/Color.h"
 
 namespace Fussion {
+    enum class DebugDrawFlag {
+        DrawMeshNormals = 1 << 0,
+        DrawMeshTangents = 1 << 1,
+    };
+
+    DECLARE_FLAGS(DebugDrawFlag, DebugDrawFlags);
+    DECLARE_OPERATORS_FOR_FLAGS(DebugDrawFlags)
+
+    struct DebugDrawContext {
+        DebugDrawFlags Flags{};
+    };
+
     class Debug {
     public:
         static void Initialize(Ref<RHI::RenderPass> const& render_pass);

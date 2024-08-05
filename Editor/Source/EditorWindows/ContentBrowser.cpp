@@ -3,7 +3,6 @@
 #include "ImGuiHelpers.h"
 #include "EditorUI.h"
 #include "Layers/Editor.h"
-#include "Assets/Importers/TextureImporter.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
 #include "AssetWindows/AssetWindow.h"
@@ -12,6 +11,7 @@
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/OS/Dialog.h"
+#include <Fussion/Util/TextureImporter.h>
 
 #include "imgui.h"
 #include <ranges>

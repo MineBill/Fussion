@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Layers/ImGuiLayer.h"
 #include "EditorStyle.h"
+#include "Fussion/Assets/AssetRef.h"
 
 #include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Maybe.h"
@@ -12,6 +13,12 @@ namespace EUI {
     namespace Detail {
         ButtonStyle& GetButtonStyle(ButtonStyles style);
         WindowStyle& GetWindowStyle(WindowStyles style);
+
+        template<class T, template<class...> class U>
+        inline constexpr bool IsInstanceOf = std::false_type{};
+
+        template<template<class...> class U, class... Vs>
+        inline constexpr bool IsInstanceOf<U<Vs...>,U> = std::true_type{};
     }
 
     struct PropTypeGeneric {};
@@ -56,6 +63,35 @@ namespace EUI {
             modified |= ImGui::InputText("", data);
         } else if constexpr (std::is_same_v<T, Color>) {
             modified |= ImGui::ColorEdit4("", data->Raw);
+        } else if constexpr (Detail::IsInstanceOf<T, Fussion::AssetRef>) {
+            auto class_type = meta_hpp::resolve_type<T>();
+            auto m_Handle = class_type.get_member("m_Handle");
+
+            ImGui::TextUnformatted("Asset Reference:");
+            ImGui::SetNextItemAllowOverlap();
+            Vector2 pos = ImGui::GetCursorPos();
+            ImGui::Button(std::format("{}", CAST(u64, m_Handle.get(data).template as<Fussion::AssetHandle>())).c_str(), Vector2(64, 64));
+
+            if (ImGui::BeginDragDropTarget()) {
+                auto* payload = ImGui::GetDragDropPayload();
+                if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
+                    auto handle = CAST(Fussion::AssetHandle*, payload->Data);
+
+                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                        m_Handle.set(data, *handle);
+                    }
+                }
+
+                ImGui::EndDragDropTarget();
+            }
+
+            // ImGui::SetCursorPos(pos + Vector2(2, 2));
+            // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
+            // EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
+            //     auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
+            //     m_AssetPicker.Show(m_Handle, value, asset_type);
+            // });
+            // ImGui::PopStyleVar();
         } else {
             static_assert(false, "Not implemented!");
         }

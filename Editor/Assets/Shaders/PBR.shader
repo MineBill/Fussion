@@ -80,6 +80,9 @@ void Vertex() {
 
 #pragma type: fragment
 
+layout(set = OBJECT_SET, binding = 1) uniform sampler2D uAlbedoMap;
+//layout(set = OBJECT_SET, binding = 2) uniform sampler2D uNormalMap;
+
 layout(location = 0) out vec4 o_Color;
 /* #ifdef EDITOR
     layout(location = 1) out int o_ID;
@@ -175,8 +178,8 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 vec3 do_directional_light() {
     // vec3 N = normalize(In.normal);
 //    vec3 N = texture(normal_map, In.frag_uv).rgb;
-    vec3 N = vec3(0, 1, 0);
-    N = normalize(N * 2.0 - 1);
+    vec3 N = vec3(0, 0, 1);
+//    N = normalize(N * 2.0 - 1);
     // vec3 V = normalize(u_SceneData.view_position.xyz - In.frag_pos);
     vec3 V = normalize(In.tangent_view_pos.xyz - In.tangent_frag_pos);
 
@@ -186,8 +189,7 @@ vec3 do_directional_light() {
     vec3 radiance = u_LightData.directional.color.rgb;
 
     vec3 F0 = vec3(0.04);
-//    vec3 albedo = texture(albedo_map, In.frag_uv).rgb;
-    vec3 albedo = vec3(1, 1, 1);
+    vec3 albedo = texture(uAlbedoMap, In.frag_uv).rgb;
 
 //    float metalness = texture(metallic_roughness_map, In.frag_uv).b * u_Material.metallic;
     float metalness = 1.0 * u_Material.Metallic;

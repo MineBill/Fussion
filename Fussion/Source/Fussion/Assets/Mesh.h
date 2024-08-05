@@ -21,6 +21,7 @@ public:
 
     void Draw(RHI::RenderContext& ctx);
 
+    std::vector<Vertex> Vertices{};
 private:
     Ref<RHI::Buffer> m_VertexBuffer;
     Ref<RHI::Buffer> m_IndexBuffer;

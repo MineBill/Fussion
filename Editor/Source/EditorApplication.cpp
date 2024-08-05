@@ -2,11 +2,11 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorApplication.h"
 #include "Layers/ImGuiLayer.h"
+#include "Project/Project.h"
 
 #include "Fussion/RHI/Renderer.h"
 #include "Fussion/Input/Input.h"
 #include "imgui.h"
-#include "Assets/Importers/TextureImporter.h"
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
@@ -18,8 +18,8 @@
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Scene/Entity.h"
 #include "Layers/ProjectCreatorLayer.h"
-#include "Project/Project.h"
 #include <Fussion/Core/Clap.h>
+#include <Fussion/Util/TextureImporter.h>
 #include <chrono>
 
 static unsigned char g_logo_32_data[] = {
@@ -114,7 +114,7 @@ void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, 
 void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
 {
     if (path.IsEmpty()) {
-        path = Dialogs::ShowFilePicker("Fussion Project", {"*.fsnproj"});
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
     }
 
     bool loaded = Project::Load(*path);

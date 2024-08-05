@@ -12,141 +12,141 @@ class SceneSerializer;
 
 namespace Fussion {
 
-struct Transform {
-    Vector3 Position{};
-    Vector3 EulerAngles{};
-    Vector3 Scale = Vector3(1, 1, 1);
+    struct Transform {
+        Vector3 Position{};
+        Vector3 EulerAngles{};
+        Vector3 Scale = Vector3(1, 1, 1);
 
-    Mat4 GetMatrix() const
-    {
-        auto scale = glm::scale(Mat4(1.0), CAST(glm::vec3, Scale));
-        auto rotation = glm::eulerAngleZXY(
-            glm::radians(EulerAngles.Z),
-            glm::radians(EulerAngles.X),
-            glm::radians(EulerAngles.Y));
-        auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
-        return translation * rotation * scale;
-    }
-
-    auto GetForward() const -> Vector3
-    {
-        auto rotation = glm::mat3(glm::eulerAngleZXY(
-            glm::radians(EulerAngles.Z),
-            glm::radians(EulerAngles.X),
-            glm::radians(EulerAngles.Y)));
-
-        return rotation * Vector3::Forward;
-    }
-};
-
-class Scene;
-
-class Entity final {
-    friend class Scene;
-    friend SceneSerializer;
-    friend class SceneBinarySerializer;
-    friend class ReflRegistrar;
-
-public:
-    Transform Transform;
-    std::string Name{ "Entity" };
-
-    Entity() = default;
-    Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
-
-    Entity(Entity const& other);
-    Entity(Entity&& other) noexcept;
-    Entity& operator=(Entity const& other);
-    Entity& operator=(Entity&& other) noexcept;
-
-    void SetParent(Entity const& new_parent);
-
-    void SetEnabled(bool enabled);
-    bool IsEnabled() const;
-    bool* GetEnabled() { return &m_Enabled; }
-
-    auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
-
-    template<std::derived_from<Component> C>
-    auto AddComponent() -> Ref<C>
-    {
-        auto type = meta_hpp::resolve_type<C>();
-        if (HasComponent<C>()) {
-            LOG_WARNF("Attempted to re-add component `{}`", type.get_metadata().at("Name").template as<std::string>());
-            return nullptr;
+        Mat4 GetMatrix() const
+        {
+            auto scale = glm::scale(Mat4(1.0), CAST(glm::vec3, Scale));
+            auto rotation = glm::eulerAngleZXY(
+                glm::radians(EulerAngles.Z),
+                glm::radians(EulerAngles.X),
+                glm::radians(EulerAngles.Y));
+            auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+            return translation * rotation * scale;
         }
-        auto const id = type.get_hash();
-        m_Components[id] = MakeRef<C>(this);
-        return m_Components[id];
-    }
 
-    [[nodiscard]]
-    auto HasComponent(meta_hpp::class_type type) const -> bool;
+        auto GetForward() const -> Vector3
+        {
+            auto rotation = glm::mat3(glm::eulerAngleZXY(
+                glm::radians(EulerAngles.Z),
+                glm::radians(EulerAngles.X),
+                glm::radians(EulerAngles.Y)));
 
-    template<std::derived_from<Component> C>
-    [[nodiscard]]
-    auto HasComponent() const -> bool
-    {
-        return m_Components.contains(meta_hpp::resolve_type<C>().get_hash());
-    }
+            return rotation * Vector3::Forward;
+        }
+    };
 
-    auto GetComponent(meta_hpp::class_type type) -> Ref<Component>;
+    class Scene;
 
-    template<std::derived_from<Component> C>
-    [[nodiscard]]
-    auto GetComponent() -> Ref<C>
-    {
-        return std::dynamic_pointer_cast<C>(GetComponent(meta_hpp::resolve_type<C>()));
-    }
+    class Entity final {
+        friend class Scene;
+        friend SceneSerializer;
+        friend class SceneBinarySerializer;
+        friend class ReflRegistrar;
 
-    void RemoveComponent(meta_hpp::class_type type);
+    public:
+        Transform Transform;
+        std::string Name{ "Entity" };
 
-    template<std::derived_from<Component> C>
-    void RemoveComponent()
-    {
-        RemoveComponent(meta_hpp::resolve_type<C>());
-    }
+        Entity() = default;
+        Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
 
-    [[nodiscard]]
-    auto GetId() const -> Uuid { return m_Handle; }
+        Entity(Entity const& other);
+        Entity(Entity&& other) noexcept;
+        Entity& operator=(Entity const& other);
+        Entity& operator=(Entity&& other) noexcept;
 
-    [[nodiscard]]
-    auto GetLocalID() const -> s32 {return m_LocalID;}
+        void SetParent(Entity const& new_parent);
 
-    [[nodiscard]]
-    auto GetComponents() const -> std::map<Uuid, Ref<Component>> const& { return m_Components; }
+        void SetEnabled(bool enabled);
+        bool IsEnabled() const;
+        bool* GetEnabled() { return &m_Enabled; }
 
-    [[nodiscard]]
-    auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
+        auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
 
-    void OnDraw(RHI::RenderContext& context);
+        template<std::derived_from<Component> C>
+        auto AddComponent() -> Ref<C>
+        {
+            auto type = meta_hpp::resolve_type<C>();
+            if (HasComponent<C>()) {
+                LOG_WARNF("Attempted to re-add component `{}`", type.get_metadata().at("Name").template as<std::string>());
+                return nullptr;
+            }
+            auto const id = type.get_hash();
+            m_Components[id] = MakeRef<C>(this);
+            return m_Components[id];
+        }
 
-private:
-    void OnStart();
-    void OnUpdate(f32 delta);
+        [[nodiscard]]
+        auto HasComponent(meta_hpp::class_type type) const -> bool;
 
-    void Tick();
+        template<std::derived_from<Component> C>
+        [[nodiscard]]
+        auto HasComponent() const -> bool
+        {
+            return m_Components.contains(meta_hpp::resolve_type<C>().get_hash());
+        }
 
-#if USE_DEBUG_DRAW
-    void OnDebugDraw();
+        auto GetComponent(meta_hpp::class_type type) -> Ref<Component>;
+
+        template<std::derived_from<Component> C>
+        [[nodiscard]]
+        auto GetComponent() -> Ref<C>
+        {
+            return std::dynamic_pointer_cast<C>(GetComponent(meta_hpp::resolve_type<C>()));
+        }
+
+        void RemoveComponent(meta_hpp::class_type type);
+
+        template<std::derived_from<Component> C>
+        void RemoveComponent()
+        {
+            RemoveComponent(meta_hpp::resolve_type<C>());
+        }
+
+        [[nodiscard]]
+        auto GetId() const -> Uuid { return m_Handle; }
+
+        [[nodiscard]]
+        auto GetLocalID() const -> s32 { return m_LocalID; }
+
+        [[nodiscard]]
+        auto GetComponents() const -> std::map<Uuid, Ref<Component>> const& { return m_Components; }
+
+        [[nodiscard]]
+        auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
+
+        void OnDraw(RHI::RenderContext& context);
+
+    private:
+        void OnStart();
+        void OnUpdate(f32 delta);
+
+        void Tick();
+
+#if FSN_DEBUG_DRAW
+        void OnDebugDraw(DebugDrawContext& ctx);
 #endif
 
-    void OnDestroy();
+        void OnDestroy();
 
-    bool IsGrandchild(Uuid handle) const;
-    void AddChild(Entity const& child);
-    void RemoveChild(Entity const& child);
+        bool IsGrandchild(Uuid handle) const;
+        void AddChild(Entity const& child);
+        void RemoveChild(Entity const& child);
 
-    Uuid m_Parent;
-    std::vector<Uuid> m_Children{};
+        Uuid m_Parent;
+        std::vector<Uuid> m_Children{};
 
-    std::map<Uuid, Ref<Component>> m_Components{};
-    std::vector<Uuid> m_RemovedComponents{};
+        std::map<Uuid, Ref<Component>> m_Components{};
+        std::vector<Uuid> m_RemovedComponents{};
 
-    Uuid m_Handle;
-    Scene* m_Scene{};
-    s32 m_LocalID{};
+        Uuid m_Handle;
+        Scene* m_Scene{};
+        s32 m_LocalID{};
 
-    bool m_Enabled{ true };
-};
+        bool m_Enabled{ true };
+    };
 }

@@ -2,7 +2,7 @@
 #include "Project/Project.h"
 
 #include "Fussion/Assets/Mesh.h"
-    
+
 #define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
 #include "Fussion/OS/FileSystem.h"
@@ -41,21 +41,27 @@ Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
     auto mesh = model.meshes[0];
     auto primitive = mesh.primitives[0];
 
-    auto pos_accessor = model.accessors[primitive.attributes.find("POSITION")->second];
-    auto pos_view = model.bufferViews[pos_accessor.bufferView];
-    auto pos_buffer = model.buffers[pos_view.buffer];
+    auto&  pos_accessor = model.accessors[primitive.attributes.find("POSITION")->second];
+    auto& pos_view = model.bufferViews[pos_accessor.bufferView];
+    auto&  pos_buffer = model.buffers[pos_view.buffer];
+    LOG_DEBUGF("pos: {} {}", pos_view.byteOffset, pos_accessor.byteOffset);
 
-    auto norm_accessor = model.accessors[primitive.attributes.find("NORMAL")->second];
-    auto norm_view = model.bufferViews[norm_accessor.bufferView];
-    auto norm_buffer = model.buffers[norm_view.buffer];
 
-    auto uv_accessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
-    auto uv_view = model.bufferViews[uv_accessor.bufferView];
-    auto uv_buffer = model.buffers[uv_view.buffer];
+    auto& norm_accessor = model.accessors[primitive.attributes.find("NORMAL")->second];
+    auto& norm_view = model.bufferViews[norm_accessor.bufferView];
+    auto& norm_buffer = model.buffers[norm_view.buffer];
+    LOG_DEBUGF("nor: {} {}", norm_view.byteOffset, norm_accessor.byteOffset);
 
-    auto idx_accessor = model.accessors[primitive.indices];
-    auto idx_view = model.bufferViews[idx_accessor.bufferView];
-    auto idx_buffer = model.buffers[idx_view.buffer];
+    auto& uv_accessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+    VERIFY(uv_accessor.type == TINYGLTF_TYPE_VEC2);
+    VERIFY(uv_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+    auto& uv_view = model.bufferViews[uv_accessor.bufferView];
+    auto& uv_buffer = model.buffers[uv_view.buffer];
+    LOG_DEBUGF("uvs: {} {}", uv_view.byteOffset, uv_accessor.byteOffset);
+
+    auto& idx_accessor = model.accessors[primitive.indices];
+    auto& idx_view = model.bufferViews[idx_accessor.bufferView];
+    auto& idx_buffer = model.buffers[idx_view.buffer];
 
     auto pos_data = TRANSMUTE(const float*, &pos_buffer.data[pos_view.byteOffset + pos_accessor.byteOffset]);
     auto norm_data = TRANSMUTE(const float*, &norm_buffer.data[norm_view.byteOffset + norm_accessor.byteOffset]);
@@ -64,24 +70,27 @@ Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
     auto idx_data = TRANSMUTE(const u32*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]);
 
     bool has_tangent = primitive.attributes.contains("TANGENT");
-    u32 const* tangent_data{ nullptr };
+    f32 const* tangent_data{ nullptr };
     if (has_tangent) {
         LOG_DEBUGF("Mesh {} has tangents.", mesh.name);
-        auto accessor = model.accessors[primitive.attributes.find("TANGENT")->second];
-        auto view = model.bufferViews[accessor.bufferView];
-        auto buffer = model.buffers[view.buffer];
-        tangent_data = TRANSMUTE(const u32*, &buffer.data[view.byteOffset + accessor.byteOffset]);
+        auto& accessor = model.accessors[primitive.attributes.find("TANGENT")->second];
+        VERIFY(accessor.type == TINYGLTF_TYPE_VEC4);
+        auto& view = model.bufferViews[accessor.bufferView];
+        auto& buffer = model.buffers[view.buffer];
+        tangent_data = TRANSMUTE(const f32*, &buffer.data[view.byteOffset + accessor.byteOffset]);
+        LOG_DEBUGF("Tangent count: {}", accessor.count);
+        LOG_DEBUGF("{} {}", view.byteOffset, accessor.byteOffset);
     }
 
     std::vector<Vertex> vertices;
     for (size_t i = 0; i < pos_accessor.count; i++) {
-        Vertex vertex;
+        Vertex vertex{};
 
-        std::copy_n(pos_data + i * 3, 3, &vertex.Position[0]);
-        std::copy_n(norm_data + i * 3, 3, &vertex.Normal[0]);
-        std::copy_n(uv_data + i * 2, 2, &vertex.TextureCoords[0]);
+        std::copy_n(pos_data + i * 3, 3, &vertex.Position.Raw[0]);
+        std::copy_n(norm_data + i * 3, 3, &vertex.Normal.Raw[0]);
+        std::copy_n(uv_data + i * 2, 2, &vertex.TextureCoords.Raw[0]);
         if (has_tangent) {
-            std::copy_n(tangent_data + i * 3, 3, &vertex.Tangent[0]);
+            std::copy_n(tangent_data + i * 4, 3, &vertex.Tangent.Raw[0]);
         }
         vertices.push_back(vertex);
     }

@@ -34,6 +34,8 @@ public:
     Fussion::Delegate<> OnResumePlay;
     Fussion::Delegate<> OnPaused;
 
+    Fussion::DebugDrawContext DebugDrawContext{};
+
     Editor();
 
     virtual void OnStart() override;

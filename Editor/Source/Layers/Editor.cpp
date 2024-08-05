@@ -119,14 +119,14 @@ void Editor::OnUpdate(f32 delta)
     case PlayState::Editing: {
         if (m_ActiveScene) {
             m_ActiveScene->Tick();
-            m_ActiveScene->OnDebugDraw();
+            m_ActiveScene->OnDebugDraw(DebugDrawContext);
         }
     }
     break;
     case PlayState::Playing: {
         if (m_PlayScene) {
             m_PlayScene->OnUpdate(delta);
-            m_PlayScene->OnDebugDraw();
+            m_PlayScene->OnDebugDraw(DebugDrawContext);
         }
     }
     break;
@@ -330,7 +330,7 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
             .Position = m_Camera.Position,
             .Near = m_Camera.Near,
             .Far = m_Camera.Far,
-            .Direction = m_Camera.GetDirection(),
+            .Direction = -m_Camera.GetDirection(),
         },
         .Scene = m_State == PlayState::Editing ? m_ActiveScene.get() : m_PlayScene.get(),
     });

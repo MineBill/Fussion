@@ -1,7 +1,7 @@
 ﻿#include "TextureSerializer.h"
-
-#include "Assets/Importers/TextureImporter.h"
 #include "Project/Project.h"
+
+#include <Fussion/Util/TextureImporter.h>
 
 using namespace Fussion;
 

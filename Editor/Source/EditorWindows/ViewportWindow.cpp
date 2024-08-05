@@ -130,14 +130,26 @@ void ViewportWindow::OnDraw()
         ImGui::SetCursorPos(origin + Vector2(5, 5));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);
 
-        EUI::Button("Camera", [&] {
+        EUI::Button("Settings", [&] {
+
             ImGui::OpenPopup("EditorCameraSettings");
         }, { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("EditorCameraSettings", [&] {
-            // EUI::Property("Speed", &m_Editor->GetCamera().Speed);
-            if (ImGui::BeginMenu("Hello")) {
+            if (ImGui::BeginMenu("Camera")) {
                 EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Debug Draw")) {
+                auto& ctx = Editor::Get().DebugDrawContext;
+                auto flags = ImGuiSelectableFlags_DontClosePopups;
+                for (auto const& [value, name] : magic_enum::enum_entries<DebugDrawFlag>()) {
+                    if (ImGui::Selectable(name.data(), ctx.Flags.Test(value), flags)) {
+                        ctx.Flags.Toggle(value);
+                        LOG_DEBUGF("Flags: {}", ctx.Flags.value);
+                    }
+                }
                 ImGui::EndMenu();
             }
         });

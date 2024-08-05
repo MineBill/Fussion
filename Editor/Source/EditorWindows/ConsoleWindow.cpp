@@ -7,7 +7,7 @@
 #include <misc/cpp/imgui_stdlib.h>
 
 #include "ImGuiHelpers.h"
-#include "Assets/Importers/TextureImporter.h"
+#include <Fussion/Util/TextureImporter.h>
 #include "Fussion/Log/Log.h"
 #include "Layers/Editor.h"
 #include "Layers/ImGuiLayer.h"

@@ -18,8 +18,10 @@ namespace Fussion {
         context.PointLights.push_back(light);
     }
 
-    void DebugDrawer::OnDebugDraw()
+    void DebugDrawer::OnDebugDraw(DebugDrawContext& ctx)
     {
+        (void)ctx;
+
         if (DrawType == Type::Box) {
             Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3::One * Size);
         } else if (DrawType == Type::Sphere) {

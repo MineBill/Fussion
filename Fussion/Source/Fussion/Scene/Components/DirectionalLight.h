@@ -2,20 +2,19 @@
 #include "Scene/Component.h"
 
 namespace Fussion {
-class DirectionalLight final : public Component {
-public:
-    COMPONENT(DirectionalLight)
+    class DirectionalLight final : public Component {
+    public:
+        COMPONENT(DirectionalLight)
 
-    virtual void OnEnabled() override;
-    virtual void OnDisabled() override;
-    virtual void OnUpdate(f32 delta) override;
+        virtual void OnEnabled() override;
+        virtual void OnDisabled() override;
+        virtual void OnUpdate(f32 delta) override;
 
-#if USE_DEBUG_DRAW
-    virtual void OnDebugDraw() override;
+#if FSN_DEBUG_DRAW
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
 
-    virtual void OnDraw(RHI::RenderContext& context) override;
-};
-
+        virtual void OnDraw(RHI::RenderContext& context) override;
+    };
 }
