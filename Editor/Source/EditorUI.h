@@ -18,7 +18,7 @@ namespace EUI {
         inline constexpr bool IsInstanceOf = std::false_type{};
 
         template<template<class...> class U, class... Vs>
-        inline constexpr bool IsInstanceOf<U<Vs...>,U> = std::true_type{};
+        inline constexpr bool IsInstanceOf<U<Vs...>, U> = std::true_type{};
     }
 
     struct PropTypeGeneric {};
@@ -71,6 +71,12 @@ namespace EUI {
             ImGui::SetNextItemAllowOverlap();
             Vector2 pos = ImGui::GetCursorPos();
             ImGui::Button(std::format("{}", CAST(u64, m_Handle.get(data).template as<Fussion::AssetHandle>())).c_str(), Vector2(64, 64));
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Clear")) {
+                    m_Handle.set(data, Fussion::AssetHandle(0));
+                }
+                ImGui::EndPopup();
+            }
 
             if (ImGui::BeginDragDropTarget()) {
                 auto* payload = ImGui::GetDragDropPayload();
