@@ -1,10 +1,13 @@
 ﻿#pragma once
 #include "Layers/ImGuiLayer.h"
 #include "EditorStyle.h"
-#include "Fussion/Assets/AssetRef.h"
+#include "Layers/Editor.h"
+#include "Project/Project.h"
 
 #include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Maybe.h"
+#include "Fussion/Assets/AssetManager.h"
+#include "Fussion/Assets/AssetRef.h"
 
 #include <misc/cpp/imgui_stdlib.h>
 #include <string>
@@ -26,6 +29,61 @@ namespace EUI {
     struct PropTypeRange {
         f32 Min{}, Max{};
     };
+
+    struct ImageButtonParams {
+        ButtonStyles StyleType = ButtonStyleImageButton;
+        Maybe<f32> Alignment;
+        Maybe<Vector2> Size;
+        bool Disabled = false;
+    };
+
+    /// Draws a button with a texture.
+    /// @param image The texture to use.
+    /// @param func The callback to call when the button is pressed.
+    void ImageButton(Ref<Fussion::RHI::Image> const& image, auto&& func, ImageButtonParams params = {})
+    {
+        auto style = Detail::GetButtonStyle(params.StyleType);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, style.NormalColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.HoverColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.PressedColor);
+
+        ImGui::PushStyleColor(ImGuiCol_Text, style.TextColor);
+        ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
+        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
+
+        auto size = params.Size.ValueOr(Vector2(0, 0));
+        auto s = size.X + style.Padding.X * 2.0f;
+        auto avail = ImGui::GetContentRegionAvail().x;
+        auto off = (avail - s) * params.Alignment.ValueOr(0.0f);
+
+        if (off > 0) {
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+        }
+
+        if (params.Disabled)
+            ImGui::BeginDisabled();
+
+        bool pressed = ImGui::ImageButton(IMGUI_IMAGE(image), size);
+        ImGui::PopStyleVar(3);
+        ImGui::PopStyleColor(6);
+
+        if (pressed) {
+            func();
+        }
+
+        if (params.Disabled)
+            ImGui::EndDisabled();
+    }
+
+    void ImageButton(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
+    {
+        ImageButton(texture->GetImage(), func, params);
+    }
 
     template<typename T, typename TypeKind = PropTypeGeneric>
     bool Property(std::string_view name, T* data, TypeKind kind = {})
@@ -70,7 +128,13 @@ namespace EUI {
             ImGui::TextUnformatted("Asset Reference:");
             ImGui::SetNextItemAllowOverlap();
             Vector2 pos = ImGui::GetCursorPos();
-            ImGui::Button(std::format("{}", CAST(u64, m_Handle.get(data).template as<Fussion::AssetHandle>())).c_str(), Vector2(64, 64));
+
+            auto handle = m_Handle.get(data).template as<Fussion::AssetHandle>();
+            auto asset_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(handle);
+            ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
+            ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
+            ImGui::PopFont();
+
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Clear")) {
                     m_Handle.set(data, Fussion::AssetHandle(0));
@@ -81,23 +145,24 @@ namespace EUI {
             if (ImGui::BeginDragDropTarget()) {
                 auto* payload = ImGui::GetDragDropPayload();
                 if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
-                    auto handle = CAST(Fussion::AssetHandle*, payload->Data);
+                    auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
+                    auto incoming_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*incoming_handle);
 
-                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                        m_Handle.set(data, *handle);
+                    if (incoming_metadata.Type == asset_metadata.Type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                        m_Handle.set(data, *incoming_handle);
                     }
                 }
 
                 ImGui::EndDragDropTarget();
             }
 
-            // ImGui::SetCursorPos(pos + Vector2(2, 2));
-            // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-            // EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
-            //     auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
-            //     m_AssetPicker.Show(m_Handle, value, asset_type);
-            // });
-            // ImGui::PopStyleVar();
+            ImGui::SetCursorPos(pos + Vector2(2, 2));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
+            EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
+                auto asset_type = class_type.get_method("GetType").invoke(data).template as<Fussion::AssetType>();
+                Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
+            }, { .Size = Vector2{ 16, 16 } });
+            ImGui::PopStyleVar();
         } else {
             static_assert(false, "Not implemented!");
         }
@@ -185,54 +250,6 @@ namespace EUI {
         }
     }
 
-    struct ImageButtonParams {
-        ButtonStyles StyleType = ButtonStyleImageButton;
-        f32 Alignment = 0.0f;
-        bool Disabled = false;
-    };
-
-    /// Draws a button with a texture.
-    /// @param texture The texture to use.
-    /// @param size The size of the button.
-    /// @param func The callback to call when the button is pressed.
-    void ImageButton(Ref<Fussion::Texture2D> const& texture, Vector2 size, auto&& func, ImageButtonParams params = {})
-    {
-        auto style = Detail::GetButtonStyle(params.StyleType);
-
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
-
-        ImGui::PushStyleColor(ImGuiCol_Button, style.NormalColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.HoverColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.PressedColor);
-
-        ImGui::PushStyleColor(ImGuiCol_Text, style.TextColor);
-        ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
-        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
-
-        auto s = size.X + style.Padding.X * 2.0f;
-        auto avail = ImGui::GetContentRegionAvail().x;
-        auto off = (avail - s) * params.Alignment;
-
-        if (off > 0) {
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-        }
-
-        if (params.Disabled)
-            ImGui::BeginDisabled();
-
-        bool pressed = ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
-        ImGui::PopStyleVar(3);
-        ImGui::PopStyleColor(6);
-
-        if (pressed) {
-            func();
-        }
-
-        if (params.Disabled)
-            ImGui::EndDisabled();
-    }
 
     void Popup(std::string_view title, auto&& func)
     {
