@@ -11,6 +11,7 @@
 struct AssetMetadata {
     Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
+    std::string Name;
 
     bool IsVirtual = false;
     bool DontSerialize = false;
@@ -33,9 +34,10 @@ public:
 
     virtual bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
-    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset) -> Fussion::AssetHandle override;
+    virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
+    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name) -> Fussion::AssetHandle override;
 
-    bool IsPathAnAsset(std::filesystem::path const& path) const;
+    bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
     auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;
     auto GetMetadata(Fsn::AssetHandle handle) const -> AssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
@@ -50,6 +52,7 @@ public:
         m_Registry[handle] = AssetMetadata{
             .Type = T::GetStaticType(),
             .Path = normal_path,
+            .Name = path.filename().string(),
             .IsVirtual = false,
             .DontSerialize = false,
             .Handle = handle,

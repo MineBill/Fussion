@@ -26,7 +26,7 @@ EditorAssetManager::EditorAssetManager()
 
 Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 {
-    VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}", handle);
+    VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}. Could it be that you are referencing a virtual asset?", handle);
     ZoneScoped;
     if (!IsAssetLoaded(handle)) {
         // Load asset first
@@ -64,12 +64,18 @@ bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
     return m_Registry.contains(handle);
 }
 
-AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset)
+bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
+{
+    return m_Registry[handle].IsVirtual;
+}
+
+AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name)
 {
     auto handle = AssetHandle();
     m_Registry[handle] = AssetMetadata{
         .Type = asset->GetType(),
         .Path = "",
+        .Name = std::string(name),
         .IsVirtual = true,
         .DontSerialize = true,
         .Handle = handle,
@@ -79,10 +85,12 @@ AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset)
     return handle;
 }
 
-bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path) const
+bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool include_virtual) const
 {
     ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
+        if (!include_virtual && metadata.IsVirtual)
+            continue;
         if (metadata.Path == path) {
             return true;
         }
@@ -171,6 +179,7 @@ void EditorAssetManager::Serialize()
             { "Handle", handle },
             { "Type", magic_enum::enum_name(metadata.Type) },
             { "Path", metadata.Path.string() },
+            { "Name", metadata.Name },
         };
     }
 
@@ -199,11 +208,13 @@ void EditorAssetManager::Deserialize()
             auto const handle = asset["Handle"].get<Fsn::Uuid>();
             auto const type = asset["Type"].get<std::string>();
             auto const asset_path = asset["Path"].get<std::string>();
+            auto name = asset.value("Name", std::filesystem::path(asset_path).filename().string());
 
             Fsn::Uuid h{ handle };
             m_Registry[h] = AssetMetadata{
                 .Type = *magic_enum::enum_cast<AssetType>(type),
                 .Path = asset_path,
+                .Name = name,
                 .Handle = h,
             };
         }

@@ -195,6 +195,7 @@ namespace EUI {
     struct ButtonParams {
         ButtonStyles Style{ ButtonStyleGeneric };
         f32 Alignment{ 0.0f };
+        bool Disabled{ false };
         Maybe<Vector2> Size{};
         Maybe<ButtonStyle> Override{};
     };
@@ -232,7 +233,14 @@ namespace EUI {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
         }
 
+        if (params.Disabled)
+            ImGui::BeginDisabled();
+
         bool opened = ImGui::Button(label.data(), params.Size.ValueOr(Vector2::Zero));
+
+        if (params.Disabled)
+            ImGui::EndDisabled();
+
         ImGui::PopStyleVar(3);
         ImGui::PopStyleColor(6);
 
@@ -261,7 +269,7 @@ namespace EUI {
     }
 
     struct ModalWindowParams {
-        ImGuiPopupFlags Flags = 0;
+        ImGuiWindowFlags Flags = 0;
         bool* Opened{ nullptr };
     };
 

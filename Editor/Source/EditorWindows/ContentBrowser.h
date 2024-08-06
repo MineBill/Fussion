@@ -9,6 +9,19 @@
 
 class ContentBrowser final : public EditorWindow {
 public:
+    class NamePopup final {
+    public:
+        void Show(std::function<void(std::string)> const& callback);
+
+        void Update();
+
+    private:
+        bool m_Show{}, m_Opened{};
+        std::string m_Name{};
+        std::function<void(std::string)> m_Callback;
+        bool m_ShowError{};
+    };
+
     struct Entry {
         std::filesystem::path Path;
         std::string StringPath;
@@ -40,9 +53,10 @@ private:
     std::filesystem::path m_CurrentPath;
     std::filesystem::path m_RelativeToRoot;
 
-    f32 m_Padding{ 8 }, m_ThumbnailSize{ 96 };
+    f32 m_Padding{ 8 }, m_ThumbnailSize{ 64 };
 
     Fsn::Dialogs::FilePickerFilter m_ImportFilter;
     std::unordered_map<std::string, Fsn::AssetType> m_FileTypes;
 
+    NamePopup m_NamePopup{};
 };

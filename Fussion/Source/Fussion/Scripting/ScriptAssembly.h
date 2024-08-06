@@ -36,6 +36,9 @@ public:
 
     void CallMethod(std::string const& method) const;
 
+    template<typename ...Args>
+    void CallMethod(std::string_view name, Args&& ...args) const;
+
     template<typename T>
     void SetProperty(std::string const& name, T& value);
 
@@ -118,6 +121,38 @@ private:
 
     friend ScriptingEngine;
 };
+
+template<typename ... Args>
+void ScriptInstance::CallMethod(std::string_view name, Args&&... args) const {
+    if (auto m = m_ScriptClass->GetMethod(std::string(name))) {
+        // auto const ctx = m_Instance->GetEngine()->CreateContext();
+        // defer(ctx->Release());
+
+        m_Context->Prepare(m);
+        m_Context->SetObject(m_Instance);
+        u32 i = 0;
+        ([&]<typename Arg>() {
+            using BaseType = std::remove_cvref_t<Arg>;
+
+            if constexpr(std::is_same_v<BaseType, f32>) {
+                m_Context->SetArgFloat(i, args);
+            } else if constexpr (std::is_same_v<BaseType, f64>) {
+                m_Context->SetArgDouble(i, args);
+            } else if constexpr (std::is_same_v<BaseType, u32>) {
+                m_Context->SetArgDWord(i, args);
+            } else if constexpr (std::is_same_v<BaseType, u64>) {
+                m_Context->SetArgQWord(i, args);
+            } else if constexpr (std::is_same_v<BaseType, std::string>) {
+                // m_Context->SetARg
+            } else {
+                static_assert(false, "Unsupported arg type");
+            }
+
+            i++;
+        }.template operator()<Args>(), ...);
+        m_Context->Execute();
+    }
+}
 
 template<typename T>
 void ScriptInstance::SetProperty(std::string const& name, T& value)

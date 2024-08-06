@@ -23,6 +23,7 @@ public:
 
     [[nodiscard]] bool IsValid() const { return m_Handle != 0; }
     [[nodiscard]] AssetHandle Handle() const { return m_Handle; }
+    bool IsVirtual() const;
 
     void SetHandle(AssetHandle handle) { m_Handle = handle; }
 

@@ -3,24 +3,26 @@
 #include "Fussion/Core/Uuid.h"
 
 namespace Fussion {
-class AssetManagerBase {
-public:
-    virtual ~AssetManagerBase() = default;
+    class AssetManagerBase {
+    public:
+        virtual ~AssetManagerBase() = default;
 
-    [[nodiscard]]
-    virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
+        [[nodiscard]]
+        virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
 
-    [[nodiscard]]
-    virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
+        [[nodiscard]]
+        virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
 
-    [[nodiscard]]
-    virtual Asset* GetAsset(AssetHandle handle, AssetType type) = 0;
+        [[nodiscard]]
+        virtual Asset* GetAsset(AssetHandle handle, AssetType type) = 0;
 
-    [[nodiscard]]
-    virtual Asset* GetAsset(std::string const& path, AssetType type) = 0;
+        [[nodiscard]]
+        virtual Asset* GetAsset(std::string const& path, AssetType type) = 0;
 
-    virtual AssetHandle CreateVirtualAsset(Ref<Asset> const& asset) = 0;
-};
+        virtual AssetHandle CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset") = 0;
+
+        virtual bool IsAssetVirtual(AssetHandle handle) = 0;
+    };
 }
 
 namespace Fsn = Fussion;

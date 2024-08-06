@@ -12,6 +12,7 @@ void AssetPicker::Update()
 
     bool was_open = m_Opened;
 
+    auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
     EUI::ModalWindow("Asset Picker", [&] {
         ImGuiH::Text("Please pick an asset for '{}':", m_Member.get_name());
 
@@ -47,7 +48,7 @@ void AssetPicker::Update()
             ImGui::TextUnformatted(name.data());
             ImGui::NextColumn();
         }
-    }, { .Flags = ImGuiPopupFlags_None, .Opened = &m_Opened });
+    }, { .Flags = flags, .Opened = &m_Opened });
 
     if (was_open && !m_Opened) {
         m_Entries.clear();

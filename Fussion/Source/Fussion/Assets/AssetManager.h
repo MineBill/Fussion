@@ -7,15 +7,15 @@ class AssetManager {
 public:
     static void SetActive(Ref<AssetManagerBase>);
 
-    static AssetHandle CreateVirtualAsset(Ref<Asset> const& asset)
+    static AssetHandle CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return s_Active->CreateVirtualAsset(asset);
+        return s_Active->CreateVirtualAsset(asset, name);
     }
 
     template<std::derived_from<Asset> T>
-    static AssetRef<T> CreateVirtualAssetRef(Ref<Asset> const& asset)
+    static AssetRef<T> CreateVirtualAssetRef(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return AssetRef<T>(s_Active->CreateVirtualAsset(asset));
+        return AssetRef<T>(s_Active->CreateVirtualAsset(asset, name));
     }
 
     static bool IsAssetHandleValid(AssetHandle const handle)
@@ -26,6 +26,11 @@ public:
     static bool IsAssetLoaded(AssetHandle handle)
     {
         return s_Active->IsAssetLoaded(handle);
+    }
+
+    static bool IsAssetVirtual(AssetHandle handle)
+    {
+        return s_Active->IsAssetVirtual(handle);
     }
 
     static Asset* GetAsset(AssetHandle handle, AssetType type)

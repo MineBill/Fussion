@@ -1,5 +1,6 @@
 ﻿#include "Editor.h"
 #include "EditorUI.h"
+#include "Fussion/Util/TextureImporter.h"
 #include "Serialization/SceneSerializer.h"
 
 #include <Fussion/Input/Input.h>
@@ -41,14 +42,14 @@ void Editor::OnStart()
     ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
     FileSystem::WriteEntireFile(Project::ActiveProject()->GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
 
-    // m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
-    // m_Watcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
-    //     using namespace std::chrono_literals;
-    //     // Wait a bit for the file lock to be released.
-    //     std::this_thread::sleep_for(100ms);
-    //     ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
-    // });
-    // m_Watcher->Start();
+    m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
+    m_Watcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
+        using namespace std::chrono_literals;
+        // Wait a bit for the file lock to be released.
+        std::this_thread::sleep_for(100ms);
+        ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
+    });
+    m_Watcher->Start();
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 

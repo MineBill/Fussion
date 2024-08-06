@@ -59,7 +59,7 @@ void ViewportWindow::OnDraw()
         m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
         m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
-        if (Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
+        if (m_IsFocused && Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
             auto mouse = Input::GetMousePosition() - (m_ContentOriginScreen - Application::Instance()->GetWindow().GetPosition());
             if (Rect::FromSize(m_Size).Contains(mouse)) {
                 if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {

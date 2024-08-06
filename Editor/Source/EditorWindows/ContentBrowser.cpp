@@ -19,6 +19,57 @@
 using namespace Fussion;
 namespace fs = std::filesystem;
 
+
+void ContentBrowser::NamePopup::Show(std::function<void(std::string)> const& callback)
+{
+    m_Callback = callback;
+    m_Show = true;
+    m_Opened = true;
+}
+
+void ContentBrowser::NamePopup::Update()
+{
+    if (m_Show) {
+        ImGui::OpenPopup("NamePicker");
+        m_Show = false;
+    }
+
+    bool was_opened = m_Opened;
+    auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
+    EUI::ModalWindow("NamePicker", [&] {
+        ImGuiH::Text("Please pick a name:");
+        ImGui::Separator();
+
+        if (ImGui::InputText("##input", &m_Name)) {
+            m_ShowError = Project::ActiveProject()->GetAssetManager()->IsPathAnAsset(m_Name, false);
+        }
+
+        if (m_ShowError) {
+            ImGui::Image(IMGUI_IMAGE(EditorStyle::GetStyle().EditorIcons[EditorIcon::Error]->GetImage()), Vector2(16, 16));
+            ImGui::SameLine();
+            ImGui::TextUnformatted("Path already exists");
+        }
+
+        EUI::Button("Accept", [this] {
+            if (!m_ShowError) {
+                m_Opened = false;
+            }
+        }, { .Disabled = m_ShowError });
+        ImGui::SameLine();
+        EUI::Button("Cancel", [&] {
+            m_Opened = false;
+
+            // Prevent m_Callback from being called.
+            was_opened = false;
+        });
+    }, { .Flags = flags, .Opened = &m_Opened });
+
+    if (was_opened && !m_Opened) {
+        m_Callback(m_Name);
+        m_Callback = nullptr;
+    }
+}
+
 void ContentBrowser::OnStart()
 {
     m_Root = Project::ActiveProject()->GetAssetsFolder();
@@ -41,6 +92,7 @@ void ContentBrowser::OnDraw()
     EUI::Window("Content", [&] {
 
         m_IsFocused = ImGui::IsWindowFocused();
+        m_NamePopup.Update();
 
         EUI::Button("Import", [&] {
             auto file = Fussion::Dialogs::ShowFilePicker(m_ImportFilter);
@@ -62,9 +114,9 @@ void ContentBrowser::OnDraw()
         ImGui::SameLine();
 
         auto& style = EditorStyle::GetStyle();
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], Vector2(16, 16), [&] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [&] {
             ImGui::OpenPopup("ContentBrowserOptions");
-        });
+        }, { .Size = Vector2{ 16, 16 } });
         if (ImGui::BeginItemTooltip()) {
             ImGui::TextUnformatted("Press to view content browser options.");
             ImGui::EndTooltip();
@@ -81,11 +133,25 @@ void ContentBrowser::OnDraw()
 
         if (ImGui::BeginPopupContextWindow()) {
             if (ImGui::BeginMenu("New")) {
-                if (ImGui::MenuItem("PbrMaterial")) {
-                    auto path = fs::relative(m_CurrentPath, m_Root) / "New PbrMaterial.fsn";
-                    Project::ActiveProject()->GetAssetManager()->CreateAsset<PbrMaterial>(path);
-                    Refresh();
+                if (ImGui::MenuItem("Folder")) {
+                    m_NamePopup.Show([this](std::string const& name) {
+                        std::error_code ec;
+                        if (!std::filesystem::create_directories(m_Root / name, ec)) {
+                            LOG_ERRORF("Failed to create directoried: {}", ec.message());
+                        }
+                        Refresh();
+                    });
                 }
+                ImGui::Separator();
+                if (ImGui::MenuItem("PbrMaterial")) {
+                    // TODO: Make the user pick a name first, to prevent conflicts.
+                    m_NamePopup.Show([this](std::string const& name) {
+                        auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
+                        Project::ActiveProject()->GetAssetManager()->CreateAsset<PbrMaterial>(path);
+                        Refresh();
+                    });
+                }
+
                 ImGui::EndMenu();
             }
             ImGui::EndPopup();
@@ -156,6 +222,7 @@ void ContentBrowser::OnDraw()
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
         ImGui::EndChild();
+
     });
 
 }

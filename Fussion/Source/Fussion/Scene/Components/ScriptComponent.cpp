@@ -22,7 +22,7 @@ void ScriptComponent::OnStart()
 void ScriptComponent::OnUpdate(f32 delta)
 {
     if (m_Instance.IsValid()) {
-        m_Instance.CallMethod("OnUpdate");
+        m_Instance.CallMethod("OnUpdate", delta);
     }
 }
 

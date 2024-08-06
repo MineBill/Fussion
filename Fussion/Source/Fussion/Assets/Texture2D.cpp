@@ -14,7 +14,9 @@ namespace Fussion {
         image_spec.Format = RHI::ImageFormat::R8G8B8A8_SRGB;
         image_spec.SamplerSpec.Filter = RHI::FilterMode::Linear;
         image_spec.SamplerSpec.UseAnisotropy = false;
-        image_spec.Usage = RHI::ImageUsage::ColorAttachment | RHI::ImageUsage::Sampled | RHI::ImageUsage::TransferDst;
+
+        using enum RHI::ImageUsage;
+        image_spec.Usage = ColorAttachment | Sampled | TransferDst | TransferSrc;
         image_spec.FinalLayout = RHI::ImageLayout::ShaderReadOnlyOptimal;
 
         texture->m_Spec = spec;

@@ -34,6 +34,8 @@ public:
 
     virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region) override;
 
+    virtual void BlitImage(Ref<Image> const& source_image, Ref<Image>& output_image, Rect source_rect, Rect dest_rect) override;
+
     virtual void* GetRawHandle() override { return Handle; }
 
     VkCommandBuffer Handle{};

@@ -31,6 +31,11 @@ void PbrMaterialSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset
 {
     auto material = asset->As<PbrMaterial>();
     auto handle = material->AlbedoMap.Handle();
+    if (material->AlbedoMap.IsVirtual()) {
+        LOG_WARNF("Attempted serializing virtual asset '{}' for PbrMaterial::AlbedoMap", handle);
+        handle = AssetHandle(0);
+    }
+
     ordered_json j = {
         { "$Type", "PbrMaterial" },
         { "Color", ToJson(material->ObjectColor) },

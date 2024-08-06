@@ -10,5 +10,7 @@ namespace Fussion {
         static auto LoadImageFromFile(std::filesystem::path const& path) -> Fussion::Image;
         static auto LoadTextureFromFile(std::filesystem::path const& path) -> Ref<Fussion::Texture2D>;
         static auto LoadTextureFromMemory(std::span<u8> data) -> Ref<Fussion::Texture2D>;
+
+        static void SaveImageToFile(Ref<RHI::Image> const& image, std::filesystem::path const& path);
     };
 }

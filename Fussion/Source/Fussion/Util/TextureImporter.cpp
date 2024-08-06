@@ -1,4 +1,8 @@
 ﻿#include "TextureImporter.h"
+
+#include "stb_image_write.h"
+#include "RHI/Device.h"
+
 #include <Fussion/OS/FileSystem.h>
 #include <Fussion/Util/stb_image.h>
 
@@ -39,5 +43,28 @@ namespace Fussion {
     {
         auto [Data, Width, Height] = LoadImageFromMemory(data);
         return Texture2D::Create(Data, { .Width = CAST(s32, Width), .Height = CAST(s32, Height) });
+    }
+
+    void TextureImporter::SaveImageToFile(Ref<RHI::Image> const& image, std::filesystem::path const& path)
+    {
+        auto& image_spec = image->GetSpec();
+
+        auto buffer_spec = RHI::BufferSpecification{
+            .Label = "Save Image To File",
+            .Usage = RHI::BufferUsage::TransferDestination,
+            .Size = image_spec.Width * image_spec.Height * 4,
+            .Mapped = true
+        };
+        auto buffer = RHI::Device::Instance()->CreateBuffer(buffer_spec);
+
+        auto old_layout = image->GetSpec().FinalLayout;
+        image->TransitionLayout(RHI::ImageLayout::TransferSrcOptimal);
+        auto cmd = RHI::Device::Instance()->BeginSingleTimeCommand();
+        cmd->CopyImageToBuffer(image, buffer, Vector2(image_spec.Width, image_spec.Height));
+        RHI::Device::Instance()->EndSingleTimeCommand(cmd);
+        image->TransitionLayout(old_layout);
+
+        buffer->GetMappedData();
+        stbi_write_jpg(path.string().data(), CAST(s32, image_spec.Width), CAST(s32, image_spec.Height), 4, buffer->GetMappedData(), 100);
     }
 }
