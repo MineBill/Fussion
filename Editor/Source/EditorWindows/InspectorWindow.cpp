@@ -40,7 +40,7 @@ void InspectorWindow::OnDraw()
             }
         }
 
-        m_AssetPicker.Update();
+        // m_AssetPicker.Update();
     }
     ImGui::End();
 }
@@ -122,10 +122,11 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
                         ImGui::SetCursorPos(pos + Vector2(2, 2));
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-                        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], Vector2(16, 16), [&] {
+                        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
                             auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
-                            m_AssetPicker.Show(m_Handle, value, asset_type);
-                        });
+                            // m_AssetPicker.Show(m_Handle, value, asset_type);
+                            Editor::GenericAssetPicker.Show(m_Handle, value, asset_type);
+                        }, { .Size = Vector2{ 16, 16 } });
                         ImGui::PopStyleVar();
                     } else {
                         ImGui::Text("Unsupported type for %s", member.get_name().c_str());
@@ -173,9 +174,9 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     ImGui::SameLine(width - line_height * 0.75);
     ImGui::PushID(component_type.get_hash());
-    EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], Vector2(18, 18), [] {
+    EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
-    });
+    }, { .Size = Vector2{ 18, 18 } });
 
     if (ImGui::BeginPopupContextItem("ComponentSettings")) {
         if (ImGui::MenuItem("Remove Component")) {
@@ -215,7 +216,7 @@ constexpr auto MakeAddComponentButtonStyle() -> ButtonStyle
     auto style = ButtonStyle::Default();
     // style.SetButtonColor(Color::FromHex(0x405070FF));
     style.BorderShadowColor = Color::Transparent;
-    style.Padding = Vector2{10, 5};
+    style.Padding = Vector2{ 10, 5 };
     style.Rounding = 1;
     style.Border = true;
     return style;

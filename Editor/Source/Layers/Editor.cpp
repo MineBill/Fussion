@@ -6,7 +6,6 @@
 #include <Fussion/Core/Application.h>
 #include <Fussion/Scene/Components/BaseComponents.h>
 #include <Fussion/Assets/AssetRef.h>
-#include <Fussion/Debug/Debug.h>
 #include <Fussion/Events/ApplicationEvents.h>
 #include <Fussion/Events/KeyboardEvents.h>
 #include <Fussion/OS/FileSystem.h>
@@ -19,6 +18,7 @@
 #include <ranges>
 
 Editor* Editor::s_EditorInstance = nullptr;
+AssetPicker Editor::GenericAssetPicker{};
 
 using namespace Fussion;
 
@@ -114,6 +114,8 @@ void Editor::Save()
 void Editor::OnUpdate(f32 delta)
 {
     ZoneScoped;
+
+    GenericAssetPicker.Update();
 
     switch (m_State) {
     case PlayState::Editing: {
@@ -211,9 +213,9 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSetCurrent(1);
 
         auto& style = EditorStyle::GetStyle();
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Play], Vector2{ height, height }, [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Play], [this] {
             SetPlayState(PlayState::Playing);
-        }, { .Disabled = m_ActiveScene == nullptr || m_State == PlayState::Playing });
+        }, { .Size = Vector2{ height, height }, .Disabled = m_ActiveScene == nullptr || m_State == PlayState::Playing });
 
         auto min = ImGui::GetItemRectMin();
 
@@ -221,15 +223,15 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], Vector2{ height, height }, [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], [this] {
             SetPlayState(PlayState::Editing);
-        }, { .Disabled = m_State != PlayState::Playing });
+        }, { .Size = Vector2{ height, height }, .Disabled = m_State != PlayState::Playing });
 
         ImGui::SameLine();
 
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], Vector2{ height, height }, [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], [this] {
             SetPlayState(PlayState::Paused);
-        }, { .Disabled = m_State != PlayState::Playing });
+        }, { .Size = Vector2{ height, height }, .Disabled = m_State != PlayState::Playing });
 
         ImGui::SetItemTooltip("Pause");
 

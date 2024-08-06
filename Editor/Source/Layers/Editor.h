@@ -36,6 +36,8 @@ public:
 
     Fussion::DebugDrawContext DebugDrawContext{};
 
+    static AssetPicker GenericAssetPicker;
+
     Editor();
 
     virtual void OnStart() override;

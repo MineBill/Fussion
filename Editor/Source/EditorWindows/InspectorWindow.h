@@ -22,6 +22,4 @@ private:
     /// Draws an entity in the inspector panel.
     /// @return true if the entity was modified, false otherwise.
     bool DrawEntity(Fussion::Entity& e);
-
-    AssetPicker m_AssetPicker{};
 };
