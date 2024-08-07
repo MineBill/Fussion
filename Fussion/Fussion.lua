@@ -48,6 +48,7 @@ target("Fussion")
     )
 
     add_rules("CompilerFlags")
+    add_rules("CommonFlags")
     add_options("Tracy")
 
     if is_plat("windows") then

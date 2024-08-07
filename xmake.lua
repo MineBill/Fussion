@@ -17,6 +17,12 @@ rule("CompilerFlags")
     end)
 rule_end()
 
+rule("CommonFlags")
+    on_load(function(target)
+        target:add("defines", "USE_ASSERTIONS")
+    end)
+rule_end()
+
 option("LivePP")
     set_showmenu(true)
     add_defines("FSN_LIVEPP_ENABLED")

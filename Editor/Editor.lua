@@ -4,6 +4,8 @@ target "Editor"
 	set_rundir("$(projectdir)/Editor")
     set_default(true)
     add_rules("CompilerFlags")
+    add_rules("CommonFlags")
+
     add_options("Tracy")
 
     set_warnings("allextra")
