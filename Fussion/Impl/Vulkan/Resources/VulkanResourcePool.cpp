@@ -20,8 +20,7 @@ VkDescriptorType ResourceTypeToVulkan(ResourceType type)
     case Sampler:
         return VK_DESCRIPTOR_TYPE_SAMPLER;
     }
-    PANIC("Unknown resource type")
-    return {};
+    UNREACHABLE;
 }
 
 VulkanResourcePool::VulkanResourcePool(VulkanDevice* device, ResourcePoolSpecification spec)

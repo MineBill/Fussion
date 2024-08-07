@@ -288,7 +288,6 @@ VkImageLayout ImageLayoutToVulkan(const ImageLayout layout)
         return VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
     }
 
-    PANIC("Invalid image layout '{}'", CAST(s32, layout))
-    return {};
+    UNREACHABLE;
 }
 }
