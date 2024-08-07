@@ -55,20 +55,6 @@ ScriptInstance& ScriptInstance::operator=(ScriptInstance const& other)
     return *this;
 }
 
-void ScriptInstance::CallMethod(std::string const& method) const
-{
-    if (auto m = m_ScriptClass->GetMethod(method)) {
-        // auto const ctx = m_Instance->GetEngine()->CreateContext();
-        // defer(ctx->Release());
-
-        m_Context->Prepare(m);
-        m_Context->SetObject(m_Instance);
-        // m_Context->SetArg
-        // m_Context->SetArg
-        m_Context->Execute();
-    }
-}
-
 ScriptClass::ScriptClass(asITypeInfo* type)
 {
     Reload(type);

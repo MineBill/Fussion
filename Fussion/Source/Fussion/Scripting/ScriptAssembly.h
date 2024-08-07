@@ -34,10 +34,8 @@ public:
     asIScriptObject* GetInstance() const { return m_Instance; }
     ScriptClass* GetScriptClass() const { return m_ScriptClass; }
 
-    void CallMethod(std::string const& method) const;
-
     template<typename ...Args>
-    void CallMethod(std::string_view name, Args&& ...args) const;
+    void CallMethod(std::string_view name, Args&& ...args);
 
     template<typename T>
     void SetProperty(std::string const& name, T& value);
@@ -123,11 +121,8 @@ private:
 };
 
 template<typename ... Args>
-void ScriptInstance::CallMethod(std::string_view name, Args&&... args) const {
+void ScriptInstance::CallMethod(std::string_view name, Args&&... args) {
     if (auto m = m_ScriptClass->GetMethod(std::string(name))) {
-        // auto const ctx = m_Instance->GetEngine()->CreateContext();
-        // defer(ctx->Release());
-
         m_Context->Prepare(m);
         m_Context->SetObject(m_Instance);
         u32 i = 0;
@@ -143,7 +138,7 @@ void ScriptInstance::CallMethod(std::string_view name, Args&&... args) const {
             } else if constexpr (std::is_same_v<BaseType, u64>) {
                 m_Context->SetArgQWord(i, args);
             } else if constexpr (std::is_same_v<BaseType, std::string>) {
-                // m_Context->SetARg
+                m_Context->SetArgObject(i, &args);
             } else {
                 static_assert(false, "Unsupported arg type");
             }
