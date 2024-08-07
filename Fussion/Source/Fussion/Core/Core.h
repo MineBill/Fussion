@@ -29,8 +29,7 @@
             }                                                                                           \
         }
 #else
-    #define EASSERT(expr, ...)
-    #define ECORE_ASSERT(expr, ...)
+    #define VERIFY(expr, ...)
 #endif
 
 #define PANIC(...)                                                                           \
