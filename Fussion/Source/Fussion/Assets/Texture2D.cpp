@@ -11,7 +11,7 @@ namespace Fussion {
         RHI::ImageSpecification image_spec{};
         image_spec.Width = spec.Width;
         image_spec.Height = spec.Height;
-        image_spec.Format = RHI::ImageFormat::R8G8B8A8_SRGB;
+        image_spec.Format = RHI::ImageFormat::R8G8B8A8_UNORM;
         image_spec.SamplerSpec.Filter = RHI::FilterMode::Linear;
         image_spec.SamplerSpec.UseAnisotropy = false;
 
