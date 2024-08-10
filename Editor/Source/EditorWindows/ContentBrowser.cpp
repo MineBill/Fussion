@@ -238,14 +238,15 @@ void ContentBrowser::ChangeDirectory(fs::path path) // NOLINT(performance-unnece
     for (auto const& entry : fs::directory_iterator(path)) {
         auto entry_path = fs::relative(entry.path(), Project::ActiveProject()->GetAssetsFolder());
         auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(entry_path);
-        if (metadata.IsValid() || entry.is_directory()) {
+        if (metadata.HasValue() || entry.is_directory()) {
+            auto meta = metadata.ValueOr({});
             m_Entries.push_back(Entry{
                 .Path = entry.path(),
                 .StringPath = entry.path().string(),
                 .Name = entry.path().filename().string(),
                 .IsDirectory = entry.is_directory(),
-                .Type = metadata.Type,
-                .Metadata = metadata,
+                .Type = meta.Type,
+                .Metadata = meta,
             });
         }
     }

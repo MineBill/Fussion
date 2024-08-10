@@ -182,7 +182,7 @@ class Includer final : public shaderc::CompileOptions::IncluderInterface {
     }
 };
 
-auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::vector<ShaderStage>, ShaderMetadata>
+auto ShaderCompiler::Compile(std::string const& source_code, std::string const& file_name) -> Maybe<CompileResult>
 {
     std::vector<ShaderStage> ret;
     ShaderMetadata metadata;
@@ -190,24 +190,39 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
     std::string vertex, fragment;
     PreProcessShader(source_code, vertex, fragment, metadata.ParsedPragmas);
 
+    using namespace std::string_literals;
+
+    if (auto pragma = std::ranges::find_if(metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
+        return pragma.Key == "samples";
+    }); pragma != metadata.ParsedPragmas.end()) {
+        auto samples = atoi(pragma->Value.data());
+        metadata.Samples = CAST(u32, samples);
+    }
+
+    if (auto pragma = std::ranges::find_if(metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
+        return pragma.Key == "blending";
+    }); pragma != metadata.ParsedPragmas.end()) {
+        metadata.UseBlending = pragma->Value == "on";
+    }
+
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
 
     // Needed to keep names.
     options.SetGenerateDebugInfo();
     options.SetPreserveBindings(true);
-    // options.SetVulkanRulesRelaxed(true);
     options.SetTargetEnvironment(shaderc_target_env_vulkan, VK_MAKE_VERSION(1, 3, 0));
     options.SetAutoBindUniforms(true);
     options.SetAutoMapLocations(true);
-    // options.SetOptimizationLevel(shaderc_optimization_level_p);
     options.AddMacroDefinition("Vertex", "main");
     options.AddMacroDefinition("Fragment", "main");
 
     auto includer = MakePtr<Includer>();
     options.SetIncluder(std::move(includer));
 
-    auto result = compiler.CompileGlslToSpv(vertex.c_str(), vertex.size(), shaderc_vertex_shader, "file.shader", options);
+    auto result = compiler.CompileGlslToSpv(vertex.c_str(), vertex.size(), shaderc_vertex_shader, file_name.data(), options);
+    VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
+
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         LOG_ERRORF("Shader compilation failed: {}", result.GetErrorMessage());
         return {};
@@ -219,7 +234,9 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
     };
     ret.emplace_back(vertex_stage);
 
-    result = compiler.CompileGlslToSpv(fragment.c_str(), fragment.size(), shaderc_fragment_shader, "file.shader", options);
+    result = compiler.CompileGlslToSpv(fragment.c_str(), fragment.size(), shaderc_fragment_shader, file_name.data(), options);
+    VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
+
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         LOG_ERRORF("Shader compilation failed: {}", result.GetErrorMessage());
         return {};
@@ -233,6 +250,9 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
 
     auto device = Device::Instance();
 
+    // ==============
+    //  Vertex Stage
+    // ==============
     {
         spirv_cross::Compiler reflection_compiler(vertex_stage.Bytecode);
 
@@ -285,6 +305,9 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
 
     }
 
+    // ==============
+    // Fragment Stage
+    // ==============
     {
         spirv_cross::Compiler reflection_compiler(fragment_stage.Bytecode);
 
@@ -384,6 +407,6 @@ auto ShaderCompiler::Compile(std::string const& source_code) -> std::tuple<std::
     //     .AttributeLayout = VertexAttributeLayout::Create({}),
     // };
 
-    return { ret, metadata };
+    return CompileResult{ ret, metadata };
 }
 }

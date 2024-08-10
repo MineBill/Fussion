@@ -82,6 +82,8 @@ ordered_json SerializeNativeComponent(meta_hpp::class_type component_type, meta_
             m = ToJson(*value.as<Vector3*>());
         } else if (value.is<Vector4*>()) {
             m = ToJson(*value.as<Vector4*>());
+        } else if (value.is<Color*>()) {
+            m = ToJson(*value.as<Color*>());
         } else if (data_type.is_class()) {
             auto class_type = data_type.as_class();
             if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
@@ -134,6 +136,8 @@ void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, met
                 member.set(ptr, value.get<Vector3>());
             } else if (mem_value.is<Vector4*>()) {
                 member.set(ptr, value.get<Vector4>());
+            } else if (mem_value.is<Color*>()) {
+                member.set(ptr, value.get<Color>());
             } else if (data_type.is_class()) {
                 auto class_type = data_type.as_class();
                 if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {

@@ -90,7 +90,7 @@ Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
         std::copy_n(norm_data + i * 3, 3, &vertex.Normal.Raw[0]);
         std::copy_n(uv_data + i * 2, 2, &vertex.TextureCoords.Raw[0]);
         if (has_tangent) {
-            std::copy_n(tangent_data + i * 4, 3, &vertex.Tangent.Raw[0]);
+            std::copy_n(tangent_data + i * 4, 4, &vertex.Tangent.Raw[0]);
         }
         vertices.push_back(vertex);
     }

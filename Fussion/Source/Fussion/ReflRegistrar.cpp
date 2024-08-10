@@ -112,7 +112,8 @@ namespace Fussion {
 
             meta::class_<DirectionalLight>(meta::metadata_()
                     ("Name"s, "DirectionalLight"s))
-                .constructor_<Entity*>(as_raw_pointer);
+                .constructor_<Entity*>(as_raw_pointer)
+                .member_("LightColor", &DirectionalLight::LightColor, as_pointer);
 
             meta::class_<Camera>(meta::metadata_()
                     ("Name"s, "Camera"s))

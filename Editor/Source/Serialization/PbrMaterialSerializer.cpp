@@ -20,7 +20,8 @@ Ref<Asset> PbrMaterialSerializer::Load(AssetMetadata metadata)
         material->ObjectColor = j["Color"].get<Color>();
         material->Metallic = j.value("Metallic", 0.0f);
         material->Roughness = j.value("Roughness", 0.0f);
-        material->AlbedoMap.SetHandle(j.value("Albedo", AssetHandle()));
+        material->AlbedoMap.SetHandle(j.value("Albedo", AssetHandle(0)));
+        material->NormalMap.SetHandle(j.value("Normal", AssetHandle(0)));
     } catch (std::exception const& e) {
         LOG_ERRORF("Error while deserializing PbrMaterial: {}", e.what());
     }
@@ -36,12 +37,19 @@ void PbrMaterialSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset
         handle = AssetHandle(0);
     }
 
+    auto nhandle = material->NormalMap.Handle();
+    if (material->NormalMap.IsVirtual()) {
+        LOG_WARNF("Attempted serializing virtual asset '{}' for PbrMaterial::AlbedoMap", nhandle);
+        nhandle = AssetHandle(0);
+    }
+
     ordered_json j = {
         { "$Type", "PbrMaterial" },
         { "Color", ToJson(material->ObjectColor) },
         { "Metallic", material->Metallic },
         { "Roughness", material->Roughness },
-        { "Albedo", CAST(u64, handle) }
+        { "Albedo", CAST(u64, handle) },
+        { "Normal", CAST(u64, nhandle) }
     };
 
     auto full_path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;

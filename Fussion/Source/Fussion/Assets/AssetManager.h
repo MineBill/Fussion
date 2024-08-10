@@ -18,6 +18,17 @@ public:
         return AssetRef<T>(s_Active->CreateVirtualAsset(asset, name));
     }
 
+    static AssetHandle CreateVirtualAssetWithPath(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+    {
+        return s_Active->CreateVirtualAsset(asset, name, path);
+    }
+
+    template<std::derived_from<Asset> T>
+    static AssetRef<T> CreateVirtualAssetRefWithPath(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+    {
+        return AssetRef<T>(s_Active->CreateVirtualAsset(asset, name, path));
+    }
+
     static bool IsAssetHandleValid(AssetHandle const handle)
     {
         return s_Active->IsAssetHandleValid(handle);

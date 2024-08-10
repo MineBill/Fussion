@@ -7,6 +7,7 @@
 #include "Fussion/RHI/UniformBuffer.h"
 #include "Fussion/Scene/Scene.h"
 #include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 
@@ -62,7 +63,7 @@ public:
     void Init();
     void Resize(Vector2 const& new_size);
 
-    void Render(const Ref<Fussion::RHI::CommandBuffer>& cmd, RenderPacket const& packet);
+    void Render(Ref<Fussion::RHI::CommandBuffer> const& cmd, RenderPacket const& packet);
 
     [[nodiscard]]
     Ref<Fussion::RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
@@ -77,9 +78,8 @@ public:
     auto GetObjectPickingFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
 
 private:
-    // static SceneRenderer* s_Instance;
+    Fussion::AssetRef<Fussion::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
 
-    Ref<Fussion::RHI::Shader> m_PbrShader{}, m_GridShader;
     Ref<Fussion::RHI::ResourcePool> m_ResourcePool{};
     Ref<Fussion::RHI::Resource> m_GlobalResource{};
     Ref<Fussion::Texture2D> m_TestTexture;
@@ -97,12 +97,13 @@ private:
     Ref<Fussion::RHI::FrameBuffer> m_FrameBuffer{};
 
     Ref<Fussion::RHI::RenderPass> m_DepthPass{};
-    Ref<Fussion::RHI::Shader> m_DepthShader{};
     Ref<Fussion::RHI::Image> m_DepthImage{};
 
     Ref<Fussion::RHI::RenderPass> m_ObjectPickingRenderPass{};
-    Ref<Fussion::RHI::Shader> m_ObjectPickingShader{};
     Ref<Fussion::RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
+
+    // Ref<Fussion::ShaderAsset> m_SkyShader{};
+    Fussion::AssetRef<Fussion::ShaderAsset> m_SkyShader{};
 
     std::array<Ref<Fussion::RHI::FrameBuffer>, 4> m_ShadowFrameBuffers{};
 

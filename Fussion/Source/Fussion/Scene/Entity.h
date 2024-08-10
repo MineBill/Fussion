@@ -20,20 +20,20 @@ namespace Fussion {
         Mat4 GetMatrix() const
         {
             auto scale = glm::scale(Mat4(1.0), CAST(glm::vec3, Scale));
-            auto rotation = glm::eulerAngleZXY(
-                glm::radians(EulerAngles.Z),
+            auto rotation = glm::eulerAngleYXZ(
+                glm::radians(EulerAngles.Y),
                 glm::radians(EulerAngles.X),
-                glm::radians(EulerAngles.Y));
+                glm::radians(EulerAngles.Z));
             auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
             return translation * rotation * scale;
         }
 
         auto GetForward() const -> Vector3
         {
-            auto rotation = glm::mat3(glm::eulerAngleZXY(
-                glm::radians(EulerAngles.Z),
+            auto rotation = glm::mat3(glm::eulerAngleYXZ(
+                glm::radians(EulerAngles.Y),
                 glm::radians(EulerAngles.X),
-                glm::radians(EulerAngles.Y)));
+                glm::radians(EulerAngles.Z)));
 
             return rotation * Vector3::Forward;
         }

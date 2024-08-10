@@ -129,10 +129,15 @@ void SceneRenderer::Init()
             }
         };
 
+        constexpr auto path = "Assets/Shaders/Depth.shader";
         m_DepthPass = Device::Instance()->CreateRenderPass(rp_spec);
-        const auto data = FileSystem::ReadEntireFile("Assets/Shaders/Depth.shader");
-        auto [stages, metadata] = ShaderCompiler::Compile(*data);
-        m_DepthShader = Device::Instance()->CreateShader(m_DepthPass, stages, metadata);
+        auto data = FileSystem::ReadEntireFile("Assets/Shaders/Depth.shader");
+        auto result = ShaderCompiler::Compile(*data);
+        auto shader = ShaderAsset::Create(m_DepthPass, result->ShaderStages, result->Metadata);
+        m_DepthShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+
+        // auto shader = ShaderAsset::Create(m_DepthPass, stages, metadata);
+        // m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, "Assets/Shaders/Depth.shader");
 
         auto image_spec = RHI::ImageSpecification{
             .Label = "Shadow Pass Depth Image",
@@ -205,10 +210,12 @@ void SceneRenderer::Init()
             }
         };
 
+        constexpr auto path = "Assets/Shaders/ObjectPick.shader";
         m_ObjectPickingRenderPass = Device::Instance()->CreateRenderPass(rp_spec);
-        const auto data = FileSystem::ReadEntireFile("Assets/Shaders/ObjectPick.shader");
-        auto [stages, metadata] = ShaderCompiler::Compile(*data);
-        m_ObjectPickingShader = Device::Instance()->CreateShader(m_ObjectPickingRenderPass, stages, metadata);
+        const auto data = FileSystem::ReadEntireFile(path);
+        auto result = ShaderCompiler::Compile(*data);
+        auto shader = ShaderAsset::Create(m_ObjectPickingRenderPass, result->ShaderStages, result->Metadata);
+        m_ObjectPickingShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
         auto fb_spec = RHI::FrameBufferSpecification{
             .Width = 100,
@@ -231,21 +238,21 @@ void SceneRenderer::Init()
     }
 
     {
-        // auto shader = AssetManager::GetAsset<ShaderAsset>("Assets/Shaders/SimplePBR.shader");
-        // shader->GetShader();
+        constexpr auto path = "Assets/Shaders/PBR.shader";
+        auto const data = FileSystem::ReadEntireFile(path);
+        auto result = ShaderCompiler::Compile(*data);
+        auto shader = ShaderAsset::Create(m_SceneRenderPass, result->ShaderStages, result->Metadata);
 
-        auto const data = FileSystem::ReadEntireFile("Assets/Shaders/PBR.shader");
-        auto [stages, metadata] = ShaderCompiler::Compile(*data);
-        metadata.Samples = 8;
-        m_PbrShader = Device::Instance()->CreateShader(m_SceneRenderPass, stages, metadata);
+        m_PbrShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
     {
-        const auto data = FileSystem::ReadEntireFile("Assets/Shaders/Editor/Grid.shader");
-        auto [stages, metadata] = ShaderCompiler::Compile(*data);
-        metadata.UseBlending = true;
-        metadata.Samples = 8;
-        m_GridShader = Device::Instance()->CreateShader(m_SceneRenderPass, stages, metadata);
+        constexpr auto path = "Assets/Shaders/Editor/Grid.shader";
+        auto data = FileSystem::ReadEntireFile(path);
+        auto result = ShaderCompiler::Compile(*data);
+        auto shader = ShaderAsset::Create(m_SceneRenderPass, result->ShaderStages, result->Metadata);
+
+        m_GridShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
     m_ViewData = UniformBuffer<ViewData>::Create("View Data");
@@ -254,7 +261,7 @@ void SceneRenderer::Init()
     m_SceneData = UniformBuffer<SceneData>::Create("Scene Data");
     m_LightData = UniformBuffer<LightData>::Create("Light Data");
 
-    const auto pool_spec = ResourcePoolSpecification::Default(100);
+    auto pool_spec = ResourcePoolSpecification::Default(100);
     m_ResourcePool = Device::Instance()->CreateResourcePool(pool_spec);
 
     {
@@ -364,7 +371,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     m_ViewData.Flush();
 
     m_SceneData.Data.ViewPosition = packet.Camera.Position;
-    m_SceneData.Data.ViewDirection = packet.Camera.Direction;
+    // m_SceneData.Data.ViewDirection = packet.Camera.Direction;
     m_SceneData.Data.AmbientColor = Color::White;
     m_SceneData.Flush();
 
@@ -405,7 +412,8 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             cmd->SetViewport({ ShadowMapResolution, -ShadowMapResolution });
             cmd->SetScissor(Vector4(0, 0, ShadowMapResolution, ShadowMapResolution));
 
-            cmd->UseShader(m_DepthShader);
+            auto depth_shader = m_DepthShader.Get()->GetShader();
+            cmd->UseShader(depth_shader);
             for (auto& light : m_RenderContext.DirectionalLights) {
                 auto _proj = glm::perspective(
                     glm::radians(50.0f),
@@ -448,7 +456,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
                 light.LightSpaceMatrix[i] = proj * view;
                 if (packet.Scene) {
-                    m_RenderContext.CurrentShader = m_DepthShader;
+                    m_RenderContext.CurrentShader = depth_shader;
                     m_RenderContext.CurrentLightSpace = light.LightSpaceMatrix[i];
                     packet.Scene->ForEachEntity([&](Entity* entity) {
                         ZoneScopedN("Entity Draw");
@@ -468,17 +476,17 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
     {
         ZoneScopedN("Object Picking Render Pass");
+        auto object_pick_shader = m_ObjectPickingShader.Get()->GetShader();
 
         m_RenderContext.RenderFlags = RenderState::ObjectPicking;
         m_RenderContext.CurrentPass = m_ObjectPickingRenderPass;
-        m_RenderContext.CurrentShader = m_ObjectPickingShader;
+        m_RenderContext.CurrentShader = object_pick_shader;
 
         cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
         cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
 
-        cmd->UseShader(m_ObjectPickingShader);
-        cmd->BindResource(m_GlobalResource, m_ObjectPickingShader, 0);
-        // cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+        cmd->UseShader(object_pick_shader);
+        cmd->BindResource(m_GlobalResource, object_pick_shader, 0);
 
         if (packet.Scene) {
             packet.Scene->ForEachEntity([&](Entity* entity) {
@@ -500,11 +508,12 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         {
             ZoneScopedN("PBR");
             m_RenderContext.RenderFlags = RenderState::Mesh;
-            cmd->UseShader(m_PbrShader);
-            cmd->BindResource(m_GlobalResource, m_PbrShader, 0);
-            cmd->BindResource(m_SceneResource, m_PbrShader, 1);
+            auto pbr_shader = m_PbrShader.Get()->GetShader();
+            cmd->UseShader(pbr_shader);
+            cmd->BindResource(m_GlobalResource, pbr_shader, 0);
+            cmd->BindResource(m_SceneResource, pbr_shader, 1);
 
-            m_RenderContext.CurrentShader = m_PbrShader;
+            m_RenderContext.CurrentShader = pbr_shader;
             if (packet.Scene) {
                 packet.Scene->ForEachEntity([&](Entity* entity) {
                     ZoneScopedN("Entity Draw");
@@ -521,9 +530,10 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
         {
             ZoneScopedN("Editor Grid");
-            m_RenderContext.CurrentShader = m_GridShader;
-            cmd->UseShader(m_GridShader);
-            cmd->BindResource(m_GlobalResource, m_GridShader, 0);
+            auto grid_shader = m_GridShader.Get()->GetShader();
+            m_RenderContext.CurrentShader = grid_shader;
+            cmd->UseShader(grid_shader);
+            cmd->BindResource(m_GlobalResource, grid_shader, 0);
             // cmd->BindResource(m_SceneResource, m_GridShader, 1);
             cmd->Draw(6, 1);
         }

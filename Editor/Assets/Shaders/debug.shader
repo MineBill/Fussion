@@ -1,5 +1,7 @@
 #version 450
+
 #pragma topology: lines
+#pragma samples: 8
 
 #include "Global.glsl"
 

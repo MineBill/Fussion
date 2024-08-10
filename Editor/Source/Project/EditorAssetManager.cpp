@@ -8,6 +8,7 @@
 #include "Serialization/PbrMaterialSerializer.h"
 
 #include "Fussion/OS/FileSystem.h"
+#include "Fussion/RHI/ShaderCompiler.h"
 #include "Fussion/Serialization/Json.h"
 
 #include <magic_enum/magic_enum.hpp>
@@ -22,6 +23,37 @@ EditorAssetManager::EditorAssetManager()
     m_AssetSerializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
     m_AssetSerializers[AssetType::Mesh] = MakePtr<MeshSerializer>();
     m_AssetSerializers[AssetType::PbrMaterial] = MakePtr<PbrMaterialSerializer>();
+
+    m_EditorWatcher = FileWatcher::Create(std::filesystem::current_path() / "Assets" / "Shaders");
+    m_EditorWatcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
+        LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
+        if (type == FileWatcher::EventType::FileModified) {
+            using namespace std::chrono_literals;
+
+            std::this_thread::sleep_for(100ms);
+            using namespace std::string_literals;
+            auto full_path = std::filesystem::path("Assets") / "Shaders"s / path;
+            auto meta = GetMetadata(full_path);
+            if (meta.IsEmpty()) {
+                return;
+            }
+            switch (meta->Type) {
+            case AssetType::Shader: {
+                auto shader = GetAsset(meta->Handle, AssetType::Shader)->As<ShaderAsset>();
+                auto data = FileSystem::ReadEntireFile(meta->Path);
+                auto result = RHI::ShaderCompiler::Compile(*data);
+                if (result.HasValue()) {
+                    *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
+                }
+            }
+            break;
+            default:
+                break;
+            }
+
+        }
+    });
+    m_EditorWatcher->Start();
 }
 
 Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
@@ -69,12 +101,12 @@ bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
     return m_Registry[handle].IsVirtual;
 }
 
-AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name)
+AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name, std::filesystem::path const& path)
 {
     auto handle = AssetHandle();
     m_Registry[handle] = AssetMetadata{
         .Type = asset->GetType(),
-        .Path = "",
+        .Path = path,
         .Name = std::string(name),
         .IsVirtual = true,
         .DontSerialize = true,
@@ -98,7 +130,7 @@ bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool i
     return false;
 }
 
-AssetMetadata EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
+Maybe<AssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
 {
     ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {

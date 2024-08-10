@@ -333,7 +333,7 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
             .Position = m_Camera.Position,
             .Near = m_Camera.Near,
             .Far = m_Camera.Far,
-            .Direction = -m_Camera.GetDirection(),
+            .Direction = m_Camera.GetDirection(),
         },
         .Scene = m_State == PlayState::Editing ? m_ActiveScene.get() : m_PlayScene.get(),
     });

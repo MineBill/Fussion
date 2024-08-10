@@ -14,6 +14,7 @@ namespace Fussion {
         image_spec.Format = RHI::ImageFormat::R8G8B8A8_UNORM;
         image_spec.SamplerSpec.Filter = RHI::FilterMode::Linear;
         image_spec.SamplerSpec.UseAnisotropy = false;
+        image_spec.SamplerSpec.Wrap = RHI::WrapMode::Repeat;
 
         using enum RHI::ImageUsage;
         image_spec.Usage = ColorAttachment | Sampled | TransferDst | TransferSrc;

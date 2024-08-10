@@ -13,6 +13,7 @@ Ref<VulkanShader> VulkanShader::Create(
 {
     auto self = MakeRef<VulkanShader>();
     self->m_Metadata = metadata;
+    self->m_RenderPass = render_pass->As<VulkanRenderPass>();
 
     for (const auto& stage : stages) {
         VkShaderModuleCreateInfo ci{};

@@ -86,6 +86,10 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         if (ImGui::MenuItem("Parent to Scene")) {
             entity->SetParent(*scene->GetRoot());
         }
+        if (ImGui::MenuItem("Align to object")) {
+            Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;
+            Editor::GetCamera().Position = entity->Transform.Position;
+        }
         ImGui::EndPopup();
     }
 

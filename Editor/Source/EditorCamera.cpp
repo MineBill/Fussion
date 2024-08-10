@@ -12,17 +12,25 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Fussion/Core/Application.h"
+#include "Fussion/Debug/Debug.h"
 #include "Fussion/Math/Math.h"
 #include "Fussion/Math/Vector4.h"
 
 using namespace Fussion;
 
-void EditorCamera::OnUpdate(const f32 delta)
+void EditorCamera::OnUpdate(f32 delta)
 {
     auto rotation = glm::eulerAngleZXY(
-        glm::radians(m_EulerAngles.Z),
-        glm::radians(m_EulerAngles.X),
-        glm::radians(m_EulerAngles.Y));
+        glm::radians(EulerAngles.Z),
+        glm::radians(EulerAngles.X),
+        glm::radians(EulerAngles.Y));
+
+    auto fake_rot = glm::eulerAngleYXZ(
+        glm::radians(EulerAngles.Y),
+        glm::radians(EulerAngles.X),
+        glm::radians(EulerAngles.Z));
+    m_Direction = glm::mat3(fake_rot) * -Vector3::Forward;
+    m_Direction = Vector3();
 
     if (m_CapturedMouse) {
         auto const x = Input::GetAxis(Keys::D, Keys::A);
@@ -31,11 +39,12 @@ void EditorCamera::OnUpdate(const f32 delta)
         auto input = Vector3(x, y, z);
 
         Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * Speed;
+        // Position += input * m_Direction * delta * Speed;
     }
 
-    m_Direction = glm::mat3(rotation) * Vector3::Forward;
+    Debug::DrawLine(Vector3(), Vector3() + m_Direction * 2);
 
-    m_Perspective = glm::perspective(glm::radians(m_FOV), m_ScreenSize.X / m_ScreenSize.Y, Near, Far);
+    m_Perspective = glm::perspective(glm::radians(Fov), m_ScreenSize.X / m_ScreenSize.Y, Near, Far);
 
     m_View = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, Position)));
 }
@@ -46,7 +55,7 @@ void EditorCamera::HandleEvent(Event& event)
     dispatcher.Dispatch<MouseMoved>([this](MouseMoved const& mouse_moved) -> bool {
         if (m_CapturedMouse) {
             const auto input = Vector3(mouse_moved.RelY, mouse_moved.RelX, 0);
-            m_EulerAngles += input * 0.1f;
+            EulerAngles += input * 0.1f;
         }
         return false;
     });

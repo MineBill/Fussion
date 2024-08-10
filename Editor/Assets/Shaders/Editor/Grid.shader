@@ -1,6 +1,7 @@
 #version 450 core
 
 #pragma blending: on
+#pragma samples: 8
 
 #include "Global.glsl"
 
@@ -56,10 +57,10 @@ vec4 grid(vec3 frag_pos, float scale) {
     vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
 
     if (frag_pos.x > -0.5 * minx && frag_pos.x < 0.5 * minx)
-    color.xyz = vec3(3, 111, 202) / 255.0;
+    color.xyz = vec3(3, 51, 202) / 255.0;
 
     if (frag_pos.z > -0.5 * minz && frag_pos.z < 0.5 * minz)
-    color.xyz = vec3(237, 55, 55) / 255.0;
+    color.xyz = vec3(237, 35, 35) / 255.0;
 
     return color;
 }

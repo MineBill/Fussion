@@ -21,7 +21,8 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
         EUI::Property("Object Color", &material->ObjectColor);
         EUI::Property("Metallic", &material->Metallic, EUI::PropTypeRange{ .Min = 0.0, .Max = 1.0 });
         EUI::Property("Roughness", &material->Roughness, EUI::PropTypeRange{ .Min = 0.0, .Max = 1.0 });
-        EUI::Property("Albedo", &material->AlbedoMap);
+        EUI::Property("Albedo Map", &material->AlbedoMap);
+        EUI::Property("Normal Map", &material->NormalMap);
     }, { .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar });
 }
 

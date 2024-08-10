@@ -1,18 +1,30 @@
 ﻿#pragma once
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/RHI/Shader.h"
+#include "Fussion/RHI/RenderPass.h"
 
 namespace Fussion {
-class ShaderAsset : public Asset {
-public:
-    static Ref<ShaderAsset> Create(std::span<u8> data);
+    class ShaderAsset final : public Asset {
+    public:
+        ShaderAsset(
+            Ref<RHI::RenderPass> const& render_pass,
+            std::span<RHI::ShaderStage> stages,
+            RHI::ShaderMetadata const& metadata);
 
-    static AssetType GetStaticType() { return AssetType::Shader; }
-    AssetType GetType() const override { return GetStaticType(); }
+        static Ref<ShaderAsset> Create(
+            Ref<RHI::RenderPass> const& render_pass,
+            std::span<RHI::ShaderStage> stages,
+            RHI::ShaderMetadata const& metadata);
 
-    Ref<RHI::Shader> GetShader() const { return m_Shader; }
+        static AssetType GetStaticType() { return AssetType::Shader; }
+        virtual AssetType GetType() const override { return GetStaticType(); }
 
-private:
-    Ref<RHI::Shader> m_Shader;
-};
+        Ref<RHI::Shader>& GetShader() { return m_Shader; }
+        Ref<RHI::RenderPass>& AssociatedRenderPass() { return m_TheRenderPass; }
+
+    private:
+        Ref<RHI::Shader> m_Shader;
+        Ref<RHI::RenderPass> m_TheRenderPass{};
+        RHI::ShaderMetadata m_Metadata{};
+    };
 }

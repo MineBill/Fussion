@@ -47,6 +47,12 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
                 .Type = RHI::ResourceType::CombinedImageSampler,
                 .Count = 1,
                 .Stages = RHI::ShaderType::Fragment,
+            },
+            RHI::ResourceUsage{
+                .Label = "Normal Map",
+                .Type = RHI::ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = RHI::ShaderType::Fragment,
             }
         };
         auto object_layout = RHI::Device::Instance()->CreateResourceLayout(resource_usages);
@@ -63,7 +69,14 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
         if (!albedo) {
             albedo = RHI::Renderer::WhiteTexture().Get();
         }
+
+        auto normal = material->NormalMap.Get();
+        if (!normal) {
+            normal = RHI::Renderer::DefaultNormalMap().Get();
+        }
+
         ctx.Cmd->BindImage(albedo->GetImage(), resource, 1);
+        ctx.Cmd->BindImage(normal->GetImage(), resource, 2);
 
         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_Data);
     } else if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
@@ -104,7 +117,7 @@ void Fussion::MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
             Debug::DrawLine(base, base + mat * vertex.Normal * 0.1f, 0, Color::Green);
         }
         if (draw_tangents) {
-            Debug::DrawLine(base, base + mat * vertex.Tangent * 0.1f, 0, Color::SkyBlue);
+            // Debug::DrawLine(base, base + mat * vertex.Tangent * 0.1f, 0, Color::SkyBlue);
         }
     }
 }

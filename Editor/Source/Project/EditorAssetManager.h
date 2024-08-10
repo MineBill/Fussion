@@ -2,7 +2,9 @@
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Assets/AssetManagerBase.h"
 #include "Fussion/Assets/Asset.h"
+#include "Fussion/Core/Maybe.h"
 #include "Fussion/Core/Types.h"
+#include "Fussion/OS/FileWatcher.h"
 
 #include <filesystem>
 #include <unordered_map>
@@ -35,10 +37,10 @@ public:
     virtual bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
-    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name) -> Fussion::AssetHandle override;
+    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
 
     bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
-    auto GetMetadata(std::filesystem::path const& path) const -> AssetMetadata;
+    auto GetMetadata(std::filesystem::path const& path) const -> Maybe<AssetMetadata>;
     auto GetMetadata(Fsn::AssetHandle handle) const -> AssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
 
@@ -89,4 +91,6 @@ private:
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
+
+    Ptr<Fussion::FileWatcher> m_EditorWatcher{};
 };

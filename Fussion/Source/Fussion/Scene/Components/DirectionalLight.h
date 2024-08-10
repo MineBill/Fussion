@@ -16,5 +16,7 @@ namespace Fussion {
 
 
         virtual void OnDraw(RHI::RenderContext& context) override;
+
+        Color LightColor{};
     };
 }

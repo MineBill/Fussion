@@ -121,7 +121,7 @@ void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
     VERIFY(loaded, "Project loading must not fail, for now.");
 
     auto editor = s_EditorInstance->PushLayer<Editor>();
-    editor->OnStart();
+    // editor->OnStart();
 
     auto now = std::chrono::system_clock::now();
     auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);

@@ -18,6 +18,7 @@ public:
     f32 Roughness{};
 
     AssetRef<Texture2D> AlbedoMap{};
+    AssetRef<Texture2D> NormalMap{};
 
     struct MaterialBlock {
         Color ObjectColor;

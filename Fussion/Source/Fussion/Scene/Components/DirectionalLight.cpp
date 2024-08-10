@@ -34,7 +34,7 @@ namespace Fussion {
 
         context.DirectionalLights.push_back(RHI::DirectionalLightData{
             .Direction = Vector4{ -m_Owner->Transform.GetForward() },
-            .Color = Color::White,
+            .Color = LightColor,
         });
     }
 }

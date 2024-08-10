@@ -1,7 +1,11 @@
 #version 450 core
+#pragma samples: 8
+
 #include "Global.glsl"
 #include "Lighting.glsl"
 #include "Scene.glsl"
+
+#define PI 3.14159265359
 
 layout (std140, set = OBJECT_SET, binding = 0) uniform Material {
     vec4 AlbedoColor;
@@ -19,7 +23,7 @@ layout(push_constant) uniform PushConstants {
 struct VertexOutput {
     vec3 frag_color;
     vec2 frag_uv;
-    vec3 frag_pos;
+    vec4 frag_pos;
     vec3 normal;
 
     vec3 tangent_light_dir;
@@ -34,7 +38,7 @@ struct VertexOutput {
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
-layout(location = 2) in vec3 a_Tangent;
+layout(location = 2) in vec4 a_Tangent;
 layout(location = 3) in vec2 a_UV;
 layout(location = 4) in vec3 a_Color;
 
@@ -50,7 +54,7 @@ void Vertex() {
     Out.frag_uv = a_UV;
 
     mat3 normal_matrix = transpose(inverse(mat3(u_PushConstants.model)));
-    vec3 T = normalize(normal_matrix * a_Tangent);
+    vec3 T = normalize(normal_matrix * a_Tangent.xyz) ;
     vec3 N = normalize(normal_matrix * a_Normal);
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
@@ -58,15 +62,15 @@ void Vertex() {
     Out.TBN = tbn;
 
     gl_Position = u_ViewData.projection * u_ViewData.view * u_PushConstants.model * vec4(a_Position, 1.0);
-    Out.frag_pos = vec3(u_PushConstants.model * vec4(a_Position, 1.0));
+    Out.frag_pos = vec4(u_PushConstants.model * vec4(a_Position, 1.0));
 
     Out.normal = N;
     Out.tangent_light_dir = tbn * u_LightData.directional.direction.xyz;
     Out.tangent_view_pos  = tbn * u_SceneData.view_position.xyz;
-    Out.tangent_frag_pos  = tbn * Out.frag_pos;
+    Out.tangent_frag_pos  = tbn * Out.frag_pos.xyz;
 
     for (int i = 0; i < 4; i++) {
-        Out.pos_light_space[i] = biasMat * u_LightData.directional.light_space_matrix[i] * vec4(Out.frag_pos, 1.0);
+        Out.pos_light_space[i] = biasMat * u_LightData.directional.light_space_matrix[i] * Out.frag_pos;
     }
     /* mat3 normal_matrix = transpose(inverse(mat3(u_PerObjectData.model)));
 
@@ -81,7 +85,7 @@ void Vertex() {
 #pragma type: fragment
 
 layout(set = OBJECT_SET, binding = 1) uniform sampler2D uAlbedoMap;
-//layout(set = OBJECT_SET, binding = 2) uniform sampler2D uNormalMap;
+layout(set = OBJECT_SET, binding = 2) uniform sampler2D uNormalMap;
 
 layout(location = 0) out vec4 o_Color;
 /* #ifdef EDITOR
@@ -176,11 +180,11 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 }
 
 vec3 do_directional_light() {
-    // vec3 N = normalize(In.normal);
-//    vec3 N = texture(normal_map, In.frag_uv).rgb;
-    vec3 N = vec3(0, 0, 1);
-//    N = normalize(N * 2.0 - 1);
-    // vec3 V = normalize(u_SceneData.view_position.xyz - In.frag_pos);
+//     vec3 N = normalize(In.normal);
+    vec3 N = texture(uNormalMap, In.frag_uv).rgb;
+//    vec3 N = vec3(0, 0, 1);
+    N = normalize(N * 2.0 - 1.0);
+//    vec3 V = normalize( u_SceneData.view_position.xyz - In.frag_pos.xyz);
     vec3 V = normalize(In.tangent_view_pos.xyz - In.tangent_frag_pos);
 
     vec3 L = normalize(In.tangent_light_dir);
@@ -189,6 +193,7 @@ vec3 do_directional_light() {
     vec3 radiance = u_LightData.directional.color.rgb;
 
     vec3 F0 = vec3(0.04);
+
     vec3 albedo = texture(uAlbedoMap, In.frag_uv).rgb;
 
 //    float metalness = texture(metallic_roughness_map, In.frag_uv).b * u_Material.metallic;
@@ -210,7 +215,7 @@ vec3 do_directional_light() {
     vec3 kd = vec3(1.0) - ks;
     kd *= 1.0 - metalness;
 
-    vec3 I = In.frag_pos - u_SceneData.view_position.xyz;
+    vec3 I = In.frag_pos.xyz - u_SceneData.view_position.xyz;
     vec3 R = reflect(I, normalize(In.normal));
     // vec3 reflection = texture(reflection_map, R).rgb;
     vec3 reflection = vec3(1, 1, 1);
@@ -238,6 +243,7 @@ vec3 do_directional_light() {
     vec3 ambient = u_SceneData.ambient_color.rgb * albedo * u_Material.AlbedoColor.rgb * 0.1;
     ambient *= occlusion;
     vec3 ret = ambient + (kd * u_Material.AlbedoColor.rgb * albedo / PI + specular + reflection * metalness * ks) * radiance * NdotL * shadow * occlusion;
+//    vec3 ret = In.tangent_frag_pos.rgb;
 
 //    ret += texture(emissive_map, In.frag_uv).rgb;
 //    if (u_DebugOptions.shadow_cascade_colors) {

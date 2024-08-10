@@ -1,6 +1,9 @@
 ﻿#include "e5pch.h"
 #include "Debug.h"
 
+#include "Assets/AssetManager.h"
+#include "Assets/AssetRef.h"
+#include "Assets/ShaderAsset.h"
 #include "Core/Time.h"
 #include "Fussion/RHI/Shader.h"
 #include "OS/FileSystem.h"
@@ -21,7 +24,7 @@ namespace Fussion {
     };
 
     struct DebugData {
-        Ref<RHI::Shader> DebugShader{};
+        AssetRef<ShaderAsset> DebugShader{};
         Ref<RHI::Buffer> VertexBuffer{};
 
         bool Initialized{ false };
@@ -41,10 +44,12 @@ namespace Fussion {
         }
         auto src = FileSystem::ReadEntireFile("Assets/Shaders/Debug.shader");
         VERIFY(src.has_value());
-        auto [stages, metadata] = RHI::ShaderCompiler::Compile(*src);
-        metadata.Samples = 8;
+        auto result = RHI::ShaderCompiler::Compile(*src, "Debug.shader");
+        VERIFY(result.HasValue());
 
-        g_DebugData.DebugShader = RHI::Device::Instance()->CreateShader(render_pass, stages, metadata);
+        auto shader = ShaderAsset::Create(render_pass, result->ShaderStages, result->Metadata);
+        g_DebugData.DebugShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, "Assets/Shaders/Debug.shader");
+
         g_DebugData.Initialized = true;
 
         auto spec = RHI::BufferSpecification{
@@ -153,12 +158,13 @@ namespace Fussion {
         }
         VERIFY(line_count % 2 == 0);
 
-        cmd->UseShader(g_DebugData.DebugShader);
+        auto shader = g_DebugData.DebugShader.Get()->GetShader();
+        cmd->UseShader(shader);
 
         g_DebugData.VertexBuffer->SetData(g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
         g_DebugData.VertexBuffer->SetData(g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point), g_DebugData.Points.size() * sizeof(Point));
 
-        cmd->BindResource(global_resource, g_DebugData.DebugShader, 0);
+        cmd->BindResource(global_resource, shader, 0);
         cmd->BindBuffer(g_DebugData.VertexBuffer);
         cmd->Draw(line_count, 1);
     }
