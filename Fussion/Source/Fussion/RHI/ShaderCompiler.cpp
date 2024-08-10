@@ -124,7 +124,7 @@ namespace Fussion::RHI {
     }
 
     class Includer final : public shaderc::CompileOptions::IncluderInterface {
-        shaderc_include_result* GetInclude(
+        virtual shaderc_include_result* GetInclude(
             const char* requested_source, shaderc_include_type type,
             [[maybe_unused]] const char* requesting_source,
             [[maybe_unused]] size_t include_depth) override
@@ -139,7 +139,6 @@ namespace Fussion::RHI {
             case shaderc_include_type_standard: {
                 auto base_path = std::filesystem::path("Assets/Shaders");
                 auto full_path = base_path / std::string{ requested_source };
-                LOG_INFOF("Loading shader from {}", full_path.string());
                 ReadThingy(full_path, result);
             }
             break;
@@ -147,7 +146,7 @@ namespace Fussion::RHI {
             return result;
         }
 
-        void ReleaseInclude(shaderc_include_result* data) override
+        virtual void ReleaseInclude(shaderc_include_result* data) override
         {
             if (data->content_length != 0) {
                 delete[] data->content;
@@ -224,7 +223,7 @@ namespace Fussion::RHI {
         VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-            LOG_ERRORF("Shader compilation failed: {}", result.GetErrorMessage());
+            LOG_ERRORF("Shader compilation failed:\n{}", result.GetErrorMessage());
             return {};
         }
 
@@ -238,7 +237,7 @@ namespace Fussion::RHI {
         VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-            LOG_ERRORF("Shader compilation failed: {}", result.GetErrorMessage());
+            LOG_ERRORF("Shader compilation failed:\n{}", result.GetErrorMessage());
             return {};
         }
 
@@ -302,7 +301,6 @@ namespace Fussion::RHI {
                     .Size = struct_size,
                 });
             }
-
         }
 
         // ==============
@@ -385,27 +383,6 @@ namespace Fussion::RHI {
                 }
             }
         }
-
-        // std::vector<ResourceUsage> flat_resource_usages;
-        // LOG_DEBUG("Shader uses these uniform buffers:");
-        // for (const auto& [set, bindings] : metadata.Uniforms) {
-        //     LOG_DEBUGF("\tFor set({}):", set);
-        //     for (const auto& [binding, usage] : bindings) {
-        //         LOG_DEBUGF("\t\tBinding {}, {}, {}, {}", binding, usage.Label, magic_enum::enum_name(usage.Type), usage.Stages.value);
-        //         // flat_resource_usages.push_back(usage);
-        //     }
-        // }
-
-        // auto layout = device->CreateResourceLayout(flat_resource_usages);
-        //
-        // PipelineLayoutSpecification layout_spec;
-        //
-        // layout_spec.ResourceUsages.emplace_back();
-        //
-        // PipelineSpecification spec{
-        //     .Label = "",
-        //     .AttributeLayout = VertexAttributeLayout::Create({}),
-        // };
 
         return CompileResult{ ret, metadata };
     }
