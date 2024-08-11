@@ -36,13 +36,20 @@ namespace Fussion {
     Ref<Texture2D> TextureImporter::LoadTextureFromFile(std::filesystem::path const& path)
     {
         auto [Data, Width, Height] = LoadImageFromFile(path);
-        return Texture2D::Create(Data, { .Width = CAST(s32, Width), .Height = CAST(s32, Height) });
+        Texture2DMetadata metadata{};
+        metadata.Width = Width;
+        metadata.Height = Height;
+        return Texture2D::Create(Data, metadata);
     }
 
-    auto TextureImporter::LoadTextureFromMemory(std::span<u8> data) -> Ref<Fussion::Texture2D>
+    auto TextureImporter::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Ref<Texture2D>
     {
         auto [Data, Width, Height] = LoadImageFromMemory(data);
-        return Texture2D::Create(Data, { .Width = CAST(s32, Width), .Height = CAST(s32, Height) });
+        Texture2DMetadata metadata{};
+        metadata.Width = Width;
+        metadata.Height = Height;
+        metadata.IsNormalMap = is_normal_map;
+        return Texture2D::Create(Data, metadata);
     }
 
     void TextureImporter::SaveImageToFile(Ref<RHI::Image> const& image, std::filesystem::path const& path)

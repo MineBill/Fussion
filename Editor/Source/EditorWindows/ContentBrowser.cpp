@@ -14,6 +14,8 @@
 #include <Fussion/Util/TextureImporter.h>
 
 #include "imgui.h"
+#include "AssetWindows/Texture2DWindow.h"
+
 #include <ranges>
 
 using namespace Fussion;
@@ -169,7 +171,7 @@ void ContentBrowser::OnDraw()
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            size.X = style.EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+            size.X = style.EditorIcons[EditorIcon::Folder]->Metadata().Aspect() * size.Y;
             ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                 ChangeDirectory(m_CurrentPath.parent_path());
@@ -181,7 +183,7 @@ void ContentBrowser::OnDraw()
             defer(ImGui::PopID());
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
             if (entry.IsDirectory) {
-                size.X = style.EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
+                size.X = style.EditorIcons[EditorIcon::Folder]->Metadata().Aspect() * size.Y;
                 ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
@@ -191,12 +193,12 @@ void ContentBrowser::OnDraw()
 
                 if (entry.Type == AssetType::Texture2D) {
                     if (auto texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get(); texture != nullptr) {
-                        size.X = texture->Spec().Aspect() * size.Y;
+                        size.X = texture->Metadata().Aspect() * size.Y;
                         ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
                     }
                 } else {
                     auto& texture = style.EditorIcons[EditorIcon::GenericAsset];
-                    size.X = texture->Spec().Aspect() * size.Y;
+                    size.X = texture->Metadata().Aspect() * size.Y;
                     ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
                 }
 
@@ -205,6 +207,8 @@ void ContentBrowser::OnDraw()
                     case AssetType::PbrMaterial:
                         m_Editor->CreateAssetWindow<MaterialWindow>(entry.Metadata.Handle);
                         break;
+                    case AssetType::Texture2D:
+                        m_Editor->CreateAssetWindow<Texture2DWindow>(entry.Metadata.Handle);
                     default:
                         break;
                     }

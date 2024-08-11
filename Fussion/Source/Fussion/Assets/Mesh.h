@@ -13,6 +13,8 @@ struct Vertex {
     Vector3 Color{ 1, 1, 1 };
 };
 
+    // class MeshMetadata : public AssetMetadata {};
+
 class Mesh final : public Asset {
 public:
     static Ref<Mesh> Create(std::vector<Vertex> const& vertices, std::vector<u32> const& indices);

@@ -11,13 +11,13 @@
 
 using namespace Fussion;
 
-void MeshSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
+void MeshSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {
     (void)metadata;
     (void)asset;
 }
 
-Ref<Asset> MeshSerializer::Load(AssetMetadata metadata)
+Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
 {
     auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
 

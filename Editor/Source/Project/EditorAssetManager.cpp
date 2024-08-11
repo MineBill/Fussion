@@ -104,7 +104,7 @@ bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
 AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name, std::filesystem::path const& path)
 {
     auto handle = AssetHandle();
-    m_Registry[handle] = AssetMetadata{
+    m_Registry[handle] = EditorAssetMetadata{
         .Type = asset->GetType(),
         .Path = path,
         .Name = std::string(name),
@@ -115,6 +115,12 @@ AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std:
     m_LoadedAssets[handle] = asset;
 
     return handle;
+}
+
+AssetSettings* EditorAssetManager::GetAssetSettings(AssetHandle handle)
+{
+    if (m_AssetSettings[handle] == nullptr) {}
+    return m_AssetSettings[handle].get();
 }
 
 bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool include_virtual) const
@@ -130,7 +136,7 @@ bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool i
     return false;
 }
 
-Maybe<AssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
+Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
 {
     ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
@@ -141,7 +147,7 @@ Maybe<AssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path const
     return {};
 }
 
-AssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
+EditorAssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
 {
     if (IsAssetHandleValid(handle)) {
         return m_Registry.at(handle);
@@ -149,7 +155,7 @@ AssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
     return {};
 }
 
-void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type)
+void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, AssetType type)
 {
     if (type == AssetType::Invalid) {
         LOG_WARNF("Ignoring Invalid asset type.");
@@ -163,13 +169,14 @@ void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, Fussio
 
     LOG_INFOF("Registering '{}' of type '{}'", path.string(), magic_enum::enum_name(type));
 
-    Fsn::Uuid id;
-    m_Registry[id] = AssetMetadata{
+    Uuid id;
+    m_Registry[id] = EditorAssetMetadata{
         .Type = type,
         .Path = path,
         .IsVirtual = false,
         .DontSerialize = false,
         .Handle = id,
+        // .CustomMetadata =
     };
 
     Serialize();
@@ -192,6 +199,117 @@ void EditorAssetManager::SaveAsset(Ref<Asset> const& asset)
     m_LoadedAssets[handle]->SetHandle(handle);
 }
 
+void SerializeCustomMetadata(json& j, Ref<AssetMetadata> const& metadata)
+{
+    auto ptr = metadata->meta_poly_ptr();
+    auto type = ptr.get_type().as_pointer().get_data_type().as_class();
+
+    for (auto const& member : type.get_members()) {
+        auto& m = j[member.get_name()];
+        auto value = member.get(ptr);
+        auto data_type = value.get_type().as_pointer().get_data_type();
+
+        if (value.is<s8*>()) {
+            m = *value.as<s8*>();
+        } else if (value.is<s16*>()) {
+            m = *value.as<s16*>();
+        } else if (value.is<s32*>()) {
+            m = *value.as<s32*>();
+        } else if (value.is<s64*>()) {
+            m = *value.as<s64*>();
+        } else if (value.is<u8*>()) {
+            m = *value.as<u8*>();
+        } else if (value.is<u16*>()) {
+            m = *value.as<u16*>();
+        } else if (value.is<u32*>()) {
+            m = *value.as<u32*>();
+        } else if (value.is<f32*>()) {
+            m = *value.as<f32*>();
+        } else if (value.is<f64*>()) {
+            m = *value.as<f64*>();
+        } else if (value.is<bool*>()) {
+            m = *value.as<bool*>();
+        } else if (value.is<std::string*>()) {
+            m = *value.as<std::string*>();
+        } else if (value.is<Vector2*>()) {
+            m = ToJson(*value.as<Vector2*>());
+        } else if (value.is<Vector3*>()) {
+            m = ToJson(*value.as<Vector3*>());
+        } else if (value.is<Vector4*>()) {
+            m = ToJson(*value.as<Vector4*>());
+        } else if (value.is<Color*>()) {
+            m = ToJson(*value.as<Color*>());
+        } else if (data_type.is_enum()) {
+            auto enum_type = data_type.as_enum();
+            auto enum_value = enum_type.value_to_evalue(value);
+            m = enum_value.get_name();
+        }
+    }
+}
+
+auto DeserializeCustomMetadata(json const& j, AssetType type) -> Ref<AssetMetadata>
+{
+    auto Deserialize = [j](meta_hpp::uvalue const& ptr) {
+        if (!j.contains("CustomMetadata"))
+            return;
+        auto type = ptr.get_type().as_pointer().get_data_type().as_class();
+        for (auto const& member : type.get_members()) {
+            if (j["CustomMetadata"].contains(member.get_name())) {
+                auto mem_value = member.get(ptr);
+                auto data_type = mem_value.get_type().as_pointer().get_data_type();
+                auto& value = j["CustomMetadata"][member.get_name()];
+
+                if (mem_value.is<s8*>()) {
+                    member.set(ptr, value.get<s8>());
+                } else if (mem_value.is<s16*>()) {
+                    member.set(ptr, value.get<s16>());
+                } else if (mem_value.is<s32*>()) {
+                    member.set(ptr, value.get<s32>());
+                } else if (mem_value.is<s64*>()) {
+                    member.set(ptr, value.get<s64>());
+                } else if (mem_value.is<u8*>()) {
+                    member.set(ptr, value.get<u8>());
+                } else if (mem_value.is<u16*>()) {
+                    member.set(ptr, value.get<u16>());
+                } else if (mem_value.is<u32*>()) {
+                    member.set(ptr, value.get<u32>());
+                } else if (mem_value.is<f32*>()) {
+                    member.set(ptr, value.get<f32>());
+                } else if (mem_value.is<f64*>()) {
+                    member.set(ptr, value.get<f64>());
+                } else if (mem_value.is<bool*>()) {
+                    member.set(ptr, value.get<bool>());
+                } else if (mem_value.is<std::string*>()) {
+                    member.set(ptr, value.get<std::string>());
+                } else if (mem_value.is<Vector2*>()) {
+                    member.set(ptr, value.get<Vector2>());
+                } else if (mem_value.is<Vector3*>()) {
+                    member.set(ptr, value.get<Vector3>());
+                } else if (mem_value.is<Vector4*>()) {
+                    member.set(ptr, value.get<Vector4>());
+                } else if (mem_value.is<Color*>()) {
+                    member.set(ptr, value.get<Color>());
+                } else if (data_type.is_enum()) {
+                    auto enum_type = data_type.as_enum();
+                    auto enum_value = enum_type.name_to_evalue(value.get<std::string>());
+                    member.set(ptr, enum_value);
+                }
+            }
+        }
+    };
+    using enum AssetType;
+    switch (type) {
+    case Texture2D: {
+        auto meta = MakeRef<Texture2DMetadata>();
+        Deserialize(meta->meta_poly_ptr());
+        return meta;
+    }
+    default:
+        break;
+    }
+    return nullptr;
+}
+
 void EditorAssetManager::Serialize()
 {
     ZoneScoped;
@@ -207,12 +325,16 @@ void EditorAssetManager::Serialize()
             continue;
         }
 
-        j["Assets"][i++] = {
+        j["Assets"][i] = {
             { "Handle", handle },
             { "Type", magic_enum::enum_name(metadata.Type) },
             { "Path", metadata.Path.string() },
             { "Name", metadata.Name },
         };
+
+        if (metadata.CustomMetadata != nullptr) {
+            SerializeCustomMetadata(j["Assets"][i++]["CustomMetadata"], metadata.CustomMetadata);
+        }
     }
 
     FileSystem::WriteEntireFile(project->GetAssetRegistry(), j.dump(2));
@@ -242,13 +364,15 @@ void EditorAssetManager::Deserialize()
             auto const asset_path = asset["Path"].get<std::string>();
             auto name = asset.value("Name", std::filesystem::path(asset_path).filename().string());
 
-            Fsn::Uuid h{ handle };
-            m_Registry[h] = AssetMetadata{
+            Uuid h{ handle };
+            m_Registry[h] = EditorAssetMetadata{
                 .Type = *magic_enum::enum_cast<AssetType>(type),
                 .Path = asset_path,
                 .Name = name,
                 .Handle = h,
             };
+
+            m_Registry[h].CustomMetadata = DeserializeCustomMetadata(asset, m_Registry[h].Type);
         }
     } catch (std::exception const& e) {
         LOG_ERRORF("Exception caught while deserialize asset registry: {}", e.what());

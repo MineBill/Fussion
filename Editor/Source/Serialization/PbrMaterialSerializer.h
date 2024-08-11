@@ -3,6 +3,6 @@
 
 class PbrMaterialSerializer final : public AssetSerializer {
 public:
-    Ref<Fussion::Asset> Load(AssetMetadata metadata) override;
-    void Save(AssetMetadata metadata, Ref<Fussion::Asset> const& asset) override;
+    Ref<Fussion::Asset> Load(EditorAssetMetadata metadata) override;
+    void Save(EditorAssetMetadata metadata, Ref<Fussion::Asset> const& asset) override;
 };

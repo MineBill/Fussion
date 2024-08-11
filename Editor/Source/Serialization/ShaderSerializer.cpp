@@ -8,7 +8,7 @@
 
 using namespace Fussion;
 
-Ref<Asset> ShaderSerializer::Load(AssetMetadata metadata)
+Ref<Asset> ShaderSerializer::Load(EditorAssetMetadata metadata)
 {
     // auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
     // auto code = FileSystem::ReadEntireFile(path);

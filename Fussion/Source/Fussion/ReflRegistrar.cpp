@@ -18,6 +18,14 @@
 #include <angelscript.h>
 #include <magic_enum/magic_enum.hpp>
 
+#define REGISTER_ENUM(EnumName)                                              \
+{                                                                            \
+    auto ee = meta::enum_<EnumName>(meta::metadata_()("Name"s, #EnumName##s));  \
+    for (auto const& [value, name] : magic_enum::enum_entries<EnumName>()) { \
+        ee.evalue_(std::string{ name }, value);                              \
+    }                                                                        \
+}
+
 namespace Fussion {
     ReflRegistrar::ReflRegistrar()
     {
@@ -215,19 +223,17 @@ namespace Fussion {
             .function_("IsMouseButtonUp"s, Input::IsMouseButtonUp)
             .function_("GetAxis"s, Input::GetAxis);
 
-        {
-            auto ee = meta::enum_<Keys>(meta::metadata_()("Name"s, "Keys"s));
-            for (auto const& [value, name] : magic_enum::enum_entries<Keys>()) {
-                ee.evalue_(std::string{ name }, value);
-            }
-        }
+        REGISTER_ENUM(MouseButton)
+        REGISTER_ENUM(Keys)
+        REGISTER_ENUM(RHI::ImageFormat)
+        REGISTER_ENUM(RHI::ImageFormat)
+        REGISTER_ENUM(RHI::WrapMode)
 
-        {
-            auto ee = meta::enum_<MouseButton>(meta::metadata_()("Name"s, "MouseButton"s));
-            for (auto const& [value, name] : magic_enum::enum_entries<MouseButton>()) {
-                ee.evalue_(std::string{ name }, value);
-            }
-        }
+        using meta::metadata_;
+        meta::class_<AssetSettings>(metadata_()("Name"s, "AssetSettings"s));
+
+        meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DSettings"s))
+            .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap);
     }
 }
 

@@ -149,7 +149,7 @@ void DeserializeNativeComponent(json j, meta_hpp::class_type component_type, met
     }
 }
 
-void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
+void SceneSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {
     auto scene = asset->As<Scene>();
     VERIFY(scene != nullptr);
@@ -193,7 +193,7 @@ void SceneSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
     FileSystem::WriteEntireFile(full_path, j.dump(2));
 }
 
-Ref<Asset> SceneSerializer::Load(AssetMetadata metadata)
+Ref<Asset> SceneSerializer::Load(EditorAssetMetadata metadata)
 {
     auto const scene = MakeRef<Scene>();
     auto const path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;

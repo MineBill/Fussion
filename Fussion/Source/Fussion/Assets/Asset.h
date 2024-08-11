@@ -22,6 +22,12 @@ enum  class [[nodiscard]] AssetType {
 
 using AssetHandle = Uuid;
 
+class AssetMetadata {
+META_HPP_ENABLE_POLY_INFO()
+public:
+    virtual ~AssetMetadata() = default;
+};
+
 class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset> {
     friend ReflRegistrar;
 

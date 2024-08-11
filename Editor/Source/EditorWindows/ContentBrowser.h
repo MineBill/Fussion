@@ -28,7 +28,7 @@ public:
         std::string Name;
         bool IsDirectory;
         Fsn::AssetType Type;
-        AssetMetadata Metadata;
+        EditorAssetMetadata Metadata;
     };
 
     EDITOR_WINDOW(ContentBrowser)

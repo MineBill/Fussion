@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "AssetSettings.h"
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Core/Uuid.h"
 
@@ -22,6 +23,8 @@ namespace Fussion {
         virtual AssetHandle CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset", std::filesystem::path const& path = "") = 0;
 
         virtual bool IsAssetVirtual(AssetHandle handle) = 0;
+
+        virtual AssetSettings* GetAssetSettings(AssetHandle handle) = 0;
     };
 }
 

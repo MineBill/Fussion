@@ -61,6 +61,16 @@ public:
         return CAST(T*, s_Active->GetAsset(path, T::GetStaticType()));
     }
 
+    template<typename T>
+    static auto GetAssetSettings(AssetHandle handle) -> T*
+    {
+        auto ptr = s_Active->GetAssetSettings(handle);
+        if (!ptr) {
+
+        }
+        return dynamic_cast<T*>(ptr);
+    }
+
 private:
     static Ref<AssetManagerBase> s_Active;
 };

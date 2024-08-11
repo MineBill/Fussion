@@ -105,7 +105,7 @@ void Editor::Save()
 
     if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
         auto serializer = MakePtr<SceneSerializer>();
-        AssetMetadata meta{};
+        EditorAssetMetadata meta{};
         meta.Path = m_ActiveScenePath;
         serializer->Save(meta, m_ActiveScene);
         m_ActiveScene->SetDirty(false);

@@ -38,7 +38,7 @@ void AssetPicker::Update()
             if (m_Type == Fussion::AssetType::Texture2D) {
                 texture = Fussion::AssetManager::GetAsset<Fussion::Texture2D>(handle).Get();
             }
-            size.X = texture->Spec().Aspect() * size.Y;
+            size.X = texture->Metadata().Aspect() * size.Y;
 
             EUI::ImageButton(texture->GetImage(), [&] {
                 m_Member.set(m_Instance, handle);

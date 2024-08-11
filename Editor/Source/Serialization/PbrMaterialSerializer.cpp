@@ -7,7 +7,7 @@
 
 using namespace Fussion;
 
-Ref<Asset> PbrMaterialSerializer::Load(AssetMetadata metadata)
+Ref<Asset> PbrMaterialSerializer::Load(EditorAssetMetadata metadata)
 {
     auto material = MakeRef<PbrMaterial>();
 
@@ -28,7 +28,7 @@ Ref<Asset> PbrMaterialSerializer::Load(AssetMetadata metadata)
     return material;
 }
 
-void PbrMaterialSerializer::Save(AssetMetadata metadata, Ref<Asset> const& asset)
+void PbrMaterialSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {
     auto material = asset->As<PbrMaterial>();
     auto handle = material->AlbedoMap.Handle();

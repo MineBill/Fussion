@@ -61,6 +61,7 @@ target("Fussion")
             os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-cored.lib",
             os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-glsld.lib"
         )
+        add_cxxflags("cl::/bigobj")
 
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})

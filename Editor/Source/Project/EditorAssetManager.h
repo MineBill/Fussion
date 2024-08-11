@@ -5,12 +5,13 @@
 #include "Fussion/Core/Maybe.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/OS/FileWatcher.h"
+#include "Fussion/Serialization/json.hpp"
 
 #include <filesystem>
 #include <unordered_map>
 #include <concepts>
 
-struct AssetMetadata {
+struct EditorAssetMetadata final {
     Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
     std::string Name;
@@ -20,6 +21,9 @@ struct AssetMetadata {
     bool Dirty = false;
 
     Fussion::AssetHandle Handle;
+
+    // TODO: Investigate if using Ref is a good idea.
+    Ref<Fussion::AssetMetadata> CustomMetadata;
     bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };
 
@@ -27,7 +31,7 @@ class AssetSerializer;
 
 class EditorAssetManager final : public Fussion::AssetManagerBase {
 public:
-    using Registry = std::unordered_map<Fsn::AssetHandle, AssetMetadata>;
+    using Registry = std::unordered_map<Fsn::AssetHandle, EditorAssetMetadata>;
 
     EditorAssetManager();
 
@@ -38,10 +42,11 @@ public:
     virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
     virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
+    virtual Fussion::AssetSettings* GetAssetSettings(Fussion::AssetHandle handle) override;
 
     bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
-    auto GetMetadata(std::filesystem::path const& path) const -> Maybe<AssetMetadata>;
-    auto GetMetadata(Fsn::AssetHandle handle) const -> AssetMetadata;
+    auto GetMetadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
+    auto GetMetadata(Fsn::AssetHandle handle) const -> EditorAssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
 
     auto GetRegistry() const -> Registry const& { return m_Registry; }
@@ -51,7 +56,7 @@ public:
     {
         auto normal_path = path.lexically_normal();
         Fussion::AssetHandle handle;
-        m_Registry[handle] = AssetMetadata{
+        m_Registry[handle] = EditorAssetMetadata{
             .Type = T::GetStaticType(),
             .Path = normal_path,
             .Name = path.filename().string(),
@@ -89,6 +94,7 @@ public:
 private:
     Registry m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
+    std::unordered_map<Fsn::AssetHandle, Ptr<Fsn::AssetSettings>> m_AssetSettings{};
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
 
