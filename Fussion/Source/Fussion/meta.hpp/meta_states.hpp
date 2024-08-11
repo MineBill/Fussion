@@ -484,6 +484,7 @@ namespace meta_hpp::detail
         function_index index;
         metadata_map metadata;
 
+        uvalue pointer;
         invoke_impl invoke{};
         invoke_error_impl invoke_error{};
         argument_list arguments{};
@@ -503,6 +504,7 @@ namespace meta_hpp::detail
         member_index index;
         metadata_map metadata;
 
+        uvalue pointer;
         getter_impl getter{};
         setter_impl setter{};
         getter_error_impl getter_error{};
@@ -520,6 +522,7 @@ namespace meta_hpp::detail
         method_index index;
         metadata_map metadata;
 
+        uvalue pointer;
         invoke_impl invoke{};
         invoke_error_impl invoke_error{};
         argument_list arguments{};
@@ -549,6 +552,7 @@ namespace meta_hpp::detail
         variable_index index;
         metadata_map metadata;
 
+        uvalue pointer;
         getter_impl getter{};
         setter_impl setter{};
         setter_error_impl setter_error{};

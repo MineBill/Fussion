@@ -77,6 +77,12 @@ namespace meta_hpp
         [[nodiscard]] uvalue unmap() const;
         [[nodiscard]] bool has_unmap_op() const noexcept;
 
+        [[nodiscard]] bool less(const uvalue& other) const;
+        [[nodiscard]] bool has_less_op() const noexcept;
+
+        [[nodiscard]] bool equals(const uvalue& other) const;
+        [[nodiscard]] bool has_equals_op() const noexcept;
+
         template < typename T >
         [[nodiscard]] bool is() const noexcept;
 
@@ -113,7 +119,7 @@ namespace meta_hpp
 
         struct alignas(std::max_align_t) internal_storage_t final {
             // NOLINTNEXTLINE(*-avoid-c-arrays)
-            std::byte data[sizeof(void*) * 2];
+            std::byte data[sizeof(void*) * 3];
         };
 
         struct external_storage_t final {
