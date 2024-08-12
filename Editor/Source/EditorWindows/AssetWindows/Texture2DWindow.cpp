@@ -15,11 +15,15 @@ void Texture2DWindow::OnDraw(f32 delta)
         auto size = ImGui::GetContentRegionAvail();
 
         auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);
-        if (settings != nullptr) {
-            if (EUI::Property("Is Normal Map", &settings->IsNormalMap)) {
-                Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
-            }
+        VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
+
+        auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
+        modified |= EUI::Property("Wrapping", &settings->Wrap);
+        modified |= EUI::Property("Filter", &settings->Filter);
+        if (modified) {
+            Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
         }
+
         auto texture_ref = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
         if (!texture_ref.IsValid()) {
             ImGui::TextUnformatted("Texture is null");

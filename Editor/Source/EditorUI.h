@@ -121,6 +121,17 @@ namespace EUI {
             modified |= ImGui::InputText("", data);
         } else if constexpr (std::is_same_v<T, Color>) {
             modified |= ImGui::ColorEdit4("", data->Raw);
+        } else if constexpr (std::is_enum_v<T>) {
+            auto opened = ImGui::BeginCombo("", magic_enum::enum_name(*data).data());
+            if (opened) {
+                for (auto const& [evalue, ename] : magic_enum::enum_entries<T>()) {
+                    if (ImGui::Selectable(ename.data())) {
+                        *data = evalue;
+                        modified |= true;
+                    }
+                }
+                ImGui::EndCombo();
+            }
         } else if constexpr (Detail::IsInstanceOf<T, Fussion::AssetRef>) {
             auto class_type = meta_hpp::resolve_type<T>();
             auto m_Handle = class_type.get_member("m_Handle");
