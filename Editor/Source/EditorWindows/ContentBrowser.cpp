@@ -145,6 +145,13 @@ void ContentBrowser::OnDraw()
                     });
                 }
                 ImGui::Separator();
+                if (ImGui::MenuItem("Scene")) {
+                    m_NamePopup.Show([this](std::string const& name) {
+                        auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
+                        Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>(path);
+                        Refresh();
+                    });
+                }
                 if (ImGui::MenuItem("PbrMaterial")) {
                     // TODO: Make the user pick a name first, to prevent conflicts.
                     m_NamePopup.Show([this](std::string const& name) {
@@ -191,16 +198,48 @@ void ContentBrowser::OnDraw()
                 }
             } else {
 
-                if (entry.Type == AssetType::Texture2D) {
-                    if (auto texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get(); texture != nullptr) {
-                        size.X = texture->Metadata().Aspect() * size.Y;
-                        ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                // if (entry.Type == AssetType::Texture2D) {
+                //     if (auto texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get(); texture != nullptr) {
+                //         size.X = texture->Metadata().Aspect() * size.Y;
+                //         ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                //     }
+                // } else {
+                //     auto& texture = style.EditorIcons[EditorIcon::GenericAsset];
+                //     size.X = texture->Metadata().Aspect() * size.Y;
+                //     ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                // }
+
+                Texture2D* texture;
+                switch (entry.Type) {
+                case AssetType::Invalid:
+                case AssetType::Image:
+                case AssetType::Texture:
+                case AssetType::HDRTexture:
+                case AssetType::Mesh:
+                case AssetType::Shader:
+                    texture = style.EditorIcons[EditorIcon::GenericAsset].get();
+                    break;
+                case AssetType::Script:
+                    texture = style.EditorIcons[EditorIcon::Script].get();
+                    break;
+                case AssetType::PbrMaterial:
+                    texture = style.EditorIcons[EditorIcon::PbrMaterial].get();
+                    break;
+                case AssetType::Scene:
+                    texture = style.EditorIcons[EditorIcon::Scene].get();
+                    break;
+                case AssetType::Texture2D:
+                    texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get();
+                    if (texture == nullptr) {
+                        texture = style.EditorIcons[EditorIcon::GenericAsset].get();
                     }
-                } else {
-                    auto& texture = style.EditorIcons[EditorIcon::GenericAsset];
-                    size.X = texture->Metadata().Aspect() * size.Y;
-                    ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                    break;
+                default:
+                    PANIC("idk");
                 }
+
+                size.X = texture->Metadata().Aspect() * size.Y;
+                ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     switch (entry.Type) {

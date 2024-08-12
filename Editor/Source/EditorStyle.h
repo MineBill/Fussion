@@ -106,6 +106,9 @@ enum class EditorIcon {
     Folder = 0,
     FolderBack,
     GenericAsset,
+    Scene,
+    Script,
+    PbrMaterial,
 
     // Other
     Dots,
