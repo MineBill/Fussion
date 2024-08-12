@@ -38,6 +38,12 @@ namespace Fussion::RHI {
     {
         switch (message_severity) {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
+            std::string message(p_callback_data->pMessage);
+
+            // :)
+            if (message.contains("EOSOverlayVkLayer"))
+                break;
+
             LOG_ERROR(p_callback_data->pMessage);
             u32 i = 0;
             LOG_ERRORF("Stacktrace:");
