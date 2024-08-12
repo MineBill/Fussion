@@ -100,51 +100,15 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                 } else if (data_type.is_class()) {
                     auto class_type = data_type.as_class();
                     if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
-                        auto m_Handle = class_type.get_member("m_Handle");
-
-                        ImGui::TextUnformatted("Asset Reference:");
-                        ImGui::SetNextItemAllowOverlap();
-                        Vector2 pos = ImGui::GetCursorPos();
-                        ImGui::Button(std::format("{}", CAST(u64, m_Handle.get(value).as<AssetHandle>())).c_str(), Vector2(64, 64));
-
-                        if (ImGui::BeginDragDropTarget()) {
-                            auto* payload = ImGui::GetDragDropPayload();
-                            if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
-                                auto handle = CAST(Fussion::AssetHandle*, payload->Data);
-
-                                if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                                    m_Handle.set(value, *handle);
-                                }
-                            }
-
-                            ImGui::EndDragDropTarget();
-                        }
-
-                        ImGui::SetCursorPos(pos + Vector2(2, 2));
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-                        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
-                            auto asset_type = class_type.get_method("GetType").invoke(value).as<AssetType>();
-                            // m_AssetPicker.Show(m_Handle, value, asset_type);
-                            Editor::GenericAssetPicker.Show(m_Handle, value, asset_type);
-                        }, { .Size = Vector2{ 16, 16 } });
-                        ImGui::PopStyleVar();
+                        EUI::AssetProperty(class_type, std::move(value));
                     } else {
                         ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                     }
                 } else if (data_type.is_enum()) {
                     auto enum_type = data_type.as_enum();
 
-                    auto GetName = [&enum_type](int i) -> std::string_view {
-                        for (auto const& evalue : enum_type.get_evalues()) {
-                            if (auto as_underlying_ptr = static_cast<int const*>(evalue.get_underlying_value().get_data()); *as_underlying_ptr == i) {
-                                return evalue.get_name();
-                            }
-                        }
-                        return std::string_view{ "Invalid" };
-                    };
-
-                    auto as_underlying_ptr = static_cast<int**>(value.get_data());
-                    if (ImGui::BeginCombo("", GetName(**as_underlying_ptr).data())) {
+                    auto current_evalue = enum_type.value_to_evalue(value);
+                    if (ImGui::BeginCombo("", current_evalue.get_name().data())) {
                         for (auto const& evalue : enum_type.get_evalues()) {
                             if (ImGui::Selectable(evalue.get_name().c_str())) {
                                 member.set(ptr, evalue.get_value());

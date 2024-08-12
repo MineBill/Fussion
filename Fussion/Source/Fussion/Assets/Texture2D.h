@@ -9,10 +9,11 @@ namespace Fussion {
     public:
         s32 Width{}, Height{};
         RHI::FilterMode Filter = RHI::FilterMode::Linear;
-        RHI::ImageFormat Format = RHI::ImageFormat::R8G8B8A8_SRGB;
+        RHI::ImageFormat Format = RHI::ImageFormat::R8G8B8A8_UNORM;
         RHI::WrapMode Wrap = RHI::WrapMode::Repeat;
         bool IsNormalMap{ false };
 
+        [[nodiscard]]
         f32 Aspect() const { return CAST(f32, Width) / CAST(f32, Height); }
     };
 
@@ -25,7 +26,7 @@ namespace Fussion {
         Texture2DMetadata const& Metadata() const { return m_Metadata; }
 
         static AssetType GetStaticType() { return AssetType::Texture2D; }
-        AssetType GetType() const override { return GetStaticType(); }
+        virtual AssetType GetType() const override { return GetStaticType(); }
 
     private:
         Ref<RHI::Image> m_Image{};
