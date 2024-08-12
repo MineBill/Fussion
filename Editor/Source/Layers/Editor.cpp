@@ -244,13 +244,10 @@ void Editor::OnUpdate(f32 delta)
         Color color = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
         color = color.Lighten(0.2f);
 
-        // auto middle = (max.x - min_step_button.x) / 2.0f;
         list->AddRectFilled(min, max, color.ToABGR(), 3);
 
-        // imgui.DrawList_AddLine(list, min_step_button + vec2{middle, 0}, max - vec2{middle, 0}, color_to_abgr(line_color))
-        // list->AddLine()
         list->ChannelsMerge();
-    }, { .Flags = ImGuiWindowFlags_NoDecoration });
+    }, { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize });
 
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);

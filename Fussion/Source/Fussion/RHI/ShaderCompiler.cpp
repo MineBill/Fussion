@@ -263,7 +263,7 @@ namespace Fussion::RHI {
                 auto attribute_type = type.basetype;
 
                 ElementType element = SpirvTypeToElementType(attribute_type, type.vecsize);
-                LOG_DEBUGF("Vertex attribute at location {} with {} named {}", location, magic_enum::enum_name(element), input.name);
+                // LOG_DEBUGF("Vertex attribute at location {} with {} named {}", location, magic_enum::enum_name(element), input.name);
                 metadata.VertexAttributes.push_back(VertexAttribute{
                     .Name = input.name,
                     .Type = element,
@@ -294,7 +294,7 @@ namespace Fussion::RHI {
             for (auto const& push : resources.push_constant_buffers) {
                 auto const& type = reflection_compiler.get_type(push.type_id);
                 auto struct_size = reflection_compiler.get_declared_struct_size(type);
-                LOG_DEBUGF("Push constant '{}' with size '{}'", push.name, struct_size);
+                // LOG_DEBUGF("Push constant '{}' with size '{}'", push.name, struct_size);
                 metadata.PushConstants.push_back(PushConstant{
                     .Stage = ShaderType::Vertex,
                     .Name = push.name,

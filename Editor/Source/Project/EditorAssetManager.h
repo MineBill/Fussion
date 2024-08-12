@@ -23,7 +23,7 @@ struct EditorAssetMetadata final {
     Fussion::AssetHandle Handle;
 
     // TODO: Investigate if using Ref is a good idea.
-    Ref<Fussion::AssetMetadata> CustomMetadata;
+    Ref<Fussion::AssetMetadata> CustomMetadata{ nullptr };
     bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };
 
@@ -42,7 +42,7 @@ public:
     virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
     virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
-    virtual Fussion::AssetSettings* GetAssetSettings(Fussion::AssetHandle handle) override;
+    virtual auto GetAssetMetadata(Fussion::AssetHandle handle) -> Fussion::AssetMetadata* override;
 
     bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
     auto GetMetadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
@@ -90,11 +90,11 @@ public:
 
     void Serialize();
     void Deserialize();
+    void RefreshAsset(Fussion::AssetHandle uuid);
 
 private:
     Registry m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
-    std::unordered_map<Fsn::AssetHandle, Ptr<Fsn::AssetSettings>> m_AssetSettings{};
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
 

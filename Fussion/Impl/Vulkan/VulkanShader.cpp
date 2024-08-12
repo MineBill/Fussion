@@ -15,7 +15,7 @@ Ref<VulkanShader> VulkanShader::Create(
     self->m_Metadata = metadata;
     self->m_RenderPass = render_pass->As<VulkanRenderPass>();
 
-    for (const auto& stage : stages) {
+    for (auto const& stage : stages) {
         VkShaderModuleCreateInfo ci{};
         ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         ci.codeSize = stage.Bytecode.size() * 4;
@@ -38,10 +38,10 @@ Ref<VulkanShader> VulkanShader::Create(
 
     std::vector<std::vector<ResourceUsage>> resources = {};
 
-    for (const auto& [set, bindings] : metadata.Uniforms) {
+    for (auto const& [set, bindings] : metadata.Uniforms) {
         resources.emplace_back();
-        for (const auto& [binding, usage] : bindings) {
-            LOG_DEBUGF("Pushing set {}, binding {}", set, binding);
+        for (auto const& [binding, usage] : bindings) {
+            (void)usage;
             resources[set].push_back(usage);
         }
     }
@@ -60,9 +60,9 @@ Ref<VulkanShader> VulkanShader::Create(
         .Samples = metadata.Samples,
     };
 
-    for (auto const& a : pipeline_spec.AttributeLayout.Attributes) {
-        LOG_DEBUGF("VertexAttribute: {} | Type: {}", a.Name, magic_enum::enum_name(a.Type));
-    }
+    // for (auto const& a : pipeline_spec.AttributeLayout.Attributes) {
+    //     LOG_DEBUGF("VertexAttribute: {} | Type: {}", a.Name, magic_enum::enum_name(a.Type));
+    // }
 
     using namespace std::string_literals;
 

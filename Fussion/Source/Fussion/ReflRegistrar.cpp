@@ -226,14 +226,18 @@ namespace Fussion {
         REGISTER_ENUM(MouseButton)
         REGISTER_ENUM(Keys)
         REGISTER_ENUM(RHI::ImageFormat)
-        REGISTER_ENUM(RHI::ImageFormat)
+        REGISTER_ENUM(RHI::FilterMode)
         REGISTER_ENUM(RHI::WrapMode)
 
         using meta::metadata_;
-        meta::class_<AssetSettings>(metadata_()("Name"s, "AssetSettings"s));
+        meta::class_<AssetMetadata>(metadata_()("Name"s, "AssetMetadata"s));
 
-        meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DSettings"s))
-            .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap);
+        meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DMetadata"s))
+            .constructor_<>(as_raw_pointer)
+            .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap, as_pointer)
+            .member_("Filter", &Texture2DMetadata::Filter, as_pointer)
+            .member_("Wrap", &Texture2DMetadata::Wrap, as_pointer)
+            .member_("Format", &Texture2DMetadata::Format, as_pointer);
     }
 }
 

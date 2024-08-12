@@ -9,7 +9,8 @@ using namespace Fussion;
 
 void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
 {
-    EUI::Window("Material Preview", [&] {
+    auto window_name = std::format("Material Preview##{}", m_AssetHandle);
+    EUI::Window(window_name, [&] {
         DrawMenuBar();
 
         auto material_ref = AssetManager::GetAsset<PbrMaterial>(m_AssetHandle);

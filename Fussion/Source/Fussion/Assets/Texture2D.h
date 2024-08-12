@@ -1,12 +1,11 @@
 ﻿#pragma once
 #include "Asset.h"
-#include "AssetSettings.h"
 #include "Fussion/RHI/Image.h"
 
 namespace Fussion {
 
     class Texture2DMetadata final : public AssetMetadata {
-        META_HPP_ENABLE_BASE_INFO(AssetMetadata)
+        META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:
         s32 Width{}, Height{};
         RHI::FilterMode Filter = RHI::FilterMode::Linear;

@@ -62,12 +62,9 @@ public:
     }
 
     template<typename T>
-    static auto GetAssetSettings(AssetHandle handle) -> T*
+    static auto GetAssetMetadata(AssetHandle handle) -> T*
     {
-        auto ptr = s_Active->GetAssetSettings(handle);
-        if (!ptr) {
-
-        }
+        auto ptr = s_Active->GetAssetMetadata(handle);
         return dynamic_cast<T*>(ptr);
     }
 

@@ -6,22 +6,26 @@ using namespace Fussion;
 
 void Texture2DWindow::OnDraw(f32 delta)
 {
-    EUI::Window("Material Preview", [&] {
+    ImGui::PushID(m_AssetHandle);
+    defer(ImGui::PopID());
+    auto window_name = std::format("Texture Preview##{}", m_AssetHandle);
+    EUI::Window(window_name, [&] {
         DrawMenuBar();
 
+        auto size = ImGui::GetContentRegionAvail();
+
+        auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);
+        if (settings != nullptr) {
+            if (EUI::Property("Is Normal Map", &settings->IsNormalMap)) {
+                Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
+            }
+        }
         auto texture_ref = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
         if (!texture_ref.IsValid()) {
-            ImGui::TextUnformatted("Material instance is null");
+            ImGui::TextUnformatted("Texture is null");
             return;
         }
         auto texture = texture_ref.Get();
-
-        auto settings = AssetManager::GetAssetSettings<Texture2DMetadata>(m_AssetHandle);
-        if (settings != nullptr) {
-            EUI::Property("Is Normal Map", &settings->IsNormalMap);
-        }
-
-        auto size = ImGui::GetContentRegionAvail();
 
         ImGui::Image(IMGUI_IMAGE(texture->GetImage()), size);
     }, { .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar });

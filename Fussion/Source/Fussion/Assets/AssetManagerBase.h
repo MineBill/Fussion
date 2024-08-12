@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "AssetSettings.h"
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Core/Uuid.h"
 
@@ -24,7 +23,7 @@ namespace Fussion {
 
         virtual bool IsAssetVirtual(AssetHandle handle) = 0;
 
-        virtual AssetSettings* GetAssetSettings(AssetHandle handle) = 0;
+        virtual AssetMetadata* GetAssetMetadata(AssetHandle handle) = 0;
     };
 }
 
