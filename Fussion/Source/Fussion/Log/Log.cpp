@@ -6,24 +6,22 @@
 #include "Fussion/Core/Types.h"
 
 namespace Fussion {
-
-
     class ConsoleSink final : public LogSink {
     public:
-        void Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc) override
+        virtual void Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc) override
         {
-            static const std::map<LogLevel, int> g_ColorCodes{
-                { LogLevel::Fatal, 31 },
-                { LogLevel::Error, 31 },
-                { LogLevel::Warning, 33 },
-                { LogLevel::Info, 32 },
-                { LogLevel::Debug, 37 },
+            static std::map<LogLevel, int> const ColorCodes{
+                { LogLevel::Fatal, 196 },
+                { LogLevel::Error, 160 },
+                { LogLevel::Warning, 178 },
+                { LogLevel::Info, 114 },
+                { LogLevel::Debug, 240 },
             };
 
             static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
             if (level >= m_Logger->GetPriority()) {
-                std::cout << std::format("\033[1;{}m{} [ConsoleSink]: {}\033[0m\n", g_ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
+                std::cout << std::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
                 if (level == LogLevel::Fatal) {
                     // Do something special?
                 }
