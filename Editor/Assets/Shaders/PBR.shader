@@ -86,6 +86,9 @@ void Vertex() {
 
 layout(set = OBJECT_SET, binding = 1) uniform sampler2D uAlbedoMap;
 layout(set = OBJECT_SET, binding = 2) uniform sampler2D uNormalMap;
+layout(set = OBJECT_SET, binding = 3) uniform sampler2D uAmbientOcclusionMap;
+layout(set = OBJECT_SET, binding = 4) uniform sampler2D uMetallicRoughnessMap;
+layout(set = OBJECT_SET, binding = 5) uniform sampler2D uEmissiveMap;
 
 layout(location = 0) out vec4 o_Color;
 /* #ifdef EDITOR
@@ -196,14 +199,14 @@ vec3 do_directional_light() {
 
     vec3 albedo = texture(uAlbedoMap, In.frag_uv).rgb;
 
-//    float metalness = texture(metallic_roughness_map, In.frag_uv).b * u_Material.metallic;
-    float metalness = 1.0 * u_Material.Metallic;
+    float metalness = texture(uMetallicRoughnessMap, In.frag_uv).b * u_Material.Metallic;
+//    float metalness = 1.0 * u_Material.Metallic;
     F0 = mix(F0, u_Material.AlbedoColor.rgb * albedo, metalness);
 
     vec3 F = FrenselSchlick(max(dot(H, V), 0.0), F0);
 
-//    float roughness = texture(metallic_roughness_map, In.frag_uv).g * u_Material.roughness;
-    float roughness = 1.0 * u_Material.Roughness;
+    float roughness = texture(uMetallicRoughnessMap, In.frag_uv).g * u_Material.Roughness;
+//    float roughness = 1.0 * u_Material.Roughness;
     float NDF = DistributionGGX(N, H, roughness);
     float G = GeometrySmith(N, V, L, roughness);
 
@@ -237,15 +240,15 @@ vec3 do_directional_light() {
     /* vec2 frag_coords = In.frag_pos.xy / In.frag_pos.w;
     vec2 screen_uv = frag_color * 0.5 + 0.5; */
     // float occlusion = texture(s_SSAO,  gl_FragCoord.xy / u_ViewData.screen_size).r;
-//    float occlusion = texture(ambient_occlusion_map, In.frag_uv).r;
-    float occlusion = 1.0f;
+    float occlusion = texture(uAmbientOcclusionMap , In.frag_uv).r;
+//    float occlusion = 1.0f;
 
     vec3 ambient = u_SceneData.ambient_color.rgb * albedo * u_Material.AlbedoColor.rgb * 0.1;
     ambient *= occlusion;
     vec3 ret = ambient + (kd * u_Material.AlbedoColor.rgb * albedo / PI + specular + reflection * metalness * ks) * radiance * NdotL * shadow * occlusion;
 //    vec3 ret = In.tangent_frag_pos.rgb;
 
-//    ret += texture(emissive_map, In.frag_uv).rgb;
+    ret += texture(uEmissiveMap, In.frag_uv).rgb;
 //    if (u_DebugOptions.shadow_cascade_colors) {
 //        switch(int(index)) {
 //            case 0 :
