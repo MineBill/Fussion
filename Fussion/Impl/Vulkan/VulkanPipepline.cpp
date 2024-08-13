@@ -175,9 +175,10 @@ VkPrimitiveTopology PipelineTopologyToVulkan(PipelineTopology topology)
         return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     case PipelineTopology::Lines:
         return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    case PipelineTopology::TriangleStrip:
+        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
     }
     UNREACHABLE;
-    return {};
 }
 
 

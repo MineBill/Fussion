@@ -9,6 +9,7 @@ namespace Fussion::RHI {
 
 enum class PipelineTopology {
     Triangles = 0,
+    TriangleStrip,
     Lines,
 };
 

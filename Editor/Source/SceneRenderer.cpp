@@ -13,6 +13,7 @@
 
 #include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Assets/AssetManager.h"
+#include "Fussion/Core/Time.h"
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/RHI/Device.h"
 #include "Fussion/RHI/Renderer.h"
@@ -255,6 +256,15 @@ void SceneRenderer::Init()
         m_GridShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
+    {
+        constexpr auto path = "Assets/Shaders/Sky.shader";
+        auto data = FileSystem::ReadEntireFile(path);
+        auto result = ShaderCompiler::Compile(*data);
+        auto shader = ShaderAsset::Create(m_SceneRenderPass, result->ShaderStages, result->Metadata);
+
+        m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+    }
+
     m_ViewData = UniformBuffer<ViewData>::Create("View Data");
     m_DebugOptions = UniformBuffer<DebugOptions>::Create("Debug Options");
     m_GlobalData = UniformBuffer<GlobalData>::Create("Global Data");
@@ -366,6 +376,10 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     ZoneScoped;
     using namespace Fussion;
 
+    // TODO: Hack
+    m_GlobalData.Data.Time += Time::DeltaTime();
+    m_GlobalData.Flush();
+
     m_ViewData.Data.Perspective = packet.Camera.Perspective;
     m_ViewData.Data.View = packet.Camera.View;
     m_ViewData.Flush();
@@ -470,6 +484,9 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     }
 
     cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
+    cmd->BindUniformBuffer(m_DebugOptions.GetBuffer(), m_GlobalResource, 1);
+    cmd->BindUniformBuffer(m_GlobalData.GetBuffer(), m_GlobalResource, 2);
+
     cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);
     cmd->BindUniformBuffer(m_LightData.GetBuffer(), m_SceneResource, 1);
 
@@ -504,6 +521,16 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         ZoneScopedN("Scene Render Pass");
         cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
         cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
+
+        {
+            ZoneScopedN("Skybox");
+
+            auto sky_shader = m_SkyShader.Get()->GetShader();
+            cmd->UseShader(sky_shader);
+            cmd->BindResource(m_GlobalResource, sky_shader, 0);
+            cmd->BindResource(m_SceneResource, sky_shader, 1);
+            cmd->Draw(4, 1);
+        }
 
         {
             ZoneScopedN("PBR");

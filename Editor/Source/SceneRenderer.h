@@ -79,6 +79,7 @@ public:
 
 private:
     Fussion::AssetRef<Fussion::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
+    Fussion::AssetRef<Fussion::ShaderAsset> m_SkyShader{};
 
     Ref<Fussion::RHI::ResourcePool> m_ResourcePool{};
     Ref<Fussion::RHI::Resource> m_GlobalResource{};
@@ -101,9 +102,6 @@ private:
 
     Ref<Fussion::RHI::RenderPass> m_ObjectPickingRenderPass{};
     Ref<Fussion::RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
-
-    // Ref<Fussion::ShaderAsset> m_SkyShader{};
-    Fussion::AssetRef<Fussion::ShaderAsset> m_SkyShader{};
 
     std::array<Ref<Fussion::RHI::FrameBuffer>, 4> m_ShadowFrameBuffers{};
 

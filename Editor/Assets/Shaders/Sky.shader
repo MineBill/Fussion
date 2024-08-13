@@ -1,7 +1,11 @@
 #version 450 core
 
-#include "new/lighting.glsl"
-#include "new/global.glsl"
+#pragma samples: 8
+#pragma topology: triangle_strip
+
+#include "Global.glsl"
+#include "Scene.glsl"
+#include "Lighting.glsl"
 
 struct VertexOutput {
     vec3 position;
@@ -24,7 +28,6 @@ void Vertex() {
 }
 
 #pragma type: fragment
-#line 10
 
 layout(location = 0) out vec4 o_Color;
 
@@ -106,14 +109,15 @@ void Fragment() {
     o_Color.rgb = mix(o_Color.rgb, extinction * 10.0, density * max(In.position.y, 0.0));
 
     // // Cumulus Clouds
-    // for (int i = 0; i < 2; i++)
-    // {
-    //   float density = smoothstep(1.0 - cumulus, 1.0, fbm((0.7 + float(i) * 0.01) * In.position.xyz / In.position.y + u_GlobalData.time * 0.01));
-    //   o_Color.rgb = mix(o_Color.rgb, extinction * density * 5.0, min(density, 1.0) * max(In.position.y, 0.0));
-    // }
+     for (int i = 0; i < 2; i++)
+     {
+       float density = smoothstep(1.0 - cumulus, 1.0, fbm((0.7 + float(i) * 0.01) * In.position.xyz / In.position.y + u_GlobalData.time * 0.01));
+       o_Color.rgb = mix(o_Color.rgb, extinction * density * 5.0, min(density, 1.0) * max(In.position.y, 0.0));
+     }
 
     // Dithering Noise
-    // o_Color.rgb += noise(In.position * 10) * 0.01;
     o_Color.a = 1.0;
     o_Color.rgb = pow(1.0 - exp(-1.3 * o_Color.rgb), vec3(1.3));
+    // TODO: Stupid?
+    gl_FragDepth = 0.9999;
 }

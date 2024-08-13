@@ -71,6 +71,8 @@ Ref<VulkanShader> VulkanShader::Create(
     }); pragma != metadata.ParsedPragmas.end()) {
         if (pragma->Value == "triangles"s) {
             pipeline_spec.Topology = PipelineTopology::Triangles;
+        } else if (pragma->Value == "triangle_strip"s) {
+            pipeline_spec.Topology = PipelineTopology::TriangleStrip;
         } else if (pragma->Value == "lines"s) {
             pipeline_spec.Topology = PipelineTopology::Lines;
         } else {
