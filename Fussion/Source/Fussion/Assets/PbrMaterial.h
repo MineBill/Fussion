@@ -11,7 +11,7 @@ public:
     PbrMaterial();
 
     static AssetType GetStaticType() { return AssetType::PbrMaterial; }
-    AssetType GetType() const override { return GetStaticType(); }
+    virtual AssetType GetType() const override { return GetStaticType(); }
 
     Color ObjectColor{};
     f32 Metallic{};
@@ -19,6 +19,9 @@ public:
 
     AssetRef<Texture2D> AlbedoMap{};
     AssetRef<Texture2D> NormalMap{};
+    AssetRef<Texture2D> AmbientOcclusionMap{};
+    AssetRef<Texture2D> MetallicRoughnessMap{};
+    AssetRef<Texture2D> EmissiveMap{};
 
     struct MaterialBlock {
         Color ObjectColor;

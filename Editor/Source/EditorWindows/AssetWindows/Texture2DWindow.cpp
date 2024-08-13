@@ -17,22 +17,31 @@ void Texture2DWindow::OnDraw(f32 delta)
         auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);
         VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
 
-        auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
-        modified |= EUI::Property("Wrapping", &settings->Wrap);
-        modified |= EUI::Property("Filter", &settings->Filter);
-        if (modified) {
-            Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
+        ImGui::BeginChild("left_panel");
+        {
+            auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
+            modified |= EUI::Property("Wrapping", &settings->Wrap);
+            modified |= EUI::Property("Filter", &settings->Filter);
+            modified |= EUI::Property("Format", &settings->Format);
+            if (modified) {
+                Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
+            }
         }
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("right_panel");
+        defer (ImGui::EndChild());
+        {
+            auto asset = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
+            if (!asset.IsLoaded()) {
+                ImGui::TextUnformatted("Texture is null");
+                return;
+            }
+            auto texture = asset.Get();
 
-        auto texture_ref = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
-        if (!texture_ref.IsValid()) {
-            ImGui::TextUnformatted("Texture is null");
-            return;
+            ImGui::Image(IMGUI_IMAGE(texture->GetImage()), size);
         }
-        auto texture = texture_ref.Get();
-
-        ImGui::Image(IMGUI_IMAGE(texture->GetImage()), size);
-    }, { .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar });
+    }, { .Style = WindowStyleAssetPreview, .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar });
 }
 
 void Texture2DWindow::OnSave() {}

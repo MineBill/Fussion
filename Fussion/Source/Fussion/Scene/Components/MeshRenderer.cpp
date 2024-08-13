@@ -53,6 +53,24 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
                 .Type = RHI::ResourceType::CombinedImageSampler,
                 .Count = 1,
                 .Stages = RHI::ShaderType::Fragment,
+            },
+            RHI::ResourceUsage{
+                .Label = "AmbientOcclusion Map",
+                .Type = RHI::ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = RHI::ShaderType::Fragment,
+            },
+            RHI::ResourceUsage{
+                .Label = "MetallicRoughness Map",
+                .Type = RHI::ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = RHI::ShaderType::Fragment,
+            },
+            RHI::ResourceUsage{
+                .Label = "Emissive Map",
+                .Type = RHI::ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = RHI::ShaderType::Fragment,
             }
         };
         auto object_layout = RHI::Device::Instance()->CreateResourceLayout(resource_usages);
@@ -75,8 +93,27 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
             normal = RHI::Renderer::DefaultNormalMap().Get();
         }
 
+        auto ao = material->AmbientOcclusionMap.Get();
+        if (!ao) {
+            ao = RHI::Renderer::WhiteTexture().Get();
+        }
+
+        auto metallic_roughness = material->MetallicRoughnessMap.Get();
+        if (!metallic_roughness) {
+            metallic_roughness = RHI::Renderer::WhiteTexture().Get();
+        }
+
+        auto emissive = material->EmissiveMap.Get();
+        if (!emissive) {
+            emissive = RHI::Renderer::BlackTexture().Get();
+        }
+
         ctx.Cmd->BindImage(albedo->GetImage(), resource, 1);
         ctx.Cmd->BindImage(normal->GetImage(), resource, 2);
+
+        ctx.Cmd->BindImage(ao->GetImage(), resource, 3);
+        ctx.Cmd->BindImage(metallic_roughness->GetImage(), resource, 4);
+        ctx.Cmd->BindImage(emissive->GetImage(), resource, 5);
 
         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_Data);
     } else if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
