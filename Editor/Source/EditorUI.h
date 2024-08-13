@@ -87,46 +87,46 @@ namespace EUI {
 
     inline void AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data)
     {
-            auto m_Handle = class_type.get_member("m_Handle");
+        auto m_Handle = class_type.get_member("m_Handle");
 
-            ImGui::TextUnformatted("Asset Reference:");
-            ImGui::SetNextItemAllowOverlap();
-            Vector2 pos = ImGui::GetCursorPos();
+        ImGui::TextUnformatted("Asset Reference:");
+        ImGui::SetNextItemAllowOverlap();
+        Vector2 pos = ImGui::GetCursorPos();
 
-            auto handle = m_Handle.get(data).template as<Fussion::AssetHandle>();
-            auto asset_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(handle);
-            ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
-            ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
-            ImGui::PopFont();
+        auto handle = m_Handle.get(data).template as<Fussion::AssetHandle>();
+        auto asset_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(handle);
+        ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
+        ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
+        ImGui::PopFont();
 
-            if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("Clear")) {
-                    m_Handle.set(data, Fussion::AssetHandle(0));
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Clear")) {
+                m_Handle.set(data, Fussion::AssetHandle(0));
+            }
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginDragDropTarget()) {
+            auto* payload = ImGui::GetDragDropPayload();
+            if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
+                auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
+                auto incoming_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*incoming_handle);
+
+                if (incoming_metadata.Type == asset_metadata.Type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                    m_Handle.set(data, *incoming_handle);
                 }
-                ImGui::EndPopup();
             }
 
-            if (ImGui::BeginDragDropTarget()) {
-                auto* payload = ImGui::GetDragDropPayload();
-                if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
-                    auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
-                    auto incoming_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*incoming_handle);
+            ImGui::EndDragDropTarget();
+        }
 
-                    if (incoming_metadata.Type == asset_metadata.Type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                        m_Handle.set(data, *incoming_handle);
-                    }
-                }
-
-                ImGui::EndDragDropTarget();
-            }
-
-            ImGui::SetCursorPos(pos + Vector2(2, 2));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-            EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
-                auto asset_type = class_type.get_method("GetType").invoke(data).template as<Fussion::AssetType>();
-                Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
-            }, { .Size = Vector2{ 16, 16 } });
-            ImGui::PopStyleVar();
+        ImGui::SetCursorPos(pos + Vector2(2, 2));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
+        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
+            auto asset_type = class_type.get_method("GetType").invoke(data).template as<Fussion::AssetType>();
+            Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
+        }, { .Size = Vector2{ 16, 16 } });
+        ImGui::PopStyleVar();
     }
 
     template<typename T, typename TypeKind = PropTypeGeneric>
@@ -311,16 +311,17 @@ namespace EUI {
     }
 
     struct WindowParams {
-        WindowStyles Style = WindowStyleGeneric;
+        WindowStyles Style{ WindowStyleGeneric };
         bool* Opened{ nullptr };
-        ImGuiWindowFlags Flags = 0;
+        ImGuiWindowFlags Flags{ ImGuiWindowFlags_None };
         Vector2 Size{ 400, 400 };
-        bool Dirty = false;
+        bool Dirty{ false };
+        Maybe<WindowStyle> Override{};
     };
 
     void Window(std::string_view title, auto&& func, WindowParams params = {})
     {
-        auto style = Detail::GetWindowStyle(params.Style);
+        auto style = params.Override.ValueOr(Detail::GetWindowStyle(params.Style));
 
         if (params.Dirty)
             params.Flags |= ImGuiWindowFlags_UnsavedDocument;

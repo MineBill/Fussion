@@ -216,24 +216,30 @@ void ContentBrowser::OnDraw()
                 case AssetType::Texture:
                 case AssetType::HDRTexture:
                 case AssetType::Mesh:
-                case AssetType::Shader:
+                case AssetType::Shader: {
                     texture = style.EditorIcons[EditorIcon::GenericAsset].get();
-                    break;
-                case AssetType::Script:
+                }
+                break;
+                case AssetType::Script: {
                     texture = style.EditorIcons[EditorIcon::Script].get();
-                    break;
-                case AssetType::PbrMaterial:
+                }
+                break;
+                case AssetType::PbrMaterial: {
                     texture = style.EditorIcons[EditorIcon::PbrMaterial].get();
-                    break;
-                case AssetType::Scene:
+                }
+                break;
+                case AssetType::Scene: {
                     texture = style.EditorIcons[EditorIcon::Scene].get();
-                    break;
-                case AssetType::Texture2D:
-                    texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get();
+                }
+                break;
+                case AssetType::Texture2D: {
+                    auto asset = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle);
+                    texture = asset.Get();
                     if (texture == nullptr) {
                         texture = style.EditorIcons[EditorIcon::GenericAsset].get();
                     }
-                    break;
+                }
+                break;
                 default:
                     PANIC("idk");
                 }
@@ -243,6 +249,7 @@ void ContentBrowser::OnDraw()
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     switch (entry.Type) {
+                    // NOLINT(clang-diagnostic-switch-enum)
                     case AssetType::PbrMaterial:
                         m_Editor->CreateAssetWindow<MaterialWindow>(entry.Metadata.Handle);
                         break;

@@ -88,6 +88,7 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
 enum WindowStyles {
     WindowStyleGeneric,
     WindowStyleCreator,
+    WindowStyleAssetPreview,
 
     WindowStyleCount,
 };
