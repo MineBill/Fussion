@@ -119,6 +119,8 @@ void ViewportWindow::OnDraw()
                 if (metadata.Type == AssetType::Scene) {
                     if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
                         auto scene = AssetManager::GetAsset<Scene>(*handle);
+                        scene.WaitUntilLoaded();
+
                         Editor::ChangeScene(scene);
                     }
                 }

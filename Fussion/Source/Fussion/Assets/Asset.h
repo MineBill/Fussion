@@ -6,60 +6,60 @@
 
 namespace Fussion {
 
-enum  class [[nodiscard]] AssetType {
-    Invalid,
+    enum class [[nodiscard]] AssetType {
+        Invalid,
 
-    Image,
-    Script,
-    Mesh,
-    PbrMaterial,
-    Scene,
-    Shader,
-    Texture,
-    Texture2D,
-    HDRTexture,
-};
+        Image,
+        Script,
+        Mesh,
+        PbrMaterial,
+        Scene,
+        Shader,
+        Texture,
+        Texture2D,
+        HDRTexture,
+    };
 
-using AssetHandle = Uuid;
+    using AssetHandle = Uuid;
 
-class AssetMetadata {
-META_HPP_ENABLE_POLY_INFO()
-public:
-    virtual ~AssetMetadata() = default;
-};
+    class AssetMetadata {
+        META_HPP_ENABLE_POLY_INFO()
+    public:
+        virtual ~AssetMetadata() = default;
+    };
 
-class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset> {
-    friend ReflRegistrar;
+    class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset> {
+        friend ReflRegistrar;
 
-public:
-    virtual ~Asset() = default;
+    public:
+        virtual ~Asset() = default;
 
-    [[nodiscard]]
-    virtual AssetType GetType() const = 0;
+        [[nodiscard]]
+        virtual AssetType GetType() const = 0;
 
-    [[nodiscard]]
-    AssetHandle GetHandle() const { return m_Handle; }
+        [[nodiscard]]
+        AssetHandle GetHandle() const { return m_Handle; }
 
-    void SetHandle(AssetHandle handle)
-    {
-        m_Handle = handle;
-    }
+        void SetHandle(AssetHandle handle)
+        {
+            m_Handle = handle;
+        }
 
-    template<typename T>
-    Ref<T> As()
-    {
-        return std::dynamic_pointer_cast<T>(shared_from_this());
-    }
+        template<typename T>
+        Ref<T> As()
+        {
+            return std::dynamic_pointer_cast<T>(shared_from_this());
+        }
 
-    [[nodiscard]]
-    bool IsValid() const
-    {
-        return m_Handle != 0;
-    }
+        [[nodiscard]]
+        bool IsValid() const
+        {
+            return m_Handle != 0;
+        }
 
-protected:
-    AssetHandle m_Handle{ 0 };
+    protected:
+        AssetHandle m_Handle{ 0 };
 
-    friend class AssetManagerBase;
-};
+        friend class AssetManagerBase;
+    };
 }

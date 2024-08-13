@@ -11,6 +11,13 @@
 #include <unordered_map>
 #include <concepts>
 
+enum class AssetLoadState {
+    Unloaded = 0,
+    Loading,
+    Loaded,
+    FailedToLoad,
+};
+
 struct EditorAssetMetadata final {
     Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
@@ -19,6 +26,8 @@ struct EditorAssetMetadata final {
     bool IsVirtual = false;
     bool DontSerialize = false;
     bool Dirty = false;
+
+    AssetLoadState LoadState{ AssetLoadState::Unloaded };
 
     Fussion::AssetHandle Handle;
 
@@ -90,9 +99,11 @@ public:
 
     void Serialize();
     void Deserialize();
-    void RefreshAsset(Fussion::AssetHandle uuid);
+    void RefreshAsset(Fussion::AssetHandle handle);
 
 private:
+    void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
+
     Registry m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 

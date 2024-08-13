@@ -21,22 +21,35 @@ public:
 
     operator bool() const { return IsValid(); }
 
-    [[nodiscard]] bool IsValid() const { return m_Handle != 0; }
-    [[nodiscard]] AssetHandle Handle() const { return m_Handle; }
+    [[nodiscard]]
+    bool IsValid() const { return m_Handle != 0; }
+
+    [[nodiscard]]
+    bool IsLoaded() const;
+
+    [[nodiscard]]
+    AssetHandle Handle() const { return m_Handle; }
+
     bool IsVirtual() const;
 
     void SetHandle(AssetHandle handle) { m_Handle = handle; }
 
-    virtual AssetType GetType() = 0;
+    virtual AssetType GetType() const = 0;
+
+    /// Blocks the current thread until the asset has completed loading.
+    /// This is useful in situations during one-shot actions where you get
+    /// an asset and want it before continuing with your code.
+    void WaitUntilLoaded() const;
 
 protected:
     [[nodiscard]] Asset* GetRaw(AssetType type) const;
 
     AssetHandle m_Handle{ 0 };
+    bool m_Loaded{false};
 };
 
 template<class T, typename M = Detail::AssetRefMarker>
-class AssetRef : public AssetRefBase {
+class AssetRef final : public AssetRefBase {
     META_HPP_ENABLE_POLY_INFO(AssetRefBase)
 public:
     AssetRef() : AssetRefBase() {}
@@ -57,7 +70,7 @@ public:
         return CAST(T*, GetRaw(T::GetStaticType()));
     }
 
-    AssetType GetType() override { return T::GetStaticType(); }
+    virtual AssetType GetType() const override { return T::GetStaticType(); }
 };
 
 }

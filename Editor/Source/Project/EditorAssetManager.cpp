@@ -61,17 +61,8 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
     VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}. Could it be that you are referencing a virtual asset?", handle);
     ZoneScoped;
     if (!IsAssetLoaded(handle)) {
-        // Load asset first
-
-        auto metadata = m_Registry[handle];
-
-        // ??
-        m_LoadedAssets[handle] = {};
-
-        // TODO: What about assets that failed to load?
-        m_LoadedAssets[handle] = m_AssetSerializers[type]->Load(metadata);
-        m_LoadedAssets[handle]->SetHandle(handle);
-        LOG_DEBUGF("Loading requested asset {} from '{}' of type {}", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));
+        LoadAsset(handle, type);
+        return nullptr;
     }
     return m_LoadedAssets[handle].get();
 }
@@ -88,7 +79,8 @@ auto EditorAssetManager::GetAsset(std::string const& path, AssetType type) -> As
 
 bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
 {
-    return m_LoadedAssets.contains(handle);
+    auto& metadata = m_Registry.at(handle);
+    return metadata.LoadState == AssetLoadState::Loaded;
 }
 
 bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
@@ -110,6 +102,7 @@ AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std:
         .Name = std::string(name),
         .IsVirtual = true,
         .DontSerialize = true,
+        .LoadState = AssetLoadState::Loaded,
         .Handle = handle,
     };
     m_LoadedAssets[handle] = asset;
@@ -119,7 +112,8 @@ AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std:
 
 AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
 {
-    if (!IsAssetHandleValid(handle)) return nullptr;
+    if (!IsAssetHandleValid(handle))
+        return nullptr;
 
     return m_Registry[handle].CustomMetadata.get();
 }
@@ -128,6 +122,7 @@ bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool i
 {
     ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
+        (void)id;
         if (!include_virtual && metadata.IsVirtual)
             continue;
         if (metadata.Path == path) {
@@ -141,6 +136,7 @@ Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path
 {
     ZoneScoped;
     for (auto const& [id, metadata] : m_Registry) {
+        (void)id;
         if (metadata.Path == path) {
             return metadata;
         }
@@ -154,6 +150,19 @@ EditorAssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
         return m_Registry.at(handle);
     }
     return {};
+}
+
+auto MetadataForAsset(AssetType type) -> Ref<AssetMetadata>
+{
+    using enum AssetType;
+    switch (type) {
+    case Texture2D: {
+        return MakeRef<Texture2DMetadata>();
+    }
+    default:
+        break;
+    }
+    return nullptr;
 }
 
 void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, AssetType type)
@@ -178,6 +187,7 @@ void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, AssetT
         .IsVirtual = false,
         .DontSerialize = false,
         .Handle = id,
+        .CustomMetadata = MetadataForAsset(type),
     };
 
     Serialize();
@@ -207,7 +217,9 @@ auto DeserializeCustomMetadata(json const& j, AssetType type) -> Ref<AssetMetada
     case Texture2D: {
         auto meta = MakeRef<Texture2DMetadata>();
         auto ptr = meta->meta_poly_ptr();
-        DeserializeClassFromJson(j["CustomMetadata"], meta_hpp::resolve_type<Texture2DMetadata>(), std::move(ptr));
+        if (j.contains("CustomMetadata")) {
+            DeserializeClassFromJson(j["CustomMetadata"], meta_hpp::resolve_type<Texture2DMetadata>(), std::move(ptr));
+        }
         return meta;
     }
     default:
@@ -292,7 +304,26 @@ void EditorAssetManager::Deserialize()
 
 void EditorAssetManager::RefreshAsset(AssetHandle handle)
 {
-    if (!IsAssetHandleValid(handle) || !IsAssetLoaded(handle)) return;
+    if (!IsAssetHandleValid(handle) || !IsAssetLoaded(handle))
+        return;
 
     SaveAsset(handle);
+}
+
+void EditorAssetManager::LoadAsset(AssetHandle handle, AssetType type)
+{
+    VERIFY(m_AssetSerializers.contains(type), "Missing asset serializer for type '{}'", magic_enum::enum_name(type));
+
+    auto& metadata = m_Registry[handle];
+    metadata.LoadState = AssetLoadState::Loading;
+
+    // ??
+    m_LoadedAssets[handle] = {};
+
+    // TODO: What about assets that failed to load?
+    m_LoadedAssets[handle] = m_AssetSerializers[type]->Load(metadata);
+    m_LoadedAssets[handle]->SetHandle(handle);
+
+    metadata.LoadState = AssetLoadState::Loaded;
+    LOG_DEBUGF("Loaded asset '{}' from '{}' of type '{}'", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));
 }

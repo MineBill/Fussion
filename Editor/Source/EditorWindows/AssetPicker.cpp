@@ -36,7 +36,10 @@ void AssetPicker::Update()
 
             Fussion::Texture2D* texture = style.EditorIcons[EditorIcon::GenericAsset].get();
             if (m_Type == Fussion::AssetType::Texture2D) {
-                texture = Fussion::AssetManager::GetAsset<Fussion::Texture2D>(handle).Get();
+                auto asset = Fussion::AssetManager::GetAsset<Fussion::Texture2D>(handle);
+                if (auto ptr = asset.Get()) {
+                    texture = ptr;
+                }
             }
             size.X = texture->Metadata().Aspect() * size.Y;
 
