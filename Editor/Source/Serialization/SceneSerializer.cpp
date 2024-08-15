@@ -94,6 +94,11 @@ Ref<Asset> SceneSerializer::Load(EditorAssetMetadata metadata)
     auto const path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
     auto const text = FileSystem::ReadEntireFile(path);
 
+    struct ParentChildPair {
+        Uuid Parent{}, Child{};
+    };
+    std::vector<ParentChildPair> entities_to_resolve{};
+
     try {
         auto j = json::parse(*text, nullptr, true, true);
         scene->m_Name = j["Name"].get<std::string>();
@@ -109,7 +114,11 @@ Ref<Asset> SceneSerializer::Load(EditorAssetMetadata metadata)
             auto parent = jentity["Parent"].get<Uuid>();
             auto enabled = jentity.value("Enabled", true);
 
-            auto e = scene->CreateEntityWithId(handle, name, parent);
+            if (parent.IsValid() && !scene->HasEntity(parent)) {
+                entities_to_resolve.emplace_back(parent, handle);
+            }
+
+            auto* e = scene->CreateEntityWithId(handle, name, scene->HasEntity(parent) ? parent : Uuid(0));
             e->SetEnabled(enabled);
 
             if (jentity.contains("Transform")) {
@@ -139,6 +148,10 @@ Ref<Asset> SceneSerializer::Load(EditorAssetMetadata metadata)
 
     } catch (std::exception const& e) {
         LOG_ERRORF("Exception while loading scene: {}", e.what());
+    }
+
+    for (auto const& [parent, child] : entities_to_resolve) {
+        scene->GetEntity(child)->SetParent(*scene->GetEntity(parent));
     }
     return scene;
 }

@@ -66,22 +66,17 @@ namespace Fussion {
         bool* GetEnabled() { return &m_Enabled; }
 
         auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
+        [[nodiscard]]
+        auto HasComponent(meta_hpp::class_type type) const -> bool;
+        [[nodiscard]]
+        auto GetComponent(meta_hpp::class_type type) -> Ref<Component>;
+        void RemoveComponent(meta_hpp::class_type type);
 
         template<std::derived_from<Component> C>
         auto AddComponent() -> Ref<C>
         {
-            auto type = meta_hpp::resolve_type<C>();
-            if (HasComponent<C>()) {
-                LOG_WARNF("Attempted to re-add component `{}`", type.get_metadata().at("Name").template as<std::string>());
-                return nullptr;
-            }
-            auto const id = type.get_hash();
-            m_Components[id] = MakeRef<C>(this);
-            return m_Components[id];
+            return std::dynamic_pointer_cast<C>(AddComponent(meta_hpp::resolve_type<C>()));
         }
-
-        [[nodiscard]]
-        auto HasComponent(meta_hpp::class_type type) const -> bool;
 
         template<std::derived_from<Component> C>
         [[nodiscard]]
@@ -90,16 +85,12 @@ namespace Fussion {
             return m_Components.contains(meta_hpp::resolve_type<C>().get_hash());
         }
 
-        auto GetComponent(meta_hpp::class_type type) -> Ref<Component>;
-
         template<std::derived_from<Component> C>
         [[nodiscard]]
         auto GetComponent() -> Ref<C>
         {
             return std::dynamic_pointer_cast<C>(GetComponent(meta_hpp::resolve_type<C>()));
         }
-
-        void RemoveComponent(meta_hpp::class_type type);
 
         template<std::derived_from<Component> C>
         void RemoveComponent()

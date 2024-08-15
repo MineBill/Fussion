@@ -31,10 +31,13 @@ namespace Fussion {
         auto CreateEntityWithId(Uuid id, std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
 
         auto GetEntity(Uuid handle) -> Entity*;
+        // TODO: What the fuck is this?
         auto GetEntity(Entity const& entity) -> Entity*;
         auto GetEntityFromLocalID(s32 local_id) -> Entity*;
 
-        auto GetRoot() -> Entity*;
+        /// Returns the invisible root entity. All other entities in the scene
+        /// are children of this root entity.
+        auto GetRoot() -> Entity&;
 
         template<typename Callback>
         void ForEachEntity(Callback callback)
@@ -44,9 +47,9 @@ namespace Fussion {
             }
         }
 
-        /// @return If the given handle is entity that exists or not in the scene.
+        /// Returns if the entity exists in the scene.
         [[nodiscard]]
-        bool IsHandleValid(Uuid parent) const;
+        bool HasEntity(Uuid handle) const;
 
         /// Marks the scene as modified.
         /// Mainly used by the editor.
@@ -56,9 +59,9 @@ namespace Fussion {
         void Destroy(Uuid handle);
         void Destroy(Entity const* entity);
 
-        static auto GetStaticType() -> AssetType { return AssetType::Scene; }
-
         virtual auto GetType() const -> AssetType override { return GetStaticType(); }
+
+        static auto GetStaticType() -> AssetType { return AssetType::Scene; }
 
     private:
         std::string m_Name{};

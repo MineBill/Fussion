@@ -105,7 +105,9 @@ namespace Fussion {
 
     auto Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent) -> Entity*
     {
+        VERIFY(m_Entities.contains(parent), "Parent {} is not a valid entity within the scene", parent);
         LOG_INFOF("Creating entity {} with parent {}", CAST(u64, id), CAST(u64, parent));
+
         m_Entities[id] = Entity(id, this);
         auto& entity = m_Entities[id];
         entity.Name = name;
@@ -120,7 +122,7 @@ namespace Fussion {
 
     auto Scene::GetEntity(Uuid const handle) -> Entity*
     {
-        if (!IsHandleValid(handle))
+        if (!HasEntity(handle))
             return nullptr;
         return &m_Entities[handle];
     }
@@ -137,14 +139,14 @@ namespace Fussion {
         return GetEntity(m_LocalIDToEntity[local_id]);
     }
 
-    bool Scene::IsHandleValid(Uuid parent) const
+    bool Scene::HasEntity(Uuid handle) const
     {
-        return m_Entities.contains(parent);
+        return m_Entities.contains(handle);
     }
 
     void Scene::Destroy(Uuid handle)
     {
-        if (!IsHandleValid(handle))
+        if (!HasEntity(handle))
             return;
 
         for (auto child : m_Entities[handle].m_Children) {
@@ -160,8 +162,8 @@ namespace Fussion {
         Destroy(entity->GetId());
     }
 
-    auto Scene::GetRoot() -> Entity*
+    auto Scene::GetRoot() -> Entity&
     {
-        return &m_Entities[0];
+        return m_Entities[0];
     }
 }
