@@ -109,7 +109,8 @@ namespace Fussion {
         if (auto parent = m_Scene->GetEntity(m_Parent)) {
             return parent->IsEnabled();
         }
-        return false;
+        // If the parent cannot be found in the scene then we are the root entity, which is always enabled.
+        return true;
     }
 
     auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
