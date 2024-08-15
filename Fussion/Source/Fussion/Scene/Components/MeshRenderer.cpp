@@ -22,9 +22,11 @@ void Fussion::MeshRenderer::OnUpdate([[maybe_unused]] f32 delta) {}
 void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
 {
     ZoneScoped;
-    if (!Mesh.IsValid())
+    if (!m_Owner->IsEnabled())
         return;
     auto mesh = Mesh.Get();
+    if (mesh == nullptr)
+        return;
 
     if (ctx.RenderFlags.Test(RHI::RenderState::Mesh)) {
         auto material = Material.Get();
@@ -133,6 +135,8 @@ void Fussion::MeshRenderer::OnDraw(RHI::RenderContext& ctx)
 
 void Fussion::MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
 {
+    if (!m_Owner->IsEnabled())
+        return;
     auto draw_normals = ctx.Flags.Test(DebugDrawFlag::DrawMeshNormals);
     auto draw_tangents = ctx.Flags.Test(DebugDrawFlag::DrawMeshTangents);
     if (!draw_normals && !draw_tangents) {
