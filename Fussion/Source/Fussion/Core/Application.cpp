@@ -48,14 +48,9 @@ void Application::Run()
     m_Window.reset(Window::Create(options));
     m_Window->OnEvent([this](Event& event) -> bool {
         ZoneScoped;
-        OnEvent(event);
         Input::OnEvent(event);
-        for (auto const& layer : m_Layers) {
-            if (event.Handled) {
-                break;
-            }
-            layer->OnEvent(event);
-        }
+
+        OnEvent(event);
         return false;
     });
 

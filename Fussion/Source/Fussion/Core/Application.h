@@ -26,6 +26,9 @@ public:
     virtual void OnEvent(Event& event)
     {
         for (auto const& layer : m_Layers) {
+            if (event.Handled) {
+                break;
+            }
             layer->OnEvent(event);
         }
     }
