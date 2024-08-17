@@ -1,5 +1,6 @@
 ﻿#pragma once
-#include <concepts>
+#include <Fussion/Core/Maybe.h>
+#include <Fussion/Core/Concepts.h>
 
 namespace Fussion {
     template<typename ValueT, typename ErrorT>
@@ -17,28 +18,28 @@ namespace Fussion {
 
         ValueType& Value()
         {
-            return m_Value.value();
+            return m_Value.Value();
         }
 
         ErrorType& Error()
         {
-            return m_Error.value();
+            return m_Error.Value();
         }
 
         [[nodiscard]]
-        bool IsValue() const { return m_Value.has_value(); }
+        bool IsValue() const { return m_Value.HasValue(); }
 
         [[nodiscard]]
-        bool IsError() const { return m_Error.has_value(); }
+        bool IsError() const { return m_Error.HasValue(); }
 
         ValueType& operator*()
         {
-            return m_Value.value();
+            return m_Value.Value();
         }
 
     private:
-        std::optional<ValueType> m_Value{};
-        std::optional<ErrorType> m_Error{};
+        Maybe<ValueType> m_Value{};
+        Maybe<ErrorType> m_Error{};
     };
 
     template<typename ErrorT>
@@ -47,22 +48,22 @@ namespace Fussion {
         using ValueType = void;
         using ErrorType = ErrorT;
 
-        Result() = default;
-        Result(ErrorT const& error): m_Error(error) {}
-        Result(ErrorT&& error): m_Error(std::move(error)) {}
+        constexpr Result() = default;
+        constexpr Result(ErrorT const& error): m_Error(error) {}
+        constexpr Result(ErrorT&& error): m_Error(std::move(error)) {}
 
-        ErrorType& Error()
+        constexpr ErrorType& Error()
         {
-            return m_Error.value();
+            return m_Error.Value();
         }
 
         [[nodiscard]]
-        bool IsError() const { return m_Error.has_value(); }
+        constexpr bool IsError() const { return m_Error.HasValue(); }
 
         [[nodiscard]]
-        bool IsValue() const { return !m_Error.has_value(); }
+        constexpr bool IsValue() const { return !m_Error.HasValue(); }
 
     private:
-        std::optional<ErrorType> m_Error{};
+        Maybe<ErrorType> m_Error{};
     };
 }

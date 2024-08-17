@@ -7,8 +7,8 @@ namespace Fussion {
 void ScriptComponent::OnStart()
 {
     if (auto klass = ScriptingEngine::Get().GetGameAssembly()->GetClass(ClassName); klass) {
-        if (klass.value()->DerivesFrom("Script")) {
-            m_Instance = klass.value()->CreateInstance();
+        if (klass.Value()->DerivesFrom("Script")) {
+            m_Instance = klass.Value()->CreateInstance();
 
             if (m_Instance.IsValid()) {
                 m_Instance.SetProperty("m_Owner", m_Owner);
@@ -31,8 +31,8 @@ void ScriptComponent::OnDestroy() {}
 void ScriptComponent::Test() const
 {
     if (auto klass = ScriptingEngine::Get().GetGameAssembly()->GetClass(ClassName); klass) {
-        if (klass.value()->DerivesFrom("Script")) {
-            if (auto inst = klass.value()->CreateInstance(); inst.IsValid()) {
+        if (klass.Value()->DerivesFrom("Script")) {
+            if (auto inst = klass.Value()->CreateInstance(); inst.IsValid()) {
                 inst.SetProperty("m_Owner", m_Owner);
                 inst.CallMethod("OnStart");
             } else {

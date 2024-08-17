@@ -1,6 +1,9 @@
 ﻿#pragma once
-#include "RenderHandle.h"
-#include "Fussion/Core/Types.h"
+#include <Fussion/RHI/RenderHandle.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Core/Maybe.h>
+
+#include <array>
 
 namespace Fussion::RHI
 {
@@ -58,7 +61,7 @@ namespace Fussion::RHI
         std::vector<RenderPassAttachmentRef> ColorAttachments;
         std::vector<RenderPassAttachmentRef> ResolveAttachments;
         std::vector<RenderPassAttachmentRef> InputAttachments;
-        std::optional<RenderPassAttachmentRef> DepthStencilAttachment;
+        Maybe<RenderPassAttachmentRef> DepthStencilAttachment;
     };
 
     struct RenderPassAttachment

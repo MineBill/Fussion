@@ -2,10 +2,8 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/Log/Formatters.h"
 
-namespace Fussion
-{
-    class Uuid
-    {
+namespace Fussion {
+    class Uuid {
     public:
         Uuid();
         Uuid(const u64 id) : m_Id(id) {}
@@ -15,14 +13,15 @@ namespace Fussion
             return m_Id;
         }
 
+        bool IsValid() const { return m_Id == 0; }
+
     private:
         u64 m_Id{};
     };
 }
 
-template <>
-struct std::hash<Fussion::Uuid>
-{
+template<>
+struct std::hash<Fussion::Uuid> {
     std::size_t operator()(const Fussion::Uuid& id) const noexcept
     {
         using std::hash;

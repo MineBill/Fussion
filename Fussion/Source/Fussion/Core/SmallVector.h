@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Fussion/Log/Log.h>
 #include <Fussion/Core/Result.h>
+#include <array>
 
 namespace Fussion {
     enum class SmallVectorError {

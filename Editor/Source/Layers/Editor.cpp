@@ -219,6 +219,7 @@ void Editor::OnUpdate(f32 delta)
         ImGuiDockNodeFlags_NoTabBar |
         ImGuiDockNodeFlags_HiddenTabBar |
         ImGuiDockNodeFlags_NoDockingOverMe |
+        ImGuiDockNodeFlags_NoResize |
         ImGuiDockNodeFlags_NoDockingOverOther;
 
     ImGuiWindowClass klass;
@@ -272,7 +273,7 @@ void Editor::OnUpdate(f32 delta)
         list->AddRectFilled(min, max, color.ToABGR(), 3);
 
         list->ChannelsMerge();
-    }, { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize });
+    }, { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
 
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);

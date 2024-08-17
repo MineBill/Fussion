@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include "Math.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/Math/Vector4.h"
-#include "Fussion/Log/Formatters.h"
+#include <Fussion/Core/Types.h>
+#include <Fussion/Log/Formatters.h>
+#include <Fussion/Math/Math.h>
+#include <Fussion/Math/Vector4.h>
 
 namespace Fussion {
     struct Color {
@@ -70,6 +70,7 @@ namespace Fussion {
             };
         }
 
+        [[nodiscard]]
         static constexpr Color FromRGBA(u8 r, u8 g, u8 b, u8 a = 255)
         {
             return {
@@ -107,14 +108,13 @@ namespace Fussion {
 
             if (hsl.S == 0) {
                 return { hsl.L, hsl.L, hsl.L, hsl.A };
-            } else {
-                auto q = hsl.L < 0.5f ? hsl.L * (1.f + hsl.S) : hsl.L + hsl.S - hsl.L * hsl.S;
-                auto p = 2 * hsl.L - q;
-                color.R = HueToRGB(p, q, hsl.H + 1.f / 3.f);
-                color.G = HueToRGB(p, q, hsl.H);
-                color.B = HueToRGB(p, q, hsl.H - 1.f / 3.f);
-                color.A = hsl.A;
             }
+            auto q = hsl.L < 0.5f ? hsl.L * (1.f + hsl.S) : hsl.L + hsl.S - hsl.L * hsl.S;
+            auto p = 2 * hsl.L - q;
+            color.R = HueToRGB(p, q, hsl.H + 1.f / 3.f);
+            color.G = HueToRGB(p, q, hsl.H);
+            color.B = HueToRGB(p, q, hsl.H - 1.f / 3.f);
+            color.A = hsl.A;
             return color;
         }
 

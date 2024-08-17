@@ -58,3 +58,5 @@ public:
 };
 
 }
+
+FSN_MAKE_FORMATTABLE(Fussion::OnKeyPressed, "OnKeyPressed({})", magic_enum::enum_name(v.Key))

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <Fussion/Core/Concepts.h>
 #include "Fussion/Core/Types.h"
 #include "Fussion/Core/Core.h"
 #include "Fussion/Math/Vector2.h"

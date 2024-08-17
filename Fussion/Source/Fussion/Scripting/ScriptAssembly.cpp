@@ -130,11 +130,11 @@ ScriptAssembly::ScriptAssembly(asIScriptModule* module)
     Reload(module);
 }
 
-auto ScriptAssembly::GetClass(std::string const& name) -> std::optional<ScriptClass*>
+auto ScriptAssembly::GetClass(std::string const& name) -> Maybe<ScriptClass*>
 {
     if (m_Classes.contains(name))
         return &m_Classes[name];
-    return std::nullopt;
+    return {};
 }
 
 auto ScriptAssembly::GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>
@@ -154,7 +154,6 @@ void ScriptAssembly::Reload(asIScriptModule* module)
     m_Name = module->GetName();
     for (u32 i = 0; i < module->GetObjectTypeCount(); i++) {
         auto const klass = module->GetObjectTypeByIndex(i);
-        LOG_DEBUGF("Storing class: {}", klass->GetName());
         m_Classes[klass->GetName()] = ScriptClass(klass);
     }
 }

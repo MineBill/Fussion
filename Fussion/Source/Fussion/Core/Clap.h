@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include "Types.h"
+#include <variant>
+#include <string>
+#include <unordered_map>
 
 namespace Fussion {
 

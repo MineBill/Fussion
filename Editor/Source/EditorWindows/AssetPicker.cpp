@@ -1,6 +1,7 @@
 ﻿#include "AssetPicker.h"
 #include "EditorUI.h"
 #include "ImGuiHelpers.h"
+#include "Fussion/Assets/AssetManager.h"
 #include "Project/Project.h"
 
 void AssetPicker::Update()
@@ -66,9 +67,13 @@ void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& i
     m_Opened = true;
     m_Instance = instance.copy();
 
-    for (auto const& [handle, metadata] : Project::ActiveProject()->GetAssetManager()->GetRegistry()) {
-        if (metadata.Type == type) {
-            m_Entries.push_back({ handle, metadata.Name, metadata.IsVirtual });
+    auto& registry = Project::ActiveProject()->GetAssetManager()->GetRegistry();
+
+    registry.Access([&](EditorAssetManager::Registry& reg) {
+        for (auto const& [handle, metadata] : reg) {
+            if (metadata.Type == type) {
+                m_Entries.push_back({ handle, metadata.Name, metadata.IsVirtual });
+            }
         }
-    }
+    });
 }

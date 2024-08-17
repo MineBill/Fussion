@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <Fussion/Core/Types.h>
-#include <concepts>
+#include <Fussion/Core/Concepts.h>
 
 namespace Fussion {
     class RefCounted {

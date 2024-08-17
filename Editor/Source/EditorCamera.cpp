@@ -39,10 +39,7 @@ void EditorCamera::OnUpdate(f32 delta)
         auto input = Vector3(x, y, z);
 
         Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * Speed;
-        // Position += input * m_Direction * delta * Speed;
     }
-
-    Debug::DrawLine(Vector3(), Vector3() + m_Direction * 2);
 
     m_Perspective = glm::perspective(glm::radians(Fov), m_ScreenSize.X / m_ScreenSize.Y, Near, Far);
 
@@ -90,12 +87,24 @@ void EditorCamera::HandleEvent(Event& event)
     });
 }
 
-void EditorCamera::Resize(Vector2 new_size)
+void EditorCamera::Resize(Vector2 const& new_size)
 {
     m_ScreenSize = new_size;
 }
 
-void EditorCamera::SetFocus(const bool focused)
+void EditorCamera::SetFocus(bool focused)
 {
     m_HasFocus = focused;
+}
+
+auto EditorCamera::ToRenderCamera() const -> RenderCamera
+{
+    return RenderCamera{
+        .Perspective = m_Perspective,
+        .View = m_View,
+        .Position = Position,
+        .Near = Near,
+        .Far = Far,
+        .Direction = GetDirection(),
+    };
 }

@@ -4,6 +4,8 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/Core/BitFlags.h"
 
+#include <span>
+
 namespace Fussion::RHI
 {
     enum class ImageUsage

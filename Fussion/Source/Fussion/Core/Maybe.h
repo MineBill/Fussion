@@ -7,38 +7,38 @@ namespace Fussion {
     template<typename T>
     class Maybe {
     public:
-        Maybe(): m_NullableValue(nullptr) {}
-        ~Maybe() { Reset(); }
+        constexpr Maybe(): m_NullableValue(nullptr) {}
+        constexpr ~Maybe() { Reset(); }
 
-        Maybe(T const& _value):
+        constexpr Maybe(T const& _value):
             m_NullableValue(new(m_Storage) T(_value)) {}
 
-        Maybe(T&& _value):
+        constexpr Maybe(T&& _value):
             m_NullableValue(new(m_Storage) T(std::move(_value))) {}
 
-        Maybe& operator=(T const& _value)
+        constexpr Maybe& operator=(T const& _value)
         {
             Reset();
             m_NullableValue = new(m_Storage) T(_value);
             return *this;
         }
 
-        Maybe& operator=(T&& _value)
+        constexpr Maybe& operator=(T&& _value)
         {
             Reset();
             m_NullableValue = new(m_Storage) T(std::move(_value));
             return *this;
         }
 
-        Maybe(Maybe const& _other):
+        constexpr Maybe(Maybe const& _other):
             m_NullableValue(_other ? new(m_Storage) T(*_other) : nullptr) {}
 
-        Maybe(Maybe&& _other) noexcept:
+        constexpr Maybe(Maybe&& _other) noexcept:
             m_NullableValue(_other
                 ? new(m_Storage) T(std::move(*_other))
                 : nullptr) {}
 
-        Maybe& operator=(Maybe const& _other)
+        constexpr Maybe& operator=(Maybe const& _other)
         {
             if (&_other != this) {
                 Reset();
@@ -47,7 +47,7 @@ namespace Fussion {
             return *this;
         }
 
-        Maybe& operator=(Maybe&& _other) noexcept
+        constexpr Maybe& operator=(Maybe&& _other) noexcept
         {
             if (&_other != this) {
                 Reset();
@@ -58,57 +58,57 @@ namespace Fussion {
             return *this;
         }
 
-        void Reset()
+        constexpr void Reset()
         {
             if (m_NullableValue) { m_NullableValue->~T(); }
             m_NullableValue = nullptr;
         }
 
-        T& operator*()
+        constexpr T& operator*()
         {
             VERIFY(m_NullableValue);
             return *m_NullableValue;
         }
 
-        T const& operator*() const
+        constexpr T const& operator*() const
         {
             VERIFY(m_NullableValue);
             return *m_NullableValue;
         }
 
-        T* operator->()
+        constexpr T* operator->()
         {
             VERIFY(m_NullableValue);
             return m_NullableValue;
         }
 
-        T const* operator->() const
+        constexpr T const* operator->() const
         {
             VERIFY(m_NullableValue);
             return m_NullableValue;
         }
 
-        T Value() const
+        constexpr T& Value() const
         {
             return *m_NullableValue;
         }
 
-        T ValueOr(T const& default_value) const
+        constexpr T ValueOr(T const& default_value) const
         {
             return m_NullableValue ? *m_NullableValue : default_value;
         }
 
-        bool HasValue() const { return m_NullableValue != nullptr; }
-        bool IsEmpty() const { return m_NullableValue == nullptr; }
+        constexpr bool HasValue() const { return m_NullableValue != nullptr; }
+        constexpr bool IsEmpty() const { return m_NullableValue == nullptr; }
 
-        bool operator !() const { return m_NullableValue == nullptr; }
+        constexpr bool operator !() const { return m_NullableValue == nullptr; }
 
-        explicit operator bool() const
+        constexpr explicit operator bool() const
         {
             return HasValue();
         }
 
-        friend bool operator==(Maybe const& a, Maybe const& b)
+        constexpr friend bool operator==(Maybe const& a, Maybe const& b)
         {
             if (a.IsEmpty() && b.IsEmpty()) {
                 return true;
@@ -119,7 +119,7 @@ namespace Fussion {
             return false;
         }
 
-        friend bool operator!=(Maybe const& a, Maybe const& b)
+        constexpr friend bool operator!=(Maybe const& a, Maybe const& b)
         {
             return !(a == b);
         }

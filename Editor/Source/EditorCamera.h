@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "SceneRenderer.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Events/Event.h"
 #include "Fussion/Math/Vector2.h"
@@ -15,13 +16,15 @@ public:
     void OnUpdate(f32);
     void HandleEvent(Fussion::Event& event);
 
-    void Resize(Vector2 new_size);
+    void Resize(Vector2 const& new_size);
 
     void SetFocus(bool focused);
 
     auto GetPerspective() const -> Mat4 const& { return m_Perspective; }
     auto GetView() const -> Mat4 const& { return m_View; }
     auto GetDirection() const -> Vector3 { return m_Direction; }
+
+    auto ToRenderCamera() const -> RenderCamera;
 
 private:
     Mat4 m_Perspective{ 1.0f }, m_View{ 1.0f };

@@ -8,6 +8,7 @@
 #include "Fussion/Input/Input.h"
 #include "Fussion/Scene/Entity.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
+#include "Fussion/Scene/Components/DirectionalLight.h"
 
 void SceneTreeWindow::OnDraw()
 {
@@ -27,10 +28,16 @@ void SceneTreeWindow::OnDraw()
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::BeginMenu("New")) {
                     if (ImGui::MenuItem("Empty Entity")) {
-                        scene->CreateEntity();
+                        auto entity = scene->CreateEntity();
+                        entity->Name = "New Entity";
                     }
                     ImGui::Separator();
-                    if (ImGui::MenuItem("Directional Light")) {}
+                    if (ImGui::MenuItem("Directional Light")) {
+                        auto entity = scene->CreateEntity();
+                        entity->Name = "Directional Light";
+                        entity->AddComponent<Fussion::DirectionalLight>();
+                        entity->Transform.EulerAngles.X = 45.0f;
+                    }
                     ImGui::EndMenu();
                 }
                 ImGui::Separator();

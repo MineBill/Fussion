@@ -4,7 +4,9 @@
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/Types.h"
+#include <Fussion/Core/Maybe.h>
 #include "scriptbuilder/scriptbuilder.h"
+
 #include <cstring>
 
 namespace Fussion {
@@ -166,7 +168,7 @@ class ScriptAssembly {
 public:
     explicit ScriptAssembly(asIScriptModule* module);
 
-    auto GetClass(std::string const& name) -> std::optional<ScriptClass*>;
+    auto GetClass(std::string const& name) -> Maybe<ScriptClass*>;
 
     auto GetAllClasses() -> std::unordered_map<std::string, ScriptClass>& { return m_Classes; }
     auto GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>;

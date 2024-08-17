@@ -59,19 +59,23 @@ void ViewportWindow::OnDraw()
         m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
         m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
-        if (m_IsFocused && Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
-            auto mouse = Input::GetMousePosition() - (m_ContentOriginScreen - Application::Instance()->GetWindow().GetPosition());
-            if (Rect::FromSize(m_Size).Contains(mouse)) {
-                if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
-                    if (auto id = color.Value()[0]; id != 0) {
-                        auto entity = m_Editor->GetActiveScene()->GetEntityFromLocalID(id);
-                        m_Editor->GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
-                    } else {
-                        m_Editor->GetSceneTree().ClearSelection();
+        if (m_Editor->GetPlayState() == Editor::PlayState::Editing) {
+            // TODO: If the ImGui viewports feature is disabled (like in linux), then the mouse position reported is wrong.
+            if (m_IsFocused && Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
+                auto mouse = Input::GetMousePosition() - (m_ContentOriginScreen - Application::Instance()->GetWindow().GetPosition());
+                if (Rect::FromSize(m_Size).Contains(mouse)) {
+                    if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
+                        if (auto id = color.Value()[0]; id != 0) {
+                            auto entity = m_Editor->GetActiveScene()->GetEntityFromLocalID(id);
+                            m_Editor->GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
+                        } else {
+                            m_Editor->GetSceneTree().ClearSelection();
+                        }
                     }
                 }
             }
         }
+
 
         if (auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
             Editor::OnViewportResized(size);
@@ -192,7 +196,7 @@ void ViewportWindow::OnDraw()
         ImGuizmo::SetRect(m_ContentOriginScreen.X, m_ContentOriginScreen.Y, m_Size.X, m_Size.Y);
 
         draw_gizmo = false;
-        if (auto& selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1) {
+        if (auto& selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1 && m_Editor->GetPlayState() == Editor::PlayState::Editing) {
             draw_gizmo = true;
             for (auto const& id : selection | std::views::keys) {
                 auto const& entity = m_Editor->GetActiveScene()->GetEntity(id);

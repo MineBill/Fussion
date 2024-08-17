@@ -2,6 +2,8 @@
 
 #include <Fussion/Util/TextureImporter.h>
 
+#include <filesystem>
+
 using namespace Fussion;
 
 EditorStyle g_Style;
@@ -55,6 +57,12 @@ void EditorStyle::Initialize()
         style.SetButtonColor(Color::FromHex(AccentColor));
 
         ButtonStyles[ButtonStyleProjectCreatorSmall] = style;
+    }
+
+    {
+        auto style = WindowStyle();
+        style.Padding = { 3, 3 };
+        WindowStyles[WindowStyleGeneric] = style;
     }
 
     {

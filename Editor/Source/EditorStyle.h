@@ -98,6 +98,7 @@ struct WindowStyle : CommonStyle {
     {
         Border = true;
         Rounding = 3.0f;
+        Padding = { 4, 4 };
     }
 };
 

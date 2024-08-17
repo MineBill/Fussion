@@ -2,6 +2,7 @@
 #include "Fussion/Core/Types.h"
 #include <source_location>
 #include <mutex>
+#include <vector>
 
 namespace Fussion {
 enum class LogLevel {

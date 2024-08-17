@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
+#include <format>
 
 #define FSN_MAKE_FORMATTABLE(Type, Format, ...)                         \
     template<>                                                          \

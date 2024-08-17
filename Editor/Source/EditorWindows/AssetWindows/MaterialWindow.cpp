@@ -14,11 +14,11 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
         DrawMenuBar();
 
         auto asset = AssetManager::GetAsset<PbrMaterial>(m_AssetHandle);
+        auto material = asset.Get();
         if (!asset.IsLoaded()) {
             ImGui::TextUnformatted("Material instance is null");
             return;
         }
-        auto material = asset.Get();
         EUI::Property("Object Color", &material->ObjectColor);
         EUI::Property("Metallic", &material->Metallic, EUI::PropTypeRange{ .Min = 0.0, .Max = 1.0 });
         EUI::Property("Roughness", &material->Roughness, EUI::PropTypeRange{ .Min = 0.0, .Max = 1.0 });

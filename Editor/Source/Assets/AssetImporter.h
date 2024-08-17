@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Assets/Asset.h"
+#include <filesystem>
 
 /**
  * Editor-Only. Raw file -> Asset.

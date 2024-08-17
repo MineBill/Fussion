@@ -24,7 +24,7 @@ void InspectorWindow::OnStart()
 void InspectorWindow::OnDraw()
 {
     ZoneScoped;
-    if (ImGui::Begin("Inspector")) {
+    EUI::Window("Entity Inspector", [&] {
         m_IsFocused = ImGui::IsWindowFocused();
 
         if (auto const& selection = m_Editor->GetSceneTree().GetSelection(); !selection.empty()) {
@@ -32,17 +32,13 @@ void InspectorWindow::OnDraw()
                 auto const handle = selection.begin()->first;
                 auto entity = m_Editor->GetActiveScene()->GetEntity(handle);
                 if (DrawEntity(*entity)) {
-                    LOG_DEBUG("Entity was modified, setting scene to dirty");
                     Editor::GetActiveScene()->SetDirty();
                 }
             } else {
                 ImGui::Text("Unsupported: Multiple entities selected");
             }
         }
-
-        // m_AssetPicker.Update();
-    }
-    ImGui::End();
+    });
 }
 
 bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)

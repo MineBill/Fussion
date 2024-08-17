@@ -1,13 +1,13 @@
 ﻿#pragma once
-#include "Layers/ImGuiLayer.h"
 #include "EditorStyle.h"
 #include "Layers/Editor.h"
+#include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
 
-#include "Fussion/Assets/Texture2D.h"
-#include "Fussion/Core/Maybe.h"
-#include "Fussion/Assets/AssetManager.h"
-#include "Fussion/Assets/AssetRef.h"
+#include <Fussion/Assets/AssetRef.h>
+#include <Fussion/Assets/Texture2D.h>
+#include <Fussion/Core/Concepts.h>
+#include <Fussion/Core/Maybe.h>
 
 #include <misc/cpp/imgui_stdlib.h>
 #include <string>
@@ -16,12 +16,6 @@ namespace EUI {
     namespace Detail {
         ButtonStyle& GetButtonStyle(ButtonStyles style);
         WindowStyle& GetWindowStyle(WindowStyles style);
-
-        template<class T, template<class...> class U>
-        inline constexpr bool IsInstanceOf = std::false_type{};
-
-        template<template<class...> class U, class... Vs>
-        inline constexpr bool IsInstanceOf<U<Vs...>, U> = std::true_type{};
     }
 
     struct PropTypeGeneric {};
@@ -85,49 +79,7 @@ namespace EUI {
         ImageButton(texture->GetImage(), func, params);
     }
 
-    inline void AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data)
-    {
-        auto m_Handle = class_type.get_member("m_Handle");
-
-        ImGui::TextUnformatted("Asset Reference:");
-        ImGui::SetNextItemAllowOverlap();
-        Vector2 pos = ImGui::GetCursorPos();
-
-        auto handle = m_Handle.get(data).template as<Fussion::AssetHandle>();
-        auto asset_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(handle);
-        ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
-        ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
-        ImGui::PopFont();
-
-        if (ImGui::BeginPopupContextItem()) {
-            if (ImGui::MenuItem("Clear")) {
-                m_Handle.set(data, Fussion::AssetHandle(0));
-            }
-            ImGui::EndPopup();
-        }
-
-        if (ImGui::BeginDragDropTarget()) {
-            auto* payload = ImGui::GetDragDropPayload();
-            if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
-                auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
-                auto incoming_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*incoming_handle);
-
-                if (incoming_metadata.Type == asset_metadata.Type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                    m_Handle.set(data, *incoming_handle);
-                }
-            }
-
-            ImGui::EndDragDropTarget();
-        }
-
-        ImGui::SetCursorPos(pos + Vector2(2, 2));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-        EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Search], [&] {
-            auto asset_type = class_type.get_method("GetType").invoke(data).template as<Fussion::AssetType>();
-            Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
-        }, { .Size = Vector2{ 16, 16 } });
-        ImGui::PopStyleVar();
-    }
+    void AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data);
 
     template<typename T, typename TypeKind = PropTypeGeneric>
     bool Property(std::string_view name, T* data, TypeKind kind = {})
@@ -143,6 +95,9 @@ namespace EUI {
         ImGui::TextUnformatted(name.data());
 
         ImGui::TableNextColumn();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+        defer (ImGui::PopStyleVar());
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         if constexpr (std::is_same_v<T, f32> || std::is_same_v<T, f64>) {
@@ -176,7 +131,7 @@ namespace EUI {
                 }
                 ImGui::EndCombo();
             }
-        } else if constexpr (Detail::IsInstanceOf<T, Fussion::AssetRef>) {
+        } else if constexpr (Fussion::IsInstanceOf<T, Fussion::AssetRef>) {
             auto class_type = meta_hpp::resolve_type<T>();
             AssetProperty(class_type, data);
         } else {
@@ -316,6 +271,8 @@ namespace EUI {
         ImGuiWindowFlags Flags{ ImGuiWindowFlags_None };
         Vector2 Size{ 400, 400 };
         bool Dirty{ false };
+        bool Centered{ false };
+        bool UseChild{ true };
         Maybe<WindowStyle> Override{};
     };
 
@@ -325,6 +282,10 @@ namespace EUI {
 
         if (params.Dirty)
             params.Flags |= ImGuiWindowFlags_UnsavedDocument;
+        if (params.Centered) {
+            auto& io = ImGui::GetIO();
+            ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        }
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.Padding);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.Rounding);
@@ -335,8 +296,14 @@ namespace EUI {
         bool o = ImGui::Begin(title.data(), params.Opened, params.Flags);
         ImGui::PopStyleVar(3);
 
+        if (params.UseChild) {
+            ImGui::BeginChild("##inner_child", {}, ImGuiChildFlags_Border);
+        }
         if (o) {
             func();
+        }
+        if (params.UseChild) {
+            ImGui::EndChild();
         }
 
         ImGui::End();

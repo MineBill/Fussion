@@ -1,6 +1,7 @@
 ﻿#pragma once
-#include "Vector4.h"
-#include "Fussion/Core/Types.h"
+#include <Fussion/Math/Vector4.h>
+#include <Fussion/Core/Concepts.h>
+#include <Fussion/Core/Types.h>
 
 #include <complex>
 

@@ -1,5 +1,9 @@
 ﻿#pragma once
-#include "e5pch.h"
+#include <memory>
+
+#include <glm/gtx/quaternion.hpp>
+#include <glm/ext/matrix_float3x3.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
 
 using s8 = int8_t;
 using s16 = int16_t;
@@ -50,5 +54,3 @@ Ref<T> MakeRef(Args&&... args)
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
-template<typename T>
-concept ScalarType = std::integral<T> || std::floating_point<T>;
