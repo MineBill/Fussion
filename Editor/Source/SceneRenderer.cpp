@@ -347,31 +347,7 @@ f32 GetSplitDepth(s32 current_split, s32 max_splits, f32 near, f32 far, f32 l = 
     return (d - near) / (far - near);
 }
 
-auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>
-{
-    auto inv = glm::inverse(proj * view);
-    std::array<Vector4, 8> corners;
-
-    auto i = 0;
-    for (auto x = 0; x < 2; x++) {
-        for (auto y = 0; y < 2; y++) {
-            for (auto z = 0; z < 2; z++) {
-                auto pt = inv * Vector4{
-                    2 * CAST(f32, x) - 1,
-                    2 * CAST(f32, y) - 1,
-                    2 * CAST(f32, z) - 1,
-                    1.0 };
-
-                corners[i] = pt / pt.w;
-
-                i += 1;
-            }
-        }
-    }
-    return corners;
-}
-
-void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& packet)
+void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& packet, bool game_view)
 {
     ZoneScoped;
     using namespace Fussion;
@@ -434,7 +410,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
                     m_RenderArea.Aspect(),
                     packet.Camera.Near,
                     packet.Camera.Far * distances[i]);
-                auto corners = GetFrustumCornersWorldSpace(_proj, packet.Camera.View);
+                auto corners = Math::GetFrustumCornersWorldSpace(_proj, packet.Camera.View);
 
                 Vector3 center;
                 for (auto const& corner : corners) {

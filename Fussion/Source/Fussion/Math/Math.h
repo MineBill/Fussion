@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Vector4.h"
 #include "Fussion/Core/Types.h"
 
 #include <complex>
@@ -90,4 +91,6 @@ namespace Fussion::Math {
     {
         return std::sqrt(value);
     }
+
+    auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
 }
