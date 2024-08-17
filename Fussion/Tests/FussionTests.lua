@@ -11,3 +11,5 @@ target("FussionTests")
 
     add_deps("Fussion")
     add_packages("Catch2")
+
+    add_defines("GLM_ENABLE_EXPERIMENTAL")
