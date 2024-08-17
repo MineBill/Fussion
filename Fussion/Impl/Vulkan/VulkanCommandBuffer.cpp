@@ -10,13 +10,14 @@
 #include <Fussion/Core/SmallVector.h>
 
 namespace Fussion::RHI {
-    VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec)
+    VulkanCommandBuffer::VulkanCommandBuffer(Ref<VulkanCommandPool> pool, CommandBufferSpecification spec)
     {
         Specification = spec;
 
+        auto device = Device::Instance()->As<VulkanDevice>();
         auto ci = VkCommandBufferAllocateInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .commandPool = device->CommandPool,
+            .commandPool = pool->Handle,
             .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
             .commandBufferCount = 1,
         };

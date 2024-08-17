@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
 #include "Fussion/RHI/CommandBuffer.h"
 
@@ -8,7 +9,7 @@
 namespace Fussion::RHI {
 class VulkanCommandBuffer final : public CommandBuffer {
 public:
-    VulkanCommandBuffer(VulkanDevice* device, CommandBufferSpecification spec);
+    VulkanCommandBuffer(Ref<VulkanCommandPool> pool, CommandBufferSpecification spec);
 
     virtual void Begin(CommandBufferType type) override;
     virtual void End(CommandBufferType type) override;

@@ -151,8 +151,7 @@ namespace Fussion::RHI {
         auto cmd_spec = CommandBufferSpecification{
             .Label = "Renderer Command Buffers",
         };
-        m_CommandBuffers = device->CreateCommandBuffers(m_Swapchain->GetImageCount(), cmd_spec);
-
+        m_CommandBuffers = device->GetMainCommandPool()->AllocateCommandBuffers(m_Swapchain->GetImageCount(), cmd_spec);
     }
 
     static unsigned char g_white_texture_png[] = {
