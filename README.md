@@ -14,6 +14,8 @@ being able to load a "cooked" game from a single asset file.
 The engine uses a "component" based system. Entities exist in the world and can have multiple components attached to them. It follows the logic of Unity's MonoBehaviour and not an ECS.
 The reason for this is that i just feel more comfortable working with this type of components and speed is not a hude concern right now.
 
+Vulkan is used for rendering, with a simple wrapper that tries to make it more friendly to work with.
+
 ## Building and Running
 > [!WARNING]  
 > The project is highly volatile and there is a chance you won't be able to compile it.
