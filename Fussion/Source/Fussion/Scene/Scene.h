@@ -47,6 +47,17 @@ namespace Fussion {
             }
         }
 
+        template<typename Component>
+        auto FindFirstComponent() -> Ref<Component>
+        {
+            for (auto& [id, entity] : m_Entities) {
+                if (entity.HasComponent<Component>()) {
+                    return entity.GetComponent<Component>();
+                }
+            }
+            return nullptr;
+        }
+
         /// Returns if the entity exists in the scene.
         [[nodiscard]]
         bool HasEntity(Uuid handle) const;
@@ -58,6 +69,8 @@ namespace Fussion {
 
         void Destroy(Uuid handle);
         void Destroy(Entity const* entity);
+
+        auto Name() const -> std::string const& { return m_Name; }
 
         virtual auto GetType() const -> AssetType override { return GetStaticType(); }
 

@@ -2,21 +2,23 @@
 #include "Fussion/Scene/Component.h"
 
 namespace Fussion {
-    class Camera: public Component
-    {
+    class Camera final : public Component {
     public:
-        Camera();
-        ~Camera() override;
         COMPONENT(Camera)
 
-        void OnCreate() override;
+#if FSN_DEBUG_DRAW
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+#endif
+        virtual void OnUpdate(f32 delta) override;
 
-        f32 FieldOfView{10.22f};
-        s32 SignedType = 0;
-        u32 UnsignedType = 0;
-        std::string AStringToo{"Pepegas"};
+        [[nodiscard]]
+        auto GetPerspective() const -> Mat4 { return m_Perspective; }
+
+        f32 Near{ 0.1f }, Far{ 1000.0f };
+
+        f32 Fov{ 50.0f };
+
     private:
-        f32 m_HiddenValue = 69.0;
-
+        Mat4 m_Perspective{ 1.0f };
     };
 }

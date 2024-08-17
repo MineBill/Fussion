@@ -8,6 +8,34 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
+    Mat4 Transform::GetMatrix() const {
+        auto scale = glm::scale(Mat4(1.0), CAST(glm::vec3, Scale));
+        auto rotation = glm::eulerAngleYXZ(
+            glm::radians(EulerAngles.Y),
+            glm::radians(EulerAngles.X),
+            glm::radians(EulerAngles.Z));
+        auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        return translation * rotation * scale;
+    }
+
+    Mat4 Transform::GetCameraMatrix() const {
+        auto rotation = glm::eulerAngleZXY(
+            glm::radians(EulerAngles.Z),
+            glm::radians(EulerAngles.X),
+            glm::radians(EulerAngles.Y));
+        auto translation = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        return rotation * glm::inverse(translation);
+    }
+
+    auto Transform::GetForward() const -> Vector3 {
+        auto rotation = glm::mat3(glm::eulerAngleYXZ(
+            glm::radians(EulerAngles.Y),
+            glm::radians(EulerAngles.X),
+            glm::radians(EulerAngles.Z)));
+
+        return rotation * Vector3::Forward;
+    }
+
     Entity::Entity(const Entity& other): Transform(other.Transform),
                                          Name(other.Name),
                                          m_Parent(other.m_Parent),

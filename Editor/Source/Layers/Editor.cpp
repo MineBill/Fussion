@@ -1,5 +1,8 @@
 ﻿#include "Editor.h"
 #include "EditorUI.h"
+#include "EditorWindows/AssetWindows/MaterialWindow.h"
+#include "EditorWindows/AssetWindows/Texture2DWindow.h"
+#include "Fussion/Scene/Components/Camera.h"
 #include "Fussion/Util/TextureImporter.h"
 #include "Serialization/SceneSerializer.h"
 
@@ -104,11 +107,34 @@ void Editor::Save()
     Project::ActiveProject()->Save();
 
     if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
+        LOG_DEBUGF("Saving scene {}", m_ActiveScene->Name());
         auto serializer = MakePtr<SceneSerializer>();
         EditorAssetMetadata meta{};
         meta.Path = m_ActiveScenePath;
         serializer->Save(meta, m_ActiveScene);
         m_ActiveScene->SetDirty(false);
+    }
+}
+
+void Editor::OpenAsset(AssetHandle handle)
+{
+    if (m_AssetWindows.contains(handle))
+        return;
+
+    auto assman = Project::ActiveProject()->GetAssetManager();
+    auto meta = assman->GetMetadata(handle);
+    if (!meta.IsValid())
+        return;
+
+    switch (meta.Type) {
+    case AssetType::PbrMaterial:
+        m_AssetWindows[handle] = MakePtr<MaterialWindow>(handle);
+        break;
+    case AssetType::Texture2D:
+        m_AssetWindows[handle] = MakePtr<Texture2DWindow>(handle);
+        break;
+    default:
+        break;
     }
 }
 
@@ -120,6 +146,8 @@ void Editor::OnUpdate(f32 delta)
 
     switch (m_State) {
     case PlayState::Editing: {
+        m_Camera.SetFocus(m_ViewportWindow->IsFocused());
+        m_Camera.OnUpdate(delta);
         if (m_ActiveScene) {
             m_ActiveScene->Tick();
             m_ActiveScene->OnDebugDraw(DebugDrawContext);
@@ -136,9 +164,6 @@ void Editor::OnUpdate(f32 delta)
     case PlayState::Paused: {}
     break;
     }
-
-    m_Camera.SetFocus(m_ViewportWindow->IsFocused());
-    m_Camera.OnUpdate(delta);
 
     ImGui::DockSpaceOverViewport();
 
@@ -269,6 +294,8 @@ void Editor::OnUpdate(f32 delta)
     });
 
     Undo.Commit();
+
+    Project::ActiveProject()->GetAssetManager()->CheckForLoadedAssets();
 }
 
 void Editor::OnEvent(Event& event)
@@ -296,9 +323,8 @@ void Editor::OnEvent(Event& event)
             data.Action = Dialogs::MessageAction::OkCancel;
             switch (Dialogs::ShowMessageBox(data)) {
             case Dialogs::MessageButton::Ok:
-                Application::Instance()->Quit();
-                break;
             case Dialogs::MessageButton::Yes:
+                Application::Instance()->Quit();
                 break;
             case Dialogs::MessageButton::No:
                 break;
@@ -323,17 +349,52 @@ void Editor::OnEvent(Event& event)
 
 void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
 {
-    m_SceneRenderer.Render(cmd, {
-        .Camera = RenderCamera{
-            .Perspective = m_Camera.GetPerspective(),
-            .View = m_Camera.GetView(),
-            .Position = m_Camera.Position,
-            .Near = m_Camera.Near,
-            .Far = m_Camera.Far,
-            .Direction = m_Camera.GetDirection(),
-        },
-        .Scene = m_State == PlayState::Editing ? m_ActiveScene.get() : m_PlayScene.get(),
-    });
+    auto RenderEditorView = [&](Ref<Scene> const& scene) {
+        m_SceneRenderer.Render(cmd, {
+            .Camera = RenderCamera{
+                .Perspective = m_Camera.GetPerspective(),
+                .View = m_Camera.GetView(),
+                .Position = m_Camera.Position,
+                .Near = m_Camera.Near,
+                .Far = m_Camera.Far,
+                .Direction = m_Camera.GetDirection(),
+            },
+            .Scene = scene.get(),
+        }, false);
+    };
+    auto RenderGameView = [&](Camera const& camera) {
+        auto entity = camera.GetOwner();
+        m_SceneRenderer.Render(cmd, {
+            .Camera = RenderCamera{
+                .Perspective = camera.GetPerspective(),
+                .View = entity->Transform.GetCameraMatrix(),
+                .Position = entity->Transform.Position,
+                .Near = camera.Near,
+                .Far = camera.Far,
+                .Direction = entity->Transform.GetForward(),
+            },
+            .Scene = m_PlayScene.get(),
+        }, true);
+    };
+    switch (m_State) {
+    case PlayState::Editing: {
+        RenderEditorView(m_ActiveScene);
+    }
+    break;
+    case PlayState::Playing:
+    case PlayState::Paused: {
+        bool detached = false;
+        auto camera = m_PlayScene->FindFirstComponent<Camera>();
+
+        if (detached || camera == nullptr) {
+            RenderEditorView(m_PlayScene);
+        } else {
+            RenderGameView(*camera.get());
+        }
+    }
+    break;
+    }
+
 }
 
 void Editor::SetPlayState(PlayState new_state)

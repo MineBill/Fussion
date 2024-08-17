@@ -37,8 +37,8 @@ void SceneTreeWindow::OnDraw()
                 ImGui::EndPopup();
             }
 
-            auto root = scene->GetRoot();
-            for (auto const& child : root->GetChildren()) {
+            auto& root = scene->GetRoot();
+            for (auto const& child : root.GetChildren()) {
                 DrawEntityHierarchy(child);
             }
         } else {
@@ -84,7 +84,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
             scene->Destroy(entity);
         }
         if (ImGui::MenuItem("Parent to Scene")) {
-            entity->SetParent(*scene->GetRoot());
+            entity->SetParent(scene->GetRoot());
         }
         if (ImGui::MenuItem("Align to object")) {
             Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;

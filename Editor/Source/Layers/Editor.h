@@ -54,6 +54,8 @@ public:
 
     SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
 
+    void OpenAsset(Fussion::AssetHandle handle);
+
     template<std::derived_from<AssetWindow> T, typename... Args>
     void CreateAssetWindow(Fussion::AssetHandle handle, Args&&... args)
     {
@@ -63,7 +65,7 @@ public:
     }
 
     void SetPlayState(PlayState new_state);
-
+    auto GetPlayState() const -> PlayState { return m_State; }
 
     std::vector<Fsn::LogEntry> GetLogEntries()
     {

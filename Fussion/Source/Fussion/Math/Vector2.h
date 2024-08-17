@@ -27,7 +27,7 @@ namespace Fussion {
 #pragma warning(pop)
 #endif
 
-        constexpr Vector2() = default;
+        Vector2() = default;
         constexpr Vector2(f32 x, f32 y): X(x), Y(y) {}
         constexpr Vector2(f64 x, f64 y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
         constexpr Vector2(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
