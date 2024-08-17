@@ -63,7 +63,7 @@ public:
     void Init();
     void Resize(Vector2 const& new_size);
 
-    void Render(Ref<Fussion::RHI::CommandBuffer> const& cmd, RenderPacket const& packet);
+    void Render(Ref<Fussion::RHI::CommandBuffer> const& cmd, RenderPacket const& packet, bool game_view = false);
 
     [[nodiscard]]
     Ref<Fussion::RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }

@@ -525,21 +525,24 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             }
         }
 
-        {
-            ZoneScopedN("Debug Draw");
-            Debug::Render(cmd, m_GlobalResource);
-            Debug::Reset();
-        }
+        if (!game_view) {
+            {
+                ZoneScopedN("Debug Draw");
+                Debug::Render(cmd, m_GlobalResource);
+            }
 
-        {
-            ZoneScopedN("Editor Grid");
-            auto grid_shader = m_GridShader.Get()->GetShader();
-            m_RenderContext.CurrentShader = grid_shader;
-            cmd->UseShader(grid_shader);
-            cmd->BindResource(m_GlobalResource, grid_shader, 0);
-            // cmd->BindResource(m_SceneResource, m_GridShader, 1);
-            cmd->Draw(6, 1);
+            {
+                ZoneScopedN("Editor Grid");
+                auto grid_shader = m_GridShader.Get()->GetShader();
+                m_RenderContext.CurrentShader = grid_shader;
+                cmd->UseShader(grid_shader);
+                cmd->BindResource(m_GlobalResource, grid_shader, 0);
+                // cmd->BindResource(m_SceneResource, m_GridShader, 1);
+                cmd->Draw(6, 1);
+            }
         }
+        Debug::Reset();
+
     }
     cmd->EndRenderPass(m_SceneRenderPass);
 }
