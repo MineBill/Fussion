@@ -36,6 +36,8 @@ option("Tracy")
 option_end();
 
 includes("Vendor.lua")
+
+includes("HeaderTool/HeaderTool.lua")
 includes("Fussion/Fussion.lua")
 includes("Editor/Editor.lua")
 includes("Sandbox/Sandbox.lua")
