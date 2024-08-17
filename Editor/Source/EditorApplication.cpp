@@ -113,7 +113,7 @@ void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, 
 
 void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
 {
-    if (path.IsEmpty()) {
+    if (path.IsEmpty() || !exists(*path)) {
         path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
     }
 

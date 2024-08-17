@@ -1,0 +1,9 @@
+{
+    "$Type": "Project",
+    "Name": "Sample Project",
+    "AssetsFolder": "Assets",
+    "CacheFolder": "Cache",
+    "ScriptsFolder": "Scripts",
+    "AssetRegistry": "AssetRegistry.json",
+    "Logs": "Logs"
+}

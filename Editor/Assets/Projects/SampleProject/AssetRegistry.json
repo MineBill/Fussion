@@ -1,0 +1,11 @@
+{
+  "$Type": "AssetRegistry",
+  "Assets": [
+    {
+      "Handle": 8792168419807411213,
+      "Name": "Main.fsn",
+      "Path": "Main.fsn",
+      "Type": "Scene"
+    }
+  ]
+}
