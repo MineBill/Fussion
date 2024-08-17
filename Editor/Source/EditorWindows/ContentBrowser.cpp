@@ -16,6 +16,7 @@
 #include "imgui.h"
 #include "AssetWindows/Texture2DWindow.h"
 
+#include <imgui_internal.h>
 #include <ranges>
 
 using namespace Fussion;
@@ -174,41 +175,29 @@ void ContentBrowser::OnDraw()
         ImGui::Columns(columns, nullptr, false);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-        ImGui::PushStyleColor(ImGuiCol_Button, Vector4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, Vector4(1.0f, 1.0f, 1.0, 0.1f));
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            size.X = style.EditorIcons[EditorIcon::Folder]->Metadata().Aspect() * size.Y;
             ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                 ChangeDirectory(m_CurrentPath.parent_path());
             }
         }
 
+        ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
         for (auto const& entry : m_Entries) {
             ImGui::PushID(entry.Path.c_str());
             defer(ImGui::PopID());
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            if (entry.IsDirectory) {
-                size.X = style.EditorIcons[EditorIcon::Folder]->Metadata().Aspect() * size.Y;
-                ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
 
+            if (entry.IsDirectory) {
+                ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     ChangeDirectory(entry.Path);
                 }
+
             } else {
-
-                // if (entry.Type == AssetType::Texture2D) {
-                //     if (auto texture = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle).Get(); texture != nullptr) {
-                //         size.X = texture->Metadata().Aspect() * size.Y;
-                //         ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
-                //     }
-                // } else {
-                //     auto& texture = style.EditorIcons[EditorIcon::GenericAsset];
-                //     size.X = texture->Metadata().Aspect() * size.Y;
-                //     ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
-                // }
-
                 Texture2D* texture;
                 switch (entry.Type) {
                 case AssetType::Invalid:
@@ -238,26 +227,17 @@ void ContentBrowser::OnDraw()
                     if (texture == nullptr) {
                         texture = style.EditorIcons[EditorIcon::GenericAsset].get();
                     }
+                    size.X = texture->Metadata().Aspect() * size.Y;
                 }
                 break;
                 default:
                     PANIC("idk");
                 }
 
-                size.X = texture->Metadata().Aspect() * size.Y;
                 ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                    switch (entry.Type) {
-                    // NOLINT(clang-diagnostic-switch-enum)
-                    case AssetType::PbrMaterial:
-                        m_Editor->CreateAssetWindow<MaterialWindow>(entry.Metadata.Handle);
-                        break;
-                    case AssetType::Texture2D:
-                        m_Editor->CreateAssetWindow<Texture2DWindow>(entry.Metadata.Handle);
-                    default:
-                        break;
-                    }
+                    m_Editor->OpenAsset(entry.Metadata.Handle);
                 }
                 if (ImGui::BeginDragDropSource()) {
                     ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.Metadata.Handle, sizeof(Fussion::AssetHandle));
@@ -265,10 +245,11 @@ void ContentBrowser::OnDraw()
                 }
             }
 
-            ImGui::TextUnformatted(entry.Name.c_str());
+            ImGui::TextWrapped(entry.Name.c_str());
             ImGui::NextColumn();
         }
 
+        ImGui::PopFont();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
         ImGui::EndChild();
