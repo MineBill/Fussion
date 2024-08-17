@@ -114,7 +114,7 @@ Ref<Asset> SceneSerializer::Load(EditorAssetMetadata metadata)
             auto parent = jentity["Parent"].get<Uuid>();
             auto enabled = jentity.value("Enabled", true);
 
-            if (parent.IsValid() && !scene->HasEntity(parent)) {
+            if (!parent.IsValid() && !scene->HasEntity(parent)) {
                 entities_to_resolve.emplace_back(parent, handle);
             }
 
