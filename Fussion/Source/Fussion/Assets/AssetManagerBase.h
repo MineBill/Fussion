@@ -2,6 +2,8 @@
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Core/Uuid.h"
 
+#include <filesystem>
+
 namespace Fussion {
     class AssetManagerBase {
     public:
@@ -11,7 +13,7 @@ namespace Fussion {
         virtual auto IsAssetHandleValid(AssetHandle handle) const -> bool = 0;
 
         [[nodiscard]]
-        virtual auto IsAssetLoaded(AssetHandle handle) const -> bool = 0;
+        virtual auto IsAssetLoaded(AssetHandle handle) -> bool = 0;
 
         [[nodiscard]]
         virtual auto GetAsset(AssetHandle handle, AssetType type) -> Asset* = 0;

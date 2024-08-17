@@ -17,9 +17,7 @@ VkAttachmentLoadOp LoadOpToVulkan(RenderPassAttachmentLoadOp op)
         return VK_ATTACHMENT_LOAD_OP_CLEAR;
     }
 
-    // @note Find some cross-platform to panic here but also include a return for compilers
-    // that shit themselves if they don't see one (clang I think).
-    return {};
+    UNREACHABLE;
 }
 
 VkAttachmentStoreOp StoreOpToVulkan(RenderPassAttachmentStoreOp op)
@@ -32,9 +30,7 @@ VkAttachmentStoreOp StoreOpToVulkan(RenderPassAttachmentStoreOp op)
         return VK_ATTACHMENT_STORE_OP_STORE;
     }
 
-    // @note Find some cross-platform to panic here but also include a return for compilers
-    // that shit themselves if they don't see one (clang I think).
-    return {};
+    UNREACHABLE;
 }
 
 VkSampleCountFlagBits SamplesToVulkan(s32 count)
@@ -57,7 +53,8 @@ VkSampleCountFlagBits SamplesToVulkan(s32 count)
     default:
         VERIFY(false, "Invalid sample count of {}", count)
     }
-    return {};
+
+    UNREACHABLE;
 }
 
 VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification spec)
@@ -65,7 +62,7 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
 {
     std::vector<VkAttachmentDescription> attachments;
     attachments.reserve(spec.Attachments.size());
-    for (const auto& attachment : spec.Attachments) {
+    for (auto const& attachment : spec.Attachments) {
         auto info = VkAttachmentDescription{
             .format = ImageFormatToVulkan(attachment.Format),
             .samples = SamplesToVulkan(attachment.Samples),
@@ -144,8 +141,8 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
         VkAttachmentReference depth_ref{};
         if (subpass.DepthStencilAttachment) {
             depth_ref = VkAttachmentReference{
-                .attachment = subpass.DepthStencilAttachment.value().Attachment,
-                .layout = ImageLayoutToVulkan(subpass.DepthStencilAttachment.value().Layout),
+                .attachment = subpass.DepthStencilAttachment.Value().Attachment,
+                .layout = ImageLayoutToVulkan(subpass.DepthStencilAttachment.Value().Layout),
             };
 
             if (spec.Attachments[depth_ref.attachment].FinalLayout == ImageLayout::DepthStencilReadOnlyOptimal) {

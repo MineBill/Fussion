@@ -52,6 +52,8 @@ public:
     template<typename T>
     static AssetRef<T> GetAsset(AssetHandle handle)
     {
+        // Trigger an asset load.
+        GetAsset(handle, T::GetStaticType());
         return AssetRef<T>(handle);
     }
 

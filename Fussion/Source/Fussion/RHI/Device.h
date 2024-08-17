@@ -17,6 +17,8 @@ namespace Fussion::RHI {
 class Image;
 class Sampler;
 
+extern thread_local Ref<CommandPool> ThreadLocalCommandPool;
+
 class Device : public RenderHandle {
     friend class Renderer;
 

@@ -33,6 +33,7 @@ public:
 
 private:
     static ImGuiLayer* s_Instance;
+    std::mutex m_RegistrationMutex;
 };
 
 // @todo This should probably be replaced with a function??

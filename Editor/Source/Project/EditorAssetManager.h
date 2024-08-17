@@ -5,11 +5,15 @@
 #include "Fussion/Core/Maybe.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/OS/FileWatcher.h"
+#include "Fussion/Core/ThreadProtected.h"
 #include "Fussion/Serialization/json.hpp"
+#include <Fussion/Core/Concepts.h>
 
 #include <filesystem>
 #include <unordered_map>
-#include <concepts>
+#include <queue>
+
+class EditorAssetManager;
 
 enum class AssetLoadState {
     Unloaded = 0,
@@ -36,9 +40,29 @@ struct EditorAssetMetadata final {
     bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };
 
+class WorkerPool final {
+public:
+    explicit WorkerPool(EditorAssetManager* asset_manager);
+
+    void Load(EditorAssetMetadata metadata);
+
+    Fussion::ThreadProtected<std::queue<Ref<Fussion::Asset>>> LoadedAssets{};
+private:
+    void Work(s32 index);
+
+    std::queue<EditorAssetMetadata> m_Tasks{};
+
+    std::mutex m_Mutex{};
+    std::vector<std::thread> m_Workers{};
+    std::condition_variable m_ConditionVariable{};
+    EditorAssetManager* m_AssetManager{ nullptr };
+};
+
 class AssetSerializer;
 
 class EditorAssetManager final : public Fussion::AssetManagerBase {
+    // NOTE: Is there a better way/abstraction to expose internals to the worker pool?
+    friend WorkerPool;
 public:
     using Registry = std::unordered_map<Fsn::AssetHandle, EditorAssetMetadata>;
 
@@ -47,32 +71,37 @@ public:
     virtual auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
     virtual auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
 
-    virtual bool IsAssetLoaded(Fsn::AssetHandle handle) const override;
+    virtual bool IsAssetLoaded(Fsn::AssetHandle handle) override;
     virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
     virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
     virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
     virtual auto GetAssetMetadata(Fussion::AssetHandle handle) -> Fussion::AssetMetadata* override;
+
+    bool IsAssetLoading(Fussion::AssetHandle handle);
 
     bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
     auto GetMetadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
     auto GetMetadata(Fsn::AssetHandle handle) const -> EditorAssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
 
-    auto GetRegistry() const -> Registry const& { return m_Registry; }
+    auto GetRegistry() -> Fussion::ThreadProtected<Registry>& { return m_Registry; }
 
     template<std::derived_from<Fsn::Asset> T>
     auto CreateAsset(std::filesystem::path const& path) -> Fsn::AssetRef<T>
     {
         auto normal_path = path.lexically_normal();
         Fussion::AssetHandle handle;
-        m_Registry[handle] = EditorAssetMetadata{
-            .Type = T::GetStaticType(),
-            .Path = normal_path,
-            .Name = path.filename().string(),
-            .IsVirtual = false,
-            .DontSerialize = false,
-            .Handle = handle,
-        };
+
+        m_Registry.Access([&](auto& registry) {
+            registry[handle] = EditorAssetMetadata{
+                .Type = T::GetStaticType(),
+                .Path = normal_path,
+                .Name = path.filename().string(),
+                .IsVirtual = false,
+                .DontSerialize = false,
+                .Handle = handle,
+            };
+        });
 
         m_LoadedAssets[handle] = MakeRef<T>();
 
@@ -101,13 +130,21 @@ public:
     void Deserialize();
     void RefreshAsset(Fussion::AssetHandle handle);
 
+    // NOTE: I'm not sure if this is a good way to go about it. Could some kind of callback
+    // be used instead?
+    void CheckForLoadedAssets();
+
 private:
     void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
 
-    Registry m_Registry{};
+    void ThreadWorkerFunction();
+
+    Fussion::ThreadProtected<Registry> m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
 
     Ptr<Fussion::FileWatcher> m_EditorWatcher{};
+
+    WorkerPool m_WorkerPool{ this };
 };

@@ -12,6 +12,7 @@ namespace Fussion {
         RHI::ImageSpecification image_spec{};
         image_spec.Width = metadata.Width;
         image_spec.Height = metadata.Height;
+        // Since normal maps have non-color data, the image format HAS to be UNORM.
         image_spec.Format = metadata.IsNormalMap ? RHI::ImageFormat::R8G8B8A8_UNORM : metadata.Format;
         image_spec.SamplerSpec.Filter = metadata.Filter;
         image_spec.SamplerSpec.UseAnisotropy = false;

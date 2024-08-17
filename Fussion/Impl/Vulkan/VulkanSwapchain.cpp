@@ -74,8 +74,11 @@ void VulkanSwapchain::Present(u32 image)
         .pImageIndices = &image,
     };
 
-    VK_CHECK(vkQueuePresentKHR(device->PresentQueue, &present_info))
-    m_CurrentFrame = (m_CurrentFrame + 1) % MaxFramesInFlight;
+    device->GraphicsQueue.Access([&] (VkQueue queue) {
+        (void)queue;
+        VK_CHECK(vkQueuePresentKHR(device->PresentQueue, &present_info))
+        m_CurrentFrame = (m_CurrentFrame + 1) % MaxFramesInFlight;
+    });
 }
 
 void VulkanSwapchain::SubmitCommandBuffer(Ref<CommandBuffer> cmd)
@@ -92,7 +95,7 @@ void VulkanSwapchain::SubmitCommandBuffer(Ref<CommandBuffer> cmd)
 
     VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-    auto submite_info = VkSubmitInfo{
+    auto submit_info = VkSubmitInfo{
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = wait_semaphores,
@@ -103,7 +106,9 @@ void VulkanSwapchain::SubmitCommandBuffer(Ref<CommandBuffer> cmd)
         .pSignalSemaphores = signal_semaphores,
     };
 
-    VK_CHECK(vkQueueSubmit(device->GraphicsQueue, 1, &submite_info, m_InFlightFences[m_CurrentFrame]))
+    device->GraphicsQueue.Access([&](VkQueue queue) {
+        VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, m_InFlightFences[m_CurrentFrame]))
+    });
 }
 
 void VulkanSwapchain::Resize(u32 width, u32 height)

@@ -66,7 +66,7 @@ void VulkanImage::Destroy()
     if (Handle == VK_NULL_HANDLE)
         return;
     if (m_DestroyHandle) {
-        const auto device = Device::Instance()->As<VulkanDevice>();
+        auto device = Device::Instance()->As<VulkanDevice>();
         vmaDestroyImage(device->Allocator, Handle, Allocation);
     }
 
@@ -95,13 +95,13 @@ void VulkanImage::SetData(std::span<u8> data)
 
 void VulkanImage::TransitionLayout(ImageLayout new_layout)
 {
-    const auto old_layout = Specification.Layout;
+    auto old_layout = Specification.Layout;
     if (old_layout == new_layout) {
         return;
     }
 
     Specification.Layout = new_layout;
-    const auto cmd = Device::Instance()->BeginSingleTimeCommand()->As<VulkanCommandBuffer>();
+    auto cmd = Device::Instance()->BeginSingleTimeCommand()->As<VulkanCommandBuffer>();
     defer(Device::Instance()->EndSingleTimeCommand(cmd));
 
     auto barrier = VkImageMemoryBarrier{
@@ -186,7 +186,7 @@ void VulkanImage::TransitionLayout(ImageLayout new_layout)
     vkCmdPipelineBarrier(cmd->Handle, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-VkFormat ImageFormatToVulkan(const ImageFormat format)
+VkFormat ImageFormatToVulkan(ImageFormat format)
 {
     using enum ImageFormat;
     switch (format) {
@@ -220,7 +220,7 @@ VkFormat ImageFormatToVulkan(const ImageFormat format)
     return {};
 }
 
-VkSampleCountFlagBits SampleCountToVulkan(const s32 count)
+VkSampleCountFlagBits SampleCountToVulkan(s32 count)
 {
     switch (count) {
     case 1:
@@ -241,7 +241,7 @@ VkSampleCountFlagBits SampleCountToVulkan(const s32 count)
     return {};
 }
 
-VkImageUsageFlags ImageUsageToVulkan(const ImageUsageFlags flags)
+VkImageUsageFlags ImageUsageToVulkan(ImageUsageFlags flags)
 {
     VkImageUsageFlags ret{ 0 };
     if (flags.Test(ImageUsage::ColorAttachment))
@@ -263,7 +263,7 @@ VkImageUsageFlags ImageUsageToVulkan(const ImageUsageFlags flags)
     return ret;
 }
 
-VkImageLayout ImageLayoutToVulkan(const ImageLayout layout)
+VkImageLayout ImageLayoutToVulkan(ImageLayout layout)
 {
     using enum ImageLayout;
 

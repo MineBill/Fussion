@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "VulkanBuffer.h"
 #include "VulkanCommandBuffer.h"
+#include "VulkanCommandPool.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanImage.h"
 #include "VulkanImageView.h"
@@ -18,7 +19,10 @@
 
 const char* g_RequiredDeviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
+
 namespace Fussion::RHI {
+thread_local Ref<CommandPool> ThreadLocalCommandPool {};
+
 Device* Device::Create(Ref<RHI::Instance> const& instance)
 {
     return new VulkanDevice(instance);
@@ -26,11 +30,15 @@ Device* Device::Create(Ref<RHI::Instance> const& instance)
 
 std::vector<u32> QueueFamilyIndices::GetUniqueIndex() const
 {
+    std::vector<u32> families{};
     if (*GraphicsFamily == *PresentFamily) {
-        return { *GraphicsFamily };
+        families.emplace_back(*GraphicsFamily);
+    }
+    if (TransferFamily.HasValue()) {
+        families.emplace_back(*TransferFamily);
     }
     LOG_ERROR("Present and Graphics indices differ, do something");
-    return {};
+    return families;
 }
 
 VulkanDevice::VulkanDevice(Ref<RHI::Instance> const& instance)
@@ -42,7 +50,9 @@ VulkanDevice::VulkanDevice(Ref<RHI::Instance> const& instance)
     FamilyIndices = GetQueueFamilies(PhysicalDevice);
 
     CreateLogicalDevice();
-    CreateCommandPool();
+
+    MainCommandPool = CreateCommandPool();
+    ThreadLocalCommandPool = MainCommandPool;
 
     auto const functions = VmaVulkanFunctions{
         .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
@@ -89,23 +99,19 @@ VulkanDevice::~VulkanDevice()
     LOG_INFO("Destroying vulkan device");
 }
 
+Ref<CommandPool> VulkanDevice::GetMainCommandPool()
+{
+    return MainCommandPool;
+}
+
 Ref<RenderPass> VulkanDevice::CreateRenderPass(RenderPassSpecification spec)
 {
     return std::make_shared<VulkanRenderPass>(this, spec);
 }
 
-auto VulkanDevice::CreateCommandBuffer(CommandBufferSpecification spec) -> Ref<CommandBuffer>
+auto VulkanDevice::CreateCommandPool() -> Ref<RHI::CommandPool>
 {
-    return std::make_shared<VulkanCommandBuffer>(this, spec);
-}
-
-auto VulkanDevice::CreateCommandBuffers(s32 count, CommandBufferSpecification spec) -> std::vector<Ref<CommandBuffer>>
-{
-    std::vector<Ref<CommandBuffer>> ret;
-    for (s32 i = 0; i < count; i++) {
-        ret.push_back(CreateCommandBuffer(spec));
-    }
-    return ret;
+    return MakeRef<VulkanCommandPool>(this);
 }
 
 auto VulkanDevice::CreateSampler(SamplerSpecification spec) -> Ref<Sampler>
@@ -197,12 +203,15 @@ auto VulkanDevice::CreateResourcePool(ResourcePoolSpecification spec) -> Ref<Res
 
 void VulkanDevice::WaitIdle()
 {
-    VK_CHECK(vkDeviceWaitIdle(Handle))
+    GraphicsQueue.Access([&](VkQueue queue) {
+        (void)queue;
+        VK_CHECK(vkDeviceWaitIdle(Handle))
+    });
 }
 
 auto VulkanDevice::BeginSingleTimeCommand() -> Ref<CommandBuffer>
 {
-    auto cmd = CreateCommandBuffer({
+    auto cmd = ThreadLocalCommandPool->AllocateCommandBuffer({
         .Label = "Single Time Command"
     });
     cmd->Begin();
@@ -211,8 +220,7 @@ auto VulkanDevice::BeginSingleTimeCommand() -> Ref<CommandBuffer>
 
 void VulkanDevice::EndSingleTimeCommand(Ref<CommandBuffer> cmd)
 {
-    auto const vk_cmd = dynamic_cast<VulkanCommandBuffer*>(cmd.get());
-    vk_cmd->End(CommandBufferType::None);
+    auto const vk_cmd = cmd->As<VulkanCommandBuffer>();
 
     auto submit_info = VkSubmitInfo{
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -220,8 +228,11 @@ void VulkanDevice::EndSingleTimeCommand(Ref<CommandBuffer> cmd)
         .pCommandBuffers = &vk_cmd->Handle,
     };
 
-    vkQueueSubmit(GraphicsQueue, 1, &submit_info, VK_NULL_HANDLE);
-    vkQueueWaitIdle(GraphicsQueue);
+    GraphicsQueue.Access([&](VkQueue queue) {
+        vk_cmd->End(CommandBufferType::None);
+        vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+        vkQueueWaitIdle(queue);
+    });
 }
 
 auto VulkanDevice::CreateFence(bool signaled) const -> VkFence
@@ -352,20 +363,33 @@ void VulkanDevice::CreateLogicalDevice()
 
     VK_CHECK(vkCreateDevice(PhysicalDevice, &device_create_info, nullptr, &Handle))
 
-    vkGetDeviceQueue(Handle, *FamilyIndices.GraphicsFamily, 0, &GraphicsQueue);
+    vkGetDeviceQueue(Handle, *FamilyIndices.GraphicsFamily, 0, GraphicsQueue.UnsafePtr());
     vkGetDeviceQueue(Handle, *FamilyIndices.PresentFamily, 0, &PresentQueue);
+
+    if (FamilyIndices.TransferFamily.HasValue()) {
+        LOG_INFOF("Found dedicated transfer family");
+        VkQueue handle;
+        vkGetDeviceQueue(Handle, *FamilyIndices.TransferFamily, 0, &handle);
+        TransferQueue = handle;
+        SetHandleName(TRANSMUTE(u64, *TransferQueue), VK_OBJECT_TYPE_QUEUE, "Transfer Queue");
+    } else {
+        LOG_WARNF("Did not find dedicated transfer family. Panic?");
+    }
+
+    SetHandleName(TRANSMUTE(u64, PresentQueue), VK_OBJECT_TYPE_QUEUE, "Present Queue");
+    SetHandleName(TRANSMUTE(u64, *GraphicsQueue.UnsafePtr()), VK_OBJECT_TYPE_QUEUE, "Graphics Queue");
 }
 
-void VulkanDevice::CreateCommandPool()
-{
-    auto const pool_create_info = VkCommandPoolCreateInfo{
-        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = CAST(u32, FamilyIndices.GraphicsFamily.value()),
-    };
-
-    VK_CHECK(vkCreateCommandPool(Handle, &pool_create_info, nullptr, &CommandPool))
-}
+// void VulkanDevice::CreateCommandPool()
+// {
+//     auto const pool_create_info = VkCommandPoolCreateInfo{
+//         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+//         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+//         .queueFamilyIndex = CAST(u32, FamilyIndices.GraphicsFamily.value()),
+//     };
+//
+//     VK_CHECK(vkCreateCommandPool(Handle, &pool_create_info, nullptr, &CommandPool))
+// }
 
 bool CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
@@ -418,14 +442,16 @@ QueueFamilyIndices VulkanDevice::GetQueueFamilies(VkPhysicalDevice device) const
 
     QueueFamilyIndices indices;
     u32 index = 0;
-    for (auto property : family_properties) {
+    for (auto const& property : family_properties) {
         if (property.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.GraphicsFamily = index;
+        } else if (property.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+            indices.TransferFamily = index;
         }
 
         VkBool32 present_support = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, index, Instance->Surface, &present_support);
-        if (present_support) {
+        if (present_support && !indices.PresentFamily.has_value()) {
             indices.PresentFamily = index;
         }
         if (indices.IsComplete()) {

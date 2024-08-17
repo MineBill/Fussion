@@ -89,7 +89,7 @@ void ImGuiLayer::Init()
         .PhysicalDevice = device->PhysicalDevice,
         .Device = device->Handle,
         .QueueFamily = 0,
-        .Queue = device->GraphicsQueue,
+        .Queue = *device->GraphicsQueue.UnsafePtr(),
         .DescriptorPool = imgui_pool->GetRenderHandle<VkDescriptorPool>(),
         .RenderPass = Renderer::GetInstance()->GetMainRenderPass()->GetRenderHandle<VkRenderPass>(),
         .MinImageCount = 2,
@@ -110,6 +110,7 @@ void ImGuiLayer::Init()
     }, device.get());
     ImGui_ImplVulkan_Init(&info);
     Device::Instance()->RegisterImageCallback([this](Ref<RHI::Image> const& image, bool create) {
+        std::lock_guard lock(m_RegistrationMutex);
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
                 auto vk_image = image->As<VulkanImage>();
@@ -144,6 +145,7 @@ void ImGuiLayer::Init()
     });
 
     Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<RHI::Image> const& image, bool create) {
+        std::lock_guard lock(m_RegistrationMutex);
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
                 auto vk_image = image->As<VulkanImage>();
@@ -251,15 +253,15 @@ void SetupImGuiStyle()
     ImVec4* colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-    colors[ImGuiCol_WindowBg] = ImVec4(0.125f, 0.125f, 0.125f, 1.000f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.145f, 0.145f, 0.145f, 1.000f);
+    colors[ImGuiCol_WindowBg] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+    colors[ImGuiCol_ChildBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
     colors[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
     colors[ImGuiCol_Border] = ImVec4(0.26f, 0.26f, 0.26f, 0.66f);
     colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-    colors[ImGuiCol_FrameBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
+    colors[ImGuiCol_FrameBg] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
     colors[ImGuiCol_FrameBgHovered] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
     colors[ImGuiCol_FrameBgActive] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
-    colors[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+    colors[ImGuiCol_TitleBg] = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
     colors[ImGuiCol_TitleBgActive] = ImVec4(0.15f, 0.15f, 0.15f, 0.97f);
     colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
     colors[ImGuiCol_MenuBarBg] = ImVec4(0.19f, 0.19f, 0.19f, 1.00f);
@@ -270,7 +272,7 @@ void SetupImGuiStyle()
     colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_SliderGrab] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
     colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.39f, 0.00f, 1.00f);
-    colors[ImGuiCol_Button] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+    colors[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
     colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 1.00f, 1.00f, 0.16f);
     colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 1.00f, 1.00f, 0.39f);
     colors[ImGuiCol_Header] = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
@@ -284,9 +286,9 @@ void SetupImGuiStyle()
     colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 0.39f, 0.00f, 1.00f);
     colors[ImGuiCol_Tab] = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
     colors[ImGuiCol_TabHovered] = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
-    colors[ImGuiCol_TabActive] = ImVec4(0.19f, 0.19f, 0.19f, 1.00f);
+    colors[ImGuiCol_TabActive] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
     colors[ImGuiCol_TabUnfocused] = ImVec4(0.19f, 0.19f, 0.19f, 1.00f);
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
     colors[ImGuiCol_DockingPreview] = ImVec4(0.26f, 0.59f, 0.98f, 0.70f);
     colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
     colors[ImGuiCol_PlotLines] = ImVec4(0.47f, 0.47f, 0.47f, 1.00f);
@@ -304,4 +306,5 @@ void SetupImGuiStyle()
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 0.39f, 0.00f, 1.00f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.59f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.59f);
+
 }
