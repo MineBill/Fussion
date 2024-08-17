@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Scene/Component.h"
+#include <Fussion/Scene/Component.h>
 
 namespace Fussion {
     class DirectionalLight final : public Component {
@@ -17,6 +17,6 @@ namespace Fussion {
 
         virtual void OnDraw(RHI::RenderContext& context) override;
 
-        Color LightColor{};
+        Color LightColor{ Color::White };
     };
 }
