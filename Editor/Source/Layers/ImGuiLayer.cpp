@@ -260,6 +260,8 @@ void SetupImGuiStyle()
     style.ColorButtonPosition = ImGuiDir_Left;
     style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
+    style.DockingSeparatorSize = 0;
+    style.WindowMenuButtonPosition = ImGuiDir_Right;
 
     ImVec4* colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
