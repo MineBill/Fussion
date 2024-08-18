@@ -2,9 +2,6 @@
 #include "Fussion/Core/Layer.h"
 #include "Fussion/RHI/CommandBuffer.h"
 
-#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
-
 class ImGuiLayer : public Fussion::Layer {
 public:
     ImGuiLayer();
@@ -29,22 +26,16 @@ public:
     void LoadFonts();
 
     // @Todo The VkDescriptorSet could be changed to void*.
-    std::map<u64, VkDescriptorSet> ImageToVkSet;
+    std::map<u64, void*> ImageToVkSet;
 
 private:
     static ImGuiLayer* s_Instance;
     std::mutex m_RegistrationMutex;
 };
 
-// @todo This should probably be replaced with a function??
-#define IMGUI_IMAGE(image) ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())]
+void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image);
 
-inline void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image)
-{
-    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())];
-}
+void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view);
 
-inline void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view)
-{
-    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())];
-}
+#define IMGUI_IMAGE(image) ToImGuiTexture(image)
+

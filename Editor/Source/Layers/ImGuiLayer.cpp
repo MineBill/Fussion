@@ -1,4 +1,5 @@
 ﻿#include "epch.h"
+#define VK_NO_PROTOTYPES
 #include "ImGuiLayer.h"
 
 #include "Fussion/RHI/Device.h"
@@ -18,6 +19,8 @@
 #include "EditorStyle.h"
 #include "Fussion/RHI/Renderer.h"
 
+#define VK_NO_PROTOTYPES
+#include <vulkan/vulkan.h>
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanImageView.h"
 #include "Vulkan/Common.h"
@@ -49,6 +52,14 @@ void ImGuiLayer::LoadFonts()
     style.Fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
 
     io.FontDefault = style.Fonts[RegularNormal];
+}
+
+void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image) {
+    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())];
+}
+
+void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view) {
+    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())];
 }
 
 void ImGuiLayer::Init()
@@ -139,7 +150,7 @@ void ImGuiLayer::Init()
             } else {
                 auto handle = TRANSMUTE(u64, image->GetRawHandle());
                 if (ImageToVkSet.contains(handle))
-                    ImGui_ImplVulkan_RemoveTexture(ImageToVkSet[handle]);
+                    ImGui_ImplVulkan_RemoveTexture(TRANSMUTE(VkDescriptorSet, ImageToVkSet[handle]));
             }
         }
     });
@@ -174,7 +185,7 @@ void ImGuiLayer::Init()
             } else {
                 auto handle = TRANSMUTE(u64, view->GetRawHandle());
                 if (ImageToVkSet.contains(handle))
-                    ImGui_ImplVulkan_RemoveTexture(ImageToVkSet[handle]);
+                    ImGui_ImplVulkan_RemoveTexture(TRANSMUTE(VkDescriptorSet, ImageToVkSet[handle]));
             }
         }
     });
