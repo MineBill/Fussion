@@ -1,4 +1,5 @@
-﻿#include "EditorAssetManager.h"
+﻿#include "epch.h"
+#include "EditorAssetManager.h"
 #include "EditorApplication.h"
 #include "Project.h"
 #include "Serialization/AssetSerializer.h"

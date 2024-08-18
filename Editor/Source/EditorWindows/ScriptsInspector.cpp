@@ -1,4 +1,5 @@
-﻿#include "ScriptsInspector.h"
+﻿#include "epch.h"
+#include "ScriptsInspector.h"
 
 #include "Fussion/Scripting/ScriptingEngine.h"
 #include "Fussion/Scripting/Attributes/RangeAttribute.h"

@@ -1,4 +1,5 @@
-﻿#include "ContentBrowser.h"
+﻿#include "epch.h"
+#include "ContentBrowser.h"
 #include "Serialization/AssetSerializer.h"
 #include "ImGuiHelpers.h"
 #include "EditorUI.h"

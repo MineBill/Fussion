@@ -1,4 +1,5 @@
-﻿#include "TextureSerializer.h"
+﻿#include "epch.h"
+#include "TextureSerializer.h"
 #include "Project/Project.h"
 
 #include <Fussion/Assets/AssetManager.h>

@@ -42,6 +42,8 @@ target "Editor"
     add_deps("Fussion")
     add_packages("glfw")
 
+    set_pcxxheader("Source/epch.h")
+
     if is_plat("windows") then
         set_runtimes("MDd")
         add_ldflags("/WHOLEARCHIVE:Fussion", {force = true})

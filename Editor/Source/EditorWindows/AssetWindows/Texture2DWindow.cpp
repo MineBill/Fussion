@@ -1,4 +1,5 @@
-﻿#include "Texture2DWindow.h"
+﻿#include "epch.h"
+#include "Texture2DWindow.h"
 
 #include "EditorUI.h"
 #include "Fussion/Assets/AssetManager.h"

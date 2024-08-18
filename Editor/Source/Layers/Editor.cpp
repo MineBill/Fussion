@@ -1,4 +1,5 @@
-﻿#include "Editor.h"
+﻿#include "epch.h"
+#include "Editor.h"
 #include "EditorUI.h"
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"

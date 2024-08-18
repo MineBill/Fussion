@@ -1,3 +1,4 @@
+#include "epch.h"
 #include "EditorApplication.h"
 #include <Fussion/OS/Args.h>
 #if defined(FSN_LIVEPP_ENABLED)

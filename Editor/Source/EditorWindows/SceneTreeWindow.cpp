@@ -1,4 +1,5 @@
-﻿#include "SceneTreeWindow.h"
+﻿#include "epch.h"
+#include "SceneTreeWindow.h"
 #include "EditorUI.h"
 
 #include <imgui.h>

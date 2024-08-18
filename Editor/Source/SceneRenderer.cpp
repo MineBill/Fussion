@@ -1,4 +1,5 @@
-﻿#include "SceneRenderer.h"
+﻿#include "epch.h"
+#include "SceneRenderer.h"
 
 #include "Fussion/Debug/Debug.h"
 #include <Fussion/Util/TextureImporter.h>

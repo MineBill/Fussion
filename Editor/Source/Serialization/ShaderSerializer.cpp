@@ -1,4 +1,5 @@
-﻿#include "ShaderSerializer.h"
+﻿#include "epch.h"
+#include "ShaderSerializer.h"
 
 #include "Fussion/RHI/Resources/Resource.h"
 #include "Fussion/Assets/ShaderAsset.h"

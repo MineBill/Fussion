@@ -1,4 +1,5 @@
-﻿#include "SceneSerializer.h"
+﻿#include "epch.h"
+#include "SceneSerializer.h"
 #include "EditorApplication.h"
 
 #include "Fussion/Scene/Scene.h"

@@ -298,6 +298,7 @@ namespace EUI {
 
         if (params.UseChild) {
             ImGui::BeginChild("##inner_child", {}, ImGuiChildFlags_Border);
+
         }
         if (o) {
             func();
