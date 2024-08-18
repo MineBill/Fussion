@@ -1,5 +1,6 @@
 #pragma once
 #include "Fussion/Log/Log.h"
+
 #include <source_location>
 #include <stacktrace>
 
@@ -93,7 +94,7 @@ namespace Fussion {
 
     template<typename... Args>
     [[noreturn]]
-    void Panic(std::format_string<Args...> message, Args&&... args)
+    void Panic(fmt::format_string<Args...> message, Args&&... args)
     {
         auto st = std::stacktrace::current(1, 1)[0];
         LOG_ERRORF("PANIC hit at: {}:{}", st.source_file(), st.source_line());

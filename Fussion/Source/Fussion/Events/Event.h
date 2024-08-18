@@ -13,12 +13,6 @@
         return StaticType();       \
     }
 
-#define EVENT_TOSTRING(name)          \
-    std::string ToString() const override \
-    {                                 \
-        return #name;                 \
-    }
-
 namespace Fussion {
 enum class EventType {
     OnKeyPressed = 0,
@@ -48,9 +42,6 @@ public:
 
     [[nodiscard]]
     virtual EventType Type() const = 0;
-
-    [[nodiscard]]
-    virtual std::string ToString() const = 0;
 };
 
 using EventFnType = std::function<bool(Event&)>;

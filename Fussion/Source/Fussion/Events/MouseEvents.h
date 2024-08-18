@@ -1,9 +1,6 @@
 ﻿#pragma once
 #include "Event.h"
 #include "Fussion//Core/Types.h"
-
-#include <format>
-
 #include "Fussion/Core/Core.h"
 
 namespace Fussion
@@ -15,11 +12,6 @@ namespace Fussion
         EVENT(MouseMoved)
         MouseMoved(f64 x, f64 y, f64 rel_x, f64 rel_y) : X(x), Y(y), RelX(rel_x), RelY(rel_y)
         {
-        }
-
-        require_results std::string ToString() const override
-        {
-            return std::format("MouseMoved(x: {}, y: {})", X, Y);
         }
 
         f64 X{0}, Y{0}, RelX{0}, RelY{0};
@@ -45,11 +37,6 @@ namespace Fussion
         {
         }
 
-        require_results std::string ToString() const override
-        {
-            return std::format("MouseButtonPressed({})", static_cast<s32>(Button));
-        }
-
         MouseButton Button{};
     };
 
@@ -61,11 +48,6 @@ namespace Fussion
         {
         }
 
-        require_results std::string ToString() const override
-        {
-            return std::format("MouseButtonReleased({})", static_cast<s32>(Button));
-        }
-
         MouseButton Button{};
     };
 
@@ -75,11 +57,6 @@ namespace Fussion
         EVENT(MouseButtonDown)
         explicit MouseButtonDown(MouseButton button) : Button(button)
         {
-        }
-
-        require_results std::string ToString() const override
-        {
-            return std::format("MouseButtonDown({})", static_cast<s32>(Button));
         }
 
         MouseButton Button{};
@@ -96,11 +73,6 @@ namespace Fussion
         require_results std::array<f32, 2> Offset() const
         {
             return {X, Y};
-        }
-
-        require_results std::string ToString() const override
-        {
-            return std::format("MouseWheelMoved(X: {}, Y: {})", X, Y);
         }
 
         f32 X, Y{0.0f};

@@ -31,6 +31,7 @@ target("Fussion")
     add_includedirs("Impl", {public = true})
     add_includedirs("Vendor/entt/src", {public = true})
 
+    add_packages("fmt", {public = true})
     add_packages("glfw", "VMA")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
@@ -61,6 +62,7 @@ target("Fussion")
             os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-glsld.lib"
         )
         add_cxxflags("cl::/bigobj")
+        add_cxxflags("cl::/utf-8", {public = true})
 
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})

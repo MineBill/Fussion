@@ -4,13 +4,15 @@
 #include "EditorUI.h"
 #include "imgui.h"
 
+#include <fmt/format.h>
+
 using namespace Fussion;
 
 void AssetWindow::Draw(f32 delta)
 {
     ImGui::PushID(m_AssetHandle);
     defer(ImGui::PopID());
-    auto window_name = std::format("Asset Window##{}", m_AssetHandle);
+    auto window_name = fmt::format("Asset Window##{}", m_AssetHandle);
     EUI::Window(window_name, [&] {
         DrawMenuBar();
 

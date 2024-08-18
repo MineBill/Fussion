@@ -1,10 +1,11 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
-#include <format>
+
+#include <fmt/format.h>
 
 #define FSN_MAKE_FORMATTABLE(Type, Format, ...)                         \
     template<>                                                          \
-    struct std::formatter<Type>                                         \
+    struct fmt::formatter<Type>                                         \
     {                                                                   \
         constexpr auto parse(auto& context) { return context.begin(); } \
                                                                         \

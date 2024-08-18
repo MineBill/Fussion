@@ -14,6 +14,11 @@
 #include <Serialization/tiny_gltf.h>
 #include <glm/glm.hpp>
 
+#include <fmt/base.h>
+#include <fmt/format.h>
+#include <fmt/compile.h>
+#include <fmt/std.h>
+
 #include <cstdint>
 #include <concepts>
 #include <functional>
@@ -22,7 +27,6 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <format>
 #include <array>
 #include <span>
 #include <utility>

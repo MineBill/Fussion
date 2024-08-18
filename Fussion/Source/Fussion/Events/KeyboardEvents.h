@@ -4,7 +4,6 @@
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/Types.h"
 
-#include <format>
 #include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
@@ -14,12 +13,6 @@ public:
     EVENT(OnKeyDown)
 
     explicit OnKeyDown(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
-
-    [[nodiscard]]
-    virtual std::string ToString() const override
-    {
-        return std::format("OnKeyDown({})", magic_enum::enum_name(Key));
-    }
 
     Keys Key{};
     KeyMods Mods{};
@@ -31,12 +24,6 @@ public:
 
     explicit OnKeyPressed(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
 
-    [[nodiscard]]
-    virtual std::string ToString() const override
-    {
-        return std::format("OnKeyPressed({})", magic_enum::enum_name(Key));
-    }
-
     Keys Key{};
     KeyMods Mods{};
 };
@@ -46,12 +33,6 @@ public:
     EVENT(OnKeyReleased)
 
     explicit OnKeyReleased(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
-
-    [[nodiscard]]
-    virtual std::string ToString() const override
-    {
-        return std::format("OnKeyReleased({})", magic_enum::enum_name(Key));
-    }
 
     Keys Key{};
     KeyMods Mods{};

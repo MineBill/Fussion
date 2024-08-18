@@ -1,7 +1,6 @@
 ﻿#include "AngelDumper.h"
 
 #include <angelscript.h>
-#include <format>
 #include <iostream>
 #include <iso646.h>
 

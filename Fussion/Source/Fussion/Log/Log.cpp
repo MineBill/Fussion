@@ -1,9 +1,9 @@
 ﻿#include "FussionPCH.h"
 #include "Log.h"
-#include <iostream>
-#include <format>
 
 #include "Fussion/Core/Types.h"
+
+#include <iostream>
 
 namespace Fussion {
     class ConsoleSink final : public LogSink {
@@ -21,7 +21,7 @@ namespace Fussion {
             static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
             if (level >= m_Logger->GetPriority()) {
-                std::cout << std::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
+                std::cout << fmt::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
                 if (level == LogLevel::Fatal) {
                     // Do something special?
                 }
