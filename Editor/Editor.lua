@@ -26,7 +26,6 @@ target "Editor"
     )
 
     add_defines(
-        "REFLECT_TYPE_INFO_ENABLED",
         "GLM_ENABLE_EXPERIMENTAL",
         "USE_EDITOR",
         "FSN_MATH_USE_GLOBALLY",

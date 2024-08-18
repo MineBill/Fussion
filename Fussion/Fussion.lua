@@ -43,7 +43,6 @@ target("Fussion")
     add_defines (
         "GLM_ENABLE_EXPERIMENTAL",
         "VMA_DYNAMIC_VULKAN_FUNCTIONS",
-        "REFLECT_TYPE_INFO_ENABLED",
         "VK_NO_PROTOTYPES"
     )
 
