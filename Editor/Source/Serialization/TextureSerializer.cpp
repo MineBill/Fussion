@@ -2,7 +2,6 @@
 #include "TextureSerializer.h"
 #include "Project/Project.h"
 
-#include <Fussion/Assets/AssetManager.h>
 #include <Fussion/Util/TextureImporter.h>
 
 using namespace Fussion;
@@ -19,8 +18,8 @@ Ref<Asset> TextureSerializer::Load(EditorAssetMetadata metadata)
     auto [data, width, height] = TextureImporter::LoadImageFromFile(path);
 
     auto texture_metadata = std::dynamic_pointer_cast<Texture2DMetadata>(metadata.CustomMetadata);
-    texture_metadata->Width = width;
-    texture_metadata->Height = height;
+    texture_metadata->Width = CAST(s32, width);
+    texture_metadata->Height = CAST(s32, height);
 
     return Texture2D::Create(data, *texture_metadata);
 }

@@ -17,6 +17,7 @@ namespace Fussion {
         image_spec.SamplerSpec.Filter = metadata.Filter;
         image_spec.SamplerSpec.UseAnisotropy = false;
         image_spec.SamplerSpec.Wrap = metadata.Wrap;
+        image_spec.GenerateMipMaps = true;
 
         using enum RHI::ImageUsage;
         image_spec.Usage = ColorAttachment | Sampled | TransferDst | TransferSrc;

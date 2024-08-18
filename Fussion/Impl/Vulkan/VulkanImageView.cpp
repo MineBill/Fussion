@@ -18,7 +18,7 @@ VulkanImageView::VulkanImageView(const VulkanDevice* device, const VulkanImage* 
         .subresourceRange = VkImageSubresourceRange{
             .aspectMask = aspect_flag,
             .baseMipLevel = 0,
-            .levelCount = 1,
+            .levelCount = spec.MipLevels,
             .baseArrayLayer = CAST(u32, spec.BaseLayerIndex),
             .layerCount = CAST(u32, spec.LayerCount),
         }

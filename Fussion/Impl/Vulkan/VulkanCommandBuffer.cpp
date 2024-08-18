@@ -235,12 +235,18 @@ namespace Fussion::RHI {
         vkCmdCopyImageToBuffer(Handle, image->GetRenderHandle<VkImage>(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer->GetRenderHandle<VkBuffer>(), 1, &copy);
     }
 
-    void VulkanCommandBuffer::BlitImage(Ref<Image> const& source_image, Ref<Image>& output_image, Rect source_rect, Rect dest_rect)
+    void VulkanCommandBuffer::BlitImage(
+        Ref<Image> const& source_image,
+        Ref<Image>& output_image,
+        Rect source_rect,
+        Rect dest_rect,
+        u32 source_mip_level,
+        u32 dest_mip_level)
     {
         VkImageBlit blit{
             .srcSubresource = {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .mipLevel = 0,
+                .mipLevel = source_mip_level,
                 .baseArrayLayer = 0,
                 .layerCount = 1
             },
@@ -258,7 +264,7 @@ namespace Fussion::RHI {
             },
             .dstSubresource = {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .mipLevel = 0,
+                .mipLevel = dest_mip_level,
                 .baseArrayLayer = 0,
                 .layerCount = 1
             },
@@ -276,10 +282,13 @@ namespace Fussion::RHI {
             },
         };
 
+        auto source_layout = source_image->As<VulkanImage>()->GetLayoutForMipLevel(source_mip_level);
+        auto dest_layout = output_image->As<VulkanImage>()->GetLayoutForMipLevel(dest_mip_level);
+
         vkCmdBlitImage(
             Handle,
-            source_image->GetRenderHandle<VkImage>(), ImageLayoutToVulkan(source_image->GetSpec().Layout),
-            output_image->GetRenderHandle<VkImage>(), ImageLayoutToVulkan(output_image->GetSpec().Layout),
+            source_image->GetRenderHandle<VkImage>(), source_layout,
+            output_image->GetRenderHandle<VkImage>(), dest_layout,
             1, &blit,
             VK_FILTER_LINEAR);
     }

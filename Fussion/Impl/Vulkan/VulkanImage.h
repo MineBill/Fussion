@@ -22,8 +22,11 @@ namespace Fussion::RHI {
         virtual auto GetSpec() const -> ImageSpecification const& override { return Specification; }
         virtual void SetData(std::span<u8>) override;
         virtual void TransitionLayout(ImageLayout new_layout) override;
+        virtual void GenerateMipmaps() override;
 
         virtual void* GetRawHandle() override { return Handle; }
+
+        VkImageLayout GetLayoutForMipLevel(u32 level) const;
 
         Ref<VulkanImageView> View{};
         Ref<VulkanSampler> Sampler{};
@@ -33,6 +36,8 @@ namespace Fussion::RHI {
         VkImage Handle{};
 
     private:
+        u32 m_MipLevels{ 1 };
+        std::vector<VkImageLayout> m_MipLevelsLayouts{};
         bool m_DestroyHandle{ false };
     };
 }

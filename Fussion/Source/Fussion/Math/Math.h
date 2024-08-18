@@ -93,5 +93,16 @@ namespace Fussion::Math {
         return std::sqrt(value);
     }
 
+    constexpr auto Floor(ScalarType auto value)
+    {
+        return CAST(decltype(value), CAST(s32, value));
+    }
+
+    auto FloorLog2(s32 value) -> s32;
+    auto FloorLog2(s64 value) -> s64;
+
+    auto CountLeadingZeros(u32 value) -> u32;
+    auto CountLeadingZeros(u64 value) -> u64;
+
     auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
 }

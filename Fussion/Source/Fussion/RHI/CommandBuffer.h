@@ -46,7 +46,13 @@ namespace Fussion::RHI {
 
         virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region) = 0;
 
-        virtual void BlitImage(Ref<Image> const& source_image, Ref<Image>& output_image, Rect source_rect, Rect dest_rect) = 0;
+        virtual void BlitImage(
+            Ref<Image> const& source_image,
+            Ref<Image>& output_image,
+            Rect source_rect,
+            Rect dest_rect,
+            u32 source_mip_level = 0,
+            u32 dest_mip_level = 0) = 0;
 
         template<typename T>
         void PushConstants(Ref<RHI::Shader> const& shader, T* data)
