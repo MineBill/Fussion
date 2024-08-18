@@ -1,4 +1,4 @@
-﻿#include "epch.h"
+﻿#include "EditorPCH.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorCamera.h"
@@ -13,7 +13,6 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Fussion/Core/Application.h"
-#include "Fussion/Debug/Debug.h"
 #include "Fussion/Math/Math.h"
 #include "Fussion/Math/Vector4.h"
 

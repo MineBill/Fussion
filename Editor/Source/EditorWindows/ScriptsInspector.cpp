@@ -1,4 +1,4 @@
-﻿#include "epch.h"
+﻿#include "EditorPCH.h"
 #include "ScriptsInspector.h"
 
 #include "Fussion/Scripting/ScriptingEngine.h"

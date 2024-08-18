@@ -1,4 +1,4 @@
-﻿#include "epch.h"
+﻿#include "EditorPCH.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorApplication.h"

@@ -41,7 +41,7 @@ target "Editor"
     add_deps("Fussion")
     add_packages("glfw")
 
-    set_pcxxheader("Source/epch.h")
+    set_pcxxheader("Source/EditorPCH.h")
 
     if is_plat("windows") then
         set_runtimes("MDd")

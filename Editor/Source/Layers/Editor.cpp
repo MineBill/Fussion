@@ -1,10 +1,9 @@
-﻿#include "epch.h"
+﻿#include "EditorPCH.h"
 #include "Editor.h"
 #include "EditorUI.h"
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "Fussion/Scene/Components/Camera.h"
-#include "Fussion/Util/TextureImporter.h"
 #include "Serialization/SceneSerializer.h"
 
 #include <Fussion/Input/Input.h>
@@ -18,7 +17,6 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 #include <ranges>
 
