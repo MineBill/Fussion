@@ -4,7 +4,6 @@
 class SceneSerializer final : public AssetSerializer
 {
 public:
-
-    void Save(EditorAssetMetadata metadata, Ref<Fussion::Asset> const& asset) override;
-    Ref<Fussion::Asset> Load(EditorAssetMetadata metadata) override;
+    virtual auto Save(EditorAssetMetadata metadata, Ref<Fussion::Asset> const& asset) -> void override;
+    virtual auto Load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> override;
 };

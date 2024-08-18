@@ -73,7 +73,7 @@ void WorkerPool::Work(s32 index)
     }
 }
 
-void WorkerPool::Load(EditorAssetMetadata metadata)
+void WorkerPool::Load(EditorAssetMetadata const& metadata)
 {
     {
         std::lock_guard lock(m_Mutex);
@@ -84,13 +84,13 @@ void WorkerPool::Load(EditorAssetMetadata metadata)
 }
 
 EditorAssetManager::EditorAssetManager()
+    : m_EditorWatcher(FileWatcher::Create(std::filesystem::current_path() / "Assets" / "Shaders"))
 {
     m_AssetSerializers[AssetType::Scene] = MakePtr<SceneSerializer>();
     m_AssetSerializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
     m_AssetSerializers[AssetType::Mesh] = MakePtr<MeshSerializer>();
     m_AssetSerializers[AssetType::PbrMaterial] = MakePtr<PbrMaterialSerializer>();
 
-    m_EditorWatcher = FileWatcher::Create(std::filesystem::current_path() / "Assets" / "Shaders");
     m_EditorWatcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
         LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
         if (type == FileWatcher::EventType::FileModified) {
@@ -139,7 +139,7 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 
 auto EditorAssetManager::GetAsset(std::string const& path, AssetType type) -> Asset*
 {
-    return m_Registry.Access([&](Registry& registry) -> Asset* {
+    return m_Registry.Access([&](Registry const& registry) -> Asset* {
         for (auto const& [handle, asset] : registry) {
             if (asset.Path == path && asset.Type == type) {
                 return GetAsset(handle, type);
@@ -153,7 +153,7 @@ bool EditorAssetManager::IsAssetLoaded(AssetHandle handle)
 {
     CheckForLoadedAssets();
     return m_Registry.Access([&](Registry const& registry) {
-        auto& metadata = registry.at(handle);
+        auto const& metadata = registry.at(handle);
         return metadata.LoadState == AssetLoadState::Loaded;
     });
 }
@@ -163,13 +163,12 @@ bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
     return m_Registry.Access([&](Registry const& registry) {
         return registry.contains(handle);
     });
-    // return m_Registry.contains(handle);
 }
 
 bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
 {
-    return m_Registry.Access([&](Registry& registry) {
-        return registry[handle].IsVirtual;
+    return m_Registry.Access([&](Registry const& registry) {
+        return registry.at(handle).IsVirtual;
     });
 }
 
@@ -205,7 +204,7 @@ AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
 bool EditorAssetManager::IsAssetLoading(AssetHandle handle)
 {
     return m_Registry.Access([&](Registry const& registry) {
-        auto& metadata = registry.at(handle);
+        auto const& metadata = registry.at(handle);
         return metadata.LoadState == AssetLoadState::Loading;
     });
 }
@@ -343,7 +342,7 @@ void EditorAssetManager::Serialize()
     };
 
     u32 i = 0;
-    m_Registry.Access([&](Registry& registry) {
+    m_Registry.Access([&](Registry const& registry) {
         for (auto const& [handle, metadata] : registry) {
             if (metadata.IsVirtual || metadata.DontSerialize) {
                 continue;

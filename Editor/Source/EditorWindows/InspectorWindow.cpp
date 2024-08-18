@@ -7,7 +7,6 @@
 #include "Fussion/Math/Color.h"
 
 #include <imgui.h>
-#include <magic_enum/magic_enum.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
 
@@ -28,7 +27,7 @@ void InspectorWindow::OnDraw()
     EUI::Window("Entity Inspector", [&] {
         m_IsFocused = ImGui::IsWindowFocused();
 
-        if (auto const& selection = m_Editor->GetSceneTree().GetSelection(); !selection.empty()) {
+        if (auto const& selection = Editor::GetSceneTree().GetSelection(); !selection.empty()) {
             if (selection.size() == 1) {
                 auto const handle = selection.begin()->first;
                 auto entity = m_Editor->GetActiveScene()->GetEntity(handle);
@@ -57,7 +56,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
             EUI::Property(member.get_name(), [&] {
                 ZoneScoped;
                 if (auto const data_type = value.get_type().as_pointer().get_data_type(); data_type.is_number()) {
-                    ImGuiDataType type = 0;
+                    ImGuiDataType type;
                     if (value.is<f32*>()) {
                         type = ImGuiDataType_Float;
                     } else if (value.is<f64*>()) {
@@ -131,9 +130,9 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     auto width = ImGui::GetContentRegionMax().x;
 
-    auto line_height = ImGui::GetFont()->FontSize + ImGui::GetStyle().FramePadding.y * 2.0;
+    auto line_height = ImGui::GetFont()->FontSize + ImGui::GetStyle().FramePadding.y * 2.0f;
 
-    ImGui::SameLine(width - line_height * 0.75);
+    ImGui::SameLine(width - line_height * 0.75f);
     ImGui::PushID(component_type.get_hash());
     EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");

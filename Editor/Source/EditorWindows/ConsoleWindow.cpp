@@ -2,7 +2,6 @@
 #include "ConsoleWindow.h"
 
 #include <imgui.h>
-#include <imgui_internal.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 #include <misc/cpp/imgui_stdlib.h>
@@ -11,16 +10,15 @@
 #include <Fussion/Util/TextureImporter.h>
 #include "Fussion/Log/Log.h"
 #include "Layers/Editor.h"
-#include "Layers/ImGuiLayer.h"
 
 void ConsoleWindow::OnStart() {}
 
 void ConsoleWindow::OnDraw()
 {
     ZoneScoped;
-    for (auto const& entry : Editor::Get().GetLogEntries()) {
-        m_LogEntries.push_back(entry);
-    }
+    auto const& entries = Editor::Get().GetLogEntries();
+    std::ranges::copy(entries, std::back_inserter(m_LogEntries));
+
     if (ImGui::Begin("Console")) {
         m_IsFocused = ImGui::IsWindowFocused();
 

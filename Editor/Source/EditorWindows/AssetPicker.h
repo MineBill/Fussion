@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <Fussion/Assets/Asset.h>
-#include <Fussion/meta.hpp/meta_base.hpp>
 
 class AssetPicker final {
 public:
@@ -21,5 +20,4 @@ private:
     bool m_Opened{};
 
     std::vector<Entry> m_Entries{};
-
 };

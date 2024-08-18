@@ -1,49 +1,15 @@
-﻿#include "EditorPCH.h"
-#include "SceneSerializer.h"
-#include "EditorApplication.h"
+﻿#include "SceneSerializer.h"
 
-#include "Fussion/Scene/Scene.h"
-#include "Fussion/OS/FileSystem.h"
-#include "Fussion/Scene/Components/ScriptComponent.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/Serialization/Json.h"
+#include "EditorApplication.h"
+#include "EditorPCH.h"
+
+#include <Fussion/OS/FileSystem.h>
+#include <Fussion/Scene/Scene.h>
+#include <Fussion/Scene/Components/ScriptComponent.h>
+#include <Fussion/Serialization/Json.h>
+#include <Fussion/meta.hpp/meta_all.hpp>
 
 using namespace Fussion;
-
-// void SerializeStruct(Node& root, meta_hpp::class_type type)
-// {
-//     // @todo Figure out a way to collect all the public fields.
-//     // for (auto const& info : type_info.GetMemberInfosWithFlag("Serialize")) {
-//     //     EASSERT(info.GetPropertyType() == Reflect::PropertyType::Member);
-//     //
-//     //     if (info.IsPrimitiveType()) {
-//     //         if (info.IsType<u32>() || info.IsType<u64>()) {
-//     //
-//     //         } else if (info.IsType<f32>() || info.IsType<f64>()) {
-//     //
-//     //         } else if (info.IsType<bool>()) {
-//     //
-//     //         }
-//     //     } else if (info.IsClassType()) {
-//     //         LOG_DEBUGF("CLASS TYPE: {}",  info.GetType().GetTypeName());
-//     //     }
-//     // }
-//     for (auto const& member: type.get_members()) {
-//         Node node{member.get_name()};
-//
-//         auto member_type = member.get_type().get_value_type();
-//         member_type.match(meta_hpp::overloaded {
-//             [&](meta_hpp::member_type mtype) {
-//                 LOG_DEBUGF("MTYPE");
-//             },
-//             [&](meta_hpp::number_type number) {
-//                 LOG_DEBUGF("NUMBER_TYPE");
-//             },
-//             [](auto&&){},
-//         });
-//         root.children().emplace_back(node);
-//     }
-// }
 
 void SceneSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {

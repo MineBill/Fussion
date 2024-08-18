@@ -1,24 +1,24 @@
 ﻿#pragma once
 #include "EditorCamera.h"
 #include "EditorStyle.h"
-#include "EditorWindows/ViewportWindow.h"
+#include "SceneRenderer.h"
+#include "Undo.h"
 #include "EditorWindows/ConsoleWindow.h"
+#include "EditorWindows/ContentBrowser.h"
 #include "EditorWindows/InspectorWindow.h"
 #include "EditorWindows/SceneTreeWindow.h"
-#include "Project/Project.h"
-#include "SceneRenderer.h"
 #include "EditorWindows/ScriptsInspector.h"
-#include "EditorWindows/ContentBrowser.h"
-#include "Undo.h"
+#include "EditorWindows/ViewportWindow.h"
 #include "EditorWindows/AssetWindows/AssetWindow.h"
+#include "Project/Project.h"
 
-#include "Fussion/Core/Layer.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/RHI/CommandBuffer.h"
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Core/Delegate.h"
-#include "Fussion/OS/FileWatcher.h"
-#include "Fussion/Scene/Scene.h"
+#include <Fussion/Assets/AssetRef.h>
+#include <Fussion/Core/Delegate.h>
+#include <Fussion/Core/Layer.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/OS/FileWatcher.h>
+#include <Fussion/RHI/CommandBuffer.h>
+#include <Fussion/Scene/Scene.h>
 
 class Editor final : public Fsn::Layer {
 public:
@@ -50,9 +50,9 @@ public:
     virtual void OnDraw(Ref<Fsn::RHI::CommandBuffer> const& cmd) override;
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
-    void Save();
+    void Save() const;
 
-    SceneRenderer& GetSceneRenderer() { return m_SceneRenderer; }
+    auto GetSceneRenderer() -> SceneRenderer& { return m_SceneRenderer; }
 
     void OpenAsset(Fussion::AssetHandle handle);
 
@@ -67,7 +67,7 @@ public:
     void SetPlayState(PlayState new_state);
     auto GetPlayState() const -> PlayState { return m_State; }
 
-    std::vector<Fsn::LogEntry> GetLogEntries()
+    auto GetLogEntries() -> std::vector<Fsn::LogEntry>
     {
         auto entries = m_LogEntries;
         m_LogEntries.clear();
@@ -76,14 +76,14 @@ public:
 
     static void ChangeScene(Fsn::AssetRef<Fsn::Scene> scene);
 
-    static void OnViewportResized(Vector2 new_size);
+    static void OnViewportResized(Vector2 const& new_size);
 
-    static Editor& Get() { return *s_EditorInstance; }
+    static auto Get() -> Editor& { return *s_EditorInstance; }
 
-    static EditorCamera& GetCamera() { return s_EditorInstance->m_Camera; }
-    static Project& GetProject() { return s_EditorInstance->m_Project; }
+    static auto GetCamera() -> EditorCamera& { return s_EditorInstance->m_Camera; }
+    static auto GetProject() -> Project& { return s_EditorInstance->m_Project; }
 
-    static Ref<Fsn::Scene>& GetActiveScene()
+    static auto GetActiveScene() -> Ref<Fsn::Scene>&
     {
         if (s_EditorInstance->m_State == PlayState::Playing) {
             return s_EditorInstance->m_PlayScene;
@@ -92,11 +92,11 @@ public:
     }
 
     // Editor Windows
-    static ViewportWindow& GetViewport() { return *s_EditorInstance->m_ViewportWindow.get(); }
-    static InspectorWindow& GetInspector() { return *s_EditorInstance->m_InspectorWindow.get(); }
-    static SceneTreeWindow& GetSceneTree() { return *s_EditorInstance->m_SceneWindow.get(); }
-    static ConsoleWindow& GetConsole() { return *s_EditorInstance->m_ConsoleWindow.get(); }
-    static ContentBrowser& GetContentBrowser() { return *s_EditorInstance->m_ContentBrowser.get(); }
+    static auto GetViewport() -> ViewportWindow& { return *s_EditorInstance->m_ViewportWindow.get(); }
+    static auto GetInspector() -> InspectorWindow& { return *s_EditorInstance->m_InspectorWindow.get(); }
+    static auto GetSceneTree() -> SceneTreeWindow& { return *s_EditorInstance->m_SceneWindow.get(); }
+    static auto GetConsole() -> ConsoleWindow& { return *s_EditorInstance->m_ConsoleWindow.get(); }
+    static auto GetContentBrowser() -> ContentBrowser& { return *s_EditorInstance->m_ContentBrowser.get(); }
 
 private:
     static Editor* s_EditorInstance;

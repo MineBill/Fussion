@@ -11,10 +11,8 @@
 #include "ImGuizmo.h"
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
-#include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-#include "EditorApplication.h"
 #include "Editor.h"
 #include "EditorStyle.h"
 #include "Fussion/RHI/Renderer.h"

@@ -187,6 +187,7 @@ void ContentBrowser::OnDraw()
         }
 
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
+        Maybe<std::filesystem::path> requested_directory_change;
         for (auto const& entry : m_Entries) {
             ImGui::PushID(entry.Path.c_str());
             defer(ImGui::PopID());
@@ -195,7 +196,8 @@ void ContentBrowser::OnDraw()
             if (entry.IsDirectory) {
                 ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                    ChangeDirectory(entry.Path);
+                    requested_directory_change = entry.Path;
+                    break;
                 }
 
             } else {
@@ -249,19 +251,20 @@ void ContentBrowser::OnDraw()
             ImGui::TextWrapped(entry.Name.c_str());
             ImGui::NextColumn();
         }
+        if (requested_directory_change.HasValue()) {
+            ChangeDirectory(*requested_directory_change);
+        }
 
         ImGui::PopFont();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
         ImGui::EndChild();
-
     });
-
 }
 
 // path cannot be a ref because it will point to an entry in m_Entries,
 // which we clear before using it.
-void ContentBrowser::ChangeDirectory(fs::path path) // NOLINT(performance-unnecessary-value-param)
+void ContentBrowser::ChangeDirectory(fs::path const& path) // NOLINT(performance-unnecessary-value-param)
 {
     m_CurrentPath = path;
     m_RelativeToRoot = fs::relative(m_CurrentPath, m_Root);

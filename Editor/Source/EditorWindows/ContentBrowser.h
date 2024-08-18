@@ -38,7 +38,7 @@ public:
 
     /// Change into the directory specified by @p path.
     /// It \b MUST be a sub-path of the root project folder.
-    void ChangeDirectory(std::filesystem::path path);
+    void ChangeDirectory(std::filesystem::path const& path);
 
     /// Refresh the content browser by iterating again all the files of the current path.
     /// Useful after modifying a file.

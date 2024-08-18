@@ -11,7 +11,7 @@ static ImVector<ImRect> s_GroupPanelLabelStack;
 
 void ImGuiHelpers::BeginProperty(const char* label)
 {
-    const auto table_flags =
+    constexpr auto table_flags =
         ImGuiTableFlags_BordersInnerV |
         ImGuiTableFlags_Resizable |
         ImGuiTableFlags_NoSavedSettings |
@@ -38,12 +38,12 @@ void ImGuiHelpers::BeginGroupPanel(const char* name, const ImVec2& size, ImFont*
     auto frameHeight = ImGui::GetFrameHeight();
     ImGui::BeginGroup();
 
-    ImVec2 effectiveSize = size;
+    ImVec2 effective_size;
     if (size.x < 0.0f)
-        effectiveSize.x = ImGui::GetContentRegionAvail().x;
+        effective_size.x = ImGui::GetContentRegionAvail().x;
     else
-        effectiveSize.x = size.x;
-    ImGui::Dummy(ImVec2(effectiveSize.x, 0.0f));
+        effective_size.x = size.x;
+    ImGui::Dummy(ImVec2(effective_size.x, 0.0f));
 
     ImGui::Dummy(ImVec2(frameHeight * 0.5f, 0.0f));
     ImGui::SameLine(0.0f, 0.0f);
@@ -89,9 +89,6 @@ void ImGuiHelpers::EndGroupPanel()
 
     ImGui::EndGroup();
 
-    // ImGui::GetWindowDrawList()->AddRectFilled(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(0, 255,
-    // 0, 64), 4.0f);
-
     ImGui::EndGroup();
 
     ImGui::SameLine(0.0f, 0.0f);
@@ -102,32 +99,31 @@ void ImGuiHelpers::EndGroupPanel()
 
     Vector2 item_min = ImGui::GetItemRectMin();
     Vector2 item_max = ImGui::GetItemRectMax();
-    // ImGui::GetWindowDrawList()->AddRectFilled(itemMin, itemMax, IM_COL32(255, 0, 0, 64), 4.0f);
 
-    auto labelRect = s_GroupPanelLabelStack.back();
+    auto label_rect = s_GroupPanelLabelStack.back();
     s_GroupPanelLabelStack.pop_back();
 
-    Vector2 half_frame = Vector2(frameHeight * 0.25f, frameHeight) * 0.5f;
-    ImRect frame_rect = ImRect(item_min + half_frame, item_max - Vector2(half_frame.X, 0.0f));
-    labelRect.Min.x -= itemSpacing.x;
-    labelRect.Max.x += itemSpacing.x;
+    auto half_frame = Vector2(frameHeight * 0.25f, frameHeight) * 0.5f;
+    auto frame_rect = ImRect(item_min + half_frame, item_max - Vector2(half_frame.X, 0.0f));
+    label_rect.Min.x -= itemSpacing.x;
+    label_rect.Max.x += itemSpacing.x;
     for (int i = 0; i < 4; ++i) {
         switch (i) {
         // left half-plane
         case 0:
-            ImGui::PushClipRect(ImVec2(-FLT_MAX, -FLT_MAX), ImVec2(labelRect.Min.x, FLT_MAX), true);
+            ImGui::PushClipRect(ImVec2(-FLT_MAX, -FLT_MAX), ImVec2(label_rect.Min.x, FLT_MAX), true);
             break;
         // right half-plane
         case 1:
-            ImGui::PushClipRect(ImVec2(labelRect.Max.x, -FLT_MAX), ImVec2(FLT_MAX, FLT_MAX), true);
+            ImGui::PushClipRect(ImVec2(label_rect.Max.x, -FLT_MAX), ImVec2(FLT_MAX, FLT_MAX), true);
             break;
         // top
         case 2:
-            ImGui::PushClipRect(ImVec2(labelRect.Min.x, -FLT_MAX), ImVec2(labelRect.Max.x, labelRect.Min.y), true);
+            ImGui::PushClipRect(ImVec2(label_rect.Min.x, -FLT_MAX), ImVec2(label_rect.Max.x, label_rect.Min.y), true);
             break;
         // bottom
         case 3:
-            ImGui::PushClipRect(ImVec2(labelRect.Min.x, labelRect.Max.y), ImVec2(labelRect.Max.x, FLT_MAX), true);
+            ImGui::PushClipRect(ImVec2(label_rect.Min.x, label_rect.Max.y), ImVec2(label_rect.Max.x, FLT_MAX), true);
             break;
         }
 
@@ -157,19 +153,19 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
 {
     bool modified{ false };
     ImGui::PushID(id);
-    constexpr auto X_COLOR = ImVec4(0.92f, 0.24f, 0.27f, 1.0);
-    constexpr auto X_COLOR_HOVER = ImVec4(0.76f, 0.20f, 0.22f, 1.0);
-    constexpr auto Y_COLOR = ImVec4(0.20f, 0.67f, 0.32f, 1.0);
-    constexpr auto Y_COLOR_HOVER = ImVec4(0.15f, 0.52f, 0.25f, 1.0);
-    constexpr auto Z_COLOR = ImVec4(0.18f, 0.49f, 0.74f, 1.0);
-    constexpr auto Z_COLOR_HOVER = ImVec4(0.14f, 0.39f, 0.60f, 1.0);
-    constexpr s32 SPACE_COUNT = 5;
-    constexpr f32 ITEM_COUNT = 3;
+    constexpr auto x_color = ImVec4(0.92f, 0.24f, 0.27f, 1.0);
+    constexpr auto x_color_hover = ImVec4(0.76f, 0.20f, 0.22f, 1.0);
+    constexpr auto y_color = ImVec4(0.20f, 0.67f, 0.32f, 1.0);
+    constexpr auto y_color_hover = ImVec4(0.15f, 0.52f, 0.25f, 1.0);
+    constexpr auto z_color = ImVec4(0.18f, 0.49f, 0.74f, 1.0);
+    constexpr auto z_color_hover = ImVec4(0.14f, 0.39f, 0.60f, 1.0);
+    constexpr s32 space_count = 5;
+    constexpr f32 item_count = 3;
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
     auto spacing = ImGui::GetStyle().ItemSpacing.x;
     auto width =
-        (ImGui::GetContentRegionAvail().x - spacing * SPACE_COUNT - ImGui::CalcTextSize("X").x * 3) / ITEM_COUNT;
+        (ImGui::GetContentRegionAvail().x - spacing * space_count - ImGui::CalcTextSize("X").x * 3) / item_count;
 
     ImGui::AlignTextToFramePadding();
 
@@ -181,11 +177,11 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
         ImGui::PopStyleColor();
     };
 
-    DrawLabel("X", X_COLOR);
+    DrawLabel("X", x_color);
     ImGui::SameLine();
     ImGui::PushItemWidth(width);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, X_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, X_COLOR_HOVER);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, x_color);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, x_color_hover);
     ImGui::PushFont(font2);
     modified |= ImGui::DragFloat("##x", &value->X, speed, min, max, format);
     ImGui::PopFont();
@@ -193,12 +189,12 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     ImGui::PopStyleColor(2);
     ImGui::SameLine();
 
-    DrawLabel("Y", Y_COLOR);
+    DrawLabel("Y", y_color);
 
     ImGui::SameLine();
     ImGui::PushItemWidth(width);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, Y_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Y_COLOR_HOVER);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, y_color);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, y_color_hover);
     ImGui::PushFont(font2);
     modified |= ImGui::DragFloat("##y", &value->Y, speed, min, max, format);
     ImGui::PopFont();
@@ -206,12 +202,12 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     ImGui::PopStyleColor(2);
     ImGui::SameLine();
 
-    DrawLabel("Z", Z_COLOR);
+    DrawLabel("Z", z_color);
 
     ImGui::SameLine();
     ImGui::PushItemWidth(width);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, Z_COLOR);
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, Z_COLOR_HOVER);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, z_color);
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, z_color_hover);
     ImGui::PushFont(font2);
     modified |= ImGui::DragFloat("##z", &value->Z, speed, min, max, format);
     ImGui::PopFont();
@@ -263,10 +259,9 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> const& image, bool& toggled, Vector2 size)
+bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> const& image, bool& toggled, Vector2 const& size)
 {
     auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
-    // auto button = Vector4(0, 1, 0, 1);
 
     if (toggled) {
         ImGui::PushStyleColor(ImGuiCol_Button, button);

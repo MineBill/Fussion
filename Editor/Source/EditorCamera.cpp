@@ -51,7 +51,7 @@ void EditorCamera::HandleEvent(Event& event)
     EventDispatcher dispatcher(event);
     dispatcher.Dispatch<MouseMoved>([this](MouseMoved const& mouse_moved) -> bool {
         if (m_CapturedMouse) {
-            const auto input = Vector3(mouse_moved.RelY, mouse_moved.RelX, 0);
+            auto input = Vector3(mouse_moved.RelY, mouse_moved.RelX, 0);
             EulerAngles += input * 0.1f;
         }
         return false;

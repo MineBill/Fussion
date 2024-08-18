@@ -4,32 +4,27 @@
 #include "EditorApplication.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
-
-#include "Fussion/RHI/Renderer.h"
-#include "Fussion/Input/Input.h"
-#include "imgui.h"
-
-#include <magic_enum/magic_enum.hpp>
-#include <tracy/Tracy.hpp>
-
-#include "Fussion/Events/ApplicationEvents.h"
-#include "Fussion/Log/FileSink.h"
-#include "Fussion/OS/Args.h"
-#include "Fussion/OS/Dialog.h"
-#include "Fussion/OS/FileSystem.h"
-#include "Fussion/Scene/Entity.h"
 #include "Layers/ProjectCreatorLayer.h"
+
+#include <Fussion/RHI/Renderer.h>
+#include <Fussion/Input/Input.h>
+#include <Fussion/Events/ApplicationEvents.h>
+#include <Fussion/Log/FileSink.h>
+#include <Fussion/OS/Args.h>
+#include <Fussion/OS/Dialog.h>
 #include <Fussion/Core/Clap.h>
 #include <Fussion/Util/TextureImporter.h>
+
+#include <tracy/Tracy.hpp>
 #include <chrono>
 
 static unsigned char g_logo_32_data[] = {
 #include "logo_32.png.h"
 };
 
-static unsigned char g_logo_64_data[] = {
-#include "logo_64.png.h"
-};
+// static unsigned char g_logo_64_data[] = {
+// #include "logo_64.png.h"
+// };
 
 EditorApplication* EditorApplication::s_EditorInstance;
 using namespace Fussion;
@@ -121,8 +116,7 @@ void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
     bool loaded = Project::Load(*path);
     VERIFY(loaded, "Project loading must not fail, for now.");
 
-    auto editor = s_EditorInstance->PushLayer<Editor>();
-    // editor->OnStart();
+    (void)s_EditorInstance->PushLayer<Editor>();
 
     auto now = std::chrono::system_clock::now();
     auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);

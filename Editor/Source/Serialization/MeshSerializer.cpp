@@ -2,12 +2,9 @@
 #include "MeshSerializer.h"
 #include "Project/Project.h"
 
-#include "Fussion/Assets/Mesh.h"
+#include <Fussion/Assets/Mesh.h>
 
-#define TINYGLTF_IMPLEMENTATION
 #include "tiny_gltf.h"
-#include "Fussion/OS/FileSystem.h"
-
 #include <vulkan/vulkan_core.h>
 
 using namespace Fussion;
@@ -45,20 +42,17 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
     auto&  pos_accessor = model.accessors[primitive.attributes.find("POSITION")->second];
     auto& pos_view = model.bufferViews[pos_accessor.bufferView];
     auto&  pos_buffer = model.buffers[pos_view.buffer];
-    LOG_DEBUGF("pos: {} {}", pos_view.byteOffset, pos_accessor.byteOffset);
 
 
     auto& norm_accessor = model.accessors[primitive.attributes.find("NORMAL")->second];
     auto& norm_view = model.bufferViews[norm_accessor.bufferView];
     auto& norm_buffer = model.buffers[norm_view.buffer];
-    LOG_DEBUGF("nor: {} {}", norm_view.byteOffset, norm_accessor.byteOffset);
 
     auto& uv_accessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
     VERIFY(uv_accessor.type == TINYGLTF_TYPE_VEC2);
     VERIFY(uv_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
     auto& uv_view = model.bufferViews[uv_accessor.bufferView];
     auto& uv_buffer = model.buffers[uv_view.buffer];
-    LOG_DEBUGF("uvs: {} {}", uv_view.byteOffset, uv_accessor.byteOffset);
 
     auto& idx_accessor = model.accessors[primitive.indices];
     auto& idx_view = model.bufferViews[idx_accessor.bufferView];
@@ -73,14 +67,11 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
     bool has_tangent = primitive.attributes.contains("TANGENT");
     f32 const* tangent_data{ nullptr };
     if (has_tangent) {
-        LOG_DEBUGF("Mesh {} has tangents.", mesh.name);
         auto& accessor = model.accessors[primitive.attributes.find("TANGENT")->second];
         VERIFY(accessor.type == TINYGLTF_TYPE_VEC4);
         auto& view = model.bufferViews[accessor.bufferView];
         auto& buffer = model.buffers[view.buffer];
         tangent_data = TRANSMUTE(const f32*, &buffer.data[view.byteOffset + accessor.byteOffset]);
-        LOG_DEBUGF("Tangent count: {}", accessor.count);
-        LOG_DEBUGF("{} {}", view.byteOffset, accessor.byteOffset);
     }
 
     std::vector<Vertex> vertices;
@@ -100,8 +91,6 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
     indices.assign(idx_data, idx_data + idx_accessor.count);
 
     if (!primitive.attributes.contains("TANGENT")) {
-        LOG_WARNF("Mesh primitive[0] does not contain tangents.");
-
         // struct UserData {
         //     std::vector<u32>* Indices;
         //     std::vector<Vertex>* Vertices;

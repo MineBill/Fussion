@@ -47,16 +47,16 @@ ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
 void ViewportWindow::OnDraw()
 {
     ZoneScoped;
-    static bool gizmo_activated = false;
 
     // This is used to track whether the gizmo was draw the previous frame or not.
-    static auto draw_gizmo = false;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(0, 0));
     bool opened = ImGui::Begin("Viewport");
     ImGui::PopStyleVar();
 
     if (opened) {
+        static auto draw_gizmo = false;
+
         m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
         m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
@@ -197,7 +197,8 @@ void ViewportWindow::OnDraw()
         ImGuizmo::SetRect(m_ContentOriginScreen.X, m_ContentOriginScreen.Y, m_Size.X, m_Size.Y);
 
         draw_gizmo = false;
-        if (auto& selection = m_Editor->GetSceneTree().GetSelection(); selection.size() == 1 && m_Editor->GetPlayState() == Editor::PlayState::Editing) {
+        if (auto& selection = Editor::GetSceneTree().GetSelection(); selection.size() == 1 && m_Editor->GetPlayState() == Editor::PlayState::Editing) {
+            static bool gizmo_activated = false;
             draw_gizmo = true;
             for (auto const& id : selection | std::views::keys) {
                 auto const& entity = m_Editor->GetActiveScene()->GetEntity(id);

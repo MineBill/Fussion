@@ -101,7 +101,7 @@ void Editor::OnEnable() {}
 
 void Editor::OnDisable() {}
 
-void Editor::Save()
+void Editor::Save() const
 {
     Project::ActiveProject()->Save();
 
@@ -261,7 +261,6 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SetItemTooltip("Pause");
 
-        auto min_step_button = ImGui::GetItemRectMin();
         auto max = ImGui::GetItemRectMax();
 
         list->ChannelsSetCurrent(0);
@@ -478,14 +477,13 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
             break;
         default:
             UNIMPLEMENTED;
-            break;
         }
     } else {
         LoadScene();
     }
 }
 
-void Editor::OnViewportResized(Vector2 new_size)
+void Editor::OnViewportResized(Vector2 const& new_size)
 {
     ZoneScoped;
 

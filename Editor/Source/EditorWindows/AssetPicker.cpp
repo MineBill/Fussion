@@ -1,9 +1,11 @@
 ﻿#include "EditorPCH.h"
+
 #include "AssetPicker.h"
 #include "EditorUI.h"
 #include "ImGuiHelpers.h"
-#include "Fussion/Assets/AssetManager.h"
 #include "Project/Project.h"
+
+#include <Fussion/Assets/AssetManager.h>
 
 void AssetPicker::Update()
 {
@@ -32,9 +34,6 @@ void AssetPicker::Update()
         auto& style = EditorStyle::GetStyle();
         for (auto const& [handle, name, virt] : m_Entries) {
             Vector2 size(thumbnail_size, thumbnail_size);
-
-            // size.X = style.EditorIcons[EditorIcon::Folder]->Spec().Aspect() * size.Y;
-            // ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
 
             Fussion::Texture2D* texture = style.EditorIcons[EditorIcon::GenericAsset].get();
             if (m_Type == Fussion::AssetType::Texture2D) {
@@ -70,7 +69,7 @@ void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& i
 
     auto& registry = Project::ActiveProject()->GetAssetManager()->GetRegistry();
 
-    registry.Access([&](EditorAssetManager::Registry& reg) {
+    registry.Access([&](EditorAssetManager::Registry const& reg) {
         for (auto const& [handle, metadata] : reg) {
             if (metadata.Type == type) {
                 m_Entries.push_back({ handle, metadata.Name, metadata.IsVirtual });

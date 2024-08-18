@@ -6,8 +6,6 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/OS/FileWatcher.h"
 #include "Fussion/Core/ThreadProtected.h"
-#include "Fussion/Serialization/json.hpp"
-#include <Fussion/Core/Concepts.h>
 
 #include <filesystem>
 #include <unordered_map>
@@ -44,7 +42,7 @@ class WorkerPool final {
 public:
     explicit WorkerPool(EditorAssetManager* asset_manager);
 
-    void Load(EditorAssetMetadata metadata);
+    void Load(EditorAssetMetadata const& metadata);
 
     Fussion::ThreadProtected<std::queue<Ref<Fussion::Asset>>> LoadedAssets{};
 private:
@@ -136,8 +134,6 @@ public:
 
 private:
     void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
-
-    void ThreadWorkerFunction();
 
     Fussion::ThreadProtected<Registry> m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};

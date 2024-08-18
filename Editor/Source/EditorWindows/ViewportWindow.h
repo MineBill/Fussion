@@ -17,8 +17,8 @@ public:
 
     EDITOR_WINDOW(ViewportWindow)
 
-    void OnDraw() override;
-    void OnEvent(Fussion::Event& event) override;
+    virtual void OnDraw() override;
+    virtual void OnEvent(Fussion::Event& event) override;
 
     Vector2 GetSize() const { return m_Size; }
 
