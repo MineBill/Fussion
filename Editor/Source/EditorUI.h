@@ -90,14 +90,14 @@ namespace EUI {
             ImGuiTableFlags_Resizable |
             ImGuiTableFlags_NoSavedSettings |
             ImGuiTableFlags_SizingStretchSame;
-        ImGui::BeginTable(name.data(), 2, table_flags);
+        auto table_opened = ImGui::BeginTable(name.data(), 2, table_flags);
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(name.data());
 
         ImGui::TableNextColumn();
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
-        defer (ImGui::PopStyleVar());
+        defer(ImGui::PopStyleVar());
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         if constexpr (std::is_same_v<T, f32> || std::is_same_v<T, f64>) {
@@ -138,7 +138,9 @@ namespace EUI {
             static_assert(false, "Not implemented!");
         }
 
-        ImGui::EndTable();
+        if (table_opened) {
+            ImGui::EndTable();
+        }
 
         return modified;
     }
@@ -150,7 +152,7 @@ namespace EUI {
             ImGuiTableFlags_Resizable |
             ImGuiTableFlags_NoSavedSettings |
             ImGuiTableFlags_SizingStretchSame;
-        ImGui::BeginTable(name.data(), 2, table_flags);
+        auto table_opened = ImGui::BeginTable(name.data(), 2, table_flags);
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(name.data());
 
@@ -160,7 +162,9 @@ namespace EUI {
 
         data();
 
-        ImGui::EndTable();
+        if (table_opened) {
+            ImGui::EndTable();
+        }
     }
 
     struct ButtonParams {
@@ -298,7 +302,6 @@ namespace EUI {
 
         if (params.UseChild) {
             ImGui::BeginChild("##inner_child", {}, ImGuiChildFlags_Border);
-
         }
         if (o) {
             func();
