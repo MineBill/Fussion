@@ -1,7 +1,7 @@
-﻿#include <GLFW/glfw3.h>
-#include "Log/Log.h"
+﻿#include "Log/Log.h"
 #include "OS/System.h"
 
+#include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <dwmapi.h>

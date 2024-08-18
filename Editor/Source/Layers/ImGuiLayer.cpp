@@ -5,7 +5,6 @@
 #include "Fussion/RHI/Device.h"
 #include "Fussion/Core/Application.h"
 #include "Vulkan/VulkanDevice.h"
-#include <GLFW/glfw3.h>
 
 #include <imgui.h>
 #include "ImGuizmo.h"
@@ -207,7 +206,7 @@ void ImGuiLayer::Begin()
     ImGuizmo::BeginFrame();
 }
 
-void ImGuiLayer::End(const Ref<Fussion::RHI::CommandBuffer>& cmd)
+void ImGuiLayer::End(Ref<Fussion::RHI::CommandBuffer> const& cmd)
 {
     ZoneScoped;
     ImGui::Render();

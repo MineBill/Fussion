@@ -1,8 +1,6 @@
 ﻿#pragma once
 
 namespace Fussion::System {
-
-bool PrefersDark();
-bool PrefersLight();
-
+    bool PrefersDark();
+    bool PrefersLight();
 }
