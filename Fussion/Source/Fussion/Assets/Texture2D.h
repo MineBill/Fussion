@@ -12,6 +12,7 @@ namespace Fussion {
         RHI::ImageFormat Format = RHI::ImageFormat::R8G8B8A8_UNORM;
         RHI::WrapMode Wrap = RHI::WrapMode::Repeat;
         bool IsNormalMap{ false };
+        bool GenerateMipmaps{ true };
 
         [[nodiscard]]
         f32 Aspect() const { return CAST(f32, Width) / CAST(f32, Height); }

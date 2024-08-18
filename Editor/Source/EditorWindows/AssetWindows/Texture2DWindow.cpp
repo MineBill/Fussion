@@ -20,6 +20,7 @@ void Texture2DWindow::OnDraw(f32 delta)
         modified |= EUI::Property("Wrapping", &settings->Wrap);
         modified |= EUI::Property("Filter", &settings->Filter);
         modified |= EUI::Property("Format", &settings->Format);
+        modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
         if (modified) {
             Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
         }
