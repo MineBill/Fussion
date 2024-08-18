@@ -5,14 +5,12 @@
 #include "Assets/AssetRef.h"
 #include "Assets/ShaderAsset.h"
 #include "Core/Time.h"
-#include "Fussion/RHI/Shader.h"
 #include "OS/FileSystem.h"
 #include "RHI/Device.h"
 #include "RHI/ShaderCompiler.h"
 #include "Fussion/Math/Color.h"
 
 #include <ranges>
-#include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
 namespace Fussion {
@@ -150,7 +148,7 @@ namespace Fussion {
         }
     }
 
-    void Debug::Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> global_resource)
+    void Debug::Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> const& global_resource)
     {
         auto line_count = g_DebugData.Points.size() + g_DebugData.TimedPoints.size();
         if (line_count == 0) {
@@ -166,14 +164,14 @@ namespace Fussion {
 
         cmd->BindResource(global_resource, shader, 0);
         cmd->BindBuffer(g_DebugData.VertexBuffer);
-        cmd->Draw(line_count, 1);
+        cmd->Draw(CAST(u32, line_count), 1);
     }
 
     void Debug::Reset()
     {
         g_DebugData.Points.clear();
 
-        for (s32 i = g_DebugData.TimedPoints.size() - 1; i >= 0; i--) {
+        for (s32 i = CAST(s32, g_DebugData.TimedPoints.size()) - 1; i >= 0; i--) {
             auto& timer = g_DebugData.Timers[i];
             timer -= Time::DeltaTime();
             if (timer <= 0) {

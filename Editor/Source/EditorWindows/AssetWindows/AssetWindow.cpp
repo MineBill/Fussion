@@ -10,7 +10,7 @@ using namespace Fussion;
 
 void AssetWindow::Draw(f32 delta)
 {
-    ImGui::PushID(m_AssetHandle);
+    ImGui::PushID(CAST(s32, m_AssetHandle));
     defer(ImGui::PopID());
     auto window_name = fmt::format("Asset Window##{}", m_AssetHandle);
     EUI::Window(window_name, [&] {

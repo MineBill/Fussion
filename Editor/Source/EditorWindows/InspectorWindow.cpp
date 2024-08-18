@@ -133,7 +133,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     auto line_height = ImGui::GetFont()->FontSize + ImGui::GetStyle().FramePadding.y * 2.0f;
 
     ImGui::SameLine(width - line_height * 0.75f);
-    ImGui::PushID(component_type.get_hash());
+    ImGui::PushID(CAST(s32, component_type.get_hash()));
     EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
     }, { .Size = Vector2{ 18, 18 } });

@@ -47,6 +47,9 @@ void Editor::OnStart()
     m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
     m_Watcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
         using namespace std::chrono_literals;
+        (void)path;
+        (void)type;
+
         // Wait a bit for the file lock to be released.
         std::this_thread::sleep_for(100ms);
         ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());

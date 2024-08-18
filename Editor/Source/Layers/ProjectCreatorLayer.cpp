@@ -19,6 +19,7 @@ void ProjectCreatorLayer::OnStart()
 
 void ProjectCreatorLayer::OnUpdate(f32 delta)
 {
+    (void)delta;
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);

@@ -68,7 +68,6 @@ public:
         } else {
             static_assert(false, "Unsupported type for option, only 'std::string', 'f32' and 'bool' are supported");
         }
-        return std::nullopt;
     }
 
     auto Parse() -> void;

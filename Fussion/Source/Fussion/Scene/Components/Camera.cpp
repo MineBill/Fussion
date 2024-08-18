@@ -9,6 +9,7 @@ namespace Fussion {
 #if FSN_DEBUG_DRAW
     void Camera::OnDebugDraw(DebugDrawContext& ctx)
     {
+        (void)ctx;
         auto aspect = Application::Instance()->GetWindow().GetSize().Aspect();
         m_Perspective = glm::perspective(glm::radians(Fov), aspect, Near, Far);
         auto corners = Math::GetFrustumCornersWorldSpace(m_Perspective, m_Owner->Transform.GetCameraMatrix());
@@ -31,8 +32,6 @@ namespace Fussion {
         Debug::DrawLine(corners[5], corners[1], 0.0, color);
     }
 #endif
-
-
 
     void Camera::OnUpdate(f32 delta)
     {

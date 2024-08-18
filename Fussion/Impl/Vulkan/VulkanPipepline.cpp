@@ -152,6 +152,7 @@ VkFormat VertexElementTypeToVulkan(ElementType type)
     case Mat4:
         return VK_FORMAT_R32G32B32A32_SFLOAT;
     }
+    UNREACHABLE;
 }
 
 std::vector<VkVertexInputAttributeDescription> VertexVulkanAttributeDescription(VertexAttributeLayout const& layout)

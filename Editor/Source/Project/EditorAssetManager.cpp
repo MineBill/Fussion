@@ -23,7 +23,7 @@ WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_AssetManager(asset_
 {
     auto max_threads = std::thread::hardware_concurrency();
     LOG_INFOF("Creating {} worker threads for background asset loading.", max_threads);
-    for (auto i = 0; i < max_threads; i++) {
+    for (u32 i = 0; i < max_threads; i++) {
         m_Workers.emplace_back(&WorkerPool::Work, this, i);
     }
 }

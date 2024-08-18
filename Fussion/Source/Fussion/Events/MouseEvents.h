@@ -1,22 +1,9 @@
 ﻿#pragma once
 #include "Event.h"
 #include "Fussion//Core/Types.h"
-#include "Fussion/Core/Core.h"
+#include <Fussion/Math/Vector2.h>
 
-namespace Fussion
-{
-
-    class MouseMoved final : public Event
-    {
-    public:
-        EVENT(MouseMoved)
-        MouseMoved(f64 x, f64 y, f64 rel_x, f64 rel_y) : X(x), Y(y), RelX(rel_x), RelY(rel_y)
-        {
-        }
-
-        f64 X{0}, Y{0}, RelX{0}, RelY{0};
-    };
-
+namespace Fussion {
     enum class MouseButton {
         None,
         Left,
@@ -29,53 +16,48 @@ namespace Fussion
         Button8,
     };
 
-    class MouseButtonPressed final : public Event
-    {
+    class MouseMoved final : public Event {
+    public:
+        EVENT(MouseMoved)
+        MouseMoved(f64 x, f64 y, f64 rel_x, f64 rel_y) : X(x), Y(y), RelX(rel_x), RelY(rel_y) {}
+
+        f64 X{ 0 }, Y{ 0 }, RelX{ 0 }, RelY{ 0 };
+    };
+
+    class MouseButtonPressed final : public Event {
     public:
         EVENT(MouseButtonPressed)
-        explicit MouseButtonPressed(MouseButton button) : Button(button)
-        {
-        }
+        explicit MouseButtonPressed(MouseButton button) : Button(button) {}
 
         MouseButton Button{};
     };
 
-    class MouseButtonReleased final : public Event
-    {
+    class MouseButtonReleased final : public Event {
     public:
         EVENT(MouseButtonReleased)
-        explicit MouseButtonReleased(MouseButton b) : Button(b)
-        {
-        }
+        explicit MouseButtonReleased(MouseButton b) : Button(b) {}
 
         MouseButton Button{};
     };
 
-    class MouseButtonDown final : public Event
-    {
+    class MouseButtonDown final : public Event {
     public:
         EVENT(MouseButtonDown)
-        explicit MouseButtonDown(MouseButton button) : Button(button)
-        {
-        }
+        explicit MouseButtonDown(MouseButton button) : Button(button) {}
 
         MouseButton Button{};
     };
 
-    class MouseWheelMoved final : public Event
-    {
+    class MouseWheelMoved final : public Event {
     public:
         EVENT(MouseWheelMoved)
-        explicit MouseWheelMoved(float x, float y) : X(x), Y(y)
+        explicit MouseWheelMoved(float x, float y) : X(x), Y(y) {}
+
+        Vector2 Offset() const
         {
+            return { X, Y };
         }
 
-        require_results std::array<f32, 2> Offset() const
-        {
-            return {X, Y};
-        }
-
-        f32 X, Y{0.0f};
+        f32 X, Y{ 0.0f };
     };
-
 }

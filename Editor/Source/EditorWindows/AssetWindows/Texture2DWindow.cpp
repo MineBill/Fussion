@@ -8,6 +8,7 @@ using namespace Fussion;
 
 void Texture2DWindow::OnDraw(f32 delta)
 {
+    (void)delta;
     auto size = ImGui::GetContentRegionAvail();
 
     auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);

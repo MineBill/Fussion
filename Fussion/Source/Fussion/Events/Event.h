@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <functional>
 
 #define EVENT(name)                 \
@@ -14,55 +13,54 @@
     }
 
 namespace Fussion {
-enum class EventType {
-    OnKeyPressed = 0,
-    OnKeyReleased,
-    OnKeyDown,
-    WindowClose,
-    WindowResized,
-    WindowMoved,
-    WindowMinimized,
-    WindowMaximized,
-    WindowGainedFocus,
-    WindowLostFocus,
-    MouseMoved,
-    MouseButtonPressed,
-    MouseButtonReleased,
-    MouseButtonDown,
-    MouseWheelMoved,
-};
+    enum class EventType : u8 {
+        OnKeyPressed = 0,
+        OnKeyReleased,
+        OnKeyDown,
+        WindowClose,
+        WindowResized,
+        WindowMoved,
+        WindowMinimized,
+        WindowMaximized,
+        WindowGainedFocus,
+        WindowLostFocus,
+        MouseMoved,
+        MouseButtonPressed,
+        MouseButtonReleased,
+        MouseButtonDown,
+        MouseWheelMoved,
+    };
 
-class Event {
-    friend class EventDispatcher;
+    class Event {
+        friend class EventDispatcher;
 
-public:
-    bool Handled{ false };
+    public:
+        bool Handled{ false };
 
-    virtual ~Event() = default;
+        virtual ~Event() = default;
 
-    [[nodiscard]]
-    virtual EventType Type() const = 0;
-};
+        [[nodiscard]]
+        virtual EventType Type() const = 0;
+    };
 
-using EventFnType = std::function<bool(Event&)>;
+    using EventFnType = std::function<bool(Event&)>;
 
-class EventDispatcher {
-    Event* m_Event;
+    class EventDispatcher {
+        Event* m_Event;
 
-public:
-    template<std::derived_from<Event> T>
-    using EventFn = std::function<bool (T&)>;
+    public:
+        template<std::derived_from<Event> T>
+        using EventFn = std::function<bool (T&)>;
 
-    explicit EventDispatcher(Event& e) : m_Event(&e) {}
+        explicit EventDispatcher(Event& e) : m_Event(&e) {}
 
-    template<std::derived_from<Event> T>
-    void Dispatch(EventFn<T> fn)
-    {
-        if (m_Event->Handled || m_Event->Type() != T::StaticType())
-            return;
+        template<std::derived_from<Event> T>
+        void Dispatch(EventFn<T> fn)
+        {
+            if (m_Event->Handled || m_Event->Type() != T::StaticType())
+                return;
 
-        m_Event->Handled = fn(dynamic_cast<T&>(*m_Event));
-    }
-};
-
+            m_Event->Handled = fn(dynamic_cast<T&>(*m_Event));
+        }
+    };
 } // namespace Fussion
