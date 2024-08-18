@@ -77,7 +77,7 @@ void EditorStyle::Initialize()
     {
         auto style = WindowStyle();
         style.Border = true;
-        style.Padding = { 10, 10 };
+        style.Padding = { 5, 5 };
         WindowStyles[WindowStyleAssetPreview] = style;
     }
 

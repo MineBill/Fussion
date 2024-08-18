@@ -288,7 +288,7 @@ void Editor::OnUpdate(f32 delta)
     m_ContentBrowser->OnDraw();
 
     for (auto const& asset_window : m_AssetWindows | std::views::values) {
-        asset_window->OnDraw(delta);
+        asset_window->Draw(delta);
     }
 
     std::erase_if(m_AssetWindows, [](auto const& pair) {

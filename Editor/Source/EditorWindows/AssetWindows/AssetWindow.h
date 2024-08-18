@@ -7,6 +7,8 @@ public:
     explicit AssetWindow(Fussion::AssetHandle handle): m_AssetHandle(handle) {}
     virtual ~AssetWindow() = default;
 
+    void Draw(f32 delta);
+
     /**
      * Called every frame.
      * @param delta Delta time.
