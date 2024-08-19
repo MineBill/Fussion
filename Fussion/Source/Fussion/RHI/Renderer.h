@@ -2,7 +2,6 @@
 #include "Device.h"
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Assets/PbrMaterial.h"
-#include "Fussion/Window.h"
 
 namespace Fussion::RHI {
     class Renderer {

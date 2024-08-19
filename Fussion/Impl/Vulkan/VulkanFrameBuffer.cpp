@@ -6,10 +6,10 @@
 #include "Math/Rect.h"
 
 namespace Fussion::RHI {
-    VulkanFrameBuffer::VulkanFrameBuffer([[maybe_unused]] VulkanDevice* device, Ref<RenderPass> render_pass, FrameBufferSpecification spec)
+    VulkanFrameBuffer::VulkanFrameBuffer([[maybe_unused]] VulkanDevice* device, Ref<RenderPass> const& render_pass, FrameBufferSpecification const& spec)
         : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
     {
-        for (const auto attachment : spec.Attachments) {
+        for (auto const& attachment : spec.Attachments) {
             if (Image::IsDepthFormat(attachment.Format)) {
                 m_DepthFormat = attachment;
             } else {
@@ -21,9 +21,9 @@ namespace Fussion::RHI {
 
     VulkanFrameBuffer::VulkanFrameBuffer(
         [[maybe_unused]] VulkanDevice* device,
-        Ref<RenderPass> render_pass,
-        std::vector<Ref<Image>> images,
-        FrameBufferSpecification spec)
+        Ref<RenderPass> const& render_pass,
+        std::vector<Ref<Image>> const& images,
+        FrameBufferSpecification const& spec)
         : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
     {
         m_Specification.DontCreateImages = true;
@@ -40,13 +40,13 @@ namespace Fussion::RHI {
 
     VulkanFrameBuffer::VulkanFrameBuffer(
         [[maybe_unused]] VulkanDevice* device,
-        Ref<RenderPass> render_pass,
-        std::vector<Ref<ImageView>> images,
-        FrameBufferSpecification spec)
+        Ref<RenderPass> const& render_pass,
+        std::vector<Ref<ImageView>> const& images,
+        FrameBufferSpecification const& spec)
         : m_RenderPass(render_pass->As<VulkanRenderPass>()), m_Specification(spec)
     {
         m_Specification.DontCreateImages = true;
-        for (const auto image : images) {
+        for (auto const& image : images) {
             if (Image::IsDepthFormat(image->GetSpec().Format)) {
                 m_DepthImageView = image->As<VulkanImageView>();
             } else {
@@ -84,7 +84,7 @@ namespace Fussion::RHI {
         VERIFY(attachment < m_ColorAttachments.size(), "Attachment index is bigger than the amount of attachments in the framebuffer");
 
         auto& attachment_spec = m_ColorAttachments[attachment]->GetSpec();
-        if (!Rect::FromSize(attachment_spec.Width, attachment_spec.Height).Contains(position)) {
+        if (!Rect::FromSize(CAST(f32, attachment_spec.Width), CAST(f32, attachment_spec.Height)).Contains(position)) {
             return Error::PositionOutOfBounds;
         }
 

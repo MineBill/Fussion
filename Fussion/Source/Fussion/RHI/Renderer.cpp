@@ -39,16 +39,16 @@ namespace Fussion::RHI {
 
     auto Renderer::Begin() -> std::tuple<Ref<CommandBuffer>, u32>
     {
-        auto [image, ok] = s_Renderer->m_Swapchain->GetNextImage();
-        if (!ok) {
+        auto image = s_Renderer->m_Swapchain->GetNextImage();
+        if (image.IsEmpty()) {
             auto& window = Application::Instance()->GetWindow();
             // @note Is there a better way to handle resizing?
             Device::Instance()->WaitIdle();
             s_Renderer->m_Swapchain->Resize(window.GetWidth(), window.GetHeight());
             return {};
         }
-        s_Renderer->m_CurrentImage = image;
-        return { s_Renderer->m_CommandBuffers.at(image), image };
+        s_Renderer->m_CurrentImage = *image;
+        return { s_Renderer->m_CommandBuffers.at(*image), *image };
     }
 
     void Renderer::End(Ref<CommandBuffer> const& cmd)

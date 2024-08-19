@@ -3,7 +3,6 @@
 #include "Fussion/RHI/Image.h"
 
 namespace Fussion {
-
     class Texture2DMetadata final : public AssetMetadata {
         META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:

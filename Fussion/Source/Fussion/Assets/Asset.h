@@ -1,11 +1,9 @@
 ﻿#pragma once
-#include "Fussion/Core/Core.h"
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/ReflRegistrar.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
 
 namespace Fussion {
-
     enum class [[nodiscard]] AssetType {
         Invalid,
 

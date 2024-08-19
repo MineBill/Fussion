@@ -5,7 +5,6 @@
 #include "FrameBuffer.h"
 #include "Image.h"
 #include "Instance.h"
-#include "Pipeline.h"
 #include "RenderPass.h"
 #include "Sampler.h"
 #include "Shader.h"
@@ -35,8 +34,6 @@ public:
     virtual Ref<RenderPass> CreateRenderPass(RenderPassSpecification spec) = 0;
     virtual Ref<CommandPool> CreateCommandPool() = 0;
 
-    // virtual Ref<CommandBuffer> CreateCommandBuffer(CommandBufferSpecification spec) = 0;
-    // virtual std::vector<Ref<CommandBuffer>> CreateCommandBuffers(s32 count, CommandBufferSpecification spec) = 0;
     virtual Ref<Sampler> CreateSampler(SamplerSpecification spec) = 0;
     virtual Ref<Image> CreateImage(ImageSpecification spec) = 0;
     virtual Ref<ImageView> CreateImageView(Ref<Image> image, ImageViewSpecification spec) = 0;

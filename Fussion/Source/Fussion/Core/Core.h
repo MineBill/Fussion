@@ -30,10 +30,6 @@
 #define CAST(type, expression) static_cast<type>(expression)
 #define TRANSMUTE(type, expression) reinterpret_cast<type>(expression)
 
-#define require_results [[nodiscard]]
-#define MUSTUSE [[nodiscard]]
-#define DEPRECATED(msg) [[deprecated(msg)]]
-
 namespace Fussion {
     template<typename F>
     struct Defer {

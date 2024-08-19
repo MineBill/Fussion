@@ -240,7 +240,7 @@ namespace Fussion {
             r = m_ScriptEngine->RegisterGlobalFunction("bool IsKeyUp(Keys key)", asFUNCTION(Input::IsKeyUp), asCALL_CDECL); VERIFY(r >= 0);
 
             auto is_any_key_down = [](CScriptArray* keys) -> bool {
-                for (auto i = 0; i < keys->GetSize(); i++) {
+                for (u32 i = 0; i < keys->GetSize(); i++) {
                     if (auto key = CAST(Keys*, keys->At(i)); Input::IsKeyDown(*key)) {
                         return true;
                     }
@@ -314,7 +314,7 @@ namespace Fussion {
             auto default_namespace = m_ScriptEngine->GetDefaultNamespace();
             defer(m_ScriptEngine->SetDefaultNamespace(default_namespace));
 
-            auto r = m_ScriptEngine->SetDefaultNamespace("Debug"); VERIFY(r >= 0);
+            r = m_ScriptEngine->SetDefaultNamespace("Debug"); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("void DrawLine(Vector3 start, Vector3 end, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawLine), asCALL_CDECL, this); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawCube), asCALL_CDECL, this); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("void DrawSphere(Vector3 center, Vector3 euler_angles, float radius, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawSphere), asCALL_CDECL, this); VERIFY(r >= 0);

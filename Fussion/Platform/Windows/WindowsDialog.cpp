@@ -53,8 +53,8 @@ namespace Fussion::Dialogs {
 
         a |= MB_SYSTEMMODAL;
 
-        auto const handle = glfwGetWin32Window(TRANSMUTE(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
-        int const answer = MessageBoxW(handle, w_message.c_str(), w_title.c_str(), a);
+        auto handle = glfwGetWin32Window(TRANSMUTE(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
+        int answer = MessageBoxW(handle, w_message.c_str(), w_title.c_str(), a);
         switch (answer) {
         case IDOK:
             return MessageButton::Ok;
@@ -129,6 +129,8 @@ namespace Fussion::Dialogs {
 
     std::filesystem::path ShowDirectoryPicker(std::filesystem::path const& base)
     {
+        // TODO: base path is currently ignored.
+        (void)base;
         LPWSTR name;
         IFileDialog* pfd;
         if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pfd)))) {

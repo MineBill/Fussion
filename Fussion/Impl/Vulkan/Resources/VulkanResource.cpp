@@ -19,7 +19,7 @@ namespace Fussion::RHI {
         return flags;
     }
 
-    VulkanResourceLayout::VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources)
+    VulkanResourceLayout::VulkanResourceLayout(VulkanDevice const* device, std::span<ResourceUsage> resources)
     {
         std::vector<VkDescriptorSetLayoutBinding> bindings;
 
@@ -34,7 +34,7 @@ namespace Fussion::RHI {
             bindings.push_back(binding);
         }
 
-        const auto ci = VkDescriptorSetLayoutCreateInfo{
+        auto ci = VkDescriptorSetLayoutCreateInfo{
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
             .bindingCount = CAST(u32, bindings.size()),
             .pBindings = bindings.data()

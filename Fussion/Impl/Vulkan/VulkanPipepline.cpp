@@ -241,6 +241,7 @@ Ref<VulkanPipeline> VulkanPipeline::Create(
 
     std::vector<VkPipelineColorBlendAttachmentState> blend_attachment_states;
     for (auto rspec = render_pass->GetSpec(); auto const& thing : rspec.SubPasses[0].ColorAttachments) {
+        (void)thing;
         blend_attachment_states.push_back(config.ColorBlendAttachment);
     }
 

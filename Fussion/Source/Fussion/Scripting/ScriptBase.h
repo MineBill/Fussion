@@ -3,32 +3,31 @@
 #include "Scene/Components/ScriptComponent.h"
 
 namespace Fussion {
-class Entity;
+    class Entity;
 
-class ScriptBase {
-public:
-    explicit ScriptBase(Entity* owner);
-    ScriptBase(Entity* owner, asIScriptObject* object);
+    class ScriptBase {
+    public:
+        explicit ScriptBase(Entity* owner);
+        ScriptBase(Entity* owner, asIScriptObject* object);
 
-    static ScriptBase* Create(Entity* owner);
+        static ScriptBase* Create(Entity* owner);
 
 #pragma region Script Override Methods
-    void OnStart();
-    void OnUpdate(f32 delta);
+        void OnStart();
+        void OnUpdate(f32 delta);
 #pragma endregion
 
-    Entity* GetOwner() const;
+        Entity* GetOwner() const;
 
-    void AddRef();
-    void Release();
+        void AddRef();
+        void Release();
 
-    ScriptBase& operator=(ScriptBase const& s);
+        ScriptBase& operator=(ScriptBase const& s);
 
-private:
-    Entity* m_Owner{};
-    asIScriptObject* m_ScriptObject{};
+    private:
+        Entity* m_Owner{};
+        asIScriptObject* m_ScriptObject{};
 
-    u32 m_RefCount{ 1 };
-};
-
+        u32 m_RefCount{ 1 };
+    };
 }

@@ -9,17 +9,17 @@ class VulkanImage;
 
 class VulkanFrameBuffer : public FrameBuffer {
 public:
-    VulkanFrameBuffer(VulkanDevice* device, Ref<RenderPass> render_pass, FrameBufferSpecification spec);
+    VulkanFrameBuffer(VulkanDevice* device, Ref<RenderPass> const& render_pass, FrameBufferSpecification const& spec);
     VulkanFrameBuffer(
         VulkanDevice* device,
-        Ref<RenderPass> render_pass,
-        std::vector<Ref<Image>> images,
-        FrameBufferSpecification spec);
+        Ref<RenderPass> const& render_pass,
+        std::vector<Ref<Image>> const& images,
+        FrameBufferSpecification const& spec);
     VulkanFrameBuffer(
         VulkanDevice* device,
-        Ref<RenderPass> render_pass,
-        std::vector<Ref<ImageView>> images,
-        FrameBufferSpecification spec);
+        Ref<RenderPass> const& render_pass,
+        std::vector<Ref<ImageView>> const& images,
+        FrameBufferSpecification const& spec);
 
     virtual void Destroy() override;
     virtual auto GetRawHandle() -> void* override { return m_Handle; }

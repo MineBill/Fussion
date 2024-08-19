@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "VulkanInstance.h"
-#include "Fussion/Log/Log.h"
-#include "Fussion/Core/Core.h"
-#include "Fussion/RHI/Device.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/Core/ThreadProtected.h"
-#include <Fussion/Core/Maybe.h>
 
-#include <optional>
-#include "volk.h"
+#include "Fussion/Core/Types.h"
+#include <Fussion/Core/ThreadProtected.h>
+#include <Fussion/Core/Maybe.h>
+#include "Fussion/Log/Log.h"
+#include "Fussion/RHI/Device.h"
+#include <Fussion/RHI/Pipeline.h>
+
 #include "VmaUsage.h"
+#include "volk.h"
 
 #if OS_WINDOWS
 // Fuck. You. Windows.
@@ -18,14 +18,14 @@
 
 namespace Fussion::RHI {
     struct QueueFamilyIndices {
-        std::optional<u32> GraphicsFamily;
-        std::optional<u32> PresentFamily;
+        Maybe<u32> GraphicsFamily;
+        Maybe<u32> PresentFamily;
         Maybe<u32> TransferFamily;
 
         [[nodiscard]]
         bool IsComplete() const
         {
-            return GraphicsFamily.has_value() && PresentFamily.has_value() && TransferFamily.HasValue();
+            return GraphicsFamily.HasValue() && PresentFamily.HasValue() && TransferFamily.HasValue();
         }
 
         [[nodiscard]]
@@ -126,7 +126,7 @@ namespace Fussion::RHI {
         //    Vulkan Specific
         // ======================
 
-        auto CreatePipelineLayout(std::vector<Ref<ResourceLayout>> layouts, PipelineLayoutSpecification spec) -> Ref<PipelineLayout>;
+        auto CreatePipelineLayout(std::vector<Ref<ResourceLayout>> const& layouts, PipelineLayoutSpecification const& spec) -> Ref<PipelineLayout>;
         auto CreatePipeline(
             Ref<RenderPass> const& render_pass,
             Ref<Shader> const& shader,

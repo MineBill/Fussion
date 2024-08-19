@@ -19,13 +19,12 @@ public:
     explicit ArgParser(std::vector<Token> const& tokens)
         : SimpleParser(tokens)
     {
-        // for (auto const& token : tokens) {
-        //     LOG_INFOF("Token {}", magic_enum::enum_name(token.GetType()));
-        // }
     }
 
     virtual void OnError(Token token, std::string const& reason) override
     {
+        (void)token;
+        (void)reason;
         LOG_ERRORF("");
     }
 

@@ -10,7 +10,7 @@ namespace Fussion::RHI {
     class VulkanResourceLayout final : public ResourceLayout {
     public:
         VulkanResourceLayout() = default;
-        VulkanResourceLayout(VulkanDevice* device, std::span<ResourceUsage> resources);
+        VulkanResourceLayout(VulkanDevice const* device, std::span<ResourceUsage> resources);
         virtual ~VulkanResourceLayout() override;
 
         virtual void Destroy() override;
@@ -26,7 +26,7 @@ namespace Fussion::RHI {
 
     public:
         VulkanResource() = default;
-        VulkanResource(VkDescriptorSet const handle) : m_Handle(handle) {}
+        explicit VulkanResource(VkDescriptorSet const handle) : m_Handle(handle) {}
         virtual ~VulkanResource() override;
 
         virtual void* GetRawHandle() override { return m_Handle; }

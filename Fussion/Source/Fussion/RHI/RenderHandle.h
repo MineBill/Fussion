@@ -3,40 +3,43 @@
 #include "Fussion/Core/Types.h"
 
 namespace Fussion::RHI {
-class RenderHandle : public std::enable_shared_from_this<RenderHandle> {
-public:
-    RenderHandle();
-    virtual ~RenderHandle() = default;
+    class RenderHandle : public std::enable_shared_from_this<RenderHandle> {
+    public:
+        RenderHandle();
+        virtual ~RenderHandle() = default;
 
-    require_results bool Equals(RenderHandle const& other) const;
-    require_results bool Equals(Ref<RenderHandle> const& other) const;
+        [[nodiscard]]
+        bool Equals(RenderHandle const& other) const;
 
-    /**
-     * Helper function to downcast to backend-specific types.
-     * @tparam T
-     * @return
-     */
-    template<class T>
-    Ref<T> As()
-    {
-        return std::dynamic_pointer_cast<T>(shared_from_this());
-    }
+        [[nodiscard]]
+        bool Equals(Ref<RenderHandle> const& other) const;
 
-    template<class T>
-    Ref<T> As() const
-    {
-        return std::dynamic_pointer_cast<T>(shared_from_this());
-    }
+        /**
+         * Helper function to downcast to backend-specific types.
+         * @tparam T
+         * @return
+         */
+        template<class T>
+        Ref<T> As()
+        {
+            return std::dynamic_pointer_cast<T>(shared_from_this());
+        }
 
-    template<class T>
-    T GetRenderHandle()
-    {
-        return TRANSMUTE(T, GetRawHandle());
-    }
+        template<class T>
+        Ref<T> As() const
+        {
+            return std::dynamic_pointer_cast<T>(shared_from_this());
+        }
 
-    virtual void* GetRawHandle() = 0;
+        template<class T>
+        T GetRenderHandle()
+        {
+            return TRANSMUTE(T, GetRawHandle());
+        }
 
-protected:
-    u64 m_Id{};
-};
+        virtual void* GetRawHandle() = 0;
+
+    protected:
+        u64 m_Id{};
+    };
 }
