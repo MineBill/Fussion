@@ -1,13 +1,12 @@
+#include "Core/Core.h"
 #include "Fussion/OS/Dialog.h"
+
 #include <cstdio>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <spirv_cross/spirv.hpp>
 
-#include "Core/Core.h"
-
-namespace Fussion::Dialogs
-{
+namespace Fussion::Dialogs {
     std::string ShellExecute(std::string const& command)
     {
         auto file = popen(command.c_str(), "r");
@@ -18,7 +17,7 @@ namespace Fussion::Dialogs
 
         // Remove newline
         char* end = buffer;
-        while(*end != '\n') {
+        while (*end != '\n') {
             end++;
         }
         *end = 0;
@@ -26,39 +25,48 @@ namespace Fussion::Dialogs
         return buffer;
     }
 
-    class LinuxDialog
-    {
+    class LinuxDialog {
     public:
-        virtual std::filesystem::path OpenFilePicker(std::vector<FilePickerFilter> const& filter) = 0;
-        virtual std::filesystem::path OpenDirectoryPicker() = 0;
+        virtual ~LinuxDialog() = default;
+
+        virtual auto OpenFilePicker(std::vector<FilePickerFilter> const& filters) -> std::filesystem::path = 0;
+        virtual auto OpenDirectoryPicker() -> std::filesystem::path = 0;
         virtual void ShowMessageBox(MessageBox box) = 0;
 
         void SetPath(std::string const& path)
         {
             m_Path = path;
         }
+
     protected:
         std::string m_Path;
     };
 
-    class KDialog: public LinuxDialog
-    {
+    class KDialog final : public LinuxDialog {
     public:
-        std::filesystem::path OpenDirectoryPicker() override
+        auto OpenDirectoryPicker() -> std::filesystem::path override
         {
             return ShellExecute(std::format("{} --getexistingdirectory", m_Path));
         }
 
-        std::filesystem::path OpenFilePicker(std::vector<FilePickerFilter> const& filter) override
+        auto OpenFilePicker(std::vector<FilePickerFilter> const& filters) -> std::filesystem::path override
         {
             std::string filter_string;
-            for (auto const& file : filter.FilePatterns) {
-                filter += file;
-                filter += " ";
-            }
-            std::string arg = std::format("{} ({})", filter.Name, filter_string);
+            for (size_t i = 0; i < filters.size(); i++) {
+                auto filter = filters[i];
+                filter_string += filter.Name;
+                filter_string += " (";
+                for (auto const& pattern : filter.FilePatterns) {
+                    filter_string += pattern + " ";
+                }
+                filter_string += ")";
 
-            return ShellExecute(std::format("{} --getopenfilename . \"{}\"", m_Path, arg));
+                if (i != filters.size() - 1) {
+                    filter_string += "|";
+                }
+            }
+
+            return ShellExecute(std::format("{} --getopenfilename . \"{}\"", m_Path, filter_string));
         }
 
         void ShowMessageBox(MessageBox box) override
@@ -67,8 +75,7 @@ namespace Fussion::Dialogs
         }
     };
 
-    class Zenity: public LinuxDialog
-    {
+    class Zenity : public LinuxDialog {
     public:
         std::filesystem::path OpenDirectoryPicker() override
         {
@@ -86,12 +93,11 @@ namespace Fussion::Dialogs
         }
     };
 
-    namespace
-    {
-        Ptr<LinuxDialog> g_NativeDialog{nullptr};
+    namespace {
+        Ptr<LinuxDialog> g_NativeDialog { nullptr };
     }
 
-    auto GetBinaryLocation(const char* name) -> std::optional<std::filesystem::path>
+    auto GetBinaryLocation(char const* name) -> std::optional<std::filesystem::path>
     {
         auto file = popen(std::format("/usr/bin/env whereis {}", name).c_str(), "r");
         defer(pclose(file));
@@ -101,7 +107,7 @@ namespace Fussion::Dialogs
 
         char* path = buffer + strlen(name) + 2;
         char* end = path;
-        while(*end != ' ' && *end != '\n') {
+        while (*end != ' ' && *end != '\n') {
             end++;
         }
         *end = 0;
@@ -110,7 +116,8 @@ namespace Fussion::Dialogs
 
     void CreateNativeDialog()
     {
-        if (g_NativeDialog) return;
+        if (g_NativeDialog)
+            return;
         auto kdialog = GetBinaryLocation("kdialog");
         auto zenity = GetBinaryLocation("zenity");
         LOG_DEBUGF("kdialog @ '{}'", kdialog.value_or("None").string());
@@ -142,10 +149,11 @@ namespace Fussion::Dialogs
         }
     }
 
-
     MessageButton ShowMessageBox(MessageBox data)
     {
         CreateNativeDialog();
+
+        return MessageButton::Ok;
     }
 
     std::filesystem::path ShowFilePicker(std::string_view name, FilePatternList const& supported_files)
@@ -158,13 +166,13 @@ namespace Fussion::Dialogs
 
     auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path
     {
-        return ShowFilePicker(std::vector{filter});
+        return ShowFilePicker(std::vector { filter });
     }
 
-    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filters) -> std::filesystem::path
     {
         CreateNativeDialog();
-        return g_NativeDialog->OpenFilePicker(name, supported_files);
+        return g_NativeDialog->OpenFilePicker(filters);
     }
 
     auto ShowDirectoryPicker() -> std::filesystem::path

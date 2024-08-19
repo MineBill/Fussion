@@ -67,10 +67,10 @@ void ViewportWindow::OnDraw()
                 if (Rect::FromSize(m_Size).Contains(mouse)) {
                     if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
                         if (auto id = color.Value()[0]; id != 0) {
-                            auto entity = m_Editor->GetActiveScene()->GetEntityFromLocalID(id);
-                            m_Editor->GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
+                            auto entity = Editor::GetActiveScene()->GetEntityFromLocalID(id);
+                            Editor::GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
                         } else {
-                            m_Editor->GetSceneTree().ClearSelection();
+                            Editor::GetSceneTree().ClearSelection();
                         }
                     }
                 }
@@ -91,9 +91,9 @@ void ViewportWindow::OnDraw()
             ImGui::Image(IMGUI_IMAGE(image), m_Size);
         }
 
-        if (m_Editor->GetActiveScene() == nullptr) {
+        if (Editor::GetActiveScene() == nullptr) {
             ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-            ImGuiWindowFlags window_flags =
+            constexpr ImGuiWindowFlags window_flags =
                 ImGuiWindowFlags_NoDecoration |
                 ImGuiWindowFlags_NoDocking |
                 ImGuiWindowFlags_AlwaysAutoResize |
@@ -144,7 +144,7 @@ void ViewportWindow::OnDraw()
 
         EUI::Popup("EditorCameraSettings", [&] {
             if (ImGui::BeginMenu("Camera")) {
-                EUI::Property("Speed", &m_Editor->GetCamera().Speed);
+                EUI::Property("Speed", &Editor::GetCamera().Speed);
                 ImGui::EndMenu();
             }
 
@@ -201,12 +201,12 @@ void ViewportWindow::OnDraw()
             static bool gizmo_activated = false;
             draw_gizmo = true;
             for (auto const& id : selection | std::views::keys) {
-                auto const& entity = m_Editor->GetActiveScene()->GetEntity(id);
+                auto const& entity = Editor::GetActiveScene()->GetEntity(id);
 
                 auto m = entity->Transform.GetMatrix();
                 if (ImGuizmo::Manipulate(
-                    glm::value_ptr(m_Editor->GetCamera().GetView()),
-                    glm::value_ptr(m_Editor->GetCamera().GetPerspective()),
+                    glm::value_ptr(Editor::GetCamera().GetView()),
+                    glm::value_ptr(Editor::GetCamera().GetPerspective()),
                     GizmoModeToImGuizmo(m_GizmoMode),
                     GizmoSpaceToImGuizmo(m_GizmoSpace),
                     glm::value_ptr(m))) {
@@ -227,7 +227,7 @@ void ViewportWindow::OnDraw()
                         }
                     }
 
-                    m_Editor->GetActiveScene()->SetDirty();
+                    Editor::GetActiveScene()->SetDirty();
                 } else {
                     if (gizmo_activated && !ImGuizmo::IsUsingAny()) {
                         gizmo_activated = false;

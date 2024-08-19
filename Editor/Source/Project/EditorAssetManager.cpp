@@ -111,17 +111,16 @@ EditorAssetManager::EditorAssetManager()
                 if (result.HasValue()) {
                     *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
                 }
-            }
-            break;
+            } break;
             default:
                 break;
             }
-
         }
     });
     m_EditorWatcher->Start();
-
 }
+
+EditorAssetManager::~EditorAssetManager() = default;
 
 Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 {

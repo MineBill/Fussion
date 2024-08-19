@@ -1,15 +1,16 @@
 ﻿#pragma once
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Assets/AssetManagerBase.h"
 #include "Fussion/Assets/Asset.h"
+#include "Fussion/Assets/AssetManagerBase.h"
+#include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Core/Maybe.h"
+#include "Fussion/Core/ThreadProtected.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/OS/FileWatcher.h"
-#include "Fussion/Core/ThreadProtected.h"
 
+#include <condition_variable>
 #include <filesystem>
-#include <unordered_map>
 #include <queue>
+#include <unordered_map>
 
 class EditorAssetManager;
 
@@ -65,6 +66,7 @@ public:
     using Registry = std::unordered_map<Fsn::AssetHandle, EditorAssetMetadata>;
 
     EditorAssetManager();
+    virtual ~EditorAssetManager() override;
 
     virtual auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
     virtual auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
@@ -136,7 +138,7 @@ private:
     void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
 
     Fussion::ThreadProtected<Registry> m_Registry{};
-    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
+    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets;
 
     std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
 
