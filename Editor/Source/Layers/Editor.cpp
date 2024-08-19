@@ -45,7 +45,7 @@ void Editor::OnStart()
     FileSystem::WriteEntireFile(Project::ActiveProject()->GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
 
     m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
-    m_Watcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
+    m_Watcher->RegisterListener([](std::filesystem::path const& path, FileWatcher::EventType type) {
         using namespace std::chrono_literals;
         (void)path;
         (void)type;

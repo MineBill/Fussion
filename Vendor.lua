@@ -54,6 +54,22 @@ package("fmt")
 package_end()
 add_requires("fmt")
 
+package("cpptrace")
+    add_deps("cmake")
+    set_sourcedir(path.join(os.scriptdir(), "Vendor/cpptrace-0.6.3"))
+    on_install(function (package)
+        local configs = {}
+        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
+        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+		package:add("links", "cpptrace")
+        if not package:config("shared") then
+            package:add("defines", "CPPTRACE_STATIC_DEFINE")
+        end
+        import("package.tools.cmake").install(package, configs)
+    end)
+package_end()
+add_requires("cpptrace")
+
 package("tinygltf")
     add_deps("cmake")
     set_sourcedir(path.join(os.scriptdir(), "Vendor/tinygltf-2.8.23"))

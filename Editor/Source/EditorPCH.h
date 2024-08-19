@@ -19,6 +19,8 @@
 #include <fmt/compile.h>
 #include <fmt/std.h>
 
+#include <cpptrace/cpptrace.hpp>
+
 #include <cstdint>
 #include <concepts>
 #include <functional>

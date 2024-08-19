@@ -1,20 +1,12 @@
 ﻿#include "FussionPCH.h"
 #include "Fussion/Scripting/ScriptingEngine.h"
 #include "AttributeParser.h"
-#include "Attributes/EditableAttribute.h"
 #include "Util/SimpleLexer.h"
 #include "Fussion/Scripting/AngelDumper.h"
-#include "Fussion/Scripting/ScriptBase.h"
 #include "Fussion/Core/Core.h"
 #include "Fussion/Log/Log.h"
-#include "Math/Vector2.h"
-#include "Math/Vector3.h"
-#include "Scene/Entity.h"
-#include "meta.hpp/meta_base.hpp"
 
-#include "scriptstdstring/scriptstdstring.h"
 #include "scriptbuilder/scriptbuilder.h"
-
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>

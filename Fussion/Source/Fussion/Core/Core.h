@@ -1,8 +1,7 @@
 #pragma once
 #include "Fussion/Log/Log.h"
 
-#include <source_location>
-#include <stacktrace>
+#include <cpptrace/cpptrace.hpp>
 
 #if defined(_MSC_VER)
 #define BUILTIN_TRAP_FUNCTION __debugbreak
@@ -19,12 +18,8 @@
                     LOG_ERRORF("    " __VA_ARGS__);                                                     \
                 } else {                                                                                \
                     LOG_ERRORF("    No additional information provided");                               \
-            }                                                                                           \
-            u32 i = 0;                                                                                  \
-            LOG_ERRORF("Stacktrace:");                                                                  \
-            for (auto const& entry : std::stacktrace::current()) {                                      \
-                    LOG_ERRORF("{:^4} > {}:{}", i++, entry.source_file(), entry.source_line());         \
                 }                                                                                       \
+                LOG_ERRORF("{}", cpptrace::generate_trace().to_string(true));                           \
                 BUILTIN_TRAP_FUNCTION();                                                                \
             }                                                                                           \
         }
@@ -84,8 +79,9 @@ namespace Fussion {
     [[noreturn]]
     inline void Panic()
     {
-        auto st = std::stacktrace::current(1, 1)[0];
-        LOG_ERRORF("PANIC hit at: {}:{}", st.source_file(), st.source_line());
+        auto trace = cpptrace::generate_trace(1, 1);
+        auto frame = trace.frames[0];
+        LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
         LOG_ERRORF("   No additional information provided");
         BUILTIN_TRAP_FUNCTION();
 
@@ -96,8 +92,9 @@ namespace Fussion {
     [[noreturn]]
     void Panic(fmt::format_string<Args...> message, Args&&... args)
     {
-        auto st = std::stacktrace::current(1, 1)[0];
-        LOG_ERRORF("PANIC hit at: {}:{}", st.source_file(), st.source_line());
+        auto trace = cpptrace::generate_trace(1, 1);
+        auto frame = trace.frames[0];
+        LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
         LOG_ERRORF(message, std::forward<Args>(args)...);
         BUILTIN_TRAP_FUNCTION();
 

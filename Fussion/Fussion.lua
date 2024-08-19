@@ -31,7 +31,7 @@ target("Fussion")
     add_includedirs("Impl", {public = true})
     add_includedirs("Vendor/entt/src", {public = true})
 
-    add_packages("fmt", {public = true})
+    add_packages("fmt", "cpptrace", {public = true})
     add_packages("glfw", "VMA")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
@@ -46,7 +46,7 @@ target("Fussion")
         "VMA_DYNAMIC_VULKAN_FUNCTIONS",
         "VK_NO_PROTOTYPES"
     )
-
+	
     add_rules("CompilerFlags")
     add_rules("CommonFlags")
     add_options("Tracy")
@@ -63,6 +63,8 @@ target("Fussion")
         )
         add_cxxflags("cl::/bigobj")
         add_cxxflags("cl::/utf-8", {public = true})
+		
+
 
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})
@@ -72,5 +74,19 @@ target("Fussion")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end
+	
+	-- Needed by cpptrace
+	-- TODO: Figure out how to put this in the package declaration.
+	if is_plat("windows") then
+		add_syslinks("dbghelp")
+	elseif is_plat("macosx") then
+		add_deps("libdwarf")
+	elseif is_plat("linux") then
+		add_deps("libdwarf")
+		add_syslinks("dl")
+	elseif is_plat("mingw") then
+		add_deps("libdwarf")
+		add_syslinks("dbghelp")
+	end
 
 includes("Tests/FussionTests.lua")

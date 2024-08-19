@@ -6,6 +6,8 @@
 #include "Fussion/Core/Core.h"
 
 #include <GLFW/glfw3.h>
+#include <cpptrace/cpptrace.hpp>
+
 #include <cstring>
 
 std::vector g_RequiredVulkanLayers = {
@@ -45,11 +47,7 @@ namespace Fussion::RHI {
                 break;
 
             LOG_ERROR(p_callback_data->pMessage);
-            u32 i = 0;
-            LOG_ERRORF("Stacktrace:");
-            for (auto const& entry : std::stacktrace::current()) {
-                LOG_ERRORF("{:^4} > {}:{}", i++, entry.source_file(), entry.source_line());
-            }
+            cpptrace::generate_trace().print_with_snippets();
         }
         break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
