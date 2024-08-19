@@ -47,7 +47,7 @@ namespace Fussion::RHI {
                 break;
 
             LOG_ERROR(p_callback_data->pMessage);
-            cpptrace::generate_trace().print_with_snippets();
+            LOG_ERRORF("{}", cpptrace::generate_trace(1).to_string(true));
         }
         break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
