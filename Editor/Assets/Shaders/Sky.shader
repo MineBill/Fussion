@@ -28,6 +28,9 @@ void Vertex() {
 }
 
 #pragma type: fragment
+// TODO: Satisfy VUID-vkCmdBindDescriptorSets-pDescriptorSets-00358
+// TODO: Figure out a way to solve this.
+layout(set = SCENE_SET,  binding = 2) uniform sampler2D uShadowMap;
 
 layout(location = 0) out vec4 o_Color;
 

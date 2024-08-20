@@ -122,7 +122,8 @@ namespace Fussion {
             meta::class_<DirectionalLight>(metadata_()
                     ("Name"s, "DirectionalLight"s))
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("LightColor", &DirectionalLight::LightColor, as_pointer);
+                .member_("LightColor", &DirectionalLight::LightColor, as_pointer)
+                .member_("SplitLambda", &DirectionalLight::SplitLambda, as_pointer);
 
             meta::class_<Camera>(metadata_()
                     ("Name"s, "Camera"s))
@@ -194,7 +195,7 @@ namespace Fussion {
 
         meta::class_<Debug>(metadata_()("Name"s, "Debug"s))
             .function_("DrawLine"s, Debug::DrawLine)
-            .function_("DrawCube"s, Debug::DrawCube);
+            .function_("DrawCube"s, static_cast<void(*)(Vector3, Vector3, f32, Color)>(Debug::DrawCube));
 
         meta::static_scope_("Scripting")
             .typedef_<Vector2>("Vector2"s)

@@ -339,6 +339,7 @@ namespace Fussion::RHI {
             for (auto const& image : resources.sampled_images) {
                 auto set = reflection_compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(image.id, spv::DecorationBinding);
+                LOG_DEBUGF("Fragmetn sampler: {}, Set: {}, Binding: {}",image.name, set, binding);
 
                 if (!metadata.Uniforms.contains(set)) {
                     if (!metadata.Uniforms[set].contains(binding)) {

@@ -32,9 +32,12 @@ namespace Fussion {
         if (!context.RenderFlags.Test(RHI::RenderState::LightCollection))
             return;
 
-        context.DirectionalLights.push_back(RHI::DirectionalLightData{
-            .Direction = Vector4{ -m_Owner->Transform.GetForward() },
-            .Color = LightColor,
+        context.DirectionalLights.push_back(RHI::DirectionalLight{
+            {
+                .Direction = Vector4{ -m_Owner->Transform.GetForward() },
+                .Color = LightColor,
+            },
+            SplitLambda,
         });
     }
 }

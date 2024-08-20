@@ -7,36 +7,37 @@
 
 namespace Fussion::RHI {
 
-enum class PipelineTopology {
-    Triangles = 0,
-    TriangleStrip,
-    Lines,
-};
+    enum class PipelineTopology {
+        Triangles = 0,
+        TriangleStrip,
+        Lines,
+    };
 
-struct PipelineLayoutSpecification {
-    std::string Label;
-    bool UsePushDescriptor{};
-    std::vector<Ref<ResourceLayout>> ResourceUsages{};
-    std::vector<PushConstant> PushConstants{};
-};
+    struct PipelineLayoutSpecification {
+        std::string Label;
+        bool UsePushDescriptor{};
+        std::vector<Ref<ResourceLayout>> ResourceUsages{};
+        std::vector<PushConstant> PushConstants{};
+    };
 
-class PipelineLayout : public RenderHandle {
-public:
-    virtual PipelineLayoutSpecification GetSpec() = 0;
-};
+    class PipelineLayout : public RenderHandle {
+    public:
+        virtual PipelineLayoutSpecification GetSpec() = 0;
+    };
 
-struct PipelineSpecification {
-    std::string Label{};
-    VertexAttributeLayout AttributeLayout{};
-    std::span<ShaderStage> ShaderStages{};
-    bool UseBlending{};
-    PipelineTopology Topology{};
-    u32 Samples{ 1 };
-};
+    struct PipelineSpecification {
+        std::string Label{};
+        VertexAttributeLayout AttributeLayout{};
+        std::span<ShaderStage> ShaderStages{};
+        bool UseBlending{};
+        PipelineTopology Topology{};
+        u32 Samples{ 1 };
+        bool DepthClamp{ false };
+    };
 
-class Pipeline : public RenderHandle {
-public:
-    virtual PipelineSpecification GetSpec() = 0;
-    virtual Ref<PipelineLayout> GetLayout() = 0;
-};
+    class Pipeline : public RenderHandle {
+    public:
+        virtual PipelineSpecification GetSpec() = 0;
+        virtual Ref<PipelineLayout> GetLayout() = 0;
+    };
 }

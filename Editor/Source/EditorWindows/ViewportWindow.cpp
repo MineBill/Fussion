@@ -77,7 +77,6 @@ void ViewportWindow::OnDraw()
             }
         }
 
-
         if (auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
             Editor::OnViewportResized(size);
             m_Size = size;
@@ -145,20 +144,37 @@ void ViewportWindow::OnDraw()
         EUI::Popup("EditorCameraSettings", [&] {
             if (ImGui::BeginMenu("Camera")) {
                 EUI::Property("Speed", &Editor::GetCamera().Speed);
+                EUI::Property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange{ .Min = 0.0f, .Max = 100.0f });
+                EUI::Property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange{ .Min = 0.0f, .Max = 1000.0f });
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Debug Draw")) {
-                auto& ctx = Editor::Get().DebugDrawContext;
-                auto flags = ImGuiSelectableFlags_DontClosePopups;
-                for (auto const& [value, name] : magic_enum::enum_entries<DebugDrawFlag>()) {
-                    if (ImGui::Selectable(name.data(), ctx.Flags.Test(value), flags)) {
-                        ctx.Flags.Toggle(value);
-                        LOG_DEBUGF("Flags: {}", ctx.Flags.value);
+            if (ImGui::BeginMenu("Debug")) {
+                if (ImGui::BeginMenu("Views")) {
+                    constexpr auto flags = ImGuiSelectableFlags_DontClosePopups;
+                    auto& scene_debug_options = m_Editor->GetSceneRenderer().SceneDebugOptions.Data;
+                    if (ImGui::Selectable("Show Cascade Boxes", scene_debug_options.ShowCascadeBoxes, flags)) {
+                        scene_debug_options.ShowCascadeBoxes = !scene_debug_options.ShowCascadeBoxes;
                     }
+                    if (ImGui::Selectable("Show Cascade Colors", scene_debug_options.ShowCascadeColors, flags)) {
+                        scene_debug_options.ShowCascadeColors = !scene_debug_options.ShowCascadeColors;
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Drawing")) {
+                    auto& ctx = Editor::Get().DebugDrawContext;
+                    auto flags = ImGuiSelectableFlags_DontClosePopups;
+                    for (auto const& [value, name] : magic_enum::enum_entries<DebugDrawFlag>()) {
+                        if (ImGui::Selectable(name.data(), ctx.Flags.Test(value), flags)) {
+                            ctx.Flags.Toggle(value);
+                            LOG_DEBUGF("Flags: {}", ctx.Flags.value);
+                        }
+                    }
+                    ImGui::EndMenu();
                 }
                 ImGui::EndMenu();
             }
+
         });
 
         ImGui::SameLine();

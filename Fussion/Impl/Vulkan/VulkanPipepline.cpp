@@ -238,6 +238,7 @@ Ref<VulkanPipeline> VulkanPipeline::Create(
     config.Multisample.rasterizationSamples = SampleCountToVulkan(spec.Samples);
 
     config.InputAssembly.topology = PipelineTopologyToVulkan(spec.Topology);
+    config.Rasterization.depthClampEnable = spec.DepthClamp;
 
     std::vector<VkPipelineColorBlendAttachmentState> blend_attachment_states;
     for (auto rspec = render_pass->GetSpec(); auto const& thing : rspec.SubPasses[0].ColorAttachments) {

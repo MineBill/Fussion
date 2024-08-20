@@ -5,10 +5,8 @@
 
 #include <array>
 
-namespace Fussion::RHI
-{
-    enum class ImageFormat
-    {
+namespace Fussion::RHI {
+    enum class ImageFormat {
         None,
         R8G8B8A8_SRGB,
         B8G8R8A8_SRGB,
@@ -24,8 +22,7 @@ namespace Fussion::RHI
         D32_SFLOAT_S8_UINT,
     };
 
-    enum class ImageLayout
-    {
+    enum class ImageLayout {
         Undefined,
         ColorAttachmentOptimal,
         DepthStencilAttachmentOptimal,
@@ -37,35 +34,30 @@ namespace Fussion::RHI
         AttachmentOptimal,
     };
 
-    enum class RenderPassAttachmentLoadOp
-    {
+    enum class RenderPassAttachmentLoadOp {
         DontCare,
         Load,
         Clear,
     };
 
-    enum class RenderPassAttachmentStoreOp
-    {
+    enum class RenderPassAttachmentStoreOp {
         DontCare,
         Store,
     };
 
-    struct RenderPassAttachmentRef
-    {
+    struct RenderPassAttachmentRef {
         u32 Attachment;
         ImageLayout Layout;
     };
 
-    struct RenderPassSubPass
-    {
+    struct RenderPassSubPass {
         std::vector<RenderPassAttachmentRef> ColorAttachments;
         std::vector<RenderPassAttachmentRef> ResolveAttachments;
         std::vector<RenderPassAttachmentRef> InputAttachments;
         Maybe<RenderPassAttachmentRef> DepthStencilAttachment;
     };
 
-    struct RenderPassAttachment
-    {
+    struct RenderPassAttachment {
         std::string Label;
 
         RenderPassAttachmentLoadOp LoadOp;
@@ -81,20 +73,19 @@ namespace Fussion::RHI
         ImageLayout InitialLayout;
         ImageLayout FinalLayout;
 
-        std::array<f32, 4> ClearColor = {1.f, 1.f, 1.f, 1.f};
+        std::array<f32, 4> ClearColor = { 1.f, 1.f, 1.f, 1.f };
         f32 ClearDepth = 1.f;
         u32 ClearStencil = 1;
     };
 
-    struct RenderPassSpecification
-    {
+    struct RenderPassSpecification {
         std::string Label;
         std::vector<RenderPassAttachment> Attachments;
         std::vector<RenderPassSubPass> SubPasses;
+        bool IsShadowMap{ false };
     };
 
-    class RenderPass: public RenderHandle
-    {
+    class RenderPass : public RenderHandle {
     public:
         virtual void Begin() = 0;
         virtual void End() = 0;

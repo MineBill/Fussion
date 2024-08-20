@@ -1,7 +1,17 @@
 ﻿#include "EditorPCH.h"
 #include "SceneRenderer.h"
 
-#include "Fussion/Debug/Debug.h"
+#include "Fussion/Input/Input.h"
+#include "Project/Project.h"
+
+#include <Fussion/Assets/ShaderAsset.h>
+#include <Fussion/Assets/AssetManager.h>
+#include <Fussion/Core/Time.h>
+#include <Fussion/Debug/Debug.h>
+#include <Fussion/OS/FileSystem.h>
+#include <Fussion/RHI/Device.h>
+#include <Fussion/RHI/Renderer.h>
+#include <Fussion/RHI/ShaderCompiler.h>
 #include <Fussion/Util/TextureImporter.h>
 
 #include <magic_enum/magic_enum.hpp>
@@ -12,20 +22,9 @@
 #undef min
 #undef max
 
-#include "Fussion/Assets/ShaderAsset.h"
-#include "Fussion/Assets/AssetManager.h"
-#include "Fussion/Core/Time.h"
-#include "Fussion/OS/FileSystem.h"
-#include "Fussion/RHI/Device.h"
-#include "Fussion/RHI/Renderer.h"
-#include "Fussion/RHI/ShaderCompiler.h"
-#include "Project/Project.h"
-
 using namespace Fussion;
 using namespace Fussion::RHI;
 
-constexpr auto ShadowCascades = 4;
-constexpr auto ShadowMapResolution = 4096;
 
 void SceneRenderer::Init()
 {
@@ -108,7 +107,7 @@ void SceneRenderer::Init()
     }
 
     {
-        const auto rp_spec = RenderPassSpecification{
+        auto rp_spec = RenderPassSpecification{
             .Label = "Depth RenderPass",
             .Attachments = {
                 RenderPassAttachment{
@@ -117,61 +116,110 @@ void SceneRenderer::Init()
                     .StoreOp = RenderPassAttachmentStoreOp::Store,
                     .Format = ImageFormat::D32_SFLOAT,
                     .Samples = 1,
-                    .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
+                    .FinalLayout = ImageLayout::DepthStencilReadOnlyOptimal,
                     .ClearDepth = 1.f,
-                }
+                },
             },
             .SubPasses = {
                 RenderPassSubPass{
                     .DepthStencilAttachment = RenderPassAttachmentRef{
                         .Attachment = 0,
                         .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-                    }
+                    },
                 },
-            }
+            },
+            .IsShadowMap = true,
         };
 
         constexpr auto path = "Assets/Shaders/Depth.shader";
         m_DepthPass = Device::Instance()->CreateRenderPass(rp_spec);
-        auto data = FileSystem::ReadEntireFile("Assets/Shaders/Depth.shader");
-        auto result = ShaderCompiler::Compile(*data);
-        auto shader = ShaderAsset::Create(m_DepthPass, result->ShaderStages, result->Metadata);
-        m_DepthShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        {
+            auto data = FileSystem::ReadEntireFile("Assets/Shaders/Depth.shader");
+            auto result = ShaderCompiler::Compile(*data);
+            auto shader = ShaderAsset::Create(m_DepthPass, result->ShaderStages, result->Metadata);
+            m_DepthShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        }
 
-        // auto shader = ShaderAsset::Create(m_DepthPass, stages, metadata);
-        // m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, "Assets/Shaders/Depth.shader");
-
-        auto image_spec = RHI::ImageSpecification{
+        auto image_spec = ImageSpecification{
             .Label = "Shadow Pass Depth Image",
             .Width = ShadowMapResolution,
             .Height = ShadowMapResolution,
             .Format = rp_spec.Attachments[0].Format,
             .Usage = ImageUsage::DepthStencilAttachment | ImageUsage::Sampled,
-            .Layout = ImageLayout::Undefined,
             .FinalLayout = ImageLayout::DepthStencilReadOnlyOptimal,
             .SamplerSpec = {},
-            .LayerCount = 4,
+            // .LayerCount = 1,
+            .LayerCount = ShadowCascades,
         };
 
         m_DepthImage = Device::Instance()->CreateImage(image_spec);
 
-        for (auto i = 0; i < m_ShadowFrameBuffers.size(); i++) {
-            auto spec = RHI::FrameBufferSpecification{
-                .Width = ShadowMapResolution,
-                .Height = ShadowMapResolution,
-            };
+        auto fb_spec = FrameBufferSpecification{
+            .Width = ShadowMapResolution,
+            .Height = ShadowMapResolution,
+        };
 
-            auto iv_spec = RHI::ImageViewSpecification{
+        for (size_t i = 0; i < ShadowCascades; i++) {
+            auto iv_spec = ImageViewSpecification{
                 .ViewType = ImageViewType::D2Array,
                 .Format = m_DepthImage->GetSpec().Format,
-                .BaseLayerIndex = i,
+                .BaseLayerIndex = CAST(s32, i),
                 .LayerCount = 1,
             };
 
             auto view = Device::Instance()->CreateImageView(m_DepthImage, iv_spec);
-
-            m_ShadowFrameBuffers[i] = Device::Instance()->CreateFrameBufferFromImageViews(m_DepthPass, { view }, spec);
+            m_ShadowFrameBuffers[i] = Device::Instance()->CreateFrameBufferFromImageViews(m_DepthPass, { view }, fb_spec);
         }
+    }
+
+    {
+        auto rp_spec = RenderPassSpecification{
+            .Label = "ShadowMap Array Viewer",
+            .Attachments = {
+                RenderPassAttachment{
+                    .Label = "Depth Debug Display",
+                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
+                    .StoreOp = RenderPassAttachmentStoreOp::Store,
+                    .Format = ImageFormat::B8G8R8A8_UNORM,
+                    .Samples = 1,
+                    .FinalLayout = ImageLayout::ColorAttachmentOptimal,
+                }
+            },
+            .SubPasses = {
+                RenderPassSubPass{
+                    .ColorAttachments = {
+                        {
+                            .Attachment = 0,
+                            .Layout = ImageLayout::ColorAttachmentOptimal,
+                        }
+                    },
+                }
+            }
+        };
+
+        m_ShadowPassDebugRenderPass = Device::Instance()->CreateRenderPass(rp_spec);
+
+        {
+            constexpr auto path = "Assets/Shaders/DepthDebugDisplay.shader";
+            auto data = FileSystem::ReadEntireFile(path);
+            auto result = ShaderCompiler::Compile(*data);
+            auto shader = ShaderAsset::Create(m_ShadowPassDebugRenderPass, result->ShaderStages, result->Metadata);
+            m_DepthViewerShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        }
+
+        auto fb_spec = FrameBufferSpecification{
+            .Width = ShadowMapResolution,
+            .Height = ShadowMapResolution,
+            .Samples = 1,
+            .Attachments = {
+                FrameBufferAttachmentInfo{
+                    .Format = ImageFormat::B8G8R8A8_UNORM,
+                    .Usage = ImageUsage::Sampled | ImageUsage::ColorAttachment,
+                    .Samples = 1,
+                },
+            }
+        };
+        m_ShadowViewerFrameBuffer = Device::Instance()->CreateFrameBuffer(m_ShadowPassDebugRenderPass, fb_spec);
     }
 
     {
@@ -266,11 +314,11 @@ void SceneRenderer::Init()
         m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
-    m_ViewData = UniformBuffer<ViewData>::Create("View Data");
-    m_DebugOptions = UniformBuffer<DebugOptions>::Create("Debug Options");
-    m_GlobalData = UniformBuffer<GlobalData>::Create("Global Data");
-    m_SceneData = UniformBuffer<SceneData>::Create("Scene Data");
-    m_LightData = UniformBuffer<LightData>::Create("Light Data");
+    SceneViewData = UniformBuffer<ViewData>::Create("View Data");
+    SceneDebugOptions = UniformBuffer<DebugOptions>::Create("Debug Options");
+    SceneGlobalData = UniformBuffer<GlobalData>::Create("Global Data");
+    SceneSceneData = UniformBuffer<SceneData>::Create("Scene Data");
+    SceneLightData = UniformBuffer<LightData>::Create("Light Data");
 
     auto pool_spec = ResourcePoolSpecification::Default(100);
     m_ResourcePool = Device::Instance()->CreateResourcePool(pool_spec);
@@ -315,6 +363,12 @@ void SceneRenderer::Init()
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
             },
+            ResourceUsage{
+                .Label = "ShadowMap",
+                .Type = ResourceType::CombinedImageSampler,
+                .Count = 1,
+                .Stages = ShaderType::Fragment,
+            },
         };
         auto layout = Device::Instance()->CreateResourceLayout(resource_usages);
         auto result = m_ResourcePool->Allocate(layout);
@@ -354,21 +408,31 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     using namespace Fussion;
 
     // TODO: Hack
-    m_GlobalData.Data.Time += Time::DeltaTime();
-    m_GlobalData.Flush();
+    SceneGlobalData.Data.Time += Time::DeltaTime();
+    SceneGlobalData.Flush();
 
-    m_ViewData.Data.Perspective = packet.Camera.Perspective;
-    m_ViewData.Data.View = packet.Camera.View;
-    m_ViewData.Flush();
+    SceneViewData.Data.Perspective = packet.Camera.Perspective;
+    SceneViewData.Data.View = packet.Camera.View;
+    SceneViewData.Flush();
 
-    m_SceneData.Data.ViewPosition = packet.Camera.Position;
+    SceneSceneData.Data.ViewPosition = packet.Camera.Position;
     // m_SceneData.Data.ViewDirection = packet.Camera.Direction;
-    m_SceneData.Data.AmbientColor = Color::White;
-    m_SceneData.Flush();
+    SceneSceneData.Data.AmbientColor = Color::White;
+    SceneSceneData.Flush();
+
+    SceneDebugOptions.Flush();
 
     m_RenderContext.Cmd = cmd;
     m_RenderContext.DirectionalLights.clear();
     m_RenderContext.PointLights.clear();
+
+    cmd->BindUniformBuffer(SceneViewData.GetBuffer(), m_GlobalResource, 0);
+    cmd->BindUniformBuffer(SceneDebugOptions.GetBuffer(), m_GlobalResource, 1);
+    cmd->BindUniformBuffer(SceneGlobalData.GetBuffer(), m_GlobalResource, 2);
+
+    cmd->BindUniformBuffer(SceneSceneData.GetBuffer(), m_SceneResource, 0);
+    cmd->BindUniformBuffer(SceneLightData.GetBuffer(), m_SceneResource, 1);
+    cmd->BindImage(m_DepthImage, m_SceneResource, 2);
 
     {
         ZoneScopedN("Light Collection");
@@ -380,92 +444,111 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         }
     }
 
-    if (m_RenderContext.DirectionalLights.size() > 0) {
-        m_LightData.Data.DirectionalLight = m_RenderContext.DirectionalLights[0];
+    if (!m_RenderContext.DirectionalLights.empty()) {
+        SceneLightData.Data.DirectionalLight = m_RenderContext.DirectionalLights[0].ShaderData;
     }
-    m_LightData.Flush();
+    SceneLightData.Flush();
 
-    if constexpr (false) {
+    {
         ZoneScopedN("Depth Pass");
         m_RenderContext.RenderFlags = RenderState::Depth;
 
-        std::array<f32, ShadowCascades> distances{};
-
-        for (auto i = 0; i < ShadowCascades; i++) {
-            for (auto& light : m_RenderContext.DirectionalLights) {
-                (void)light;
-                distances[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, 1.0f);
+        for (auto& light : m_RenderContext.DirectionalLights) {
+            for (auto i = 0; i < ShadowCascades; i++) {
+                SceneLightData.Data.ShadowSplitDistances[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
             }
-        }
 
-        for (auto i = 0; i < ShadowCascades; i++) {
-            cmd->BeginRenderPass(m_DepthPass, m_ShadowFrameBuffers[i]);
             cmd->SetViewport({ ShadowMapResolution, -ShadowMapResolution });
             cmd->SetScissor(Vector4(0, 0, ShadowMapResolution, ShadowMapResolution));
 
-            auto depth_shader = m_DepthShader.Get()->GetShader();
-            cmd->UseShader(depth_shader);
-            for (auto& light : m_RenderContext.DirectionalLights) {
-                auto _proj = glm::perspective(
-                    glm::radians(50.0f),
-                    m_RenderArea.Aspect(),
-                    packet.Camera.Near,
-                    packet.Camera.Far * distances[i]);
-                auto corners = Math::GetFrustumCornersWorldSpace(_proj, packet.Camera.View);
+            f32 last_split{ 0 };
+            for (auto i = 0; i < ShadowCascades; i++) {
 
-                Vector3 center;
-                for (auto const& corner : corners) {
-                    center += corner;
+
+
+                Vector3 frustum_corners[8] = {
+                    Vector3(-1.0f, 1.0f, 0.0f),
+                    Vector3(1.0f, 1.0f, 0.0f),
+                    Vector3(1.0f, -1.0f, 0.0f),
+                    Vector3(-1.0f, -1.0f, 0.0f),
+                    Vector3(-1.0f, 1.0f, 1.0f),
+                    Vector3(1.0f, 1.0f, 1.0f),
+                    Vector3(1.0f, -1.0f, 1.0f),
+                    Vector3(-1.0f, -1.0f, 1.0f),
+                };
+
+                // Project frustum corners into world space
+                glm::mat4 inv_cam = glm::inverse(packet.Camera.Perspective * packet.Camera.View);
+                for (auto& frustum_corner : frustum_corners) {
+                    Vector4 inv_corner = inv_cam * Vector4(frustum_corner, 1.0f);
+                    frustum_corner = inv_corner / inv_corner.W;
+                }
+
+                auto split = SceneLightData.Data.ShadowSplitDistances[i];
+                for (u32 j = 0; j < 4; j++) {
+                    Vector3 dist = frustum_corners[j + 4] - frustum_corners[j];
+                    frustum_corners[j + 4] = frustum_corners[j] + dist * split;
+                    frustum_corners[j] = frustum_corners[j] + dist * last_split;
+                }
+
+                Vector3 center{};
+                for (auto frustum_corner : frustum_corners) {
+                    center += frustum_corner;
                 }
                 center /= 8.0f;
 
-                auto view = glm::lookAt(glm::vec3(center + Vector3(light.Direction)), glm::vec3(center), glm::vec3(Vector3::Up));
-
-                auto maxf = std::numeric_limits<f32>::min();
-                auto minf = std::numeric_limits<f32>::max();
-
-                Vector3 min{ minf, minf, minf };
-                Vector3 max{ maxf, maxf, maxf };
-
-                for (auto const& corner : corners) {
-                    auto hm = glm::vec3(view * corner);
-                    if (hm.x < min.X)
-                        min.X = hm.x;
-                    if (hm.y < min.Y)
-                        min.Y = hm.y;
-                    if (hm.z < min.Z)
-                        min.Z = hm.z;
-                    if (hm.x > max.X)
-                        max.X = hm.x;
-                    if (hm.y > max.Y)
-                        max.Y = hm.y;
-                    if (hm.z > max.Z)
-                        max.Z = hm.z;
+                float radius = 0.0f;
+                for (auto frustum_corner : frustum_corners) {
+                    f32 distance = (frustum_corner - center).Length();
+                    radius = Math::Max(radius, distance);
                 }
+                radius = std::ceil(radius * 16.0f) / 16.0f;
 
-                auto proj = glm::ortho(min.X, max.X, min.Y, max.Y, min.Z * 10.0f, max.Z / 10.0f);
+                Vector3 max_extents{ radius, radius, radius };
+                Vector3 min_extents = -max_extents;
 
-                light.LightSpaceMatrix[i] = proj * view;
+                glm::mat4 view = glm::lookAt(glm::vec3(center - Vector3(light.ShaderData.Direction) * min_extents.Z), glm::vec3(center), glm::vec3(Vector3::Up));
+                glm::mat4 proj = glm::ortho(min_extents.X, max_extents.X, min_extents.Y, max_extents.Y, -10.0f, max_extents.Z - min_extents.Z);
+
+                light.ShaderData.LightSpaceMatrix[i] = proj * view;
+
+                cmd->BeginRenderPass(m_DepthPass, m_ShadowFrameBuffers[i]);
+                auto depth_shader = m_DepthShader.Get()->GetShader();
+                cmd->UseShader(depth_shader);
+                SceneLightData.Data.DirectionalLight.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
                 if (packet.Scene) {
                     m_RenderContext.CurrentShader = depth_shader;
-                    m_RenderContext.CurrentLightSpace = light.LightSpaceMatrix[i];
+                    m_RenderContext.CurrentLightSpace = light.ShaderData.LightSpaceMatrix[i];
                     packet.Scene->ForEachEntity([&](Entity* entity) {
                         ZoneScopedN("Entity Draw");
                         entity->OnDraw(m_RenderContext);
                     });
                 }
+                cmd->EndRenderPass(m_DepthPass);
+                last_split = split;
             }
+            SceneLightData.Flush();
 
-            cmd->EndRenderPass(m_DepthPass);
+            cmd->BeginRenderPass(m_ShadowPassDebugRenderPass, m_ShadowViewerFrameBuffer);
+            {
+                ZoneScopedN("ShadowMap Debug Viewer");
+
+                auto shader = m_DepthViewerShader.Get()->GetShader();
+                cmd->UseShader(shader);
+                cmd->BindResource(m_SceneResource, shader, 1);
+                struct {
+                    s32 CascadeIndex;
+                } pc;
+                pc.CascadeIndex = RenderDebugOptions.CascadeIndex;;
+                cmd->PushConstants(shader, &pc, sizeof(pc));
+                cmd->Draw(6, 1);
+            }
+            cmd->EndRenderPass(m_ShadowPassDebugRenderPass);
         }
     }
 
-    cmd->BindUniformBuffer(m_ViewData.GetBuffer(), m_GlobalResource, 0);
-    cmd->BindUniformBuffer(m_DebugOptions.GetBuffer(), m_GlobalResource, 1);
-    cmd->BindUniformBuffer(m_GlobalData.GetBuffer(), m_GlobalResource, 2);
-
-    cmd->BindUniformBuffer(m_SceneData.GetBuffer(), m_SceneResource, 0);
-    cmd->BindUniformBuffer(m_LightData.GetBuffer(), m_SceneResource, 1);
+    cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
+    cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
 
     cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
     {
@@ -475,9 +558,6 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
         m_RenderContext.RenderFlags = RenderState::ObjectPicking;
         m_RenderContext.CurrentPass = m_ObjectPickingRenderPass;
         m_RenderContext.CurrentShader = object_pick_shader;
-
-        cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
-        cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
 
         cmd->UseShader(object_pick_shader);
         cmd->BindResource(m_GlobalResource, object_pick_shader, 0);

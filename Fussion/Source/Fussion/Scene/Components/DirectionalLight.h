@@ -14,9 +14,9 @@ namespace Fussion {
         virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
-
         virtual void OnDraw(RHI::RenderContext& context) override;
 
         Color LightColor{ Color::White };
+        f32 SplitLambda{ 0.95f };
     };
 }

@@ -15,9 +15,6 @@ layout (std140, set = OBJECT_SET, binding = 0) uniform Material {
 
 layout(push_constant) uniform PushConstants {
     mat4 model;
-//#ifdef EDITOR
-//    int local_id;
-//#endif
 } u_PushConstants;
 
 struct VertexOutput {
@@ -42,7 +39,7 @@ layout(location = 2) in vec4 a_Tangent;
 layout(location = 3) in vec2 a_UV;
 layout(location = 4) in vec3 a_Color;
 
-const mat4 biasMat = mat4(
+const mat4 shadow_bias = mat4(
     0.5, 0.0, 0.0, 0.0,
     0.0, 0.5, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
@@ -70,7 +67,7 @@ void Vertex() {
     Out.tangent_frag_pos  = tbn * Out.frag_pos.xyz;
 
     for (int i = 0; i < 4; i++) {
-        Out.pos_light_space[i] = biasMat * u_LightData.directional.light_space_matrix[i] * Out.frag_pos;
+        Out.pos_light_space[i] = shadow_bias * u_LightData.directional.light_space_matrix[i] * Out.frag_pos;
     }
     /* mat3 normal_matrix = transpose(inverse(mat3(u_PerObjectData.model)));
 
@@ -90,57 +87,57 @@ layout(set = OBJECT_SET, binding = 3) uniform sampler2D uAmbientOcclusionMap;
 layout(set = OBJECT_SET, binding = 4) uniform sampler2D uMetallicRoughnessMap;
 layout(set = OBJECT_SET, binding = 5) uniform sampler2D uEmissiveMap;
 
+layout(set = SCENE_SET,  binding = 2) uniform sampler2DArray uShadowMapArray;
+
 layout(location = 0) out vec4 o_Color;
-/* #ifdef EDITOR
-    layout(location = 1) out int o_ID;
-#endif */
 
 layout(location = 0) in VertexOutput In;
 
-//float SampleShadow(float index, vec2 coords, float compare) {
-//    return step(compare, texture(shadow_map, vec3(coords, index)).r);
-//}
-//
-//float SampleShadowLinear(float index, vec2 coords, float compare, vec2 texel_size) {
-//    vec2 pp = coords / texel_size + vec2(0.5);
-//    vec2 fraction = fract(pp);
-//    vec2 texel = (pp - fraction) * texel_size;
-//
-//    float a = SampleShadow(index, texel + vec2(0.0, 0.0), compare);
-//    float b = SampleShadow(index, texel + vec2(1.0, 0.0) * texel_size, compare);
-//    float c = SampleShadow(index, texel + vec2(0.0, 1.0) * texel_size, compare);
-//    float d = SampleShadow(index, texel + vec2(1.0, 1.0) * texel_size, compare);
-//
-//    float aa = mix(a, c, fraction.y);
-//    float bb = mix(b, d, fraction.y);
-//
-//    return mix(aa, bb, fraction.x);
-//}
-//
-//float ShadowCalculation(int index) {
-//    float shadow = 0.0;
-//    vec4 fragPosLightSpace = In.pos_light_space[index];
-//    vec3 shadowCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w);
-//    // shadowCoords = shadowCoords * 2 - 1.0;
-//    if (shadowCoords.z > 1.0 || shadowCoords.x > 1.0 || shadowCoords.x < 0.0 || shadowCoords.z < 0.0)
-//        return 1.0;
-//    shadowCoords.y = 1.0 - shadowCoords.y;
-//    float bias = max((1.0/4096.0) * (1.0 - dot(In.normal, normalize(u_LightData.directional.direction.xyz))), 0.003);
-//    // vec2 texel_size = 1.0 / textureSize(shadow_map, 0).xy;
-//    ivec3 textureSize = textureSize(shadow_map, 0); // Get the size of the texture at level 0
+float SampleShadow(float index, vec2 coords, float compare) {
+//    return step(compare, texture(uShadowMapArray, coords).r);
+    return step(compare, texture(uShadowMapArray, vec3(coords, index)).r);
+}
+
+float SampleShadowLinear(float index, vec2 coords, float compare, vec2 texel_size) {
+    vec2 pp = coords / texel_size + vec2(0.5);
+    vec2 fraction = fract(pp);
+    vec2 texel = (pp - fraction) * texel_size;
+
+    float a = SampleShadow(index, texel + vec2(0.0, 0.0), compare);
+    float b = SampleShadow(index, texel + vec2(1.0, 0.0) * texel_size, compare);
+    float c = SampleShadow(index, texel + vec2(0.0, 1.0) * texel_size, compare);
+    float d = SampleShadow(index, texel + vec2(1.0, 1.0) * texel_size, compare);
+
+    float aa = mix(a, c, fraction.y);
+    float bb = mix(b, d, fraction.y);
+
+    return mix(aa, bb, fraction.x);
+}
+
+float ShadowCalculation(int index) {
+    float shadow = 0.0;
+    vec4 fragPosLightSpace = In.pos_light_space[index];
+    vec3 shadowCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w);
+    // shadowCoords = shadowCoords * 2 - 1.0;
+    if (shadowCoords.z > 1.0 || shadowCoords.z < -1.0)
+        return 1.0;
+    shadowCoords.y = 1.0 - shadowCoords.y;
+    float bias = max((1.0/4096.0) * (1.0 - dot(In.normal, normalize(u_LightData.directional.direction.xyz))), 0.003);
+     vec2 texel_size = 1.0 / textureSize(uShadowMapArray, 0).xy;
+//    ivec2 textureSize = textureSize(uShadowMapArray, 0); // Get the size of the texture at level 0
 //    vec2 texel_size = vec2(1.0) / vec2(textureSize.xy);
-//
-//    const float SAMPLES = 1;
-//    const float SAMPLES_START = (SAMPLES - 1) / 2;
-//    const float SAMPLES_SQUARED = SAMPLES * SAMPLES;
-//    for (float x = -SAMPLES_START; x <= SAMPLES_START; x++) {
-//        for (float y = -SAMPLES_START; y <= SAMPLES_START; y++) {
-//            shadow += SampleShadowLinear(index, shadowCoords.xy + vec2(x, y) * texel_size, shadowCoords.z - bias, texel_size);
-//        }
-//    }
-//
-//    return shadow / SAMPLES_SQUARED;
-//}
+
+    const float SAMPLES = 3;
+    const float SAMPLES_START = (SAMPLES - 1) / 2;
+    const float SAMPLES_SQUARED = SAMPLES * SAMPLES;
+    for (float x = -SAMPLES_START; x <= SAMPLES_START; x++) {
+        for (float y = -SAMPLES_START; y <= SAMPLES_START; y++) {
+            shadow += SampleShadowLinear(index, shadowCoords.xy + vec2(x, y) * texel_size, shadowCoords.z - bias, texel_size);
+        }
+    }
+
+    return shadow / SAMPLES_SQUARED;
+}
 
 /* layout(location = 1) out vec4 o_BrightColor; */
 // f0:  Surface reflection at zero iradiance, when looking at the fragment directly.
@@ -182,7 +179,7 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
     return ggx1 * ggx2;
 }
 
-vec3 do_directional_light() {
+vec3 DoDirectionalLight() {
 //     vec3 N = normalize(In.normal);
     vec3 N = texture(uNormalMap, In.frag_uv).rgb;
 //    vec3 N = vec3(0, 0, 1);
@@ -233,9 +230,9 @@ vec3 do_directional_light() {
     } else if (1.0 - gl_FragCoord.z < u_LightData.shadow_split_distances.z) {
         index = 1;
     }
-//    float shadow = ShadowCalculation(int(index));
+    float shadow = ShadowCalculation(int(index));
 
-     float shadow = 1.0;
+//     float shadow = 1.0;
 
     /* vec2 frag_coords = In.frag_pos.xy / In.frag_pos.w;
     vec2 screen_uv = frag_color * 0.5 + 0.5; */
@@ -243,35 +240,35 @@ vec3 do_directional_light() {
     float occlusion = texture(uAmbientOcclusionMap , In.frag_uv).r;
 //    float occlusion = 1.0f;
 
-    vec3 ambient = u_SceneData.ambient_color.rgb * albedo * u_Material.AlbedoColor.rgb * 0.1;
+    vec3 ambient = u_SceneData.ambient_color.rgb * albedo * u_Material.AlbedoColor.rgb * 0.2;
     ambient *= occlusion;
     vec3 ret = ambient + (kd * u_Material.AlbedoColor.rgb * albedo / PI + specular + reflection * metalness * ks) * radiance * NdotL * shadow * occlusion;
 //    vec3 ret = In.tangent_frag_pos.rgb;
 
     ret += texture(uEmissiveMap, In.frag_uv).rgb;
-//    if (u_DebugOptions.shadow_cascade_colors) {
-//        switch(int(index)) {
-//            case 0 :
-//                ret *= vec3(1.0f, 0.25f, 0.25f);
-//                break;
-//            case 1 :
-//                ret *= vec3(0.25f, 1.0f, 0.25f);
-//                break;
-//            case 2 :
-//                ret *= vec3(0.25f, 0.25f, 1.0f);
-//                break;
-//            case 3 :
-//                ret *= vec3(1.0f, 1.0f, 0.25f);
-//                break;
-//        }
-//    }
+    if (u_DebugOptions.shadow_cascade_colors == 1) {
+        switch(int(index)) {
+            case 0 :
+                ret *= vec3(1.0f, 0.25f, 0.25f);
+                break;
+            case 1 :
+                ret *= vec3(0.25f, 1.0f, 0.25f);
+                break;
+            case 2 :
+                ret *= vec3(0.25f, 0.25f, 1.0f);
+                break;
+            case 3 :
+                ret *= vec3(1.0f, 1.0f, 0.25f);
+                break;
+        }
+    }
     return ret;
 }
 
 void Fragment() {
     vec3 Lo = vec3(0.0);
 
-    Lo += do_directional_light();
+    Lo += DoDirectionalLight();
     // Lo += u_Material.albedo_color.rgb;
     // Lo += u_SceneData.ambient_color.rgb * u_Material.albedo_color.rgb;
 

@@ -45,16 +45,16 @@ namespace Fussion::RHI {
     };
 
     struct ImageSpecification {
-        std::string Label = "Image";
+        std::string Label{ "Image" };
         s32 Width, Height;
-        s32 Samples = 1;
+        s32 Samples{ 1 };
         ImageFormat Format;
         ImageUsageFlags Usage;
         bool GenerateMipMaps{ false };
 
         ImageLayout Layout = ImageLayout::Undefined, FinalLayout;
         SamplerSpecification SamplerSpec;
-        s32 LayerCount = 1;
+        s32 LayerCount{ 1 };
     };
 
     class Image : public RenderHandle {

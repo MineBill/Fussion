@@ -21,8 +21,8 @@ struct ViewData {
 };
 
 struct DebugOptions {
-    bool ShowCascadeBoxes;
-    bool ShowCascadeColors;
+    b32 ShowCascadeBoxes;
+    b32 ShowCascadeColors;
 };
 
 struct GlobalData {
@@ -38,7 +38,7 @@ struct SceneData {
 };
 
 struct LightData {
-    Fussion::RHI::DirectionalLightData DirectionalLight{};
+    Fussion::RHI::DirectionalLight::ShaderStruct DirectionalLight{};
 
     Vector4 ShadowSplitDistances{};
 };
@@ -58,8 +58,22 @@ struct RenderPacket {
     Vector2 Size{};
 };
 
+constexpr s32 ShadowCascades = 4;
+constexpr s32 ShadowMapResolution = 4096;
+
 class SceneRenderer {
 public:
+    struct RenderDebugOptions {
+        s32 CascadeIndex{ 0 };
+    } RenderDebugOptions;
+
+    Fussion::RHI::UniformBuffer<ViewData> SceneViewData;
+    Fussion::RHI::UniformBuffer<DebugOptions> SceneDebugOptions;
+    Fussion::RHI::UniformBuffer<GlobalData> SceneGlobalData;
+
+    Fussion::RHI::UniformBuffer<SceneData> SceneSceneData;
+    Fussion::RHI::UniformBuffer<LightData> SceneLightData;
+
     void Init();
     void Resize(Vector2 const& new_size);
 
@@ -68,14 +82,17 @@ public:
     [[nodiscard]]
     Ref<Fussion::RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
 
-    [[nodiscard]]
-    auto GetShadowFrameBuffers() const -> std::array<Ref<Fussion::RHI::FrameBuffer>, 4> { return m_ShadowFrameBuffers; }
+    // [[nodiscard]]
+    // auto GetShadowFrameBuffers() const -> std::array<Ref<Fussion::RHI::FrameBuffer>, 4> { return m_ShadowFrameBuffers; }
 
     [[nodiscard]]
     auto GetDepthImage() const -> Ref<Fussion::RHI::Image> { return m_DepthImage; }
 
     [[nodiscard]]
     auto GetObjectPickingFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
+
+    [[nodiscard]]
+    auto GetShadowDebugFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffer; }
 
 private:
     Fussion::AssetRef<Fussion::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
@@ -85,12 +102,6 @@ private:
     Ref<Fussion::RHI::Resource> m_GlobalResource{};
     Ref<Fussion::Texture2D> m_TestTexture;
 
-    Fussion::RHI::UniformBuffer<ViewData> m_ViewData;
-    Fussion::RHI::UniformBuffer<DebugOptions> m_DebugOptions;
-    Fussion::RHI::UniformBuffer<GlobalData> m_GlobalData;
-
-    Fussion::RHI::UniformBuffer<SceneData> m_SceneData;
-    Fussion::RHI::UniformBuffer<LightData> m_LightData;
     Ref<Fussion::RHI::Resource> m_SceneResource;
 
     Vector2 m_RenderArea{};
@@ -103,7 +114,11 @@ private:
     Ref<Fussion::RHI::RenderPass> m_ObjectPickingRenderPass{};
     Ref<Fussion::RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
 
-    std::array<Ref<Fussion::RHI::FrameBuffer>, 4> m_ShadowFrameBuffers{};
+    std::array<Ref<Fussion::RHI::FrameBuffer>, ShadowCascades> m_ShadowFrameBuffers{};
 
-    Fussion::RHI::RenderContext m_RenderContext;
+    Ref<Fussion::RHI::RenderPass> m_ShadowPassDebugRenderPass{};
+    Fussion::AssetRef<Fussion::ShaderAsset> m_DepthViewerShader{};
+    Ref<Fussion::RHI::FrameBuffer> m_ShadowViewerFrameBuffer{};
+
+    Fussion::RHI::RenderContext m_RenderContext{};
 };

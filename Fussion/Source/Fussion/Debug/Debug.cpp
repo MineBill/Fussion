@@ -101,6 +101,11 @@ namespace Fussion {
 
     }
 
+    void Debug::DrawCube(Vector3 min_extents, Vector3 max_extents, f32 time, Color color)
+    {
+        DrawCube((min_extents + max_extents) / 2.0f, {}, max_extents - min_extents, time, color);
+    }
+
     void Debug::DrawSphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time, Color color)
     {
         constexpr auto segments = 10; // Number of segments per circle

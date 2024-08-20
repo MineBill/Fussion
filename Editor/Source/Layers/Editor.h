@@ -124,4 +124,5 @@ private:
     std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows{};
 
     PlayState m_State{ PlayState::Editing };
+    bool m_ShadowMapDisplayOpened{ false };
 };

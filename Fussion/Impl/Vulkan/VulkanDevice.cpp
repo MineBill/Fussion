@@ -352,6 +352,10 @@ namespace Fussion::RHI {
         VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT }; // Partial binding is required for descriptor aliasing.
         descriptor_indexing_features.descriptorBindingPartiallyBound = VK_TRUE;
 
+        VkPhysicalDeviceFeatures device_features {
+            .depthClamp = true,
+        };
+
         VkDeviceCreateInfo const device_create_info{
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
             .pNext = &descriptor_indexing_features,
@@ -359,7 +363,7 @@ namespace Fussion::RHI {
             .pQueueCreateInfos = queue_infos.data(),
             .enabledExtensionCount = 1,
             .ppEnabledExtensionNames = g_RequiredDeviceExtensions,
-            .pEnabledFeatures = nullptr,
+            .pEnabledFeatures = &device_features,
         };
 
         VK_CHECK(vkCreateDevice(PhysicalDevice, &device_create_info, nullptr, &Handle))

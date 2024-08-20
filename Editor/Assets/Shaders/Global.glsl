@@ -11,8 +11,8 @@ layout (std140, set = GLOBAL_SET, binding = 0) uniform ViewData {
 } u_ViewData;
 
 layout (std140, set = GLOBAL_SET, binding = 1) uniform DebugOptions {
-    bool shadow_cascade_boxes;
-    bool shadow_cascade_colors;
+    int shadow_cascade_boxes;
+    int shadow_cascade_colors;
 } u_DebugOptions;
 
 layout (std140, set = GLOBAL_SET, binding = 2) uniform GlobalData {

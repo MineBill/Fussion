@@ -203,6 +203,13 @@ void Editor::OnUpdate(f32 delta)
             if (ImGui::MenuItem("Scripts Inspector")) {
                 m_ScriptsInspector->Show();
             }
+            if (ImGui::BeginMenu("Debug")) {
+                if (ImGui::MenuItem("Shadow Map")) {
+                    m_ShadowMapDisplayOpened = !m_ShadowMapDisplayOpened;
+                }
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
 
@@ -278,6 +285,14 @@ void Editor::OnUpdate(f32 delta)
 
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
+    }
+
+    // TODO: Is there a better place to put this?
+    if (m_ShadowMapDisplayOpened) {
+        EUI::Window("Shadow Map", [&] {
+            EUI::Property("Cascade Index", &m_SceneRenderer.RenderDebugOptions.CascadeIndex, EUI::PropTypeRange{ .Min = 0.0f, .Max = ShadowCascades - 1 });
+            ImGui::Image(IMGUI_IMAGE(m_SceneRenderer.GetShadowDebugFrameBuffer()->GetColorAttachment(0)), ImGui::GetContentRegionAvail());
+        }, { .Opened = &m_ShadowMapDisplayOpened });
     }
 
     m_ViewportWindow->OnDraw();

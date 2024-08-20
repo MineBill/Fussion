@@ -51,11 +51,13 @@ void ImGuiLayer::LoadFonts()
     io.FontDefault = style.Fonts[RegularNormal];
 }
 
-void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image) {
+void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image)
+{
     return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())];
 }
 
-void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view) {
+void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view)
+{
     return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())];
 }
 
@@ -131,6 +133,10 @@ void ImGuiLayer::Init()
                 }
                 break;
                 case ImageLayout::DepthStencilAttachmentOptimal: {
+                    layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                }
+                break;
+                case ImageLayout::DepthStencilReadOnlyOptimal: {
                     layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                 }
                 break;

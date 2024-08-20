@@ -316,7 +316,7 @@ namespace Fussion {
 
             r = m_ScriptEngine->SetDefaultNamespace("Debug"); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("void DrawLine(Vector3 start, Vector3 end, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawLine), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawCube), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, float time = 0.0f, Color color = Color::Red)", asFUNCTION(static_cast<void(*)(Vector3, Vector3, f32, Color)>(Debug::DrawCube)), asCALL_CDECL, this); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("void DrawSphere(Vector3 center, Vector3 euler_angles, float radius, float time = 0.0f, Color color = Color::Red)", asFUNCTION(Debug::DrawSphere), asCALL_CDECL, this); VERIFY(r >= 0);
         }
     }

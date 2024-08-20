@@ -15,6 +15,8 @@ using u16 = uint16_t;
 using u32 = uint32_t;
 using u64 = uint64_t;
 
+using b32 = uint32_t;
+
 constexpr s8 operator""_s8(unsigned long long int v) { return static_cast<s8>(v); }
 constexpr s16 operator""_s16(unsigned long long int v) { return static_cast<s16>(v); }
 constexpr s32 operator""_s32(unsigned long long int v) { return static_cast<s32>(v); }
