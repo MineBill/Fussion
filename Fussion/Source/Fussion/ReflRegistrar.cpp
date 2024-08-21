@@ -7,7 +7,6 @@
 #include "Fussion/Scene/Entity.h"
 #include "Math/Color.h"
 
-#include <print>
 #include "ReflRegistrar.h"
 
 #include "Debug/Debug.h"
@@ -41,8 +40,6 @@ namespace Fussion {
 
         using meta::constructor_policy::as_raw_pointer;
         using meta::member_policy::as_pointer;
-
-        std::print("Registering meta info\n");
 
         // Math
         {
