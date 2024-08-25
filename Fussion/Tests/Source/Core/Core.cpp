@@ -1,4 +1,5 @@
 ﻿#include "Fussion/Core/Maybe.h"
+#include "Fussion/Core/StringUtils.h"
 
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -244,5 +245,13 @@ TEST_CASE("Optional")
             CHECK(num.HasValue());
         }
     }
+}
 
+TEST_CASE("StringUtils")
+{
+    using namespace std::string_view_literals;
+    SECTION("::Remove") {
+        CHECK(StringUtils::Remove("m_Enabled", "m_") == "Enabled"sv);
+        CHECK(StringUtils::Remove("Enabled", "m_") == "Enabled"sv);
+    }
 }

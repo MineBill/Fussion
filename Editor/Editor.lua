@@ -18,7 +18,8 @@ target "Editor"
     )
 
     add_files (
-        "Source/**.cpp"
+        "Source/**.cpp",
+        "Source/**.c"
     )
 
     add_headerfiles (

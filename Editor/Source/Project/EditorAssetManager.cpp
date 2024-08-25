@@ -2,6 +2,8 @@
 #include "EditorAssetManager.h"
 #include "EditorApplication.h"
 #include "Project.h"
+#include "Fussion/Assets/Model.h"
+#include "Fussion/Assets/PbrMaterial.h"
 #include "Serialization/AssetSerializer.h"
 #include "Serialization/SceneSerializer.h"
 #include "Serialization/TextureSerializer.h"
@@ -11,13 +13,31 @@
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/RHI/ShaderCompiler.h"
 #include "Fussion/Serialization/Json.h"
+#include "Fussion/Serialization/JsonSerializer.h"
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
-#include <fstream>
 #include <future>
 
 using namespace Fussion;
+
+// void EditorAssetMetadata::Serialize(Serializer& ctx) const
+// {
+//     if (IsVirtual || DontSerialize)
+//         return;
+//     ISerializable::Serialize(ctx);
+//     FSN_SERIALIZE_MEMBER(Type);
+//     FSN_SERIALIZE_MEMBER(Path);
+//     FSN_SERIALIZE_MEMBER(Name);
+// }
+//
+// void EditorAssetMetadata::Deserialize(Deserializer& ctx)
+// {
+//     ISerializable::Deserialize(ctx);
+//     FSN_DESERIALIZE_MEMBER(Type);
+//     FSN_DESERIALIZE_MEMBER(Path);
+//     FSN_DESERIALIZE_MEMBER(Name);
+// }
 
 WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_AssetManager(asset_manager)
 {
@@ -35,10 +55,23 @@ void WorkerPool::Work(s32 index)
 
     // NOTE: This probably doesn't hurt much since these are pointers to functions, no data are created.
     std::map<AssetType, Ptr<AssetSerializer>> asset_serializers{};
-    asset_serializers[AssetType::Scene] = MakePtr<SceneSerializer>();
     asset_serializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
-    asset_serializers[AssetType::Mesh] = MakePtr<MeshSerializer>();
-    asset_serializers[AssetType::PbrMaterial] = MakePtr<PbrMaterialSerializer>();
+    asset_serializers[AssetType::Model] = MakePtr<MeshSerializer>();
+
+    auto MakeAsset = [](AssetType type) -> Ref<Asset> {
+        switch (type) {
+        case AssetType::Model:
+            return MakeRef<Model>();
+        case AssetType::PbrMaterial:
+            return MakeRef<PbrMaterial>();
+        case AssetType::Scene:
+            return MakeRef<Scene>();
+        case AssetType::Texture2D:
+            return MakeRef<Texture2D>();
+        default:
+            UNREACHABLE;
+        }
+    };
 
     LOG_INFOF("Worker({}) started", index);
 
@@ -57,11 +90,23 @@ void WorkerPool::Work(s32 index)
         if (task.HasValue()) {
             LOG_INFOF("Worker({}) was notified about a new task: {}", index, task->Path.string());
 
-            auto asset = asset_serializers[task->Type]->Load(*task);
-            asset->SetHandle(task->Handle);
-            LoadedAssets.Access([&](auto& queue) {
-                queue.push(asset);
-            });
+            if (asset_serializers.contains(task->Type)) {
+                auto asset = asset_serializers[task->Type]->Load(*task);
+                asset->SetHandle(task->Handle);
+                LoadedAssets.Access([&](auto& queue) {
+                    queue.push(asset);
+                });
+            } else {
+                auto asset = MakeAsset(task->Type);
+                if (auto json_string = FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / task->Path)) {
+                    JsonDeserializer ds(*json_string);
+                    asset->Deserialize(ds);
+                    asset->SetHandle(task->Handle);
+                    LoadedAssets.Access([&](auto& queue) {
+                        queue.push(asset);
+                    });
+                }
+            }
 
             // // TODO: This whole thing screams thread safety :) m_LoadedAssets probably needs to be guarded too.
             // m_AssetManager->m_LoadedAssets[task->Handle] = m_AssetManager->m_AssetSerializers[task->Type]->Load(*task);
@@ -86,10 +131,8 @@ void WorkerPool::Load(EditorAssetMetadata const& metadata)
 EditorAssetManager::EditorAssetManager()
     : m_EditorWatcher(FileWatcher::Create(std::filesystem::current_path() / "Assets" / "Shaders"))
 {
-    m_AssetSerializers[AssetType::Scene] = MakePtr<SceneSerializer>();
-    m_AssetSerializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
-    m_AssetSerializers[AssetType::Mesh] = MakePtr<MeshSerializer>();
-    m_AssetSerializers[AssetType::PbrMaterial] = MakePtr<PbrMaterialSerializer>();
+    m_AssetImporters[AssetType::Texture2D] = MakePtr<TextureSerializer>();
+    m_AssetImporters[AssetType::Model] = MakePtr<MeshSerializer>();
 
     m_EditorWatcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
         LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
@@ -111,7 +154,8 @@ EditorAssetManager::EditorAssetManager()
                 if (result.HasValue()) {
                     *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
                 }
-            } break;
+            }
+            break;
             default:
                 break;
             }
@@ -167,6 +211,8 @@ bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
 bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
 {
     return m_Registry.Access([&](Registry const& registry) {
+        if (!registry.contains(handle))
+            return false;
         return registry.at(handle).IsVirtual;
     });
 }
@@ -288,7 +334,7 @@ void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, AssetT
         };
     });
 
-    Serialize();
+    SaveToFile();
 }
 
 void EditorAssetManager::SaveAsset(AssetHandle handle)
@@ -296,19 +342,29 @@ void EditorAssetManager::SaveAsset(AssetHandle handle)
     auto meta = m_Registry.Access([&](Registry& registry) {
         return registry[handle];
     });
-    m_AssetSerializers[meta.Type]->Save(meta, m_LoadedAssets[handle]);
 
-    m_LoadedAssets[handle] = m_AssetSerializers[meta.Type]->Load(meta);
-    m_LoadedAssets[handle]->SetHandle(handle);
+    if (m_AssetImporters.contains(meta.Type)) {
+        m_AssetImporters[meta.Type]->Save(meta, m_LoadedAssets[handle]);
+        m_LoadedAssets[handle] = m_AssetImporters[meta.Type]->Load(meta);
+        m_LoadedAssets[handle]->SetHandle(handle);
+    } else {
+        JsonSerializer js;
+        js.Initialize();
+
+        m_LoadedAssets[handle]->Serialize(js);
+
+        auto path = Project::ActiveProject()->GetAssetsFolder() / meta.Path;
+        FileSystem::WriteEntireFile(path, js.ToString());
+    }
 }
 
 void EditorAssetManager::SaveAsset(Ref<Asset> const& asset)
 {
     auto const handle = asset->GetHandle();
     m_Registry.Access([&](Registry& registry) {
-        m_AssetSerializers[registry[handle].Type]->Save(registry[handle], asset);
+        m_AssetImporters[registry[handle].Type]->Save(registry[handle], asset);
 
-        m_LoadedAssets[handle] = m_AssetSerializers[registry[handle].Type]->Load(registry[handle]);
+        m_LoadedAssets[handle] = m_AssetImporters[registry[handle].Type]->Load(registry[handle]);
         m_LoadedAssets[handle]->SetHandle(handle);
     });
 }
@@ -319,10 +375,9 @@ auto DeserializeCustomMetadata(json const& j, AssetType type) -> Ref<AssetMetada
     switch (type) {
     case Texture2D: {
         auto meta = MakeRef<Texture2DMetadata>();
-        auto ptr = meta->meta_poly_ptr();
-        if (j.contains("CustomMetadata")) {
-            DeserializeClassFromJson(j["CustomMetadata"], meta_hpp::resolve_type<Texture2DMetadata>(), std::move(ptr));
-        }
+        JsonDeserializer ds = JsonDeserializer::FromJsonObject(j);
+
+        ds.Read("CustomMetadata", *meta);
         return meta;
     }
     default:
@@ -331,7 +386,7 @@ auto DeserializeCustomMetadata(json const& j, AssetType type) -> Ref<AssetMetada
     return nullptr;
 }
 
-void EditorAssetManager::Serialize()
+void EditorAssetManager::SaveToFile()
 {
     ZoneScoped;
     auto project = Project::ActiveProject();
@@ -368,7 +423,7 @@ void EditorAssetManager::Serialize()
     });
 }
 
-void EditorAssetManager::Deserialize()
+void EditorAssetManager::LoadFromFile()
 {
     ZoneScoped;
     auto const& path = Project::ActiveProject()->GetAssetRegistry();
@@ -435,10 +490,96 @@ void EditorAssetManager::CheckForLoadedAssets()
     });
 }
 
+void EditorAssetManager::Serialize(Serializer& ctx) const
+{
+    ISerializable::Serialize(ctx);
+    auto project = Project::ActiveProject();
+
+    m_Registry.Access([&](Registry const& registry) {
+        // for (auto const& [handle, metadata] : registry) {
+        //     if (metadata.IsVirtual || metadata.DontSerialize) {
+        //         continue;
+        //     }
+        //
+        //     auto index = i++;
+        //     j["Assets"][index] = {
+        //         { "Handle", handle },
+        //         { "Type", magic_enum::enum_name(metadata.Type) },
+        //         { "Path", metadata.Path.string() },
+        //         { "Name", metadata.Name },
+        //     };
+        //
+        //     if (metadata.CustomMetadata != nullptr) {
+        //         auto ptr = metadata.CustomMetadata->meta_poly_ptr();
+        //         auto class_type = ptr.get_type().as_pointer().get_data_type().as_class();
+        //         auto name = class_type.get_metadata().at("Name").as<std::string>();
+        //         j["Assets"][index]["CustomMetadata"] = SerializeNativeClass(class_type, std::move(ptr));
+        //         j["Assets"][index]["CustomMetadata"]["$Type"] = name;
+        //     }
+        // }
+        ctx.BeginArray("Assets", registry.size());
+        for (auto const& metadata : registry | std::views::values) {
+            if (metadata.IsVirtual || metadata.DontSerialize)
+                continue;
+            ctx.BeginObject("", 0);
+            ctx.Write("Name", metadata.Name);
+            ctx.Write("Handle", metadata.Handle);
+            ctx.Write("Type", metadata.Type);
+            ctx.Write("Path", metadata.Path);
+
+            if (metadata.CustomMetadata != nullptr) {
+                ctx.Write("CustomMetadata", *metadata.CustomMetadata);
+            }
+            ctx.EndObject();
+        }
+        ctx.EndArray();
+
+    });
+}
+
+void EditorAssetManager::Deserialize(Deserializer& ctx)
+{
+    ISerializable::Deserialize(ctx);
+    size_t size;
+    ctx.BeginArray("Assets", size);
+    m_Registry.Access([&](Registry& registry) {
+        registry.reserve(size);
+
+        for (size_t i = 0; i < size; i++) {
+            size_t _s;
+            ctx.BeginObject("", _s);
+
+            EditorAssetMetadata metadata{};
+            ctx.Read("Name", metadata.Name);
+            ctx.Read("Handle", metadata.Handle);
+            ctx.Read("Type", metadata.Type);
+            ctx.Read("Path", metadata.Path);
+
+            // size_t custom_metadata_size;
+            // if (ctx.BeginObject("CustomMetadata", custom_metadata_size) {
+            //     ctx.Read("CustomMetadata", metadata);
+            //     ctx.EndObject();
+            // }
+
+            switch (metadata.Type) {
+            case AssetType::Texture2D: {
+                auto meta = MakeRef<Texture2DMetadata>();
+                ctx.Read("CustomMetadata", *meta);
+                metadata.CustomMetadata = meta;
+            }
+            break;
+            default:
+                break;
+            }
+
+            ctx.EndObject();
+        }
+    });
+    ctx.EndArray();
+}
+
 void EditorAssetManager::LoadAsset(AssetHandle handle, AssetType type)
 {
-    VERIFY(m_AssetSerializers.contains(type), "Missing asset serializer for type '{}'", magic_enum::enum_name(type));
-
     LOG_DEBUGF("LoadAsset[{}, {}]", handle, magic_enum::enum_name(type));
     m_Registry.Access([&](Registry& registry) {
         registry[handle].LoadState = AssetLoadState::Loading;

@@ -2,6 +2,7 @@
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/ReflRegistrar.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
+#include "Fussion/Serialization/ISerializable.h"
 
 namespace Fussion {
     enum class [[nodiscard]] AssetType {
@@ -9,7 +10,7 @@ namespace Fussion {
 
         Image,
         Script,
-        Mesh,
+        Model,
         PbrMaterial,
         Scene,
         Shader,
@@ -20,17 +21,17 @@ namespace Fussion {
 
     using AssetHandle = Uuid;
 
-    class AssetMetadata {
+    class AssetMetadata : public ISerializable {
         META_HPP_ENABLE_POLY_INFO()
     public:
-        virtual ~AssetMetadata() = default;
+        virtual ~AssetMetadata() override = default;
     };
 
-    class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset> {
+    class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset>, public ISerializable {
         friend ReflRegistrar;
 
     public:
-        virtual ~Asset() = default;
+        virtual ~Asset() override = default;
 
         [[nodiscard]]
         virtual AssetType GetType() const = 0;

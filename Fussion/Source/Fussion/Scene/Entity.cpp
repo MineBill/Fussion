@@ -1,6 +1,7 @@
 ﻿#include "FussionPCH.h"
 #include "Entity.h"
 #include "Fussion/Scene/Scene.h"
+#include "Serialization/Serializer.h"
 
 #include "Components/Camera.h"
 
@@ -8,7 +9,8 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    Mat4 Transform::GetMatrix() const {
+    Mat4 Transform::GetMatrix() const
+    {
         auto scale = glm::scale(Mat4(1.0), CAST(glm::vec3, Scale));
         auto rotation = glm::eulerAngleYXZ(
             glm::radians(EulerAngles.Y),
@@ -18,7 +20,8 @@ namespace Fussion {
         return translation * rotation * scale;
     }
 
-    Mat4 Transform::GetCameraMatrix() const {
+    Mat4 Transform::GetCameraMatrix() const
+    {
         auto rotation = glm::eulerAngleZXY(
             glm::radians(EulerAngles.Z),
             glm::radians(EulerAngles.X),
@@ -27,7 +30,8 @@ namespace Fussion {
         return rotation * glm::inverse(translation);
     }
 
-    auto Transform::GetForward() const -> Vector3 {
+    auto Transform::GetForward() const -> Vector3
+    {
         auto rotation = glm::mat3(glm::eulerAngleYXZ(
             glm::radians(EulerAngles.Y),
             glm::radians(EulerAngles.X),
@@ -36,39 +40,76 @@ namespace Fussion {
         return rotation * Vector3::Forward;
     }
 
-    Entity::Entity(const Entity& other): Transform(other.Transform),
+    void Transform::Serialize(Serializer& ctx) const
+    {
+        FSN_SERIALIZE_MEMBER(Position);
+        FSN_SERIALIZE_MEMBER(EulerAngles);
+        FSN_SERIALIZE_MEMBER(Scale);
+    }
+
+    void Transform::Deserialize(Deserializer& ctx)
+    {
+        FSN_DESERIALIZE_MEMBER(Position);
+        FSN_DESERIALIZE_MEMBER(EulerAngles);
+        FSN_DESERIALIZE_MEMBER(Scale);
+    }
+
+    Entity::Entity(Entity const& other): Transform(other.Transform),
                                          Name(other.Name),
                                          m_Parent(other.m_Parent),
                                          m_Children(other.m_Children),
-                                         m_Components(other.m_Components),
+                                         m_Components(std::move(other.m_Components)),
                                          m_RemovedComponents(other.m_RemovedComponents),
                                          m_Handle(other.m_Handle),
                                          m_Scene(other.m_Scene),
-                                         m_Enabled(other.m_Enabled) {}
+                                         m_LocalID(other.m_LocalID),
+                                         m_Enabled(other.m_Enabled)
+    {
+
+        for (auto& [id, component] : other.m_Components) {
+            (void)id;
+            component->m_Owner = this;
+        }
+    }
 
     Entity::Entity(Entity&& other) noexcept: Transform(std::move(other.Transform)),
                                              Name(std::move(other.Name)),
-                                             m_Parent(std::move(other.m_Parent)),
+                                             m_Parent(other.m_Parent),
                                              m_Children(std::move(other.m_Children)),
                                              m_Components(std::move(other.m_Components)),
                                              m_RemovedComponents(std::move(other.m_RemovedComponents)),
-                                             m_Handle(std::move(other.m_Handle)),
+                                             m_Handle(other.m_Handle),
                                              m_Scene(other.m_Scene),
-                                             m_Enabled(other.m_Enabled) {}
+                                             m_Enabled(other.m_Enabled)
+    {
+        for (auto& [id, component] : m_Components) {
+            (void)id;
+            component->m_Owner = this;
+        }
+    }
 
-    Entity& Entity::operator=(const Entity& other)
+    Entity& Entity::operator=(Entity const& other)
     {
         if (this == &other)
             return *this;
         Transform = other.Transform;
         Name = other.Name;
         m_Parent = other.m_Parent;
+        // Since Entity only has a handle to it's parent,
+        // and we copy that handle here, we don't have to
+        // "update" the children to point to us, because they
+        // already do.
         m_Children = other.m_Children;
         m_Components = other.m_Components;
         m_RemovedComponents = other.m_RemovedComponents;
         m_Handle = other.m_Handle;
         m_Scene = other.m_Scene;
         m_Enabled = other.m_Enabled;
+
+        for (auto& [id, component] : m_Components) {
+            (void)id;
+            component->m_Owner = this;
+        }
         return *this;
     }
 
@@ -78,13 +119,19 @@ namespace Fussion {
             return *this;
         Transform = std::move(other.Transform);
         Name = std::move(other.Name);
-        m_Parent = std::move(other.m_Parent);
+        m_Parent = other.m_Parent;
         m_Children = std::move(other.m_Children);
         m_Components = std::move(other.m_Components);
         m_RemovedComponents = std::move(other.m_RemovedComponents);
-        m_Handle = std::move(other.m_Handle);
+        m_Handle = other.m_Handle;
         m_Scene = other.m_Scene;
         m_Enabled = other.m_Enabled;
+        m_LocalID = other.m_LocalID;
+
+        for (auto& [id, component] : m_Components) {
+            (void)id;
+            component->m_Owner = this;
+        }
         return *this;
     }
 
@@ -157,7 +204,7 @@ namespace Fussion {
         comp.reset(ptr);
 
         comp->OnCreate();
-        m_Components[type.get_hash()] = comp;
+        m_Components[Uuid(type.get_hash())] = comp;
         return comp;
     }
 
@@ -165,7 +212,7 @@ namespace Fussion {
     {
         ZoneScoped;
 
-        return m_Components.contains(type.get_hash());
+        return m_Components.contains(Uuid(type.get_hash()));
     }
 
     auto Entity::GetComponent(meta_hpp::class_type type) -> Ref<Component>
@@ -174,7 +221,7 @@ namespace Fussion {
 
         if (!HasComponent(type))
             return nullptr;
-        auto component = m_Components[type.get_hash()];
+        auto component = m_Components[Uuid(type.get_hash())];
         return component;
     }
 
@@ -183,7 +230,7 @@ namespace Fussion {
         VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
             "Attempted to remove a component that doesn't derive from Component, weird.");
 
-        m_RemovedComponents.push_back(type.get_hash());
+        m_RemovedComponents.push_back(Uuid(type.get_hash()));
     }
 
     void Entity::OnDraw(RHI::RenderContext& context)
@@ -193,6 +240,43 @@ namespace Fussion {
             (void)id;
             component->OnDraw(context);
         }
+    }
+
+    void Entity::Serialize(Serializer& ctx) const
+    {
+        FSN_SERIALIZE_MEMBER(Name);
+        FSN_SERIALIZE_MEMBER(m_Enabled);
+        FSN_SERIALIZE_MEMBER(m_Handle);
+        FSN_SERIALIZE_MEMBER(m_Parent);
+        FSN_SERIALIZE_MEMBER(Transform);
+
+        ctx.BeginObject("Components", m_Components.size());
+        for (auto const& [id, component] : m_Components) {
+            auto name = component->meta_poly_ptr().get_type().as_pointer().get_data_type().get_metadata().at("Name").as<std::string>();
+            ctx.Write(name, *component);
+        }
+        ctx.EndObject();
+    }
+
+    void Entity::Deserialize(Deserializer& ctx)
+    {
+        FSN_DESERIALIZE_MEMBER(Name);
+        FSN_DESERIALIZE_MEMBER(m_Enabled);
+        FSN_DESERIALIZE_MEMBER(m_Handle);
+        FSN_DESERIALIZE_MEMBER(m_Parent);
+        FSN_DESERIALIZE_MEMBER(Transform);
+
+        size_t size;
+        ctx.BeginObject("Components", size);
+
+        auto registry = meta_hpp::resolve_scope("Components");
+        for (auto const& key : ctx.ReadKeys()) {
+            if (auto klass = registry.get_typedef(key); klass.is_valid()) {
+                auto component = AddComponent(klass.as_class());
+                ctx.Read(key, *component);
+            }
+        }
+        ctx.EndObject();
     }
 
     void Entity::OnStart()

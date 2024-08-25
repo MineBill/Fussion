@@ -1,42 +1,49 @@
 ﻿#pragma once
-#include "Assets/PbrMaterial.h"
+#include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Scene/Component.h"
-#include "Fussion/Assets/Mesh.h"
-#include "RHI/FrameAllocator.h"
+#include "Fussion/Assets/Model.h"
+#include "Fussion/RHI/FrameAllocator.h"
 
 namespace Fussion {
-class MeshRenderer final : public Component {
-    struct PushConstantData {
-        Mat4 Model;
-    } m_Data;
+    class MeshRenderer final : public Component {
+        struct PushConstantData {
+            Mat4 Model;
+        } m_Data;
 
-    struct DepthPushConstantData {
-        Mat4 Model;
-        Mat4 LightSpace;
-    } m_DepthPushData;
+        struct DepthPushConstantData {
+            Mat4 Model;
+            Mat4 LightSpace;
+        } m_DepthPushData;
 
-    struct ObjectPickingConstantData {
-        Mat4 Model;
-        s32 LocalID;
-    } m_ObjectPickingPushData;
-public:
-    COMPONENT_DEFAULT(MeshRenderer)
+        struct ObjectPickingConstantData {
+            Mat4 Model;
+            s32 LocalID;
+        } m_ObjectPickingPushData;
 
-    virtual void OnStart() override;
-    virtual void OnUpdate(f32 delta) override;
-    virtual void OnDraw(RHI::RenderContext& ctx) override;
+    public:
+        COMPONENT_DEFAULT(MeshRenderer)
+
+        virtual void OnStart() override;
+        virtual void OnUpdate(f32 delta) override;
+        virtual void OnDraw(RHI::RenderContext& ctx) override;
 
 #if FSN_DEBUG_DRAW
-    virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
-    AssetRef<Mesh> Mesh;
-    AssetRef<PbrMaterial> Material;
+        AssetRef<Model> Model;
 
-private:
-    Ref<RHI::Shader> m_PbrShader;
-    Ref<RHI::ResourceLayout> m_ObjectLayout;
-    RHI::FrameAllocator m_FrameAllocator;
-};
+        std::vector<AssetRef<PbrMaterial>> Materials{};
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
+    private:
+        Ref<RHI::Shader> m_PbrShader;
+        Ref<RHI::ResourceLayout> m_ObjectLayout;
+        RHI::FrameAllocator m_FrameAllocator;
+
+        std::array<RHI::ResourceUsage, 6> m_MaterialResourceUsages{};
+    };
 }

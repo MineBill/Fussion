@@ -151,7 +151,7 @@ namespace Fussion::RHI {
     {
         auto const& spec = buffer->GetSpec();
         if (spec.Usage.Test(BufferUsage::Index)) {
-            vkCmdBindIndexBuffer(Handle, buffer->GetRenderHandle<VkBuffer>(), 0, VK_INDEX_TYPE_UINT16);
+            vkCmdBindIndexBuffer(Handle, buffer->GetRenderHandle<VkBuffer>(), 0, VK_INDEX_TYPE_UINT32);
         } else if (spec.Usage.Test(BufferUsage::Vertex)) {
             const auto handle = buffer->GetRenderHandle<VkBuffer>();
             constexpr auto offsets = VkDeviceSize{};

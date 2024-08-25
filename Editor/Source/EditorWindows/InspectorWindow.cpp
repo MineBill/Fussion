@@ -3,7 +3,7 @@
 #include "Layers/Editor.h"
 #include "ImGuiHelpers.h"
 #include "EditorUI.h"
-#include "Fussion/Assets/Mesh.h"
+#include "Fussion/Assets/Model.h"
 #include "Fussion/Math/Color.h"
 
 #include <imgui.h>
@@ -12,6 +12,7 @@
 
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Component.h"
+#include "Fussion/Scene/Components/MeshRenderer.h"
 #include "Fussion/Scene/Components/ScriptComponent.h"
 
 using namespace Fussion;
@@ -53,9 +54,12 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
             ImGui::PushID(member.get_name().data());
             defer(ImGui::PopID());
 
-            EUI::Property(member.get_name(), [&] {
+            if (!member.get_metadata().contains("vector")) {
+                EUI::Property(member.get_name(), [&] {
+                    DrawProperty(std::move(value), member, ptr);
+#if 0
                 ZoneScoped;
-                if (auto const data_type = value.get_type().as_pointer().get_data_type(); data_type.is_number()) {
+                if (auto const property_type = value.get_type().as_pointer().get_data_type(); property_type.is_number()) {
                     ImGuiDataType type;
                     if (value.is<f32*>()) {
                         type = ImGuiDataType_Float;
@@ -93,15 +97,30 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                     modified |= ImGui::DragFloat3("", value.as<Vector3*>()->Raw);
                 } else if (value.is<Vector4*>()) {
                     modified |= ImGui::DragFloat4("", value.as<Vector4*>()->Raw);
-                } else if (data_type.is_class()) {
-                    auto class_type = data_type.as_class();
+                } else if (property_type.is_class()) {
+                    auto class_type = property_type.as_class();
                     if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
                         EUI::AssetProperty(class_type, std::move(value));
+                    } else if (member.get_metadata().contains("vector")) {
+                        // class_type is std::vector<T>
+                        auto type_t = class_type.get_argument_type(0);
+                        if (type_t == meta_hpp::resolve_type<s32>()) {
+                            auto vector = CAST(std::vector<s32>**, value.get_data());
+                            if (ImGui::CollapsingHeader("Values")) {
+                                // for (auto &number : **vector) {
+                                for (auto i = 0; i < (*vector)->size(); i++) {
+                                    auto& number = (**vector)[i];
+                                    ImGui::PushID(i);
+                                    defer(ImGui::PopID());
+                                }
+                            }
+
+                        }
                     } else {
-                        ImGui::Text("Unsupported type for %s", member.get_name().c_str());
+                        ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
                     }
-                } else if (data_type.is_enum()) {
-                    auto enum_type = data_type.as_enum();
+                } else if (property_type.is_enum()) {
+                    auto enum_type = property_type.as_enum();
 
                     auto current_evalue = enum_type.value_to_evalue(value);
                     if (ImGui::BeginCombo("", current_evalue.get_name().data())) {
@@ -115,7 +134,9 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                 } else {
                     ImGui::Text("Unsupported type for %s", member.get_name().c_str());
                 }
-            });
+#endif
+                });
+            }
         }
     };
 
@@ -136,7 +157,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     ImGui::PushID(CAST(s32, component_type.get_hash()));
     EUI::ImageButton(EditorStyle::GetStyle().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
-    }, { .Size = Vector2{ 18, 18 } });
+    }, { .Size = Vector2{ line_height, line_height } });
 
     if (ImGui::BeginPopupContextItem("ComponentSettings")) {
         if (ImGui::MenuItem("Remove Component")) {
@@ -150,16 +171,17 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     if (opened) {
         // Special case gui for some components.
         if (component_type == meta_hpp::resolve_type<ScriptComponent>()) {
-            if (ImGui::TreeNode("Classes")) {
+            DrawProps();
+        } else if (component_type == meta_hpp::resolve_type<MeshRenderer>()) {
+            DrawProps();
 
+            if (ImGui::TreeNode("Materials")) {
+                for (auto mr = *CAST(MeshRenderer**, ptr.get_data()); auto& material : mr->Materials) {
+                    EUI::AssetProperty(material.meta_poly_ptr().get_type().as_pointer().get_data_type().as_class(), material.meta_poly_ptr());
+                }
                 ImGui::TreePop();
             }
 
-            if (ImGuiHelpers::ButtonCenteredOnLine("Test")) {
-                ptr.as<ScriptComponent*>()->Test();
-            }
-
-            DrawProps();
         } else {
             // Generic case
             DrawProps();
@@ -168,6 +190,91 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
         ImGui::Separator();
     }
 
+    return modified;
+}
+
+template<typename... T>
+auto DrawVector(meta_hpp::any_type type, meta_hpp::uvalue vector) {}
+
+bool InspectorWindow::DrawProperty(meta_hpp::uvalue prop_value, meta_hpp::member const& member, meta_hpp::uvalue& ptr)
+{
+    ZoneScoped;
+    bool modified{ false };
+    if (auto const prop_type = prop_value.get_type().as_pointer().get_data_type(); prop_type.is_number()) {
+        ImGuiDataType type;
+        if (prop_value.is<f32*>()) {
+            type = ImGuiDataType_Float;
+        } else if (prop_value.is<f64*>()) {
+            type = ImGuiDataType_Double;
+        } else if (prop_value.is<u32*>()) {
+            type = ImGuiDataType_U32;
+        } else if (prop_value.is<u64*>()) {
+            type = ImGuiDataType_U64;
+        } else if (prop_value.is<s32*>()) {
+            type = ImGuiDataType_S32;
+        } else if (prop_value.is<s64*>()) {
+            type = ImGuiDataType_S64;
+        } else {
+            PANIC("Unsupported numeric type for member");
+        }
+        // @note value has a pointer to the member pointer, so get_data returns that
+        // pointer to the pointer.
+        if (ImGui::InputScalar("", type, *CAST(void**, prop_value.get_data()))) {
+            modified = true;
+        }
+    } else if (prop_value.is<bool*>()) {
+        if (ImGui::Checkbox("", prop_value.as<bool*>())) {
+            modified = true;
+        }
+    } else if (prop_value.is<std::string*>()) {
+        if (ImGui::InputText("", prop_value.as<std::string*>())) {
+            modified = true;
+        }
+    } else if (prop_value.is<Color*>()) {
+        modified |= ImGui::ColorEdit4("", prop_value.as<Color*>()->Raw);
+    } else if (prop_value.is<Vector2*>()) {
+        modified |= ImGui::DragFloat2("", prop_value.as<Vector2*>()->Raw);
+    } else if (prop_value.is<Vector3*>()) {
+        modified |= ImGui::DragFloat3("", prop_value.as<Vector3*>()->Raw);
+    } else if (prop_value.is<Vector4*>()) {
+        modified |= ImGui::DragFloat4("", prop_value.as<Vector4*>()->Raw);
+    } else if (prop_type.is_class()) {
+        auto class_type = prop_type.as_class();
+        if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
+            EUI::AssetProperty(class_type, std::move(prop_value));
+            // } else if (member.get_metadata().contains("vector")) {
+            // // class_type is std::vector<T>
+            // auto type_t = class_type.get_argument_type(0);
+            // if (type_t == meta_hpp::resolve_type<s32>()) {
+            //     auto vector = CAST(std::vector<s32>**, prop_value.get_data());
+            //     if (ImGui::CollapsingHeader("Values")) {
+            //         // for (auto &number : **vector) {
+            //         for (auto i = 0; i < (*vector)->size(); i++) {
+            //             auto& number = (**vector)[i];
+            //             DrawProperty(meta_hpp::uvalue(number), {});
+            //         }
+            //     }
+            // }
+        } else {
+            ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
+        }
+    } else if (prop_type.is_enum()) {
+        auto enum_type = prop_type.as_enum();
+
+        auto current_evalue = enum_type.value_to_evalue(*prop_value);
+        if (current_evalue.is_valid()) {
+            if (ImGui::BeginCombo("", current_evalue.get_name().data())) {
+                for (auto const& evalue : enum_type.get_evalues()) {
+                    if (ImGui::Selectable(evalue.get_name().c_str())) {
+                        member.set(ptr, evalue.get_value());
+                    }
+                }
+                ImGui::EndCombo();
+            }
+        }
+    } else {
+        ImGui::Text("Unsupported type for %s", member.get_name().c_str());
+    }
     return modified;
 }
 
@@ -218,7 +325,7 @@ bool InspectorWindow::DrawEntity(Entity& e)
     modified |= ImGuiHelpers::DragVec3("##scale", &e.Transform.Scale, 0.01f, 0.f, 0.f, "%.2f", style.Fonts[EditorFont::Bold], style.Fonts[EditorFont::RegularSmall]);
     ImGuiHelpers::EndGroupPanel();
 
-    for (const auto& component : e.GetComponents() | std::views::values) {
+    for (auto const& component : e.GetComponents() | std::views::values) {
         auto ptr = component->meta_poly_ptr();
 
         auto type = ptr.get_type().as_pointer().get_data_type().as_class();

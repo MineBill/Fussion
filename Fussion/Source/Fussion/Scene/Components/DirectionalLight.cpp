@@ -3,6 +3,7 @@
 
 #include "Debug/Debug.h"
 #include "Scene/Entity.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
     void DirectionalLight::OnEnabled()
@@ -39,5 +40,19 @@ namespace Fussion {
             },
             SplitLambda,
         });
+    }
+
+    void DirectionalLight::Serialize(Serializer& ctx) const
+    {
+        Component::Serialize(ctx);
+        FSN_SERIALIZE_MEMBER(LightColor);
+        FSN_SERIALIZE_MEMBER(SplitLambda);
+    }
+
+    void DirectionalLight::Deserialize(Deserializer& ctx)
+    {
+        Component::Deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(LightColor);
+        FSN_DESERIALIZE_MEMBER(SplitLambda);
     }
 }

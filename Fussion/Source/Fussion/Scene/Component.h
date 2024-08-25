@@ -2,6 +2,7 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
 #include "Fussion/RHI/RenderContext.h"
+#include "Fussion/Serialization/ISerializable.h"
 
 #define FSN_DEBUG_DRAW 1
 
@@ -10,39 +11,42 @@
 #endif
 
 namespace Fussion {
-class Entity;
+    class Entity;
+    class Scene;
 
-class Component {
-    META_HPP_ENABLE_POLY_INFO()
-public:
-    Component() = default;
-    explicit Component(Entity* owner): m_Owner(owner) {}
-    virtual ~Component() = default;
+    class Component : public ISerializable {
+        META_HPP_ENABLE_POLY_INFO()
+        friend Entity;
+        friend Scene;
+    public:
+        Component() = default;
+        explicit Component(Entity* owner): m_Owner(owner) {}
+        virtual ~Component() override = default;
 
-    virtual void OnCreate()
-    {
-        OnStart();
-    }
+        virtual void OnCreate()
+        {
+            OnStart();
+        }
 
-    virtual void OnDestroy() {}
+        virtual void OnDestroy() {}
 
-    virtual void OnStart() {}
-    virtual void OnUpdate([[maybe_unused]] f32 delta) {}
+        virtual void OnStart() {}
+        virtual void OnUpdate([[maybe_unused]] f32 delta) {}
 
 #if FSN_DEBUG_DRAW
-    virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) {}
+        virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) {}
 #endif
 
-    virtual void OnEnabled() {}
-    virtual void OnDisabled() {}
+        virtual void OnEnabled() {}
+        virtual void OnDisabled() {}
 
-    virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
+        virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
 
-    Entity* GetOwner() const { return m_Owner; }
+        Entity* GetOwner() const { return m_Owner; }
 
-protected:
-    Entity* m_Owner;
-};
+    protected:
+        Entity* m_Owner;
+    };
 }
 
 #define COMPONENT(name)                               \

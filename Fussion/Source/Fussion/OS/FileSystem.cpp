@@ -6,10 +6,10 @@
 #include <iterator>
 
 namespace Fussion {
-    std::optional<std::string> FileSystem::ReadEntireFile(std::filesystem::path const& path)
+    auto FileSystem::ReadEntireFile(std::filesystem::path const& path) -> Maybe<std::string>
     {
-        if (!std::filesystem::exists(path)) {
-            return std::nullopt;
+        if (!exists(path)) {
+            return {};
         }
 
         std::ifstream file(path);

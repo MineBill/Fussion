@@ -4,6 +4,7 @@
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "Fussion/Scene/Components/Camera.h"
+#include "Fussion/Serialization/JsonSerializer.h"
 #include "Serialization/SceneSerializer.h"
 
 #include <Fussion/Input/Input.h>
@@ -75,9 +76,15 @@ void Editor::OnStart()
 
     OnBeginPlay += [this] {
         LOG_DEBUG("On Begin Play");
-        auto serializer = MakePtr<SceneSerializer>();
+        // auto serializer = MakePtr<SceneSerializer>();
         auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(m_ActiveScene->GetHandle());
-        m_PlayScene = serializer->Load(meta)->As<Scene>();
+        // m_PlayScene = serializer->Load(meta)->As<Scene>();
+
+        // m_PlayScene = m_ActiveScene->Clone()->As<Scene>();
+
+        JsonDeserializer ds(*FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / meta.Path));
+        m_PlayScene = MakeRef<Scene>();
+        m_PlayScene->Deserialize(ds);
 
         if (m_PlayScene)
             m_PlayScene->OnStart();
@@ -109,11 +116,15 @@ void Editor::Save() const
     Project::ActiveProject()->Save();
 
     if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
-        LOG_DEBUGF("Saving scene {}", m_ActiveScene->Name());
-        auto serializer = MakePtr<SceneSerializer>();
-        EditorAssetMetadata meta{};
-        meta.Path = m_ActiveScenePath;
-        serializer->Save(meta, m_ActiveScene);
+        LOG_DEBUGF("Saving scene {} to {}", m_ActiveScene->Name(), m_ActiveScenePath);
+        JsonSerializer js;
+        js.Initialize();
+
+        m_ActiveScene->Serialize(js);
+
+        auto path = Project::ActiveProject()->GetAssetsFolder() / m_ActiveScenePath;
+        FileSystem::WriteEntireFile(path, js.ToString());
+
         m_ActiveScene->SetDirty(false);
     }
 }
@@ -475,11 +486,18 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
     auto LoadScene = [&scene] {
         s_EditorInstance->m_SceneWindow->ClearSelection();
 
-        auto serializer = MakePtr<SceneSerializer>();
         auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(scene.Handle());
-        s_EditorInstance->m_ActiveScene = serializer->Load(meta)->As<Scene>();
-        s_EditorInstance->m_ActiveScene->SetHandle(scene.Handle());
-        s_EditorInstance->m_ActiveScenePath = meta.Path;
+
+        if (auto scene_json = FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / meta.Path)) {
+            JsonDeserializer ds(*scene_json);
+
+            auto scene_asset = MakeRef<Scene>();
+            scene_asset->Deserialize(ds);
+            scene_asset->SetHandle(scene.Handle());
+
+            s_EditorInstance->m_ActiveScenePath = meta.Path;
+            s_EditorInstance->m_ActiveScene = scene_asset;
+        }
     };
     if (s_EditorInstance->m_ActiveScene != nullptr && s_EditorInstance->m_ActiveScene->IsDirty()) {
         Dialogs::MessageBox data{};

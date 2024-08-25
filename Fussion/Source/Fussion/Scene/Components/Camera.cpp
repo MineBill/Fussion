@@ -2,8 +2,9 @@
 #include "Camera.h"
 
 #include "Core/Application.h"
-#include "Scene/Entity.h"
 #include "Fussion/Math/Math.h"
+#include "Scene/Entity.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
 #if FSN_DEBUG_DRAW
@@ -39,5 +40,21 @@ namespace Fussion {
 
         auto aspect = Application::Instance()->GetWindow().GetSize().Aspect();
         m_Perspective = glm::perspective(glm::radians(Fov), aspect, Near, Far);
+    }
+
+    void Camera::Serialize(Serializer& ctx) const
+    {
+        Component::Serialize(ctx);
+        FSN_SERIALIZE_MEMBER(Far);
+        FSN_SERIALIZE_MEMBER(Near);
+        FSN_SERIALIZE_MEMBER(Fov);
+    }
+
+    void Camera::Deserialize(Deserializer& ctx)
+    {
+        Component::Deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(Far);
+        FSN_DESERIALIZE_MEMBER(Near);
+        FSN_DESERIALIZE_MEMBER(Fov);
     }
 }

@@ -22,12 +22,14 @@ enum class AssetLoadState {
 };
 
 struct EditorAssetMetadata final {
+
     Fsn::AssetType Type = Fsn::AssetType::Invalid;
     std::filesystem::path Path;
     std::string Name;
-
     bool IsVirtual = false;
     bool DontSerialize = false;
+
+    /// Runtime-only flag to detect if the asset has been modified.
     bool Dirty = false;
 
     AssetLoadState LoadState{ AssetLoadState::Unloaded };
@@ -46,6 +48,7 @@ public:
     void Load(EditorAssetMetadata const& metadata);
 
     Fussion::ThreadProtected<std::queue<Ref<Fussion::Asset>>> LoadedAssets{};
+
 private:
     void Work(s32 index);
 
@@ -59,9 +62,13 @@ private:
 
 class AssetSerializer;
 
-class EditorAssetManager final : public Fussion::AssetManagerBase {
+class EditorAssetManager final : public Fussion::AssetManagerBase, Fussion::ISerializable {
+
+
+private:
     // NOTE: Is there a better way/abstraction to expose internals to the worker pool?
     friend WorkerPool;
+
 public:
     using Registry = std::unordered_map<Fsn::AssetHandle, EditorAssetMetadata>;
 
@@ -118,7 +125,7 @@ public:
 
         SaveAsset(handle);
 
-        Serialize();
+        SaveToFile();
 
         return Fsn::AssetRef<T>(handle);
     }
@@ -126,8 +133,8 @@ public:
     void SaveAsset(Fussion::AssetHandle handle);
     void SaveAsset(Ref<Fussion::Asset> const& asset);
 
-    void Serialize();
-    void Deserialize();
+    void SaveToFile();
+    void LoadFromFile();
     void RefreshAsset(Fussion::AssetHandle handle);
 
     // NOTE: I'm not sure if this is a good way to go about it. Could some kind of callback
@@ -135,12 +142,15 @@ public:
     void CheckForLoadedAssets();
 
 private:
+    virtual void Serialize(Fussion::Serializer& ctx) const override;
+    virtual void Deserialize(Fussion::Deserializer& ctx) override;
+
     void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
 
     Fussion::ThreadProtected<Registry> m_Registry{};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets;
 
-    std::map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetSerializers{};
+    std::unordered_map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetImporters{};
 
     Ptr<Fussion::FileWatcher> m_EditorWatcher{};
 

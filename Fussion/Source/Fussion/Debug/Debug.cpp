@@ -41,7 +41,7 @@ namespace Fussion {
             return;
         }
         auto src = FileSystem::ReadEntireFile("Assets/Shaders/Debug.shader");
-        VERIFY(src.has_value());
+        VERIFY(src.HasValue());
         auto result = RHI::ShaderCompiler::Compile(*src, "Debug.shader");
         VERIFY(result.HasValue());
 

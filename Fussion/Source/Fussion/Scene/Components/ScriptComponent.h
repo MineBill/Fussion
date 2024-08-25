@@ -4,21 +4,24 @@
 #include "Fussion/Scripting/ScriptingEngine.h"
 
 namespace Fussion {
-class ScriptComponent final : public Component {
-public:
-    COMPONENT_DEFAULT(ScriptComponent)
+    class ScriptComponent final : public Component {
+    public:
+        COMPONENT_DEFAULT(ScriptComponent)
 
-    virtual void OnStart() override;
-    virtual void OnUpdate(f32) override;
+        virtual void OnStart() override;
+        virtual void OnUpdate(f32) override;
 
-    virtual void OnDestroy() override;
+        virtual void OnDestroy() override;
 
-    void Test() const;
+        void Test() const;
 
-    std::string ClassName{};
+        std::string ClassName{};
 
-private:
-    ScriptClass* m_ScriptClass{ nullptr };
-    ScriptInstance m_Instance{};
-};
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
+    private:
+        ScriptClass* m_ScriptClass{ nullptr };
+        ScriptInstance m_Instance{};
+    };
 }

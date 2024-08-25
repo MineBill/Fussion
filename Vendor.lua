@@ -87,6 +87,7 @@ package("Catch2")
     set_sourcedir(path.join(os.scriptdir(), "Vendor/Catch2-3.6.0"))
     on_install(function (package)
         local configs = {}
+		table.insert(configs, "-DCMAKE_CXX_STANDARD=20")
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
         import("package.tools.cmake").install(package, configs)

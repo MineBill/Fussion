@@ -10,6 +10,9 @@ namespace Fussion {
     public:
         PbrMaterial();
 
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
         static AssetType GetStaticType() { return AssetType::PbrMaterial; }
         virtual AssetType GetType() const override { return GetStaticType(); }
 

@@ -13,6 +13,7 @@ namespace Fussion {
     class Scene final : public Asset {
     public:
         Scene();
+        virtual ~Scene() override = default;
 
         Scene(Scene const& other);
         Scene(Scene&& other) noexcept;
@@ -75,6 +76,9 @@ namespace Fussion {
         virtual auto GetType() const -> AssetType override { return GetStaticType(); }
 
         static auto GetStaticType() -> AssetType { return AssetType::Scene; }
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
     private:
         std::string m_Name{};

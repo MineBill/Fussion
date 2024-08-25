@@ -1,7 +1,7 @@
 ﻿#include "FussionPCH.h"
 #include "ScriptComponent.h"
-
 #include "Scripting/ScriptBase.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
 void ScriptComponent::OnStart()
@@ -44,6 +44,18 @@ void ScriptComponent::Test() const
     } else {
         LOG_WARNF("Class '{}' not found", ClassName);
     }
+}
+
+void ScriptComponent::Serialize(Serializer& ctx) const
+{
+    Component::Serialize(ctx);
+    FSN_SERIALIZE_MEMBER(ClassName);
+}
+
+void ScriptComponent::Deserialize(Deserializer& ctx)
+{
+    Component::Deserialize(ctx);
+    FSN_DESERIALIZE_MEMBER(ClassName);
 }
 
 }

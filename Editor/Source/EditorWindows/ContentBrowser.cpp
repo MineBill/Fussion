@@ -82,8 +82,8 @@ void ContentBrowser::OnStart()
     m_FileTypes[".png"] = AssetType::Texture2D;
     m_FileTypes[".jpg"] = AssetType::Texture2D;
     m_FileTypes[".jpeg"] = AssetType::Texture2D;
-    m_FileTypes[".glb"] = AssetType::Mesh;
-    m_FileTypes[".gltf"] = AssetType::Mesh;
+    m_FileTypes[".glb"] = AssetType::Model;
+    m_FileTypes[".gltf"] = AssetType::Model;
 
     m_ImportFilter.Name = "Supported Asset Files";
     for (auto const& file_type : m_FileTypes | std::views::keys) {
@@ -207,7 +207,7 @@ void ContentBrowser::OnDraw()
                 case AssetType::Image:
                 case AssetType::Texture:
                 case AssetType::HDRTexture:
-                case AssetType::Mesh:
+                case AssetType::Model:
                 case AssetType::Shader: {
                     texture = style.EditorIcons[EditorIcon::GenericAsset].get();
                 }

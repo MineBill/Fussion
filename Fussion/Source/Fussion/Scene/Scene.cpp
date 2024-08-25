@@ -3,13 +3,14 @@
 #include "Entity.h"
 #include "Components/BaseComponents.h"
 #include "Fussion/Input/Keys.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
     Scene::Scene()
     {
         m_Name = "Cool Scene";
-        m_Entities[Uuid(0)] = Entity(0, this);
-        auto root = m_Entities[0];
+        m_Entities[Uuid(0)] = Entity(Uuid(0), this);
+        auto& root = m_Entities[Uuid(0)];
         root.Name = "Root";
     }
 
@@ -21,17 +22,26 @@ namespace Fussion {
         m_Handle = other.m_Handle;
         for (auto& entity : m_Entities | std::views::values) {
             entity.m_Scene = this;
+
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
+            }
         }
     }
 
-    Scene::Scene(Scene&& other) noexcept: Asset(std::move(other)),
-                                          m_Name(std::move(other.m_Name)),
-                                          m_Entities(std::move(other.m_Entities)),
-                                          m_Dirty(other.m_Dirty)
+    Scene::Scene(Scene&& other) noexcept:
+        m_Name(std::move(other.m_Name)),
+        m_Entities(std::move(other.m_Entities)),
+        m_Dirty(other.m_Dirty),
+        Asset(std::move(other))
     {
         m_Handle = other.m_Handle;
         for (auto& entity : m_Entities | std::views::values) {
             entity.m_Scene = this;
+
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
+            }
         }
     }
 
@@ -39,7 +49,6 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        Asset::operator =(other);
         m_Handle = other.m_Handle;
         m_Name = other.m_Name;
         m_Entities = other.m_Entities;
@@ -47,6 +56,10 @@ namespace Fussion {
 
         for (auto& entity : m_Entities | std::views::values) {
             entity.m_Scene = this;
+
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
+            }
         }
         return *this;
     }
@@ -55,7 +68,6 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        Asset::operator =(std::move(other));
         m_Handle = other.m_Handle;
         m_Name = std::move(other.m_Name);
         m_Entities = std::move(other.m_Entities);
@@ -63,6 +75,10 @@ namespace Fussion {
 
         for (auto& entity : m_Entities | std::views::values) {
             entity.m_Scene = this;
+
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
+            }
         }
         return *this;
     }
@@ -162,8 +178,59 @@ namespace Fussion {
         Destroy(entity->GetId());
     }
 
+    void Scene::Serialize(Serializer& ctx) const
+    {
+        FSN_SERIALIZE_MEMBER(m_Name);
+        ctx.BeginArray("Entities", m_Entities.size());
+        for (auto const& [id, entity] : m_Entities) {
+            if (id == 0)
+                continue;
+            ctx.Write("", entity);
+        }
+        ctx.EndArray();
+    }
+
+    void Scene::Deserialize(Deserializer& ctx)
+    {
+        FSN_DESERIALIZE_MEMBER(m_Name);
+        size_t size;
+        ctx.BeginArray("Entities", size);
+        m_Entities.reserve(size);
+
+        // Because an entity's parent might not exist when deserializing
+        // the entity, we defer the parenting operations until all the
+        // entities are loaded.
+        struct ParentChildPair {
+            Uuid Parent{}, Child{};
+        };
+        std::vector<ParentChildPair> entities_to_resolve{};
+
+        for (size_t i = 0; i < size; i++) {
+            Entity e;
+            e.m_Scene = this;
+            ctx.Read("", e);
+
+            if (!HasEntity(e.m_Parent)) {
+                entities_to_resolve.emplace_back(e.m_Parent, e.m_Handle);
+            } else {
+                e.SetParent(m_Entities[e.m_Parent]);
+            }
+            auto local_id = m_LocalIDCounter++;
+            e.m_LocalID = local_id;
+            m_LocalIDToEntity[local_id] = e.m_Handle;
+
+            m_Entities[e.m_Handle] = std::move(e);
+        }
+
+        // Resolve all parent/child relationships.
+        for (auto const& [parent, child] : entities_to_resolve) {
+            GetEntity(child)->SetParent(*GetEntity(parent));
+        }
+        ctx.EndArray();
+    }
+
     auto Scene::GetRoot() -> Entity&
     {
-        return m_Entities[0];
+        return m_Entities[Uuid(0)];
     }
 }

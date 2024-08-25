@@ -158,14 +158,7 @@ namespace Fussion::RHI {
 
         static void ReadThingy(std::filesystem::path const& full_path, shaderc_include_result* result)
         {
-            auto data = FileSystem::ReadEntireFile(full_path);
-            if (!data.has_value()) {
-                result->source_name = "";
-                result->source_name_length = 0;
-
-                result->content = "";
-                result->content_length = 0;
-            } else {
+            if (auto data = FileSystem::ReadEntireFile(full_path)) {
                 auto str_path = full_path.string();
                 auto cstr_path = new char[str_path.size()];
                 std::memcpy(cstr_path, str_path.c_str(), str_path.size());
@@ -177,6 +170,12 @@ namespace Fussion::RHI {
                 std::memcpy(cstr_content, data->c_str(), data->size());
                 result->content = cstr_content;
                 result->content_length = data->size();
+            } else {
+                result->source_name = "";
+                result->source_name_length = 0;
+
+                result->content = "";
+                result->content_length = 0;
             }
         }
     };
@@ -339,7 +338,7 @@ namespace Fussion::RHI {
             for (auto const& image : resources.sampled_images) {
                 auto set = reflection_compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(image.id, spv::DecorationBinding);
-                LOG_DEBUGF("Fragmetn sampler: {}, Set: {}, Binding: {}",image.name, set, binding);
+                LOG_DEBUGF("Fragmetn sampler: {}, Set: {}, Binding: {}", image.name, set, binding);
 
                 if (!metadata.Uniforms.contains(set)) {
                     if (!metadata.Uniforms[set].contains(binding)) {

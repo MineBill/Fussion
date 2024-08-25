@@ -6,7 +6,7 @@ namespace Fussion {
     class Uuid {
     public:
         Uuid();
-        Uuid(const u64 id) : m_Id(id) {}
+        explicit Uuid(u64 id) : m_Id(id) {}
 
         operator u64() const
         {

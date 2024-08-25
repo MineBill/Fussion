@@ -18,5 +18,8 @@ namespace Fussion {
 
         Color LightColor{ Color::White };
         f32 SplitLambda{ 0.95f };
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 }

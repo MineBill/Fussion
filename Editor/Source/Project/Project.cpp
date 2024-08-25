@@ -20,7 +20,7 @@ void Project::Initialize()
 
 void Project::Save(std::filesystem::path path)
 {
-    s_ActiveProject->m_AssetManager->Serialize();
+    s_ActiveProject->m_AssetManager->SaveToFile();
 }
 
 bool Project::Load(std::filesystem::path const& path)
@@ -64,6 +64,6 @@ bool Project::Load(std::filesystem::path const& path)
     if (!exists(s_ActiveProject->m_LogsFolderPath)) {
         LOG_ERRORF("Logs folder '{}' does not exist", s_ActiveProject->m_LogsFolderPath.string());
     }
-    s_ActiveProject->m_AssetManager->Deserialize();
+    s_ActiveProject->m_AssetManager->LoadFromFile();
     return true;
 }

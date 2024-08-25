@@ -80,17 +80,7 @@ namespace Fussion {
                 .method_("LengthSquared"s, &Vector3::LengthSquared);
         }
 
-        meta::enum_<AssetType>()
-            .evalue_("Invalid"s, AssetType::Invalid)
-            .evalue_("Image"s, AssetType::Image)
-            .evalue_("Script"s, AssetType::Script)
-            .evalue_("Mesh"s, AssetType::Mesh)
-            .evalue_("PbrMaterial"s, AssetType::PbrMaterial)
-            .evalue_("Scene"s, AssetType::Scene)
-            .evalue_("Shader"s, AssetType::Shader)
-            .evalue_("Texture"s, AssetType::Texture)
-            .evalue_("Texture2D"s, AssetType::Texture2D)
-            .evalue_("HDRTexture"s, AssetType::HDRTexture);
+        REGISTER_ENUM(AssetType);
 
         meta::class_<Asset>(metadata_()
                 ("Name"s, "Asset"s))
@@ -134,8 +124,8 @@ namespace Fussion {
                     ("Name"s, "MeshRenderer"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("Mesh"s, &MeshRenderer::Mesh, as_pointer)
-                .member_("Material"s, &MeshRenderer::Material, as_pointer);
+                .member_("Mesh"s, &MeshRenderer::Model, as_pointer)
+                .member_("Materials"s, &MeshRenderer::Materials, as_pointer, metadata_()("vector"s, true));
 
             meta::class_<ScriptComponent>(metadata_()
                     ("Name"s, "ScriptComponent"s))
@@ -148,10 +138,6 @@ namespace Fussion {
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
                 .member_("Speed"s, &MoverComponent::Speed, as_pointer);
-
-            meta::enum_<DebugDrawer::Type>()
-                .evalue_("Box"s, DebugDrawer::Type::Box)
-                .evalue_("Sphere"s, DebugDrawer::Type::Sphere);
 
             meta::class_<DebugDrawer>(metadata_()
                     ("Name"s, "DebugDrawer"s))
@@ -219,6 +205,7 @@ namespace Fussion {
             .function_("IsMouseButtonUp"s, Input::IsMouseButtonUp)
             .function_("GetAxis"s, Input::GetAxis);
 
+        REGISTER_ENUM(DebugDrawer::Type);
         REGISTER_ENUM(MouseButton)
         REGISTER_ENUM(Keys)
         REGISTER_ENUM(RHI::ImageFormat)

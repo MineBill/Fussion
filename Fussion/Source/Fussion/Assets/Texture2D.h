@@ -7,14 +7,17 @@ namespace Fussion {
         META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:
         s32 Width{}, Height{};
-        RHI::FilterMode Filter = RHI::FilterMode::Linear;
-        RHI::ImageFormat Format = RHI::ImageFormat::R8G8B8A8_UNORM;
-        RHI::WrapMode Wrap = RHI::WrapMode::Repeat;
+        RHI::FilterMode Filter{ RHI::FilterMode::Linear };
+        RHI::ImageFormat Format{ RHI::ImageFormat::R8G8B8A8_UNORM };
+        RHI::WrapMode Wrap{ RHI::WrapMode::Repeat };
         bool IsNormalMap{ false };
         bool GenerateMipmaps{ true };
 
         [[nodiscard]]
         f32 Aspect() const { return CAST(f32, Width) / CAST(f32, Height); }
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class Texture2D final : public Asset {

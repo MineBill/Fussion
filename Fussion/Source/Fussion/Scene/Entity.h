@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "Component.h"
-#include "Fussion/Core/Core.h"
-#include "Fussion/Core/Uuid.h"
-#include "Fussion/Math/Vector3.h"
+#include <Fussion/Scene/Component.h>
+#include <Fussion/Core/Core.h>
+#include <Fussion/Core/Uuid.h>
+#include <Fussion/Math/Vector3.h>
+#include <Fussion/Serialization/ISerializable.h>
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -12,7 +13,8 @@ class SceneSerializer;
 
 namespace Fussion {
 
-    struct Transform {
+    struct Transform : ISerializable {
+
         Vector3 Position{};
         Vector3 EulerAngles{};
         Vector3 Scale = Vector3(1, 1, 1);
@@ -21,13 +23,16 @@ namespace Fussion {
 
         Mat4 GetCameraMatrix() const;
 
-        auto GetForward() const -> Vector3
-        ;
+        auto GetForward() const -> Vector3;
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class Scene;
 
-    class Entity final {
+    class Entity final : public ISerializable {
+        META_HPP_ENABLE_POLY_INFO()
         friend class Scene;
         friend SceneSerializer;
         friend class SceneBinarySerializer;
@@ -39,6 +44,7 @@ namespace Fussion {
 
         Entity() = default;
         Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+        virtual ~Entity() override = default;
 
         Entity(Entity const& other);
         Entity(Entity&& other) noexcept;
@@ -68,7 +74,7 @@ namespace Fussion {
         [[nodiscard]]
         auto HasComponent() const -> bool
         {
-            return m_Components.contains(meta_hpp::resolve_type<C>().get_hash());
+            return m_Components.contains(Uuid(meta_hpp::resolve_type<C>().get_hash()));
         }
 
         template<std::derived_from<Component> C>
@@ -97,6 +103,9 @@ namespace Fussion {
         auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
 
         void OnDraw(RHI::RenderContext& context);
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
     private:
         void OnStart();

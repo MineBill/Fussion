@@ -1,5 +1,6 @@
 ﻿#include "AssetRef.h"
 #include "AssetManager.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
     bool AssetRefBase::IsLoaded() const
@@ -18,6 +19,16 @@ namespace Fussion {
         (void)GetRaw(GetType());
         // TODO: Fishy
         while (!IsLoaded()) {}
+    }
+
+    void AssetRefBase::Serialize(Serializer& ctx) const
+    {
+        FSN_SERIALIZE_MEMBER(m_Handle);
+    }
+
+    void AssetRefBase::Deserialize(Deserializer& ctx)
+    {
+        FSN_DESERIALIZE_MEMBER(m_Handle);
     }
 
     Asset* AssetRefBase::GetRaw(AssetType type) const

@@ -18,6 +18,9 @@ namespace Fussion {
 
         f32 Fov{ 50.0f };
 
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
     private:
         Mat4 m_Perspective{ 1.0f };
     };

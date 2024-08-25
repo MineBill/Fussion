@@ -5,43 +5,52 @@
 #include "Fussion/Log/Log.h"
 
 namespace Fussion {
-class PointLight : public Component {
-public:
-    COMPONENT_DEFAULT(PointLight)
+    class PointLight final : public Component {
+    public:
+        COMPONENT_DEFAULT(PointLight)
 
-    virtual void OnUpdate(f32 delta) override;
-    virtual void OnDraw(RHI::RenderContext& context) override;
+        virtual void OnUpdate(f32 delta) override;
+        virtual void OnDraw(RHI::RenderContext& context) override;
 
-    f32 Radius{ 10.0f };
-    Vector3 Offset{};
-};
+        f32 Radius{ 10.0f };
+        Vector3 Offset{};
 
-class DebugDrawer : public Component {
-public:
-    enum class Type {
-        Sphere,
-        Box,
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
-    COMPONENT_DEFAULT(DebugDrawer)
+    class DebugDrawer final : public Component {
+    public:
+        enum class Type {
+            Sphere,
+            Box,
+        };
+
+        COMPONENT_DEFAULT(DebugDrawer)
 
 #if FSN_DEBUG_DRAW
-    virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
-    Type DrawType{};
+        Type DrawType{ Type::Box };
 
-    f32 Size{ 0.0f };
-};
+        f32 Size{ 0.0f };
 
-class MoverComponent : public Component {
-public:
-    COMPONENT_DEFAULT(MoverComponent)
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+    };
 
-    virtual void OnUpdate(f32 delta) override;
+    class MoverComponent final : public Component {
+    public:
+        COMPONENT_DEFAULT(MoverComponent)
 
-    f32 Speed{ 0.1f };
-};
+        virtual void OnUpdate(f32 delta) override;
+
+        f32 Speed{ 0.1f };
+
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+    };
 }
 
 namespace Fsn = Fussion;

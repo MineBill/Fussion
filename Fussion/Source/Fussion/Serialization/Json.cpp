@@ -3,6 +3,7 @@
 
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Assets/AssetRef.h"
+#include "Scene/Components/MeshRenderer.h"
 
 namespace Fussion {
     auto SerializeNativeClass(meta_hpp::class_type component_type, meta_hpp::uvalue ptr) -> ordered_json
