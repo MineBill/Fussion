@@ -75,11 +75,7 @@ void Editor::OnStart()
 
     OnBeginPlay += [this] {
         LOG_DEBUG("On Begin Play");
-        // auto serializer = MakePtr<SceneSerializer>();
         auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(m_ActiveScene->GetHandle());
-        // m_PlayScene = serializer->Load(meta)->As<Scene>();
-
-        // m_PlayScene = m_ActiveScene->Clone()->As<Scene>();
 
         JsonDeserializer ds(*FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / meta.Path));
         m_PlayScene = MakeRef<Scene>();
@@ -91,7 +87,6 @@ void Editor::OnStart()
 
     OnStopPlay += [this] {
         LOG_DEBUG("On Stop Play");
-        // m_SceneWindow->ClearSelection();
         if (m_PlayScene) {
             m_PlayScene = nullptr;
         }
