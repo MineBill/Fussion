@@ -20,6 +20,8 @@
 #include <Fussion/RHI/CommandBuffer.h>
 #include <Fussion/Scene/Scene.h>
 
+class AssetRegistryViewer;
+
 class Editor final : public Fsn::Layer {
 public:
     enum class PlayState {
@@ -39,6 +41,7 @@ public:
     static AssetPicker GenericAssetPicker;
 
     Editor();
+    virtual ~Editor() override;
 
     virtual void OnStart() override;
     virtual void OnEnable() override;
@@ -119,6 +122,7 @@ private:
     Ptr<ConsoleWindow> m_ConsoleWindow;
     Ptr<ContentBrowser> m_ContentBrowser;
 
+    Ptr<AssetRegistryViewer> m_AssetRegistryViewer;
     Ptr<ScriptsInspector> m_ScriptsInspector;
 
     std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows{};

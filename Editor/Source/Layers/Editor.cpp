@@ -3,8 +3,7 @@
 #include "EditorUI.h"
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
-#include "Fussion/Scene/Components/Camera.h"
-#include "Fussion/Serialization/JsonSerializer.h"
+#include "EditorWindows/AssetRegistryViewer.h"
 
 #include <Fussion/Input/Input.h>
 #include <Fussion/Core/Application.h>
@@ -14,6 +13,8 @@
 #include <Fussion/Events/KeyboardEvents.h>
 #include <Fussion/OS/FileSystem.h>
 #include <Fussion/Scripting/ScriptingEngine.h>
+#include <Fussion/Scene/Components/Camera.h>
+#include <Fussion/Serialization/JsonSerializer.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -31,6 +32,8 @@ Editor::Editor()
     s_EditorInstance = this;
 }
 
+Editor::~Editor() = default;
+
 void Editor::OnStart()
 {
     ZoneScoped;
@@ -40,6 +43,7 @@ void Editor::OnStart()
     m_SceneWindow = MakePtr<SceneTreeWindow>(this);
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
     m_ContentBrowser = MakePtr<ContentBrowser>(this);
+    m_AssetRegistryViewer = MakePtr<AssetRegistryViewer>(this);
 
     ScriptingEngine::Get().CompileGameAssembly(Project::GetScriptsFolder());
     FileSystem::WriteEntireFile(Project::GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
@@ -69,6 +73,9 @@ void Editor::OnStart()
     m_ConsoleWindow->OnStart();
     m_SceneWindow->OnStart();
     m_ContentBrowser->OnStart();
+
+    m_AssetRegistryViewer->OnStart();
+    m_AssetRegistryViewer->Hide();
 
     m_ScriptsInspector->OnStart();
     m_ScriptsInspector->Hide();
@@ -212,6 +219,10 @@ void Editor::OnUpdate(f32 delta)
                 if (ImGui::MenuItem("Shadow Map")) {
                     m_ShadowMapDisplayOpened = !m_ShadowMapDisplayOpened;
                 }
+
+                if (ImGui::MenuItem("Asset Registry")) {
+                    m_AssetRegistryViewer->Toggle();
+                }
                 ImGui::EndMenu();
             }
 
@@ -306,6 +317,9 @@ void Editor::OnUpdate(f32 delta)
     m_SceneWindow->OnDraw();
     m_ScriptsInspector->OnDraw();
     m_ContentBrowser->OnDraw();
+
+    if (m_AssetRegistryViewer->IsVisible())
+        m_AssetRegistryViewer->OnDraw();
 
     for (auto const& asset_window : m_AssetWindows | std::views::values) {
         asset_window->Draw(delta);

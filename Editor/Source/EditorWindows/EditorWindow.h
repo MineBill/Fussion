@@ -31,6 +31,15 @@ public:
         m_IsVisible = true;
     }
 
+    void Toggle()
+    {
+        if (m_IsVisible) {
+            Hide();
+        } else {
+            Show();
+        }
+    }
+
     /// Returns if this editor window is visible or not.
     [[nodiscard]]
     bool IsVisible() const { return m_IsVisible; }

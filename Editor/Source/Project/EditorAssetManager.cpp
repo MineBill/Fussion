@@ -422,13 +422,10 @@ void EditorAssetManager::SaveToFile()
 void EditorAssetManager::LoadFromFile()
 {
     ZoneScoped;
-    auto const& path = Project::GetAssetRegistry();
-    if (!std::filesystem::exists(path)) {
-        LOG_WARNF("{} did not exist", path.string());
-        return;
-    }
-    auto const data = FileSystem::ReadEntireFile(path);
+    auto const data = FileSystem::ReadEntireFile(Project::GetAssetRegistry());
 
+    // JsonDeserializer ds(*data);
+    // Deserialize(ds);
     try {
         auto j = json::parse(*data);
         auto file_type = j["$Type"].get<std::string>();
