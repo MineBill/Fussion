@@ -14,7 +14,7 @@ void TextureSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& ass
 
 Ref<Asset> TextureSerializer::Load(EditorAssetMetadata metadata)
 {
-    auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
+    auto path = Project::GetAssetsFolder() / metadata.Path;
     auto [data, width, height] = TextureImporter::LoadImageFromFile(path);
 
     auto texture_metadata = std::dynamic_pointer_cast<Texture2DMetadata>(metadata.CustomMetadata);

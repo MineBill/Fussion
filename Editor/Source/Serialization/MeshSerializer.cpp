@@ -76,7 +76,7 @@ void MeshSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 
 Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
 {
-    auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
+    auto path = Project::GetAssetsFolder() / metadata.Path;
 
     tinygltf::TinyGLTF loader;
     tinygltf::Model model;

@@ -45,7 +45,7 @@ void ContentBrowser::NamePopup::Update()
         ImGui::Separator();
 
         if (ImGui::InputText("##input", &m_Name)) {
-            m_ShowError = Project::ActiveProject()->GetAssetManager()->IsPathAnAsset(m_Name, false);
+            m_ShowError = Project::GetAssetManager()->IsPathAnAsset(m_Name, false);
         }
 
         if (m_ShowError) {
@@ -76,7 +76,7 @@ void ContentBrowser::NamePopup::Update()
 
 void ContentBrowser::OnStart()
 {
-    m_Root = Project::ActiveProject()->GetAssetsFolder();
+    m_Root = Project::GetAssetsFolder();
     ChangeDirectory(m_Root);
 
     m_FileTypes[".png"] = AssetType::Texture2D;
@@ -150,7 +150,7 @@ void ContentBrowser::OnDraw()
                 if (ImGui::MenuItem("Scene")) {
                     m_NamePopup.Show([this](std::string const& name) {
                         auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
-                        Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>(path);
+                        Project::GetAssetManager()->CreateAsset<Scene>(path);
                         Refresh();
                     });
                 }
@@ -158,7 +158,7 @@ void ContentBrowser::OnDraw()
                     // TODO: Make the user pick a name first, to prevent conflicts.
                     m_NamePopup.Show([this](std::string const& name) {
                         auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
-                        Project::ActiveProject()->GetAssetManager()->CreateAsset<PbrMaterial>(path);
+                        Project::GetAssetManager()->CreateAsset<PbrMaterial>(path);
                         Refresh();
                     });
                 }
@@ -271,8 +271,8 @@ void ContentBrowser::ChangeDirectory(fs::path const& path) // NOLINT(performance
 
     m_Entries.clear();
     for (auto const& entry : fs::directory_iterator(path)) {
-        auto entry_path = fs::relative(entry.path(), Project::ActiveProject()->GetAssetsFolder());
-        auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(entry_path);
+        auto entry_path = fs::relative(entry.path(), Project::GetAssetsFolder());
+        auto metadata = Project::GetAssetManager()->GetMetadata(entry_path);
         if (metadata.HasValue() || entry.is_directory()) {
             auto meta = metadata.ValueOr({});
             m_Entries.push_back(Entry{
@@ -322,8 +322,8 @@ void ContentBrowser::ImportFile(fs::path const& path)
         return;
     }
 
-    auto asset_manager = Project::ActiveProject()->GetAssetManager();
+    auto asset_manager = Project::GetAssetManager();
 
-    auto rel = fs::relative(copy_location, Project::ActiveProject()->GetAssetsFolder());
+    auto rel = fs::relative(copy_location, Project::GetAssetsFolder());
     asset_manager->RegisterAsset(rel, m_FileTypes[path.extension().string().c_str()]);
 }

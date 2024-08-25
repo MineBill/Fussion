@@ -121,6 +121,6 @@ void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
     auto now = std::chrono::system_clock::now();
     auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::ActiveProject()->GetLogsFolder() / log_file));
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::GetLogsFolder() / log_file));
 
 }

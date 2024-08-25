@@ -15,37 +15,13 @@ public:
     static void Save(std::filesystem::path path = {});
     static bool Load(std::filesystem::path const& path);
 
-    Ref<EditorAssetManager>& GetAssetManager() { return m_AssetManager; }
-
-    std::filesystem::path const& GetRoot() const
-    {
-        return m_ProjectPath;
-    }
-
-    std::filesystem::path const& GetAssetRegistry() const
-    {
-        return m_AssetRegistryPath;
-    }
-
-    std::filesystem::path const& GetAssetsFolder() const
-    {
-        return m_AssetsFolderPath;
-    }
-
-    std::filesystem::path const& GetCacheFolder() const
-    {
-        return m_CacheFolderPath;
-    }
-
-    std::filesystem::path const& GetScriptsFolder() const
-    {
-        return m_ScriptsFolderPath;
-    }
-
-    std::filesystem::path const& GetLogsFolder() const
-    {
-        return m_LogsFolderPath;
-    }
+    static auto GetAssetManager() -> Ref<EditorAssetManager>& { return s_ActiveProject->m_AssetManager; }
+    static auto GetRoot() -> std::filesystem::path const& { return s_ActiveProject->m_ProjectPath; }
+    static auto GetAssetRegistry() -> std::filesystem::path const& { return s_ActiveProject->m_AssetRegistryPath; }
+    static auto GetAssetsFolder() -> std::filesystem::path const& { return s_ActiveProject->m_AssetsFolderPath; }
+    static auto GetCacheFolder() -> std::filesystem::path const& { return s_ActiveProject->m_CacheFolderPath; }
+    static auto GetScriptsFolder() -> std::filesystem::path const& { return s_ActiveProject->m_ScriptsFolderPath; }
+    static auto GetLogsFolder() -> std::filesystem::path const& { return s_ActiveProject->m_LogsFolderPath; }
 
 private:
     static Ref<Project> s_ActiveProject;

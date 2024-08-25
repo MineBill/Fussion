@@ -31,5 +31,5 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
 
 void MaterialWindow::OnSave()
 {
-    Project::ActiveProject()->GetAssetManager()->SaveAsset(m_AssetHandle);
+    Project::GetAssetManager()->SaveAsset(m_AssetHandle);
 }

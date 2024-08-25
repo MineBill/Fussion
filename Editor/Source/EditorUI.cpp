@@ -26,7 +26,7 @@ namespace EUI {
         Vector2 pos = ImGui::GetCursorPos();
 
         auto handle = m_Handle.get(data).as<Fussion::AssetHandle>();
-        auto asset_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(handle);
+        auto asset_metadata = Project::GetAssetManager()->GetMetadata(handle);
 
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
         if (asset_metadata.IsValid()) {
@@ -51,7 +51,7 @@ namespace EUI {
             auto* payload = ImGui::GetDragDropPayload();
             if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
                 auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
-                auto incoming_metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*incoming_handle);
+                auto incoming_metadata = Project::GetAssetManager()->GetMetadata(*incoming_handle);
 
                 if (incoming_metadata.Type == asset_type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
                     m_Handle.set(data, *incoming_handle);

@@ -67,7 +67,7 @@ void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& i
     m_Opened = true;
     m_Instance = instance.copy();
 
-    auto& registry = Project::ActiveProject()->GetAssetManager()->GetRegistry();
+    auto& registry = Project::GetAssetManager()->GetRegistry();
 
     registry.Access([&](EditorAssetManager::Registry const& reg) {
         for (auto const& [handle, metadata] : reg) {

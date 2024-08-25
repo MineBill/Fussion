@@ -11,11 +11,5 @@ using namespace Fussion;
 
 Ref<Asset> ShaderSerializer::Load(EditorAssetMetadata metadata)
 {
-    // auto path = Project::ActiveProject()->GetAssetsFolder() / metadata.Path;
-    // auto code = FileSystem::ReadEntireFile(path);
-    // if (!code) {
-    //     return nullptr;
-    // }
-    // auto result = RHI::ShaderCompiler::Compile(*code);
     return nullptr;
 }

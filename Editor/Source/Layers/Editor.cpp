@@ -41,10 +41,10 @@ void Editor::OnStart()
     m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
     m_ContentBrowser = MakePtr<ContentBrowser>(this);
 
-    ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
-    FileSystem::WriteEntireFile(Project::ActiveProject()->GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
+    ScriptingEngine::Get().CompileGameAssembly(Project::GetScriptsFolder());
+    FileSystem::WriteEntireFile(Project::GetScriptsFolder() / "as.predefined", ScriptingEngine::Get().DumpCurrentTypes().str());
 
-    m_Watcher = FileWatcher::Create(Project::ActiveProject()->GetScriptsFolder());
+    m_Watcher = FileWatcher::Create(Project::GetScriptsFolder());
     m_Watcher->RegisterListener([](std::filesystem::path const& path, FileWatcher::EventType type) {
         using namespace std::chrono_literals;
         (void)path;
@@ -52,7 +52,7 @@ void Editor::OnStart()
 
         // Wait a bit for the file lock to be released.
         std::this_thread::sleep_for(100ms);
-        ScriptingEngine::Get().CompileGameAssembly(Project::ActiveProject()->GetScriptsFolder());
+        ScriptingEngine::Get().CompileGameAssembly(Project::GetScriptsFolder());
     });
     m_Watcher->Start();
 
@@ -75,9 +75,9 @@ void Editor::OnStart()
 
     OnBeginPlay += [this] {
         LOG_DEBUG("On Begin Play");
-        auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(m_ActiveScene->GetHandle());
+        auto meta = Project::GetAssetManager()->GetMetadata(m_ActiveScene->GetHandle());
 
-        JsonDeserializer ds(*FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / meta.Path));
+        JsonDeserializer ds(*FileSystem::ReadEntireFile(Project::GetAssetsFolder() / meta.Path));
         m_PlayScene = MakeRef<Scene>();
         m_PlayScene->Deserialize(ds);
 
@@ -107,7 +107,7 @@ void Editor::OnDisable() {}
 
 void Editor::Save() const
 {
-    Project::ActiveProject()->Save();
+    Project::Save();
 
     if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
         LOG_DEBUGF("Saving scene {} to {}", m_ActiveScene->Name(), m_ActiveScenePath);
@@ -116,7 +116,7 @@ void Editor::Save() const
 
         m_ActiveScene->Serialize(js);
 
-        auto path = Project::ActiveProject()->GetAssetsFolder() / m_ActiveScenePath;
+        auto path = Project::GetAssetsFolder() / m_ActiveScenePath;
         FileSystem::WriteEntireFile(path, js.ToString());
 
         m_ActiveScene->SetDirty(false);
@@ -128,7 +128,7 @@ void Editor::OpenAsset(AssetHandle handle)
     if (m_AssetWindows.contains(handle))
         return;
 
-    auto assman = Project::ActiveProject()->GetAssetManager();
+    auto assman = Project::GetAssetManager();
     auto meta = assman->GetMetadata(handle);
     if (!meta.IsValid())
         return;
@@ -180,7 +180,7 @@ void Editor::OnUpdate(f32 delta)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::BeginMenu("New..")) {
                 if (ImGui::MenuItem("Create Scene")) {
-                    ChangeScene(Project::ActiveProject()->GetAssetManager()->CreateAsset<Scene>("TestScene.fsn"));
+                    ChangeScene(Project::GetAssetManager()->CreateAsset<Scene>("TestScene.fsn"));
                 }
                 ImGui::EndMenu();
             }
@@ -317,7 +317,7 @@ void Editor::OnUpdate(f32 delta)
 
     Undo.Commit();
 
-    Project::ActiveProject()->GetAssetManager()->CheckForLoadedAssets();
+    Project::GetAssetManager()->CheckForLoadedAssets();
 }
 
 void Editor::OnEvent(Event& event)
@@ -480,9 +480,9 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
     auto LoadScene = [&scene] {
         s_EditorInstance->m_SceneWindow->ClearSelection();
 
-        auto meta = Project::ActiveProject()->GetAssetManager()->GetMetadata(scene.Handle());
+        auto meta = Project::GetAssetManager()->GetMetadata(scene.Handle());
 
-        if (auto scene_json = FileSystem::ReadEntireFile(Project::ActiveProject()->GetAssetsFolder() / meta.Path)) {
+        if (auto scene_json = FileSystem::ReadEntireFile(Project::GetAssetsFolder() / meta.Path)) {
             JsonDeserializer ds(*scene_json);
 
             auto scene_asset = MakeRef<Scene>();

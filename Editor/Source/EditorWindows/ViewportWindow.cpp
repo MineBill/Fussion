@@ -119,7 +119,7 @@ void ViewportWindow::OnDraw()
             if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
                 auto handle = CAST(AssetHandle*, payload->Data);
 
-                auto metadata = Project::ActiveProject()->GetAssetManager()->GetMetadata(*handle);
+                auto metadata = Project::GetAssetManager()->GetMetadata(*handle);
                 if (metadata.Type == AssetType::Scene) {
                     if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
                         auto scene = AssetManager::GetAsset<Scene>(*handle);

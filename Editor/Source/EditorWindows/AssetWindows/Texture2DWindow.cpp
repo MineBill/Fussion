@@ -22,7 +22,7 @@ void Texture2DWindow::OnDraw(f32 delta)
         modified |= EUI::Property("Format", &settings->Format);
         modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
         if (modified) {
-            Project::ActiveProject()->GetAssetManager()->RefreshAsset(m_AssetHandle);
+            Project::GetAssetManager()->RefreshAsset(m_AssetHandle);
         }
     }
     ImGui::EndChild();
