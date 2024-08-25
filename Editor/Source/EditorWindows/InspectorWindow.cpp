@@ -57,84 +57,6 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
             if (!member.get_metadata().contains("vector")) {
                 EUI::Property(member.get_name(), [&] {
                     DrawProperty(std::move(value), member, ptr);
-#if 0
-                ZoneScoped;
-                if (auto const property_type = value.get_type().as_pointer().get_data_type(); property_type.is_number()) {
-                    ImGuiDataType type;
-                    if (value.is<f32*>()) {
-                        type = ImGuiDataType_Float;
-                    } else if (value.is<f64*>()) {
-                        type = ImGuiDataType_Double;
-                    } else if (value.is<u32*>()) {
-                        type = ImGuiDataType_U32;
-                    } else if (value.is<u64*>()) {
-                        type = ImGuiDataType_U64;
-                    } else if (value.is<s32*>()) {
-                        type = ImGuiDataType_S32;
-                    } else if (value.is<s64*>()) {
-                        type = ImGuiDataType_S64;
-                    } else {
-                        PANIC("Unsupported numeric type for member");
-                    }
-                    // @note value has a pointer to the member pointer, so get_data returns that
-                    // pointer to the pointer.
-                    if (ImGui::InputScalar("", type, *CAST(void**, value.get_data()))) {
-                        modified = true;
-                    }
-                } else if (value.is<bool*>()) {
-                    if (ImGui::Checkbox("", value.as<bool*>())) {
-                        modified = true;
-                    }
-                } else if (value.is<std::string*>()) {
-                    if (ImGui::InputText("", value.as<std::string*>())) {
-                        modified = true;
-                    }
-                } else if (value.is<Color*>()) {
-                    modified |= ImGui::ColorEdit4("", value.as<Color*>()->Raw);
-                } else if (value.is<Vector2*>()) {
-                    modified |= ImGui::DragFloat2("", value.as<Vector2*>()->Raw);
-                } else if (value.is<Vector3*>()) {
-                    modified |= ImGui::DragFloat3("", value.as<Vector3*>()->Raw);
-                } else if (value.is<Vector4*>()) {
-                    modified |= ImGui::DragFloat4("", value.as<Vector4*>()->Raw);
-                } else if (property_type.is_class()) {
-                    auto class_type = property_type.as_class();
-                    if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
-                        EUI::AssetProperty(class_type, std::move(value));
-                    } else if (member.get_metadata().contains("vector")) {
-                        // class_type is std::vector<T>
-                        auto type_t = class_type.get_argument_type(0);
-                        if (type_t == meta_hpp::resolve_type<s32>()) {
-                            auto vector = CAST(std::vector<s32>**, value.get_data());
-                            if (ImGui::CollapsingHeader("Values")) {
-                                // for (auto &number : **vector) {
-                                for (auto i = 0; i < (*vector)->size(); i++) {
-                                    auto& number = (**vector)[i];
-                                    ImGui::PushID(i);
-                                    defer(ImGui::PopID());
-                                }
-                            }
-
-                        }
-                    } else {
-                        ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
-                    }
-                } else if (property_type.is_enum()) {
-                    auto enum_type = property_type.as_enum();
-
-                    auto current_evalue = enum_type.value_to_evalue(value);
-                    if (ImGui::BeginCombo("", current_evalue.get_name().data())) {
-                        for (auto const& evalue : enum_type.get_evalues()) {
-                            if (ImGui::Selectable(evalue.get_name().c_str())) {
-                                member.set(ptr, evalue.get_value());
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-                } else {
-                    ImGui::Text("Unsupported type for %s", member.get_name().c_str());
-                }
-#endif
                 });
             }
         }
@@ -192,9 +114,6 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     return modified;
 }
-
-template<typename... T>
-auto DrawVector(meta_hpp::any_type type, meta_hpp::uvalue vector) {}
 
 bool InspectorWindow::DrawProperty(meta_hpp::uvalue prop_value, meta_hpp::member const& member, meta_hpp::uvalue& ptr)
 {

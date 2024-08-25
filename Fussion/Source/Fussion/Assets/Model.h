@@ -24,8 +24,6 @@ namespace Fussion {
         Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index);
     };
 
-    // class MeshMetadata : public AssetMetadata {};
-
     class Model final : public Asset {
     public:
         std::vector<Mesh> Meshes{};
@@ -36,7 +34,5 @@ namespace Fussion {
         virtual AssetType GetType() const override { return GetStaticType(); }
 
         static AssetType GetStaticType() { return AssetType::Model; }
-
-        // void Draw(RHI::RenderContext& ctx) const;
     };
 }
