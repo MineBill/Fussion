@@ -36,6 +36,8 @@ Editor::~Editor() = default;
 
 void Editor::OnStart()
 {
+    Application::Instance()->GetWindow().SetTitle(fmt::format("Fussion - {}", Project::GetName()));
+
     ZoneScoped;
     m_ViewportWindow = MakePtr<ViewportWindow>(this);
     m_InspectorWindow = MakePtr<InspectorWindow>(this);
@@ -441,17 +443,16 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
         RenderEditorView(m_ActiveScene);
     }
     break;
+    case PlayState::Detached:
     case PlayState::Playing:
     case PlayState::Paused: {
         auto camera = m_PlayScene->FindFirstComponent<Camera>();
 
-        RenderGameView(*camera.get());
-    }
-    break;
-    case PlayState::Detached: {
-        auto camera = m_PlayScene->FindFirstComponent<Camera>();
-
-        RenderEditorView(m_PlayScene);
+        if (camera == nullptr) {
+            RenderEditorView(m_PlayScene);
+        } else {
+            RenderGameView(*camera.get());
+        }
     }
     break;
     }
@@ -546,6 +547,8 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
 
             s_EditorInstance->m_ActiveScenePath = meta.Path;
             s_EditorInstance->m_ActiveScene = scene_asset;
+
+            Application::Instance()->GetWindow().SetTitle(fmt::format("Fussion - {} - {}", Project::GetName(), meta.Name));
         }
     };
     if (s_EditorInstance->m_ActiveScene != nullptr && s_EditorInstance->m_ActiveScene->IsDirty()) {

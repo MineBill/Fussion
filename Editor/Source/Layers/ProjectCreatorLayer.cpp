@@ -1,6 +1,7 @@
 ﻿#include "EditorPCH.h"
 #include "ProjectCreatorLayer.h"
 
+#include "EditorApplication.h"
 #include "EditorUI.h"
 #include "ImGuiHelpers.h"
 #include "Fussion/Core/Application.h"
@@ -15,6 +16,8 @@ void ProjectCreatorLayer::OnStart()
     LOG_INFOF("TestLayer::OnStart");
     ImGui::ClearIniSettings();
     ImGui::ClearWindowSettings("Window");
+
+    Application::Instance()->GetWindow().SetTitle("Fussion - Project Creator");
 }
 
 void ProjectCreatorLayer::OnUpdate(f32 delta)
@@ -34,9 +37,14 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         constexpr auto width = 150;
         auto avail_width = ImGui::GetContentRegionAvail().x;
         ImGui::BeginChild("Buttons", Vector2{ width, 0 }, 0, ImGuiWindowFlags_NoSavedSettings);
+
+        constexpr auto padding = 20;
+        constexpr auto button_width = width - padding;
+        ImGui::SetCursorPosX(padding / 2);
+        ImGui::SetCursorPosY(padding / 2);
         EUI::Button("New", [&] {
             m_OpenNewProjectPopup = true;
-        }, { .Style = ButtonStyleProjectCreator, .Size = Vector2{ 125, 0 } });
+        }, { .Style = ButtonStyleProjectCreator, .Size = Vector2{ button_width, 0 } });
         ImGui::EndChild();
 
         ImGui::SameLine();
@@ -53,7 +61,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         ImGui::EndChild();
 
         if (m_OpenNewProjectPopup) {
-            ImGui::OpenPopup("NewProjectWindow");
+            ImGui::OpenPopup("New Project");
             m_OpenNewProjectPopup = false;
         }
 
@@ -61,13 +69,15 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         auto size = Vector2(viewport->Size) / 2.0f;
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        if (ImGui::BeginPopupModal("NewProjectWindow", nullptr, flags)) {
+        EUI::ModalWindow("New Project", [&] {
             ImGui::Separator();
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
             ImGui::BeginChild("awd", { 0, size.Y - 75 });
             static std::string project_name;
-            EUI::Property("Project Name", &project_name);
+            if (EUI::Property("Project Name", &project_name)) {
+                m_ProjectNameValidated = !project_name.empty() && !StringUtils::IsWhitespace(project_name);
+            }
 
             static std::string project_folder;
 
@@ -81,6 +91,14 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
                 ImGui::InputText("", &project_folder);
             });
 
+            ImGui::Spacing();
+
+            if (!m_ProjectNameValidated) {
+                ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::Bold]);
+                defer(ImGui::PopFont());
+                ImGui::Text("Invalid project name");
+            }
+
             ImGui::EndChild();
             ImGui::PopStyleVar();
 
@@ -90,12 +108,20 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
                 ImGui::CloseCurrentPopup();
             }, { .Style = ButtonStyleProjectCreator });
             ImGui::SameLine();
+
+            if (!m_ProjectNameValidated)
+                ImGui::BeginDisabled();
+
             EUI::Button("Create", [] {
+                auto path = EditorApplication::CreateProject(fs::path(project_folder));
+                EditorApplication::CreateEditorFromProjectCreator(path);
                 ImGui::CloseCurrentPopup();
             }, { .Style = ButtonStyleProjectCreator });
-            ImGui::EndPopup();
-        }
-    }, { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {} });
+
+            if (!m_ProjectNameValidated)
+                ImGui::EndDisabled();
+        }, { .Flags = flags });
+    }, { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {}, .UseChild = false });
 }
 
 void ProjectCreatorLayer::OnEvent(Event& event)

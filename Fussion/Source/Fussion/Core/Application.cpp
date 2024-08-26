@@ -85,6 +85,11 @@ Layer* Application::PushLayer(Ptr<Layer> layer)
     return ptr;
 }
 
+void Application::PopLayer()
+{
+    m_Layers.pop_back();
+}
+
 void Application::Quit()
 {
     LOG_DEBUG("Quit was requested");

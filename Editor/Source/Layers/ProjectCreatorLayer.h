@@ -12,4 +12,5 @@ private:
     bool m_StartedDragging{};
 
     bool m_OpenNewProjectPopup{};
+    bool m_ProjectNameValidated{ false };
 };

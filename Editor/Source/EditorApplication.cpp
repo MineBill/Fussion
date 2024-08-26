@@ -50,10 +50,19 @@ void EditorApplication::OnStart()
 
     EditorStyle::GetStyle().Initialize();
 
-    if (auto project = m_Args.ProjectPath) {
-        CreateEditor(std::filesystem::path(*project));
+    if (m_Args.CreateProject) {
+        if (auto project = m_Args.ProjectPath) {
+            auto path = CreateProject(std::filesystem::path(*project));
+            CreateEditor(path);
+        } else {
+            PANIC("Must provide path with the create option");
+        }
     } else {
-        PushLayer<ProjectCreatorLayer>();
+        if (auto project = m_Args.ProjectPath) {
+            CreateEditor(std::filesystem::path(*project));
+        } else {
+            PushLayer<ProjectCreatorLayer>();
+        }
     }
 
     m_ImGuiLayer->LoadFonts();
@@ -107,7 +116,16 @@ void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, 
     Application::OnLogReceived(level, message, loc);
 }
 
-void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
+auto EditorApplication::CreateProject(Maybe<fs::path> path) -> fs::path
+{
+    if (path.IsEmpty() || !exists(*path) || !is_directory(*path)) {
+        path = Dialogs::ShowDirectoryPicker();
+    }
+
+    return Project::GenerateProject(*path, "Simple Project");
+}
+
+void EditorApplication::CreateEditor(Maybe<fs::path> path)
 {
     if (path.IsEmpty() || !exists(*path)) {
         path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
@@ -123,4 +141,24 @@ void EditorApplication::CreateEditor(Maybe<std::filesystem::path> path)
 
     Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::GetLogsFolder() / log_file));
 
+}
+
+void EditorApplication::CreateEditorFromProjectCreator(fs::path path)
+{
+    s_EditorInstance->PopLayer();
+
+    if (!exists(path)) {
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
+    }
+
+    bool loaded = Project::Load(path);
+    VERIFY(loaded, "Project loading must not fail, for now.");
+
+    auto editor = s_EditorInstance->PushLayer<Editor>();
+    editor->OnStart();
+
+    auto now = std::chrono::system_clock::now();
+    auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
+
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::GetLogsFolder() / log_file));
 }

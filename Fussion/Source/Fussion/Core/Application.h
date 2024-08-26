@@ -57,6 +57,8 @@ public:
         return dynamic_cast<T*>(PushLayer(std::move(layer)));
     }
 
+    void PopLayer();
+
     void Quit();
 
 protected:

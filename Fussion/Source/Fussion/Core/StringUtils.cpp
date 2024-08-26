@@ -9,4 +9,9 @@ namespace Fussion::StringUtils {
             return std::string_view(str).substr(pos + what.size());
         return std::string_view(str);
     }
+
+    auto IsWhitespace(std::string_view str) -> bool
+    {
+        return str.size() == std::ranges::count_if(str, [](char c) { return std::isspace(c); });
+    }
 }

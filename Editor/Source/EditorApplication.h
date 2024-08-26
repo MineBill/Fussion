@@ -5,6 +5,8 @@
 
 #include <argparse.hpp>
 
+namespace fs = std::filesystem;
+
 struct EditorCLI final : argparse::Args {
     EditorCLI& operator=(EditorCLI const& other)
     {
@@ -30,9 +32,12 @@ public:
     virtual void OnEvent(Fussion::Event&) override;
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
+    static auto CreateProject(Maybe<fs::path> path) -> fs::path;
+
     static EditorApplication* Instance() { return s_EditorInstance; }
 
-    static void CreateEditor(Maybe<std::filesystem::path> path);
+    static void CreateEditor(Maybe<fs::path> path);
+    static void CreateEditorFromProjectCreator(fs::path path);
 
 private:
     static EditorApplication* s_EditorInstance;
