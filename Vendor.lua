@@ -132,6 +132,13 @@ target("magic_enum", function()
     add_sysincludedirs("Vendor/magic_enum/include", {public = true})
 end)
 
+target("argparse", function()
+    set_kind "headeronly"
+    set_group "Vendor"
+
+    add_sysincludedirs("Vendor/argparse/include", {public = true})
+end)
+
 if is_plat("linux") then
     add_requires("spirv-cross")
 end
