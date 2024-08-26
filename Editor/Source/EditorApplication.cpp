@@ -5,6 +5,7 @@
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
 #include "Layers/ProjectCreatorLayer.h"
+#include "Layers/Editor.h"
 
 #include <Fussion/RHI/Renderer.h>
 #include <Fussion/Input/Input.h>
@@ -12,7 +13,6 @@
 #include <Fussion/Log/FileSink.h>
 #include <Fussion/OS/Args.h>
 #include <Fussion/OS/Dialog.h>
-#include <Fussion/Core/Clap.h>
 #include <Fussion/Util/TextureImporter.h>
 
 #include <tracy/Tracy.hpp>
@@ -28,6 +28,11 @@ static unsigned char g_logo_32_data[] = {
 
 EditorApplication* EditorApplication::s_EditorInstance;
 using namespace Fussion;
+
+EditorApplication::EditorApplication()
+{
+    m_Args = argparse::parse<EditorCLI>(Args::Argc(), Args::Argv());
+}
 
 void EditorApplication::OnStart()
 {
@@ -45,12 +50,7 @@ void EditorApplication::OnStart()
 
     EditorStyle::GetStyle().Initialize();
 
-    Clap clap(Args::AsSingleLine());
-    clap.Option<std::string>("Project");
-
-    clap.Parse();
-
-    if (auto project = clap.Get<std::string>("Project")) {
+    if (auto project = m_Args.ProjectPath) {
         CreateEditor(std::filesystem::path(*project));
     } else {
         PushLayer<ProjectCreatorLayer>();

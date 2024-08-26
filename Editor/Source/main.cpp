@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 #endif
 
     Fussion::Args::Collect(argc, argv);
-    EditorApplication editor;
+    EditorApplication editor{};
     editor.Run();
 
 #if defined(FSN_LIVEPP_ENABLED)

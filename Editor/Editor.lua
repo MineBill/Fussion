@@ -39,7 +39,7 @@ target "Editor"
     add_sysincludedirs("Vendor/imgui")
     add_files("Vendor/imgui/*.cpp")
 
-    add_deps("Fussion")
+    add_deps("Fussion", "argparse")
     -- We need an explicit link to glfw here to be able to build the glfw imgui backend.
     add_packages("glfw")
 

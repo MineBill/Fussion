@@ -8,34 +8,18 @@
 #include "Serialization/TextureSerializer.h"
 #include "Serialization/MeshSerializer.h"
 
-#include "Fussion/OS/FileSystem.h"
-#include "Fussion/RHI/ShaderCompiler.h"
-#include "Fussion/Serialization/Json.h"
-#include "Fussion/Serialization/JsonSerializer.h"
+#include <Fussion/OS/FileSystem.h>
+#include <Fussion/RHI/ShaderCompiler.h>
+#include <Fussion/Serialization/Json.h>
+#include <Fussion/Serialization/JsonSerializer.h>
+#include <Fussion/Scene/Scene.h>
+#include <Fussion/Assets/ShaderAsset.h>
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 #include <future>
 
 using namespace Fussion;
-
-// void EditorAssetMetadata::Serialize(Serializer& ctx) const
-// {
-//     if (IsVirtual || DontSerialize)
-//         return;
-//     ISerializable::Serialize(ctx);
-//     FSN_SERIALIZE_MEMBER(Type);
-//     FSN_SERIALIZE_MEMBER(Path);
-//     FSN_SERIALIZE_MEMBER(Name);
-// }
-//
-// void EditorAssetMetadata::Deserialize(Deserializer& ctx)
-// {
-//     ISerializable::Deserialize(ctx);
-//     FSN_DESERIALIZE_MEMBER(Type);
-//     FSN_DESERIALIZE_MEMBER(Path);
-//     FSN_DESERIALIZE_MEMBER(Name);
-// }
 
 WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_AssetManager(asset_manager)
 {
