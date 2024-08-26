@@ -6,11 +6,6 @@
 
 class Project {
 public:
-    static Ref<Project> ActiveProject()
-    {
-        return s_ActiveProject;
-    }
-
     static void Initialize();
     static void Save(std::filesystem::path path = {});
     static bool Load(std::filesystem::path const& path);
@@ -24,7 +19,7 @@ public:
     static auto GetLogsFolder() -> std::filesystem::path const& { return s_ActiveProject->m_LogsFolderPath; }
 
 private:
-    static Ref<Project> s_ActiveProject;
+    static Ptr<Project> s_ActiveProject;
 
     Ref<EditorAssetManager> m_AssetManager{};
 

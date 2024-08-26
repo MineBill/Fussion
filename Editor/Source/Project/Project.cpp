@@ -7,12 +7,12 @@
 #include "Serialization/AssetSerializer.h"
 #include "Fussion/Serialization/Json.h"
 
-Ref<Project> Project::s_ActiveProject;
+Ptr<Project> Project::s_ActiveProject;
 using namespace Fussion;
 
 void Project::Initialize()
 {
-    s_ActiveProject = MakeRef<Project>();
+    s_ActiveProject = MakePtr<Project>();
     s_ActiveProject->m_AssetManager = MakeRef<EditorAssetManager>();
 
     AssetManager::SetActive(s_ActiveProject->m_AssetManager);
