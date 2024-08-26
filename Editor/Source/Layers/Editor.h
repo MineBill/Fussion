@@ -28,6 +28,7 @@ public:
         Editing,
         Playing,
         Paused,
+        Detached,
     };
 
     UndoRedo Undo;
@@ -128,5 +129,6 @@ private:
     std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows{};
 
     PlayState m_State{ PlayState::Editing };
+    bool m_Detached{ false };
     bool m_ShadowMapDisplayOpened{ false };
 };

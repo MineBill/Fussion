@@ -169,6 +169,10 @@ void Editor::OnUpdate(f32 delta)
     }
     break;
     case PlayState::Playing: {
+        if (m_Detached) {
+            m_Camera.SetFocus(m_ViewportWindow->IsFocused());
+            m_Camera.OnUpdate(delta);
+        }
         if (m_PlayScene) {
             m_PlayScene->OnUpdate(delta);
             m_PlayScene->OnDebugDraw(DebugDrawContext);
@@ -251,6 +255,11 @@ void Editor::OnUpdate(f32 delta)
     klass.DockNodeFlagsOverrideSet = flags;
 
     ImGui::SetNextWindowClass(&klass);
+
+    auto state = m_State;
+    if (state == PlayState::Playing) {
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, Color::Yellow);
+    }
     EUI::Window("##toolbar", [this] {
         constexpr auto y = 4;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2{ 0, y });
@@ -285,6 +294,18 @@ void Editor::OnUpdate(f32 delta)
             SetPlayState(PlayState::Paused);
         }, { .Size = Vector2{ height, height }, .Disabled = m_State != PlayState::Playing });
 
+        ImGui::SameLine();
+
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [this] {
+            ImGui::OpenPopup("Toolbar::Options");
+        }, { .Size = Vector2{ height, height }, .Disabled = m_State != PlayState::Playing });
+
+        EUI::Popup("Toolbar::Options", [&] {
+            if (ImGui::MenuItem("Detach")) {
+                m_Detached = !m_Detached;
+            }
+        });
+
         ImGui::SetItemTooltip("Pause");
 
         auto max = ImGui::GetItemRectMax();
@@ -298,6 +319,9 @@ void Editor::OnUpdate(f32 delta)
 
         list->ChannelsMerge();
     }, { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
+    if (state == PlayState::Playing) {
+        ImGui::PopStyleColor();
+    }
 
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -419,14 +443,15 @@ void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
     break;
     case PlayState::Playing:
     case PlayState::Paused: {
-        bool detached = false;
         auto camera = m_PlayScene->FindFirstComponent<Camera>();
 
-        if (detached || camera == nullptr) {
-            RenderEditorView(m_PlayScene);
-        } else {
-            RenderGameView(*camera.get());
-        }
+        RenderGameView(*camera.get());
+    }
+    break;
+    case PlayState::Detached: {
+        auto camera = m_PlayScene->FindFirstComponent<Camera>();
+
+        RenderEditorView(m_PlayScene);
     }
     break;
     }
@@ -439,14 +464,13 @@ void Editor::SetPlayState(PlayState new_state)
     switch (m_State) {
     case PlayState::Editing:
         switch (new_state) {
-        case PlayState::Editing:
-            // noop
-            return;
         case PlayState::Playing:
             OnBeginPlay.Fire();
             break;
+        // noop
+        case PlayState::Editing:
         case PlayState::Paused:
-            // noop
+        case PlayState::Detached:
             return;
         }
         break;
@@ -461,6 +485,8 @@ void Editor::SetPlayState(PlayState new_state)
         case PlayState::Paused:
             OnPaused.Fire();
             break;
+        case PlayState::Detached:
+            break;
         }
         break;
     case PlayState::Paused:
@@ -471,7 +497,22 @@ void Editor::SetPlayState(PlayState new_state)
         case PlayState::Playing:
             OnResumePlay.Fire();
             break;
+        case PlayState::Detached:
+            break;
         case PlayState::Paused:
+            // noop
+            return;
+        }
+        break;
+    case PlayState::Detached:
+        switch (new_state) {
+        case PlayState::Editing:
+            break;
+        case PlayState::Playing:
+            break;
+        case PlayState::Paused:
+            break;
+        case PlayState::Detached:
             // noop
             return;
         }
