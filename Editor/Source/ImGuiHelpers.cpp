@@ -276,3 +276,126 @@ bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> co
     }
     return pressed;
 }
+
+bool ImGuiHelpers::TreeNode(std::string_view label, Ref<Fussion::RHI::Image> const& image, ImGuiTreeNodeFlags flags)
+{
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiWindow* window = g.CurrentWindow;
+
+    ImGuiID id = window->GetID(label.data());
+    ImVec2 pos = window->DC.CursorPos;
+    ImRect bb(pos, ImVec2(pos.x + ImGui::GetContentRegionAvail().x, pos.y + g.FontSize + g.Style.FramePadding.y * 2));
+    bool opened = ImGui::TreeNodeBehaviorIsOpen(id, flags);
+    // bool hovered, held;
+    // bool selected = flags & ImGuiTreeNodeFlags_Selected;
+
+    float button_sz = g.FontSize + g.Style.FramePadding.y * 2;
+    auto arrow_rect = Fussion::Rect::FromStartEnd(pos, Vector2(pos.x + button_sz, bb.Max.y));
+    //
+    // if (flags & ImGuiTreeNodeFlags_OpenOnArrow) {
+    //     if (ImGui::ButtonBehavior(ImRect(pos, ImVec2(pos.x + button_sz, bb.Max.y)), id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
+    //         window->DC.StateStorage->SetInt(id, opened ? 0 : 1);
+    // } else {
+    //     if (ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
+    //         window->DC.StateStorage->SetInt(id, opened ? 0 : 1);
+    // }
+    //
+    // if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick) {
+    //     if (ImGui::ButtonBehavior(bb, id, &hovered, &held, ImGuiButtonFlags_PressedOnDoubleClick))
+    //         window->DC.StateStorage->SetInt(id, opened ? 0 : 1);
+    // }
+    //
+
+    auto text_pos = Vector2(pos.x + g.Style.ItemInnerSpacing.x, pos.y + g.Style.FramePadding.y);
+
+    const bool is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0;
+    ImGuiButtonFlags button_flags = ImGuiTreeNodeFlags_None;
+    if ((flags & ImGuiTreeNodeFlags_AllowOverlap) || (g.LastItemData.InFlags & ImGuiItemFlags_AllowOverlap))
+        button_flags |= ImGuiButtonFlags_AllowOverlap;
+    if (!is_leaf)
+        button_flags |= ImGuiButtonFlags_PressedOnDragDropHold;
+
+    auto& style = ImGui::GetStyle();
+
+    // Open behaviors can be altered with the _OpenOnArrow and _OnOnDoubleClick flags.
+    // Some alteration have subtle effects (e.g. toggle on MouseUp vs MouseDown events) due to requirements for multi-selection and drag and drop support.
+    // - Single-click on label = Toggle on MouseUp (default, when _OpenOnArrow=0)
+    // - Single-click on arrow = Toggle on MouseDown (when _OpenOnArrow=0)
+    // - Single-click on arrow = Toggle on MouseDown (when _OpenOnArrow=1)
+    // - Double-click on label = Toggle on MouseDoubleClick (when _OpenOnDoubleClick=1)
+    // - Double-click on arrow = Toggle on MouseDoubleClick (when _OpenOnDoubleClick=1 and _OpenOnArrow=0)
+    // It is rather standard that arrow click react on Down rather than Up.
+    // We set ImGuiButtonFlags_PressedOnClickRelease on OpenOnDoubleClick because we want the item to be active on the initial MouseDown in order for drag and drop to work.
+    auto is_mouse_x_over_arrow = arrow_rect.Contains(g.IO.MousePos);
+    if (is_mouse_x_over_arrow)
+        button_flags |= ImGuiButtonFlags_PressedOnClick;
+    else if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)
+        button_flags |= ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnDoubleClick;
+    else
+        button_flags |= ImGuiButtonFlags_PressedOnClickRelease;
+
+    bool selected = (flags & ImGuiTreeNodeFlags_Selected) != 0;
+    const bool was_selected = selected;
+
+    bool is_open = ImGui::TreeNodeUpdateNextOpen(id, flags);
+
+    bool hovered, held;
+    bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, button_flags);
+    bool toggled = false;
+    if (!is_leaf) {
+        if (pressed && g.DragDropHoldJustPressedId != id) {
+            if ((flags & (ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick)) == 0 || (g.NavActivateId == id))
+                toggled = true;
+            if (flags & ImGuiTreeNodeFlags_OpenOnArrow)
+                toggled |= is_mouse_x_over_arrow && !g.NavDisableMouseHover; // Lightweight equivalent of IsMouseHoveringRect() since ButtonBehavior() already did the job
+            if ((flags & ImGuiTreeNodeFlags_OpenOnDoubleClick) && g.IO.MouseClickedCount[0] == 2)
+                toggled = true;
+        } else if (pressed && g.DragDropHoldJustPressedId == id) {
+            IM_ASSERT(button_flags & ImGuiButtonFlags_PressedOnDragDropHold);
+            if (!is_open) // When using Drag and Drop "hold to open" we keep the node highlighted after opening, but never close it again.
+                toggled = true;
+        }
+
+        if (g.NavId == id && g.NavMoveDir == ImGuiDir_Left && is_open) {
+            toggled = true;
+            ImGui::NavClearPreferredPosForAxis(ImGuiAxis_X);
+            ImGui::NavMoveRequestCancel();
+        }
+        if (g.NavId == id && g.NavMoveDir == ImGuiDir_Right && !is_open) // If there's something upcoming on the line we may want to give it the priority?
+        {
+            toggled = true;
+            ImGui::NavClearPreferredPosForAxis(ImGuiAxis_X);
+            ImGui::NavMoveRequestCancel();
+        }
+
+        if (toggled) {
+            is_open = !is_open;
+            window->DC.StateStorage->SetInt(id, is_open);
+            g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledOpen;
+        }
+    }
+
+    // In this branch, TreeNodeBehavior() cannot toggle the selection so this will never trigger.
+    if (selected != was_selected) //-V547
+        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
+
+    if (hovered || selected) {
+        ImU32 const bg_col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        window->DrawList->AddRectFilled(bb.Min, bb.Max, bg_col, false);
+    }
+
+    if (!(flags & ImGuiTreeNodeFlags_Leaf)) {
+        ImGui::RenderArrow(window->DrawList, text_pos, 0xFFFFFFFF, opened ? ImGuiDir_Down : ImGuiDir_Right);
+    }
+    // Icon, text
+    auto button_pos = Vector2(pos) + Vector2(button_sz, 0);
+    window->DrawList->AddImage(IMGUI_IMAGE(image), button_pos, button_pos + button_sz);
+    ImGui::RenderText(text_pos + Vector2(button_sz * 2, 0), label.data());
+
+    ImGui::ItemSize(bb, g.Style.FramePadding.y);
+    ImGui::ItemAdd(bb, id);
+
+    if (opened)
+        ImGui::TreePush(label.data());
+    return opened;
+}

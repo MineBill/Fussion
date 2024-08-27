@@ -1,6 +1,7 @@
 ﻿#include "EditorPCH.h"
 #include "SceneTreeWindow.h"
 #include "EditorUI.h"
+#include "ImGuiHelpers.h"
 
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
@@ -66,7 +67,11 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     auto& scene = Editor::GetActiveScene();
     auto entity = scene->GetEntity(handle);
 
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_SpanAvailWidth |
+        ImGuiTreeNodeFlags_FramePadding |
+        ImGuiTreeNodeFlags_OpenOnDoubleClick |
+        ImGuiTreeNodeFlags_OpenOnArrow;
 
     if (entity->GetChildren().empty()) {
         flags |= ImGuiTreeNodeFlags_Leaf;
@@ -78,7 +83,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     ImGui::PushID(CAST(s32, CAST(u64, handle)));
     defer(ImGui::PopID());
 
-    auto opened = ImGui::TreeNodeEx(entity->Name.c_str(), flags);
+    auto opened = ImGuiH::TreeNode(entity->Name, EditorStyle::GetStyle().EditorIcons[EditorIcon::Entity]->GetImage(), flags);
 
     if (ImGui::IsItemClicked()) {
         SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
@@ -88,7 +93,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
         if (ImGui::BeginMenu("New")) {
             if (ImGui::MenuItem("Entity")) {
-                scene->CreateEntity("Entity", handle);
+                (void)scene->CreateEntity("Entity", handle);
             }
             ImGui::EndMenu();
         }

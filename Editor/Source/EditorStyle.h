@@ -125,6 +125,7 @@ enum class EditorIcon {
     Warning,
     Info,
     CogWheel,
+    Entity,
 };
 
 struct EditorStyle {

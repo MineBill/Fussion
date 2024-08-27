@@ -95,6 +95,7 @@ void EditorStyle::Initialize()
     EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png");
     EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png");
     EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png");
+    EditorIcons[Entity] = TextureImporter::LoadTextureFromFile("Assets/Icons/Entity.png");
 
     EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png");
     EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png");

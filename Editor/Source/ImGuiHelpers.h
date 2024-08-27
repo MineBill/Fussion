@@ -56,6 +56,9 @@ namespace ImGuiHelpers {
     {
         return ImGui::Button(std::format(fmt, std::forward<Args>(args)...).c_str());
     }
+
+    bool TreeNode(std::string_view label, Ref<Fussion::RHI::Image> const& image, ImGuiTreeNodeFlags flags = 0);
+
 } // namespace ImGuiHelpers
 
 namespace ImGuiH = ImGuiHelpers;
