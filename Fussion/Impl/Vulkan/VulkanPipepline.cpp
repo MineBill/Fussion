@@ -25,7 +25,7 @@ VulkanPipelineConfig VulkanPipelineConfig::Default()
         .depthClampEnable = false,
         .rasterizerDiscardEnable = false,
         .polygonMode = VK_POLYGON_MODE_FILL,
-        .cullMode = VK_CULL_MODE_BACK_BIT,
+        .cullMode = VK_CULL_MODE_NONE,
         .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
         .depthBiasEnable = false,
         // .depthBiasConstantFactor = ,
