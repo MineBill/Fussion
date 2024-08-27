@@ -52,6 +52,7 @@ namespace Fussion {
         Entity& operator=(Entity&& other) noexcept;
 
         void SetParent(Entity const& new_parent);
+        void AddChild(Entity& other);
 
         void SetEnabled(bool enabled);
         bool IsEnabled() const;
@@ -93,6 +94,7 @@ namespace Fussion {
         [[nodiscard]]
         auto GetId() const -> Uuid { return m_Handle; }
 
+        /// Returns the local id of the entity for the scene it is currently in.
         [[nodiscard]]
         auto GetLocalID() const -> s32 { return m_LocalID; }
 
@@ -120,8 +122,8 @@ namespace Fussion {
         void OnDestroy();
 
         bool IsGrandchild(Uuid handle) const;
-        void AddChild(Entity const& child);
-        void RemoveChild(Entity const& child);
+        void AddChildInternal(Entity const& child);
+        void RemoveChildInternal(Entity const& child);
 
         Uuid m_Parent;
         std::vector<Uuid> m_Children{};

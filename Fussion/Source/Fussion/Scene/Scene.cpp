@@ -143,11 +143,6 @@ namespace Fussion {
         return &m_Entities[handle];
     }
 
-    auto Scene::GetEntity(Entity const& entity) -> Entity*
-    {
-        return GetEntity(entity.m_Handle);
-    }
-
     auto Scene::GetEntityFromLocalID(s32 local_id) -> Entity*
     {
         if (!m_LocalIDToEntity.contains(local_id))
@@ -173,9 +168,9 @@ namespace Fussion {
         m_Entities.erase(handle);
     }
 
-    void Scene::Destroy(Entity const* entity)
+    void Scene::Destroy(Entity const& entity)
     {
-        Destroy(entity->GetId());
+        Destroy(entity.GetId());
     }
 
     void Scene::Serialize(Serializer& ctx) const

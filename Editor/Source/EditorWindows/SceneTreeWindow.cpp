@@ -9,6 +9,7 @@
 #include "Fussion/Input/Input.h"
 #include "Fussion/Scene/Entity.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
+#include "Fussion/Scene/Components/Camera.h"
 #include "Fussion/Scene/Components/DirectionalLight.h"
 
 void SceneTreeWindow::OnDraw()
@@ -39,14 +40,19 @@ void SceneTreeWindow::OnDraw()
                         entity->AddComponent<Fussion::DirectionalLight>();
                         entity->Transform.EulerAngles.X = 45.0f;
                     }
+                    if (ImGui::MenuItem("Camera")) {
+                        auto entity = scene->CreateEntity();
+                        entity->Name = "Camera";
+                        entity->AddComponent<Fussion::Camera>();
+                        entity->Transform.EulerAngles.X = 45.0f;
+                    }
                     ImGui::EndMenu();
                 }
                 ImGui::Separator();
                 ImGui::EndPopup();
             }
 
-            auto& root = scene->GetRoot();
-            for (auto const& child : root.GetChildren()) {
+            for (auto& root = scene->GetRoot(); auto const& child : root.GetChildren()) {
                 DrawEntityHierarchy(child);
             }
         } else {
@@ -89,7 +95,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         ImGui::Separator();
         if (ImGui::MenuItem("Destroy")) {
             m_Selection.erase(entity->GetId());
-            scene->Destroy(entity);
+            scene->Destroy(*entity);
         }
         if (ImGui::MenuItem("Parent to Scene")) {
             entity->SetParent(scene->GetRoot());

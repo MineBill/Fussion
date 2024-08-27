@@ -141,18 +141,23 @@ namespace Fussion {
             return;
 
         if (auto p = m_Scene->GetEntity(m_Parent)) {
-            p->RemoveChild(*this);
+            p->RemoveChildInternal(*this);
         }
-        m_Scene->GetEntity(new_parent)->AddChild(*this);
+        m_Scene->GetEntity(new_parent.m_Handle)->AddChildInternal(*this);
         m_Parent = new_parent.m_Handle;
     }
 
-    void Entity::AddChild(Entity const& child)
+    void Entity::AddChild(Entity& other)
+    {
+        other.SetParent(*this);
+    }
+
+    void Entity::AddChildInternal(Entity const& child)
     {
         m_Children.push_back(child.m_Handle);
     }
 
-    void Entity::RemoveChild(Entity const& child)
+    void Entity::RemoveChildInternal(Entity const& child)
     {
         ZoneScoped;
 
@@ -297,7 +302,7 @@ namespace Fussion {
         }
 
         if (auto parent = m_Scene->GetEntity(m_Parent)) {
-            parent->RemoveChild(*this);
+            parent->RemoveChildInternal(*this);
         }
     }
 

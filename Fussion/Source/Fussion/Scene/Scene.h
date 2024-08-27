@@ -27,16 +27,19 @@ namespace Fussion {
         void OnDebugDraw(DebugDrawContext& ctx);
 #endif
 
+        [[nodiscard]]
         auto CreateEntity(std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
+        [[nodiscard]]
         auto CreateEntityWithId(Uuid id, std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
 
+        [[nodiscard]]
         auto GetEntity(Uuid handle) -> Entity*;
-        // TODO: What the fuck is this?
-        auto GetEntity(Entity const& entity) -> Entity*;
+        [[nodiscard]]
         auto GetEntityFromLocalID(s32 local_id) -> Entity*;
 
         /// Returns the invisible root entity. All other entities in the scene
         /// are children of this root entity.
+        [[nodiscard]]
         auto GetRoot() -> Entity&;
 
         template<typename Callback>
@@ -47,12 +50,15 @@ namespace Fussion {
             }
         }
 
-        template<typename Component>
-        auto FindFirstComponent() -> Ref<Component>
+        /// Looks for the first component of type C in any entity and returns it.
+        /// @returns The component if it exists, nullptr otherwise.
+        template<std::derived_from<Component> C>
+        [[nodiscard]]
+        auto FindFirstComponent() -> Ref<C>
         {
             for (auto& [id, entity] : m_Entities) {
-                if (entity.HasComponent<Component>()) {
-                    return entity.GetComponent<Component>();
+                if (entity.HasComponent<C>()) {
+                    return entity.GetComponent<C>();
                 }
             }
             return nullptr;
@@ -68,7 +74,7 @@ namespace Fussion {
         bool IsDirty() const { return m_Dirty; }
 
         void Destroy(Uuid handle);
-        void Destroy(Entity const* entity);
+        void Destroy(Entity const& entity);
 
         auto Name() const -> std::string const& { return m_Name; }
 
