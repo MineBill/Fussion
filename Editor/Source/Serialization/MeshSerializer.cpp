@@ -183,7 +183,11 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
             continue;
         }
 
-        meshes.emplace_back(vertices, indices, primitive.material);
+        Vector3 offset{};
+        if (node.translation.size() == 3) {
+            offset = { node.translation[0], node.translation[1], node.translation[2] };
+        }
+        meshes.emplace_back(vertices, indices, primitive.material, offset);
     }
 
     auto the_model = Model::Create(meshes);

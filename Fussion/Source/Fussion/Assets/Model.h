@@ -14,6 +14,7 @@ namespace Fussion {
 
     struct Mesh {
         std::vector<Vertex> Vertices{};
+        Vector3 Offset{};
 
         Ref<RHI::Buffer> VertexBuffer{};
         Ref<RHI::Buffer> IndexBuffer{};
@@ -21,7 +22,7 @@ namespace Fussion {
 
         s32 MaterialIndex{};
 
-        Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index);
+        Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index, Vector3 offset);
     };
 
     class Model final : public Asset {

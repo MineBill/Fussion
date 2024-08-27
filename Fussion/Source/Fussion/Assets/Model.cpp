@@ -4,8 +4,9 @@
 #include "RHI/Device.h"
 
 namespace Fussion {
-    Mesh::Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index)
-        : MaterialIndex(material_index)
+    Mesh::Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index, Vector3 offset)
+        : Offset(offset),
+          MaterialIndex(material_index)
     {
         Vertices = vertices;
 

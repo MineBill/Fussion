@@ -86,7 +86,7 @@ namespace Fussion {
                     material = RHI::Renderer::GetDefaultMaterial().Get();
                 }
 
-                m_Data.Model = m_Owner->Transform.GetMatrix();
+                m_Data.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
 
                 auto object_layout = RHI::Device::Instance()->CreateResourceLayout(m_MaterialResourceUsages);
                 auto resource = m_FrameAllocator.Alloc(object_layout, "MeshRenderer Material");
@@ -139,19 +139,19 @@ namespace Fussion {
             return;
         }
 
-        if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
-            m_DepthPushData.Model = m_Owner->Transform.GetMatrix();
-            m_DepthPushData.LightSpace = ctx.CurrentLightSpace;
-            ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
-        } else if (ctx.RenderFlags.Test(RHI::RenderState::ObjectPicking)) {
-            m_ObjectPickingPushData.Model = m_Owner->Transform.GetMatrix();
-            m_ObjectPickingPushData.LocalID = m_Owner->GetLocalID();
-            ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);
-        } else {
-            return;
-        }
-
         for (auto const& mesh : model->Meshes) {
+            if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
+                m_DepthPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
+                m_DepthPushData.LightSpace = ctx.CurrentLightSpace;
+                ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
+            } else if (ctx.RenderFlags.Test(RHI::RenderState::ObjectPicking)) {
+                m_ObjectPickingPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
+                m_ObjectPickingPushData.LocalID = m_Owner->GetLocalID();
+                ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);
+            } else {
+                return;
+            }
+
             ctx.Cmd->BindBuffer(mesh.VertexBuffer);
             ctx.Cmd->BindBuffer(mesh.IndexBuffer);
             ctx.Cmd->DrawIndexed(mesh.IndexCount, 1);
