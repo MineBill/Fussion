@@ -26,7 +26,7 @@ namespace Fussion {
 
         virtual void OnStart() override;
         virtual void OnUpdate(f32 delta) override;
-        virtual void OnDraw(RHI::RenderContext& ctx) override;
+        virtual void OnDraw(RenderContext& ctx) override;
 
 #if FSN_DEBUG_DRAW
         virtual void OnDebugDraw(DebugDrawContext& ctx) override;

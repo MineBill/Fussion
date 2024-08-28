@@ -1,7 +1,10 @@
 ﻿#pragma once
-#include "Fussion/Assets/Asset.h"
-#include "Fussion/RHI/Buffer.h"
-#include "Fussion/RHI/RenderContext.h"
+#include <Fussion/Assets/Asset.h>
+#include <Fussion/RHI/Buffer.h>
+#include <Fussion/Rendering/RenderContext.h>
+#include <Fussion/Math/Vector2.h>
+#include <Fussion/Math/Vector3.h>
+#include <Fussion/Math/Vector4.h>
 
 namespace Fussion {
     struct Vertex {

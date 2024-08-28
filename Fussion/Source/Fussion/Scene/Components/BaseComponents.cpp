@@ -7,11 +7,11 @@
 namespace Fussion {
     void PointLight::OnUpdate(f32) {}
 
-    void PointLight::OnDraw(RHI::RenderContext& context)
+    void PointLight::OnDraw(RenderContext& context)
     {
-        if (!context.RenderFlags.Test(RHI::RenderState::LightCollection))
+        if (!context.RenderFlags.Test(RenderState::LightCollection))
             return;
-        auto light = RHI::PointLightData{
+        auto light = GPUPointLight{
             .Position = m_Owner->Transform.Position,
             .Color = Color::White,
             .Radius = Radius,

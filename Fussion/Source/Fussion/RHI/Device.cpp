@@ -3,5 +3,5 @@
 
 namespace Fussion::RHI
 {
-    Ref<Device> Device::s_Instance = {};
+    Ptr<Device> Device::s_Instance = {};
 }

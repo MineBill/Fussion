@@ -14,9 +14,10 @@
 
 #include "Editor.h"
 #include "EditorStyle.h"
-#include "Fussion/RHI/Renderer.h"
 
 #define VK_NO_PROTOTYPES
+#include "Fussion/Rendering/Renderer.h"
+
 #include <vulkan/vulkan.h>
 #include "Vulkan/VulkanImage.h"
 #include "Vulkan/VulkanImageView.h"
@@ -117,9 +118,9 @@ void ImGuiLayer::Init()
     };
     ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void* device) {
         return vkGetInstanceProcAddr(CAST(VulkanDevice*, device)->Instance->Instance, function_name);
-    }, device.get());
+    }, device);
     ImGui_ImplVulkan_Init(&info);
-    Device::Instance()->RegisterImageCallback([this](Ref<RHI::Image> const& image, bool create) {
+    Device::Instance()->RegisterImageCallback([this](Ref<Fussion::RHI::Image> const& image, bool create) {
         std::lock_guard lock(m_RegistrationMutex);
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {
@@ -158,7 +159,7 @@ void ImGuiLayer::Init()
         }
     });
 
-    Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<RHI::Image> const& image, bool create) {
+    Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<Fussion::RHI::Image> const& image, bool create) {
         std::lock_guard lock(m_RegistrationMutex);
         if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
             if (create) {

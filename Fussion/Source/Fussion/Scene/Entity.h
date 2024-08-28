@@ -104,7 +104,7 @@ namespace Fussion {
         [[nodiscard]]
         auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
 
-        void OnDraw(RHI::RenderContext& context);
+        void OnDraw(RenderContext& context);
 
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;

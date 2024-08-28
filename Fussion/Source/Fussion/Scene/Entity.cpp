@@ -238,7 +238,7 @@ namespace Fussion {
         m_RemovedComponents.push_back(Uuid(type.get_hash()));
     }
 
-    void Entity::OnDraw(RHI::RenderContext& context)
+    void Entity::OnDraw(RenderContext& context)
     {
         ZoneScoped;
         for (auto& [id, component] : m_Components) {

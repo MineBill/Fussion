@@ -10,7 +10,7 @@ namespace Fussion {
         COMPONENT_DEFAULT(PointLight)
 
         virtual void OnUpdate(f32 delta) override;
-        virtual void OnDraw(RHI::RenderContext& context) override;
+        virtual void OnDraw(RenderContext& context) override;
 
         f32 Radius{ 10.0f };
         Vector3 Offset{};

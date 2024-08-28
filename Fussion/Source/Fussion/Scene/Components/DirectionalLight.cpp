@@ -28,12 +28,12 @@ namespace Fussion {
         Debug::DrawCube(end, m_Owner->Transform.EulerAngles, Vector3::One * 0.1f);
     }
 
-    void DirectionalLight::OnDraw(RHI::RenderContext& context)
+    void DirectionalLight::OnDraw(RenderContext& context)
     {
-        if (!context.RenderFlags.Test(RHI::RenderState::LightCollection))
+        if (!context.RenderFlags.Test(RenderState::LightCollection))
             return;
 
-        context.DirectionalLights.push_back(RHI::DirectionalLight{
+        context.DirectionalLights.push_back(GPUDirectionalLight{
             {
                 .Direction = Vector4{ -m_Owner->Transform.GetForward() },
                 .Color = LightColor,

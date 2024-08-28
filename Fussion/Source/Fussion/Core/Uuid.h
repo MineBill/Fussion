@@ -15,6 +15,7 @@ namespace Fussion {
 
         bool IsValid() const { return m_Id == 0; }
 
+        static Uuid Invalid;
     private:
         u64 m_Id{};
     };

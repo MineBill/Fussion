@@ -3,16 +3,14 @@
 
 #include <random>
 
-namespace
-{
+namespace {
     std::random_device g_RandomDevice;
     std::mt19937_64 g_Engine(g_RandomDevice());
 }
 
-namespace Fussion
-{
+namespace Fussion {
     Uuid::Uuid()
-        : m_Id(g_Engine())
-    {
-    }
+        : m_Id(g_Engine()) {}
+
+    Uuid Uuid::Invalid{ CAST(u64, -1) };
 }

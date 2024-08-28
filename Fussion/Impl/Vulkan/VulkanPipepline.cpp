@@ -264,7 +264,7 @@ Ref<VulkanPipeline> VulkanPipeline::Create(
         .pStages = shader_stage_create_infos.data(),
         .pVertexInputState = &vertex_input_state,
         .pInputAssemblyState = &config.InputAssembly,
-        // .pTessellationState = ,
+        .pTessellationState = {},
         .pViewportState = &viewport_ci,
         .pRasterizationState = &config.Rasterization,
         .pMultisampleState = &config.Multisample,

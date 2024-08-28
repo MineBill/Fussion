@@ -2,12 +2,13 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorApplication.h"
+
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
 #include "Layers/ProjectCreatorLayer.h"
 #include "Layers/Editor.h"
 
-#include <Fussion/RHI/Renderer.h>
+#include <Fussion/Rendering/Renderer.h>
 #include <Fussion/Input/Input.h>
 #include <Fussion/Events/ApplicationEvents.h>
 #include <Fussion/Log/FileSink.h>
@@ -79,7 +80,7 @@ void EditorApplication::OnUpdate(f32 delta)
 
     Application::OnUpdate(delta);
 
-    auto [cmd, image] = RHI::Renderer::Begin();
+    auto [cmd, image] = Renderer::Begin();
     if (cmd == nullptr) {
         m_ImGuiLayer->End(cmd);
         return;
@@ -92,8 +93,8 @@ void EditorApplication::OnUpdate(f32 delta)
         layer->OnDraw(cmd);
     }
 
-    auto main = RHI::Renderer::GetInstance()->GetMainRenderPass();
-    cmd->BeginRenderPass(main, RHI::Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
+    auto main = Renderer::GetInstance()->GetMainRenderPass();
+    cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
     cmd->SetViewport({ window_size.X, -window_size.Y });
     cmd->SetScissor({ 0, 0, window_size.X, window_size.Y });
 
@@ -103,7 +104,7 @@ void EditorApplication::OnUpdate(f32 delta)
 
     cmd->End();
 
-    RHI::Renderer::End(cmd);
+    Renderer::End(cmd);
 }
 
 void EditorApplication::OnEvent(Event& event)

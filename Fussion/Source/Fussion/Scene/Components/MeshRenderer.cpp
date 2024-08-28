@@ -6,7 +6,7 @@
 #include "Serialization/Serializer.h"
 #include "RHI/Device.h"
 #include "RHI/FrameAllocator.h"
-#include "RHI/Renderer.h"
+#include "Rendering/Renderer.h"
 
 #include <tracy/Tracy.hpp>
 
@@ -60,7 +60,7 @@ namespace Fussion {
 
     void MeshRenderer::OnUpdate([[maybe_unused]] f32 delta) {}
 
-    void MeshRenderer::OnDraw(RHI::RenderContext& ctx)
+    void MeshRenderer::OnDraw(RenderContext& ctx)
     {
         ZoneScoped;
         if (!m_Owner->IsEnabled())
@@ -69,7 +69,7 @@ namespace Fussion {
         if (model == nullptr)
             return;
 
-        if (ctx.RenderFlags.Test(RHI::RenderState::Mesh)) {
+        if (ctx.RenderFlags.Test(RenderState::Mesh)) {
             m_FrameAllocator.Reset();
 
             Materials.resize(model->Meshes.size());
@@ -83,7 +83,7 @@ namespace Fussion {
                     }
                 }
                 if (material == nullptr) {
-                    material = RHI::Renderer::GetDefaultMaterial().Get();
+                    material = Renderer::GetDefaultMaterial().Get();
                 }
 
                 m_Data.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
@@ -100,27 +100,27 @@ namespace Fussion {
                 ctx.Cmd->BindResource(resource, ctx.CurrentShader, 2);
                 auto albedo = material->AlbedoMap.Get();
                 if (!albedo) {
-                    albedo = RHI::Renderer::WhiteTexture().Get();
+                    albedo = Renderer::WhiteTexture().Get();
                 }
 
                 auto normal = material->NormalMap.Get();
                 if (!normal) {
-                    normal = RHI::Renderer::DefaultNormalMap().Get();
+                    normal = Renderer::DefaultNormalMap().Get();
                 }
 
                 auto ao = material->AmbientOcclusionMap.Get();
                 if (!ao) {
-                    ao = RHI::Renderer::WhiteTexture().Get();
+                    ao = Renderer::WhiteTexture().Get();
                 }
 
                 auto metallic_roughness = material->MetallicRoughnessMap.Get();
                 if (!metallic_roughness) {
-                    metallic_roughness = RHI::Renderer::WhiteTexture().Get();
+                    metallic_roughness = Renderer::WhiteTexture().Get();
                 }
 
                 auto emissive = material->EmissiveMap.Get();
                 if (!emissive) {
-                    emissive = RHI::Renderer::BlackTexture().Get();
+                    emissive = Renderer::BlackTexture().Get();
                 }
 
                 ctx.Cmd->BindImage(albedo->GetImage(), resource, 1);
@@ -140,11 +140,11 @@ namespace Fussion {
         }
 
         for (auto const& mesh : model->Meshes) {
-            if (ctx.RenderFlags.Test(RHI::RenderState::Depth)) {
+            if (ctx.RenderFlags.Test(RenderState::Depth)) {
                 m_DepthPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
                 m_DepthPushData.LightSpace = ctx.CurrentLightSpace;
                 ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
-            } else if (ctx.RenderFlags.Test(RHI::RenderState::ObjectPicking)) {
+            } else if (ctx.RenderFlags.Test(RenderState::ObjectPicking)) {
                 m_ObjectPickingPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
                 m_ObjectPickingPushData.LocalID = m_Owner->GetLocalID();
                 ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);

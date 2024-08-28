@@ -77,7 +77,7 @@ namespace Fussion::RHI {
         Ref<CommandPool> MainCommandPool;
 
         explicit VulkanDevice(Ref<RHI::Instance> const& instance);
-        virtual ~VulkanDevice() override;
+        virtual ~VulkanDevice();
 
         virtual Ref<CommandPool> GetMainCommandPool() override;
 
@@ -111,7 +111,7 @@ namespace Fussion::RHI {
         virtual auto BeginSingleTimeCommand() -> Ref<CommandBuffer> override;
         virtual void EndSingleTimeCommand(Ref<CommandBuffer> cmd) override;
 
-        virtual void* GetRawHandle() override { return Handle; }
+        // virtual void* GetRawHandle() override { return Handle; }
 
         virtual void RegisterImageCallback(ImageCreationCallback const& callback) override;
         virtual void RegisterImageViewCallback(ImageViewCreationCallback const& callback) override;

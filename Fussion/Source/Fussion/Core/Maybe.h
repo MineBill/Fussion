@@ -66,25 +66,25 @@ namespace Fussion {
 
         constexpr T& operator*()
         {
-            VERIFY(m_NullableValue);
+            VERIFY(m_NullableValue, "Tried to access empty Maybe");
             return *m_NullableValue;
         }
 
         constexpr T const& operator*() const
         {
-            VERIFY(m_NullableValue);
+            VERIFY(m_NullableValue, "Tried to access empty Maybe");
             return *m_NullableValue;
         }
 
         constexpr T* operator->()
         {
-            VERIFY(m_NullableValue);
+            VERIFY(m_NullableValue, "Tried to access empty Maybe");
             return m_NullableValue;
         }
 
         constexpr T const* operator->() const
         {
-            VERIFY(m_NullableValue);
+            VERIFY(m_NullableValue, "Tried to access empty Maybe");
             return m_NullableValue;
         }
 

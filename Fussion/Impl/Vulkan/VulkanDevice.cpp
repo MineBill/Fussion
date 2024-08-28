@@ -29,6 +29,11 @@ namespace Fussion::RHI {
         return new VulkanDevice(instance);
     }
 
+    void Device::SetInstance(Device* ptr)
+    {
+        s_Instance.reset(ptr);
+    }
+
     std::vector<u32> QueueFamilyIndices::GetUniqueIndex() const
     {
         std::vector<u32> families{};
@@ -352,7 +357,7 @@ namespace Fussion::RHI {
         VkPhysicalDeviceDescriptorIndexingFeatures descriptor_indexing_features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT }; // Partial binding is required for descriptor aliasing.
         descriptor_indexing_features.descriptorBindingPartiallyBound = VK_TRUE;
 
-        VkPhysicalDeviceFeatures device_features {
+        VkPhysicalDeviceFeatures device_features{
             .depthClamp = true,
         };
 

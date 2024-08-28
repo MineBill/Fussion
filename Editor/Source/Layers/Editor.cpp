@@ -409,7 +409,7 @@ void Editor::OnEvent(Event& event)
     m_ContentBrowser->OnEvent(event);
 }
 
-void Editor::OnDraw(Ref<RHI::CommandBuffer> const& cmd)
+void Editor::OnDraw(Ref<::RHI::CommandBuffer> const& cmd)
 {
     auto RenderEditorView = [&](Ref<Scene> const& scene) {
         m_SceneRenderer.Render(cmd, {

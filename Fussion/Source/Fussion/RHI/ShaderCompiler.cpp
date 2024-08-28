@@ -246,7 +246,7 @@ namespace Fussion::RHI {
         };
         ret.emplace_back(fragment_stage);
 
-        auto device = Device::Instance();
+        auto& device = Device::Instance();
 
         // ==============
         //  Vertex Stage

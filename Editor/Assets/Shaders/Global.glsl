@@ -1,7 +1,7 @@
 #ifndef GLOBAL_SET_H
 #define GLOBAL_SET_H
 
-#define GLOBAL_SET 0
+#include "Defines.glsl"
 
 layout (std140, set = GLOBAL_SET, binding = 0) uniform ViewData {
     mat4 projection;

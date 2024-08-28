@@ -10,7 +10,6 @@
 #include <Fussion/Debug/Debug.h>
 #include <Fussion/OS/FileSystem.h>
 #include <Fussion/RHI/Device.h>
-#include <Fussion/RHI/Renderer.h>
 #include <Fussion/RHI/ShaderCompiler.h>
 #include <Fussion/Util/TextureImporter.h>
 
@@ -24,7 +23,6 @@
 
 using namespace Fussion;
 using namespace Fussion::RHI;
-
 
 void SceneRenderer::Init()
 {
@@ -267,7 +265,7 @@ void SceneRenderer::Init()
         auto shader = ShaderAsset::Create(m_ObjectPickingRenderPass, result->ShaderStages, result->Metadata);
         m_ObjectPickingShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
-        auto fb_spec = RHI::FrameBufferSpecification{
+        auto fb_spec = FrameBufferSpecification{
             .Width = 100,
             .Height = 100,
             .Attachments = {
@@ -288,7 +286,7 @@ void SceneRenderer::Init()
     }
 
     {
-        constexpr auto path = "Assets/Shaders/PBR.shader";
+        constexpr auto path = "Assets/Shaders/PbrObject.shader";
         auto const data = FileSystem::ReadEntireFile(path);
         auto result = ShaderCompiler::Compile(*data);
         auto shader = ShaderAsset::Create(m_SceneRenderPass, result->ShaderStages, result->Metadata);
@@ -463,8 +461,6 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
             f32 last_split{ 0 };
             for (auto i = 0; i < ShadowCascades; i++) {
-
-
 
                 Vector3 frustum_corners[8] = {
                     Vector3(-1.0f, 1.0f, 0.0f),

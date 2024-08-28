@@ -6,28 +6,29 @@
 #include "Fussion/Core/Application.h"
 #include "Fussion/Assets/PbrMaterial.h"
 
-namespace Fussion::RHI {
+using namespace Fussion::RHI;
+
+namespace Fussion {
     Renderer* Renderer::s_Renderer = nullptr;
 
     Renderer::~Renderer()
     {
         LOG_DEBUGF("Destroying renderer!");
-        Device::s_Instance->~Device();
-        Device::s_Instance = nullptr;
     }
 
     void Renderer::Init(Window const& window)
     {
+        LOG_INFO("Initializing Renderer");
         s_Renderer = new Renderer();
 
         auto instance = Instance::Create(window);
         auto* device = Device::Create(instance);
-        Device::s_Instance.reset(device);
+        Device::SetInstance(device);
     }
 
     void Renderer::Shutdown()
     {
-        LOG_DEBUGF("Shutdown renderer!");
+        LOG_DEBUGF("Shutdown Renderer!");
         s_Renderer->~Renderer();
         s_Renderer = nullptr;
     }
@@ -65,7 +66,7 @@ namespace Fussion::RHI {
 
     void Renderer::CreateDefaultRenderpasses()
     {
-        auto device = Device::Instance();
+        auto& device = Device::Instance();
         auto main_rp_spec = RenderPassSpecification{
             .Label = "Main RenderPass",
             .Attachments = {

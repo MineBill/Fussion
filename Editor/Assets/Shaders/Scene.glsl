@@ -1,7 +1,7 @@
 #ifndef SCENE_SET_H
 #define SCENE_SET_H
 
-#define SCENE_SET  1
+#include "Defines.glsl"
 
 layout (std140, set = SCENE_SET, binding = 0) uniform SceneData {
     vec4 view_position;

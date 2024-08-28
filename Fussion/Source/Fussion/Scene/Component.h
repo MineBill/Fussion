@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/RHI/RenderContext.h"
+#include "Fussion/Rendering/RenderContext.h"
 #include "Fussion/Serialization/ISerializable.h"
 
 #define FSN_DEBUG_DRAW 1
@@ -18,6 +18,7 @@ namespace Fussion {
         META_HPP_ENABLE_POLY_INFO()
         friend Entity;
         friend Scene;
+
     public:
         Component() = default;
         explicit Component(Entity* owner): m_Owner(owner) {}
@@ -40,7 +41,7 @@ namespace Fussion {
         virtual void OnEnabled() {}
         virtual void OnDisabled() {}
 
-        virtual void OnDraw([[maybe_unused]] RHI::RenderContext& context) {}
+        virtual void OnDraw([[maybe_unused]] RenderContext& context) {}
 
         Entity* GetOwner() const { return m_Owner; }
 

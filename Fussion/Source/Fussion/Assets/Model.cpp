@@ -10,7 +10,7 @@ namespace Fussion {
     {
         Vertices = vertices;
 
-        auto device = RHI::Device::Instance();
+        auto& device = RHI::Device::Instance();
 
         auto vertex_spec = RHI::BufferSpecification{
             .Label = "Mesh Vertex Buffer",

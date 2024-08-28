@@ -11,6 +11,9 @@
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 
+namespace RHI = Fussion::RHI;
+namespace Fsn = Fussion;
+
 // == Global Set == //
 
 struct ViewData {
@@ -38,7 +41,7 @@ struct SceneData {
 };
 
 struct LightData {
-    Fussion::RHI::DirectionalLight::ShaderStruct DirectionalLight{};
+    Fsn::GPUDirectionalLight::ShaderStruct DirectionalLight{};
 
     Vector4 ShadowSplitDistances{};
 };
@@ -54,12 +57,13 @@ struct RenderCamera {
 
 struct RenderPacket {
     RenderCamera Camera;
-    Fussion::Scene* Scene = nullptr;
+    Fsn::Scene* Scene = nullptr;
     Vector2 Size{};
 };
 
 constexpr s32 ShadowCascades = 4;
 constexpr s32 ShadowMapResolution = 4096;
+
 
 class SceneRenderer {
 public:
@@ -67,58 +71,58 @@ public:
         s32 CascadeIndex{ 0 };
     } RenderDebugOptions;
 
-    Fussion::RHI::UniformBuffer<ViewData> SceneViewData;
-    Fussion::RHI::UniformBuffer<DebugOptions> SceneDebugOptions;
-    Fussion::RHI::UniformBuffer<GlobalData> SceneGlobalData;
+    RHI::UniformBuffer<ViewData> SceneViewData;
+    RHI::UniformBuffer<DebugOptions> SceneDebugOptions;
+    RHI::UniformBuffer<GlobalData> SceneGlobalData;
 
-    Fussion::RHI::UniformBuffer<SceneData> SceneSceneData;
-    Fussion::RHI::UniformBuffer<LightData> SceneLightData;
+    RHI::UniformBuffer<SceneData> SceneSceneData;
+    RHI::UniformBuffer<LightData> SceneLightData;
 
     void Init();
     void Resize(Vector2 const& new_size);
 
-    void Render(Ref<Fussion::RHI::CommandBuffer> const& cmd, RenderPacket const& packet, bool game_view = false);
+    void Render(Ref<RHI::CommandBuffer> const& cmd, RenderPacket const& packet, bool game_view = false);
 
     [[nodiscard]]
-    Ref<Fussion::RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
+    Ref<RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
 
     // [[nodiscard]]
     // auto GetShadowFrameBuffers() const -> std::array<Ref<Fussion::RHI::FrameBuffer>, 4> { return m_ShadowFrameBuffers; }
 
     [[nodiscard]]
-    auto GetDepthImage() const -> Ref<Fussion::RHI::Image> { return m_DepthImage; }
+    auto GetDepthImage() const -> Ref<RHI::Image> { return m_DepthImage; }
 
     [[nodiscard]]
-    auto GetObjectPickingFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
+    auto GetObjectPickingFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
 
     [[nodiscard]]
-    auto GetShadowDebugFrameBuffer() const -> Ref<Fussion::RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffer; }
+    auto GetShadowDebugFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffer; }
 
 private:
-    Fussion::AssetRef<Fussion::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
-    Fussion::AssetRef<Fussion::ShaderAsset> m_SkyShader{};
+    Fsn::AssetRef<Fsn::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
+    Fsn::AssetRef<Fsn::ShaderAsset> m_SkyShader{};
 
-    Ref<Fussion::RHI::ResourcePool> m_ResourcePool{};
-    Ref<Fussion::RHI::Resource> m_GlobalResource{};
-    Ref<Fussion::Texture2D> m_TestTexture;
+    Ref<RHI::ResourcePool> m_ResourcePool{};
+    Ref<RHI::Resource> m_GlobalResource{};
+    Ref<Fsn::Texture2D> m_TestTexture;
 
-    Ref<Fussion::RHI::Resource> m_SceneResource;
+    Ref<RHI::Resource> m_SceneResource;
 
     Vector2 m_RenderArea{};
-    Ref<Fussion::RHI::RenderPass> m_SceneRenderPass{};
-    Ref<Fussion::RHI::FrameBuffer> m_FrameBuffer{};
+    Ref<RHI::RenderPass> m_SceneRenderPass{};
+    Ref<RHI::FrameBuffer> m_FrameBuffer{};
 
-    Ref<Fussion::RHI::RenderPass> m_DepthPass{};
-    Ref<Fussion::RHI::Image> m_DepthImage{};
+    Ref<RHI::RenderPass> m_DepthPass{};
+    Ref<RHI::Image> m_DepthImage{};
 
-    Ref<Fussion::RHI::RenderPass> m_ObjectPickingRenderPass{};
-    Ref<Fussion::RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
+    Ref<RHI::RenderPass> m_ObjectPickingRenderPass{};
+    Ref<RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
 
-    std::array<Ref<Fussion::RHI::FrameBuffer>, ShadowCascades> m_ShadowFrameBuffers{};
+    std::array<Ref<RHI::FrameBuffer>, ShadowCascades> m_ShadowFrameBuffers{};
 
-    Ref<Fussion::RHI::RenderPass> m_ShadowPassDebugRenderPass{};
-    Fussion::AssetRef<Fussion::ShaderAsset> m_DepthViewerShader{};
-    Ref<Fussion::RHI::FrameBuffer> m_ShadowViewerFrameBuffer{};
+    Ref<RHI::RenderPass> m_ShadowPassDebugRenderPass{};
+    Fsn::AssetRef<Fsn::ShaderAsset> m_DepthViewerShader{};
+    Ref<RHI::FrameBuffer> m_ShadowViewerFrameBuffer{};
 
-    Fussion::RHI::RenderContext m_RenderContext{};
+    Fsn::RenderContext m_RenderContext{};
 };
