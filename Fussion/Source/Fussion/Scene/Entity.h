@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include <Fussion/Scene/Component.h>
 #include <Fussion/Core/Core.h>
-#include <Fussion/Core/Uuid.h>
 #include <Fussion/Math/Vector3.h>
+#include <Fussion/Scene/Forward.h>
 #include <Fussion/Serialization/ISerializable.h>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -19,31 +19,33 @@ namespace Fussion {
         Vector3 EulerAngles{};
         Vector3 Scale = Vector3(1, 1, 1);
 
+        [[nodiscard]]
         Mat4 GetMatrix() const;
 
+        [[nodiscard]]
         Mat4 GetCameraMatrix() const;
 
-        auto GetForward() const -> Vector3;
+        [[nodiscard]]
+        Vector3 GetForward() const;
 
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
     };
 
-    class Scene;
+    class ReflRegistrar;
 
     class Entity final : public ISerializable {
         META_HPP_ENABLE_POLY_INFO()
-        friend class Scene;
+        friend Scene;
         friend SceneSerializer;
-        friend class SceneBinarySerializer;
-        friend class ReflRegistrar;
+        friend ReflRegistrar;
 
     public:
         Transform Transform;
         std::string Name{ "Entity" };
 
         Entity() = default;
-        Entity(Uuid const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+        Entity(EntityHandle const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
         virtual ~Entity() override = default;
 
         Entity(Entity const& other);
@@ -75,7 +77,7 @@ namespace Fussion {
         [[nodiscard]]
         auto HasComponent() const -> bool
         {
-            return m_Components.contains(Uuid(meta_hpp::resolve_type<C>().get_hash()));
+            return m_Components.contains(EntityHandle(meta_hpp::resolve_type<C>().get_hash()));
         }
 
         template<std::derived_from<Component> C>
@@ -92,17 +94,17 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        auto GetId() const -> Uuid { return m_Handle; }
+        auto GetId() const -> EntityHandle { return m_Handle; }
 
         /// Returns the local id of the entity for the scene it is currently in.
         [[nodiscard]]
         auto GetLocalID() const -> s32 { return m_LocalID; }
 
         [[nodiscard]]
-        auto GetComponents() const -> std::map<Uuid, Ref<Component>> const& { return m_Components; }
+        auto GetComponents() const -> std::map<EntityHandle, Ref<Component>> const& { return m_Components; }
 
         [[nodiscard]]
-        auto GetChildren() const -> std::vector<Uuid> const& { return m_Children; }
+        auto GetChildren() const -> std::vector<EntityHandle> const& { return m_Children; }
 
         void OnDraw(RenderContext& context);
 
@@ -121,17 +123,17 @@ namespace Fussion {
 
         void OnDestroy();
 
-        bool IsGrandchild(Uuid handle) const;
+        bool IsGrandchild(EntityHandle handle) const;
         void AddChildInternal(Entity const& child);
         void RemoveChildInternal(Entity const& child);
 
-        Uuid m_Parent;
-        std::vector<Uuid> m_Children{};
+        EntityHandle m_Parent;
+        std::vector<EntityHandle> m_Children{};
 
-        std::map<Uuid, Ref<Component>> m_Components{};
-        std::vector<Uuid> m_RemovedComponents{};
+        std::map<EntityHandle, Ref<Component>> m_Components{};
+        std::vector<EntityHandle> m_RemovedComponents{};
 
-        Uuid m_Handle;
+        EntityHandle m_Handle;
         Scene* m_Scene{};
         s32 m_LocalID{};
 

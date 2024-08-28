@@ -30,7 +30,7 @@ namespace Fussion {
         return rotation * glm::inverse(translation);
     }
 
-    auto Transform::GetForward() const -> Vector3
+    Vector3 Transform::GetForward() const
     {
         auto rotation = glm::mat3(glm::eulerAngleYXZ(
             glm::radians(EulerAngles.Y),
@@ -209,7 +209,7 @@ namespace Fussion {
         comp.reset(ptr);
 
         comp->OnCreate();
-        m_Components[Uuid(type.get_hash())] = comp;
+        m_Components[EntityHandle(type.get_hash())] = comp;
         return comp;
     }
 
@@ -217,7 +217,7 @@ namespace Fussion {
     {
         ZoneScoped;
 
-        return m_Components.contains(Uuid(type.get_hash()));
+        return m_Components.contains(EntityHandle(type.get_hash()));
     }
 
     auto Entity::GetComponent(meta_hpp::class_type type) -> Ref<Component>
@@ -226,7 +226,7 @@ namespace Fussion {
 
         if (!HasComponent(type))
             return nullptr;
-        auto component = m_Components[Uuid(type.get_hash())];
+        auto component = m_Components[EntityHandle(type.get_hash())];
         return component;
     }
 
@@ -235,7 +235,7 @@ namespace Fussion {
         VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
             "Attempted to remove a component that doesn't derive from Component, weird.");
 
-        m_RemovedComponents.push_back(Uuid(type.get_hash()));
+        m_RemovedComponents.push_back(EntityHandle(type.get_hash()));
     }
 
     void Entity::OnDraw(RenderContext& context)
@@ -257,6 +257,7 @@ namespace Fussion {
 
         ctx.BeginObject("Components", m_Components.size());
         for (auto const& [id, component] : m_Components) {
+            (void)id;
             auto name = component->meta_poly_ptr().get_type().as_pointer().get_data_type().get_metadata().at("Name").as<std::string>();
             ctx.Write(name, *component);
         }
@@ -288,6 +289,7 @@ namespace Fussion {
     {
         ZoneScoped;
         for (auto& [id, component] : m_Components) {
+            (void)id;
             component->OnStart();
         }
     }
@@ -298,6 +300,7 @@ namespace Fussion {
 
         LOG_DEBUGF("Destroying entity '{}'", Name);
         for (auto& [id, component] : m_Components) {
+            (void)id;
             component->OnDestroy();
         }
 
@@ -336,7 +339,7 @@ namespace Fussion {
         }
     }
 
-    bool Entity::IsGrandchild(Uuid handle) const
+    bool Entity::IsGrandchild(EntityHandle handle) const
     {
         ZoneScoped;
 

@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "Entity.h"
-#include "Fussion/Core/Uuid.h"
-#include "Fussion/Assets/Asset.h"
+#include <Fussion/Assets/Asset.h>
+#include <Fussion/Scene/Entity.h>
+#include <Fussion/Scene/Forward.h>
 
 #include <ranges>
 
@@ -28,12 +28,12 @@ namespace Fussion {
 #endif
 
         [[nodiscard]]
-        auto CreateEntity(std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
+        auto CreateEntity(std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
         [[nodiscard]]
-        auto CreateEntityWithId(Uuid id, std::string const& name = "Entity", Uuid parent = Uuid(0)) -> Entity*;
+        auto CreateEntityWithId(EntityHandle id, std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
 
         [[nodiscard]]
-        auto GetEntity(Uuid handle) -> Entity*;
+        auto GetEntity(EntityHandle handle) -> Entity*;
         [[nodiscard]]
         auto GetEntityFromLocalID(s32 local_id) -> Entity*;
 
@@ -66,14 +66,14 @@ namespace Fussion {
 
         /// Returns if the entity exists in the scene.
         [[nodiscard]]
-        bool HasEntity(Uuid handle) const;
+        bool HasEntity(EntityHandle handle) const;
 
         /// Marks the scene as modified.
         /// Mainly used by the editor.
         void SetDirty(bool dirty = true) { m_Dirty = dirty; }
         bool IsDirty() const { return m_Dirty; }
 
-        void Destroy(Uuid handle);
+        void Destroy(EntityHandle handle);
         void Destroy(Entity const& entity);
 
         auto Name() const -> std::string const& { return m_Name; }
@@ -87,10 +87,10 @@ namespace Fussion {
 
     private:
         std::string m_Name{};
-        std::unordered_map<Uuid, Entity> m_Entities{};
+        std::unordered_map<EntityHandle, Entity> m_Entities{};
         bool m_Dirty{};
 
-        std::unordered_map<s32, Uuid> m_LocalIDToEntity{};
+        std::unordered_map<s32, EntityHandle> m_LocalIDToEntity{};
         // We set this to 1 so that the first has an id of 1 because
         // the object picking framebuffer is filled with 0s.
         s32 m_LocalIDCounter{ 1 };

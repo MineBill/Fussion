@@ -9,8 +9,8 @@ namespace Fussion {
     Scene::Scene()
     {
         m_Name = "Cool Scene";
-        m_Entities[Uuid(0)] = Entity(Uuid(0), this);
-        auto& root = m_Entities[Uuid(0)];
+        m_Entities[EntityHandle(0)] = Entity(EntityHandle(0), this);
+        auto& root = m_Entities[EntityHandle(0)];
         root.Name = "Root";
     }
 
@@ -114,12 +114,12 @@ namespace Fussion {
         }
     }
 
-    auto Scene::CreateEntity(std::string const& name, Uuid parent) -> Entity*
+    auto Scene::CreateEntity(std::string const& name, EntityHandle parent) -> Entity*
     {
-        return CreateEntityWithId(Uuid(), name, parent);
+        return CreateEntityWithId(EntityHandle(), name, parent);
     }
 
-    auto Scene::CreateEntityWithId(Uuid id, std::string const& name, Uuid parent) -> Entity*
+    auto Scene::CreateEntityWithId(EntityHandle id, std::string const& name, EntityHandle parent) -> Entity*
     {
         VERIFY(m_Entities.contains(parent), "Parent {} is not a valid entity within the scene", parent);
         LOG_INFOF("Creating entity {} with parent {}", CAST(u64, id), CAST(u64, parent));
@@ -136,7 +136,7 @@ namespace Fussion {
         return &entity;
     }
 
-    auto Scene::GetEntity(Uuid const handle) -> Entity*
+    auto Scene::GetEntity(EntityHandle const handle) -> Entity*
     {
         if (!HasEntity(handle))
             return nullptr;
@@ -150,12 +150,12 @@ namespace Fussion {
         return GetEntity(m_LocalIDToEntity[local_id]);
     }
 
-    bool Scene::HasEntity(Uuid handle) const
+    bool Scene::HasEntity(EntityHandle handle) const
     {
         return m_Entities.contains(handle);
     }
 
-    void Scene::Destroy(Uuid handle)
+    void Scene::Destroy(EntityHandle handle)
     {
         if (!HasEntity(handle))
             return;
@@ -196,7 +196,7 @@ namespace Fussion {
         // the entity, we defer the parenting operations until all the
         // entities are loaded.
         struct ParentChildPair {
-            Uuid Parent{}, Child{};
+            EntityHandle Parent{}, Child{};
         };
         std::vector<ParentChildPair> entities_to_resolve{};
 
@@ -226,6 +226,6 @@ namespace Fussion {
 
     auto Scene::GetRoot() -> Entity&
     {
-        return m_Entities[Uuid(0)];
+        return m_Entities[EntityHandle(0)];
     }
 }
