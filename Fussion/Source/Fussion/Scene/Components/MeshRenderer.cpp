@@ -146,7 +146,7 @@ namespace Fussion {
                 ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
             } else if (ctx.RenderFlags.Test(RenderState::ObjectPicking)) {
                 m_ObjectPickingPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
-                m_ObjectPickingPushData.LocalID = m_Owner->GetLocalID();
+                m_ObjectPickingPushData.LocalID = m_Owner->GetSceneLocalID();
                 ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);
             } else {
                 return;
@@ -188,6 +188,14 @@ namespace Fussion {
                 }
             }
         }
+    }
+
+    Ref<Component> MeshRenderer::Clone()
+    {
+        auto mr = MakeRef<MeshRenderer>();
+        mr->Model = Model;
+        mr->Materials = Materials;
+        return mr;
     }
 
     void MeshRenderer::Serialize(Serializer& ctx) const

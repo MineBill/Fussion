@@ -42,6 +42,15 @@ namespace Fussion {
         m_Perspective = glm::perspective(glm::radians(Fov), aspect, Near, Far);
     }
 
+    Ref<Component> Camera::Clone()
+    {
+        auto camera = MakeRef<Camera>();
+        camera->Far = Far;
+        camera->Near = Near;
+        camera->Fov = Fov;
+        return camera;
+    }
+
     void Camera::Serialize(Serializer& ctx) const
     {
         Component::Serialize(ctx);

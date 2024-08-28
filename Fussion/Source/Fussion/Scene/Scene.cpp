@@ -1,8 +1,9 @@
-﻿#include "FussionPCH.h"
-#include "Scene.h"
-#include "Entity.h"
+﻿#include "Scene.h"
+
 #include "Components/BaseComponents.h"
+#include "Entity.h"
 #include "Fussion/Input/Keys.h"
+#include "FussionPCH.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
@@ -14,10 +15,11 @@ namespace Fussion {
         root.Name = "Root";
     }
 
-    Scene::Scene(const Scene& other): Asset(other),
-                                      m_Name(other.m_Name),
-                                      m_Entities(other.m_Entities),
-                                      m_Dirty(other.m_Dirty)
+    Scene::Scene(Scene const& other)
+        : Asset(other)
+          , m_Name(other.m_Name)
+          , m_Entities(other.m_Entities)
+          , m_Dirty(other.m_Dirty)
     {
         m_Handle = other.m_Handle;
         for (auto& entity : m_Entities | std::views::values) {
@@ -29,11 +31,11 @@ namespace Fussion {
         }
     }
 
-    Scene::Scene(Scene&& other) noexcept:
-        m_Name(std::move(other.m_Name)),
-        m_Entities(std::move(other.m_Entities)),
-        m_Dirty(other.m_Dirty),
-        Asset(std::move(other))
+    Scene::Scene(Scene&& other) noexcept
+        : m_Name(std::move(other.m_Name))
+          , m_Entities(std::move(other.m_Entities))
+          , m_Dirty(other.m_Dirty)
+          , Asset(std::move(other))
     {
         m_Handle = other.m_Handle;
         for (auto& entity : m_Entities | std::views::values) {
@@ -45,7 +47,7 @@ namespace Fussion {
         }
     }
 
-    Scene& Scene::operator=(const Scene& other)
+    Scene& Scene::operator=(Scene const& other)
     {
         if (this == &other)
             return *this;
@@ -170,7 +172,38 @@ namespace Fussion {
 
     void Scene::Destroy(Entity const& entity)
     {
-        Destroy(entity.GetId());
+        Destroy(entity.GetHandle());
+    }
+
+    EntityHandle Scene::CloneEntity(EntityHandle handle)
+    {
+        if (!m_Entities.contains(handle)) {
+            return EntityHandle::Invalid;
+        }
+
+        auto const& entity = m_Entities[handle];
+
+        auto new_entity = CreateEntity(entity.Name, entity.m_Parent);
+        new_entity->Transform = entity.Transform;
+        new_entity->m_Enabled = entity.m_Enabled;
+
+        for (auto const& [component_id, component] : entity.GetComponents()) {
+            (void)component_id;
+            new_entity->AddComponent(component->Clone());
+        }
+
+        // Transform = std::move(other.Transform);
+        // Name = std::move(other.Name);
+        // m_Parent = other.m_Parent;
+        // m_Children = std::move(other.m_Children);
+        // m_Components = std::move(other.m_Components);
+        // m_RemovedComponents = std::move(other.m_RemovedComponents);
+        // m_Handle = other.m_Handle;
+        // m_Scene = other.m_Scene;
+        // m_Enabled = other.m_Enabled;
+        // m_LocalID = other.m_LocalID;
+
+        return new_entity->m_Handle;
     }
 
     void Scene::Serialize(Serializer& ctx) const

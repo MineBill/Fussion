@@ -17,6 +17,8 @@ namespace Fussion {
 
         std::string ClassName{};
 
+        virtual auto Clone() -> Ref<Component> override;
+
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
 

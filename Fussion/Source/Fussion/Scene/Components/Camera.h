@@ -4,7 +4,7 @@
 namespace Fussion {
     class Camera final : public Component {
     public:
-        COMPONENT(Camera)
+        COMPONENT_DEFAULT(Camera)
 
 #if FSN_DEBUG_DRAW
         virtual void OnDebugDraw(DebugDrawContext& ctx) override;
@@ -18,6 +18,7 @@ namespace Fussion {
 
         f32 Fov{ 50.0f };
 
+        virtual auto Clone() -> Ref<Component> override;
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
 

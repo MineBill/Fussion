@@ -46,6 +46,7 @@ namespace Fussion {
         void ForEachEntity(Callback callback)
         {
             for (auto&& [id, entity] : m_Entities) {
+                (void)id;
                 callback(&entity);
             }
         }
@@ -57,6 +58,7 @@ namespace Fussion {
         auto FindFirstComponent() -> Ref<C>
         {
             for (auto& [id, entity] : m_Entities) {
+                (void)id;
                 if (entity.HasComponent<C>()) {
                     return entity.GetComponent<C>();
                 }
@@ -75,6 +77,8 @@ namespace Fussion {
 
         void Destroy(EntityHandle handle);
         void Destroy(Entity const& entity);
+
+        EntityHandle CloneEntity(EntityHandle handle);
 
         auto Name() const -> std::string const& { return m_Name; }
 

@@ -375,6 +375,17 @@ void Editor::OnEvent(Event& event)
         if (e.Key == Keys::S && e.Mods.Test(KeyMod::Control)) {
             Save();
         }
+
+        if (e.Key == Keys::D && e.Mods.Test(KeyMod::Control)) {
+            for (auto const& [entity, nothing] : m_SceneWindow->GetSelection()) {
+                (void)nothing;
+                auto new_handle = m_ActiveScene->CloneEntity(entity);
+                if (new_handle != EntityHandle::Invalid) {
+                    auto* new_entity = m_ActiveScene->GetEntity(new_handle);
+                    new_entity->Name += " (Clone)";
+                }
+            }
+        }
         return false;
     });
 

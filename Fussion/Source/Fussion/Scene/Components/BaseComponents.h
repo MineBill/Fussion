@@ -8,6 +8,7 @@ namespace Fussion {
     class PointLight final : public Component {
     public:
         COMPONENT_DEFAULT(PointLight)
+        COMPONENT_DEFAULT_COPY(PointLight)
 
         virtual void OnUpdate(f32 delta) override;
         virtual void OnDraw(RenderContext& context) override;
@@ -27,6 +28,7 @@ namespace Fussion {
         };
 
         COMPONENT_DEFAULT(DebugDrawer)
+        COMPONENT_DEFAULT_COPY(DebugDrawer)
 
 #if FSN_DEBUG_DRAW
         virtual void OnDebugDraw(DebugDrawContext& ctx) override;
@@ -43,6 +45,7 @@ namespace Fussion {
     class MoverComponent final : public Component {
     public:
         COMPONENT_DEFAULT(MoverComponent)
+        COMPONENT_DEFAULT_COPY(MoverComponent)
 
         virtual void OnUpdate(f32 delta) override;
 

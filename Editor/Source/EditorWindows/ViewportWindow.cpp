@@ -68,7 +68,7 @@ void ViewportWindow::OnDraw()
                     if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
                         if (auto id = color.Value()[0]; id != 0) {
                             auto entity = Editor::GetActiveScene()->GetEntityFromLocalID(id);
-                            Editor::GetSceneTree().SelectEntity(entity->GetId(), Input::IsKeyUp(Keys::LeftShift));
+                            Editor::GetSceneTree().SelectEntity(entity->GetHandle(), Input::IsKeyUp(Keys::LeftShift));
                         } else {
                             Editor::GetSceneTree().ClearSelection();
                         }

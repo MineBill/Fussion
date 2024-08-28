@@ -4,7 +4,8 @@
 namespace Fussion {
     class DirectionalLight final : public Component {
     public:
-        COMPONENT(DirectionalLight)
+        COMPONENT_DEFAULT(DirectionalLight)
+        COMPONENT_DEFAULT_COPY(DirectionalLight)
 
         virtual void OnEnabled() override;
         virtual void OnDisabled() override;

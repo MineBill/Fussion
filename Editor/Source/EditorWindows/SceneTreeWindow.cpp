@@ -3,15 +3,15 @@
 #include "EditorUI.h"
 #include "ImGuiHelpers.h"
 
-#include <imgui.h>
-#include <tracy/Tracy.hpp>
-
 #include "EditorApplication.h"
 #include "Fussion/Input/Input.h"
 #include "Fussion/Scene/Entity.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Components/Camera.h"
 #include "Fussion/Scene/Components/DirectionalLight.h"
+
+#include <imgui.h>
+#include <tracy/Tracy.hpp>
 
 void SceneTreeWindow::OnDraw()
 {
@@ -53,7 +53,11 @@ void SceneTreeWindow::OnDraw()
                 ImGui::EndPopup();
             }
 
-            for (auto& root = scene->GetRoot(); auto const& child : root.GetChildren()) {
+            // TODO: Is there a way to prevent the copy here?
+            // NOTE: We copy here because the children vector might get
+            //       modified if we duplicate an entity.
+            auto children = scene->GetRoot().GetChildren();
+            for (auto child : children) {
                 DrawEntityHierarchy(child);
             }
         } else {
@@ -86,21 +90,26 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     auto opened = ImGuiH::TreeNode(entity->Name, EditorStyle::GetStyle().EditorIcons[EditorIcon::Entity]->GetImage(), flags);
 
     if (ImGui::IsItemClicked()) {
-        SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        SelectEntity(entity->GetHandle(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
     }
 
     if (ImGui::BeginPopupContextItem()) {
-        SelectEntity(entity->GetId(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        SelectEntity(entity->GetHandle(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
         if (ImGui::BeginMenu("New")) {
             if (ImGui::MenuItem("Entity")) {
                 (void)scene->CreateEntity("Entity", handle);
             }
             ImGui::EndMenu();
         }
+
         ImGui::Separator();
-        if (ImGui::MenuItem("Destroy")) {
-            m_Selection.erase(entity->GetId());
-            scene->Destroy(*entity);
+
+        if (ImGui::MenuItem("Duplicate")) {
+            auto new_handle = scene->CloneEntity(handle);
+            if (new_handle != Fussion::EntityHandle::Invalid) {
+                auto* new_entity = scene->GetEntity(new_handle);
+                new_entity->Name += " (Clone)";
+            }
         }
         if (ImGui::MenuItem("Parent to Scene")) {
             entity->SetParent(scene->GetRoot());
@@ -109,6 +118,15 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
             Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;
             Editor::GetCamera().Position = entity->Transform.Position;
         }
+
+        ImGui::Separator();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, Color::Red);
+        if (ImGui::MenuItem("Destroy")) {
+            m_Selection.erase(entity->GetHandle());
+            scene->Destroy(*entity);
+        }
+        ImGui::PopStyleColor();
         ImGui::EndPopup();
     }
 
@@ -128,7 +146,11 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     }
 
     if (opened) {
-        for (auto const& child : entity->GetChildren()) {
+        // TODO: Is there a way to prevent the copy here?
+        // NOTE: We copy here because the children vector might get
+        //       modified if we duplicate an entity.
+        auto children = entity->GetChildren();
+        for (auto child : entity->GetChildren()) {
             DrawEntityHierarchy(child);
         }
         ImGui::TreePop();

@@ -45,7 +45,7 @@ namespace Fussion {
         std::string Name{ "Entity" };
 
         Entity() = default;
-        Entity(EntityHandle const handle, Scene* scene): m_Handle(handle), m_Scene(scene) {}
+        Entity(EntityHandle handle, Scene* scene): m_Handle(CAST(u64, handle)), m_Scene(scene) {}
         virtual ~Entity() override = default;
 
         Entity(Entity const& other);
@@ -60,6 +60,7 @@ namespace Fussion {
         bool IsEnabled() const;
         bool* GetEnabled() { return &m_Enabled; }
 
+        auto AddComponent(Ref<Component> const& component) -> Ref<Component>;
         auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
         [[nodiscard]]
         auto HasComponent(meta_hpp::class_type type) const -> bool;
@@ -94,11 +95,11 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        auto GetId() const -> EntityHandle { return m_Handle; }
+        auto GetHandle() const -> EntityHandle { return m_Handle; }
 
         /// Returns the local id of the entity for the scene it is currently in.
         [[nodiscard]]
-        auto GetLocalID() const -> s32 { return m_LocalID; }
+        auto GetSceneLocalID() const -> s32 { return m_LocalID; }
 
         [[nodiscard]]
         auto GetComponents() const -> std::map<EntityHandle, Ref<Component>> const& { return m_Components; }
@@ -130,7 +131,7 @@ namespace Fussion {
         EntityHandle m_Parent;
         std::vector<EntityHandle> m_Children{};
 
-        std::map<EntityHandle, Ref<Component>> m_Components{};
+        std::map<EntityHandle, Ref<Component>> m_Components;
         std::vector<EntityHandle> m_RemovedComponents{};
 
         EntityHandle m_Handle;

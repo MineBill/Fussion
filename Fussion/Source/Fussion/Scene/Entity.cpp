@@ -193,6 +193,21 @@ namespace Fussion {
         return true;
     }
 
+    auto Entity::AddComponent(Ref<Component> const& component) -> Ref<Component>
+    {
+        ZoneScoped;
+        auto const& meta = component->meta_poly_ptr();
+        auto id = EntityHandle(meta.get_type().get_hash());
+        if (m_Components.contains(id)) {
+            LOG_WARN("Component already exists on this entity");
+            return nullptr;
+        }
+        component->m_Owner = this;
+        component->OnCreate();
+        m_Components[id] = component;
+        return component;
+    }
+
     auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
     {
         ZoneScoped;

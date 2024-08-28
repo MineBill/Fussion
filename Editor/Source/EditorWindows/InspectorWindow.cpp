@@ -220,8 +220,8 @@ bool InspectorWindow::DrawEntity(Entity& e)
         auto parent = m.get_member("m_Parent").get(e).as<Uuid>();
         ImGui::BeginDisabled();
 
-        auto id = e.GetId();
-        auto local_id = e.GetLocalID();
+        auto id = e.GetHandle();
+        auto local_id = e.GetSceneLocalID();
         EUI::Property("ID", &id);
         EUI::Property("LocalID", &local_id);
         EUI::Property("Parent", &parent);

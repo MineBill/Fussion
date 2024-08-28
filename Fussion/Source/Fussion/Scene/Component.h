@@ -43,6 +43,8 @@ namespace Fussion {
 
         virtual void OnDraw([[maybe_unused]] RenderContext& context) {}
 
+        virtual Ref<Component> Clone() { return nullptr; }
+
         Entity* GetOwner() const { return m_Owner; }
 
     protected:
@@ -58,3 +60,6 @@ namespace Fussion {
 #define COMPONENT_DEFAULT(name) \
     name() = default;           \
     COMPONENT(name)
+
+#define COMPONENT_DEFAULT_COPY(name) \
+    virtual Ref<Component> Clone() override { return MakeRef<name>(); }

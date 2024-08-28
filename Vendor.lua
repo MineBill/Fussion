@@ -98,6 +98,7 @@ add_requires("Catch2")
 target("glm", function()
     set_kind "headeronly"
     set_group "Vendor"
+    set_languages("c++23")
 
     add_includedirs("Vendor/glm", {public = true})
 end)
@@ -128,6 +129,7 @@ end)
 target("magic_enum", function()
     set_kind "headeronly"
     set_group "Vendor"
+    set_languages("c++23")
 
     add_sysincludedirs("Vendor/magic_enum/include", {public = true})
 end)
@@ -135,6 +137,7 @@ end)
 target("argparse", function()
     set_kind "headeronly"
     set_group "Vendor"
+    set_languages("c++23")
 
     add_sysincludedirs("Vendor/argparse/include", {public = true})
 end)
