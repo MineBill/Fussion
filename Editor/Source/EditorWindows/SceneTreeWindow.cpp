@@ -111,12 +111,19 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
                 new_entity->Name += " (Clone)";
             }
         }
+
         if (ImGui::MenuItem("Parent to Scene")) {
             entity->SetParent(scene->GetRoot());
         }
-        if (ImGui::MenuItem("Align to object")) {
+
+        if (ImGui::MenuItem("Align camera to object")) {
             Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;
             Editor::GetCamera().Position = entity->Transform.Position;
+        }
+
+        if (ImGui::MenuItem("Align object to camera")) {
+            entity->Transform.EulerAngles = Editor::GetCamera().EulerAngles;
+            entity->Transform.Position = Editor::GetCamera().Position;
         }
 
         ImGui::Separator();
