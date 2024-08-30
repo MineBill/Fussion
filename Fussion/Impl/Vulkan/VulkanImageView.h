@@ -10,7 +10,7 @@ VkImageViewType ImageViewTypeToVulkan(ImageViewType type);
 
 class VulkanImageView : public ImageView {
 public:
-    VulkanImageView(const VulkanDevice* device, const VulkanImage* image, ImageViewSpecification);
+    VulkanImageView(VulkanDevice* device, const VulkanImage* image, ImageViewSpecification);
     void Destroy() override;
 
     ImageViewSpecification const& GetSpec() override { return m_Specification; }

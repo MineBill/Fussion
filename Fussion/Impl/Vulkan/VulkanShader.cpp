@@ -36,10 +36,10 @@ namespace Fussion::RHI {
 
         spec.PushConstants = metadata.PushConstants;
 
-        std::vector<std::vector<ResourceUsage>> resources = {};
+        // std::vector<std::vector<ResourceUsage>> resources = {};
+        std::unordered_map<u32, std::vector<ResourceUsage>> resources = {};
 
         for (auto const& [set, bindings] : metadata.Uniforms) {
-            resources.emplace_back();
             for (auto const& [binding, usage] : bindings) {
                 (void)usage;
                 resources[set].push_back(usage);
@@ -47,9 +47,14 @@ namespace Fussion::RHI {
         }
 
         std::vector<Ref<ResourceLayout>> resource_layouts;
-        std::ranges::transform(resources, std::back_inserter(resource_layouts), [&](std::vector<ResourceUsage>& resource_usage) {
-            return device->CreateResourceLayout(resource_usage);
-        });
+        // std::ranges::transform(resources, std::back_inserter(resource_layouts), [&](u32&, std::vector<ResourceUsage>& resource_usage) {
+        //     return device->CreateResourceLayout(resource_usage);
+        // });
+        for (auto& [key, resource_usage] : resources) {
+            (void)key;
+            resource_layouts.push_back(device->CreateResourceLayout(resource_usage));
+        }
+
         const auto layout = device->CreatePipelineLayout(resource_layouts, spec)->As<VulkanPipelineLayout>();
 
         auto pipeline_spec = PipelineSpecification{

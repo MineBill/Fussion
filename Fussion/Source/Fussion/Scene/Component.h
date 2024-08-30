@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/Rendering/RenderContext.h"
+#include "Fussion/Rendering/RenderTypes.h"
 #include "Fussion/Serialization/ISerializable.h"
 
 #define FSN_DEBUG_DRAW 1

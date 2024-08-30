@@ -7,7 +7,7 @@ namespace Fussion::RHI {
         using FramePools = std::vector<Ref<ResourcePool>>;
 
         void Init(u32 frames, std::string const& name = "");
-        Ref<Resource> Alloc(Ref<ResourceLayout> layout, std::string const& name = "");
+        Ref<Resource> Alloc(Ref<ResourceLayout> const& layout, std::string const& name = "");
         void Reset();
 
     private:

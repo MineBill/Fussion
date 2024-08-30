@@ -10,6 +10,9 @@
 #include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
+#include "Fussion/RHI/FrameAllocator.h"
+
+#include <Fussion/RHI/Swapchain.h>
 
 namespace RHI = Fussion::RHI;
 namespace Fsn = Fussion;
@@ -84,7 +87,7 @@ public:
     void Render(Ref<RHI::CommandBuffer> const& cmd, RenderPacket const& packet, bool game_view = false);
 
     [[nodiscard]]
-    Ref<RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffer; }
+    Ref<RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffers[(m_CurrentFrame - 1) % RHI::MAX_FRAMES_IN_FLIGHT]; }
 
     // [[nodiscard]]
     // auto GetShadowFrameBuffers() const -> std::array<Ref<Fussion::RHI::FrameBuffer>, 4> { return m_ShadowFrameBuffers; }
@@ -96,21 +99,26 @@ public:
     auto GetObjectPickingFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
 
     [[nodiscard]]
-    auto GetShadowDebugFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffer; }
+    auto GetShadowDebugFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffers[0]; }
 
 private:
     Fsn::AssetRef<Fsn::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
     Fsn::AssetRef<Fsn::ShaderAsset> m_SkyShader{};
 
-    Ref<RHI::ResourcePool> m_ResourcePool{};
-    Ref<RHI::Resource> m_GlobalResource{};
-    Ref<Fsn::Texture2D> m_TestTexture;
+    std::array<Ref<RHI::ResourcePool>, RHI::MAX_FRAMES_IN_FLIGHT> m_ResourcePool{};
+    std::array<Ref<RHI::Resource>, RHI::MAX_FRAMES_IN_FLIGHT> m_GlobalResource{};
+    std::array<Ref<RHI::Resource>, RHI::MAX_FRAMES_IN_FLIGHT> m_SceneResource;
 
-    Ref<RHI::Resource> m_SceneResource;
+    std::array<Ref<RHI::Buffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_InstanceBuffers;
+    std::array<Ref<RHI::Buffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_PBRInstanceBuffers{};
+
+    RHI::FrameAllocator m_FrameAllocator;
+    std::array<RHI::ResourceUsage, 1> m_ObjectDepthResourceUsages{};
+    std::array<RHI::ResourceUsage, 7> m_PBRResourceUsages{};
 
     Vector2 m_RenderArea{};
     Ref<RHI::RenderPass> m_SceneRenderPass{};
-    Ref<RHI::FrameBuffer> m_FrameBuffer{};
+    std::array<Ref<RHI::FrameBuffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_FrameBuffers{};
 
     Ref<RHI::RenderPass> m_DepthPass{};
     Ref<RHI::Image> m_DepthImage{};
@@ -122,7 +130,8 @@ private:
 
     Ref<RHI::RenderPass> m_ShadowPassDebugRenderPass{};
     Fsn::AssetRef<Fsn::ShaderAsset> m_DepthViewerShader{};
-    Ref<RHI::FrameBuffer> m_ShadowViewerFrameBuffer{};
+    std::array<Ref<RHI::FrameBuffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_ShadowViewerFrameBuffers{};
 
     Fsn::RenderContext m_RenderContext{};
+    u32 m_CurrentFrame{ 0 };
 };

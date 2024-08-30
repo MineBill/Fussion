@@ -10,6 +10,7 @@
 #include <cmath>
 #include <imgui.h>
 #include "ImGuizmo.h"
+#include "Fussion/Core/Time.h"
 #include "Fussion/Events/KeyboardEvents.h"
 #include "Fussion/Input/Input.h"
 #include "Fussion/Math/Rect.h"
@@ -42,6 +43,53 @@ ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
         return ImGuizmo::SCALE;
     }
     UNREACHABLE;
+}
+
+void ViewportWindow::RenderStats() const
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    static int location = 1;
+    if (location >= 0) {
+        float const PAD = 10.0f;
+        ImGuiViewport const* viewport = ImGui::GetMainViewport();
+        ImVec2 work_pos = m_ContentOriginScreen;
+        ImVec2 work_size = m_Size;
+        ImVec2 window_pos, window_pos_pivot;
+        window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
+        window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+        window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
+        window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
+        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        window_flags |= ImGuiWindowFlags_NoMove;
+    } else if (location == -2) {
+        // Center window
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        window_flags |= ImGuiWindowFlags_NoMove;
+    }
+
+    ImGui::SetNextWindowBgAlpha(0.35f);
+    if (ImGui::Begin("Stats Overlay", nullptr, window_flags)) {
+        auto delta = Time::DeltaTime();
+        ImGui::Text("CPU Time: %4.2fms", Time::SmoothDeltaTime() * 1000.0f);
+        ImGui::Text("Draw Calls: %d", Fussion::RHI::Device::Instance()->GetRenderStats().DrawCalls);
+        if (ImGui::BeginPopupContextWindow()) {
+            if (ImGui::MenuItem("Custom", nullptr, location == -1))
+                location = -1;
+            if (ImGui::MenuItem("Center", nullptr, location == -2))
+                location = -2;
+            if (ImGui::MenuItem("Top-left", nullptr, location == 0))
+                location = 0;
+            if (ImGui::MenuItem("Top-right", nullptr, location == 1))
+                location = 1;
+            if (ImGui::MenuItem("Bottom-left", nullptr, location == 2))
+                location = 2;
+            if (ImGui::MenuItem("Bottom-right", nullptr, location == 3))
+                location = 3;
+            ImGui::EndPopup();
+        }
+    }
+    ImGui::End();
 }
 
 void ViewportWindow::OnDraw()
@@ -84,10 +132,14 @@ void ViewportWindow::OnDraw()
 
         Vector2 origin = ImGui::GetCursorPos();
 
+        // TODO: Fails sync-hazard validation with Read-After-Write
         {
             ZoneScopedN("Get image from set");
-            auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
-            ImGui::Image(IMGUI_IMAGE(image), m_Size);
+            static int i = 0;
+            if (i++ >= 20) {
+                auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
+                ImGui::Image(IMGUI_IMAGE(image), m_Size);
+            }
         }
 
         if (Editor::GetActiveScene() == nullptr) {
@@ -132,6 +184,8 @@ void ViewportWindow::OnDraw()
 
             ImGui::EndDragDropTarget();
         }
+
+        RenderStats();
 
         ImGui::SetCursorPos(origin + Vector2(5, 5));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);

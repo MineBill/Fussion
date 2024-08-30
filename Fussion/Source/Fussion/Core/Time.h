@@ -9,6 +9,7 @@ namespace Fussion {
 
     public:
         static f32 DeltaTime();
+        static f32 SmoothDeltaTime();
 
     private:
         static void SetDeltaTime(f32 delta_time);

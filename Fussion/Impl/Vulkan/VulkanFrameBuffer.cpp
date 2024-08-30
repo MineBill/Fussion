@@ -122,7 +122,8 @@ namespace Fussion::RHI {
             if (!m_ColorFormats.empty()) {
                 for (auto const& format : m_ColorFormats) {
                     auto spec = ImageSpecification{
-                        .Label = "FrameBuffer Color Image",
+                        // .Label = "FrameBuffer Color Image of " + m_Specification.Label + " Samples" + format.Samples,
+                        .Label = fmt::format("FB Color Image[{}], Samples: {}", m_Specification.Label, format.Samples),
                         .Width = m_Specification.Width,
                         .Height = m_Specification.Height,
                         .Samples = format.Samples,
@@ -136,7 +137,7 @@ namespace Fussion::RHI {
 
             if (m_DepthFormat) {
                 auto spec = ImageSpecification{
-                    .Label = "FrameBuffer Depth Image",
+                    .Label = fmt::format("FB Depth Image[{}], Samples: {}", m_Specification.Label, m_DepthFormat->Samples),
                     .Width = m_Specification.Width,
                     .Height = m_Specification.Height,
                     .Samples = m_DepthFormat->Samples,
@@ -190,6 +191,7 @@ namespace Fussion::RHI {
         };
 
         VK_CHECK(vkCreateFramebuffer(device->Handle, &fb_ci, nullptr, &m_Handle))
+        device->SetHandleName(TRANSMUTE(u64, m_Handle), VK_OBJECT_TYPE_FRAMEBUFFER, m_Specification.Label);
     }
 
     void VulkanFrameBuffer::Resize(Vector2 new_size)

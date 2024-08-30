@@ -26,7 +26,7 @@ namespace Fussion::RHI {
         for (u32 i = 0; i < resources.size(); i++) {
             auto const& resource = resources[i];
             VkDescriptorSetLayoutBinding binding{
-                .binding = i,
+                .binding = resource.Binding,
                 .descriptorType = ResourceTypeToVulkan(resource.Type),
                 .descriptorCount = CAST(u32, resource.Count),
                 .stageFlags = ShaderStagesToVulkan(resource.Stages)

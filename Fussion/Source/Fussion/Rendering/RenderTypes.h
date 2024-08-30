@@ -63,12 +63,14 @@ namespace Fussion {
     //       a shader to use. For now, we assume that all render objects
     //       are for the PBR pass.
     struct RenderObject {
+        Vector3 Position{};
         Mat4 WorldMatrix{};
 
         DrawPassFlags Pass;
         PbrMaterial* Material{};
         Ref<RHI::Buffer> VertexBuffer{};
         Ref<RHI::Buffer> IndexBuffer{};
+        Ref<RHI::Buffer> InstanceBuffer{};
         u32 IndexCount{};
     };
 
@@ -83,6 +85,9 @@ namespace Fussion {
         Mat4 CurrentLightSpace;
 
         std::vector<RenderObject> RenderObjects{};
+
+        /// This maps unique mesh buffers to an index of the @ref RenderContext::RenderObjects vector.
+        std::unordered_map<Ref<RHI::Buffer>, std::vector<size_t>> MeshRenderLists{};
 
         void AddRenderObject(RenderObject& obj);
         void Reset();

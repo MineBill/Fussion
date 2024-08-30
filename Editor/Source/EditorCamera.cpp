@@ -13,6 +13,7 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "Fussion/Core/Application.h"
+#include "Fussion/Core/Time.h"
 #include "Fussion/Math/Math.h"
 #include "Fussion/Math/Vector4.h"
 
@@ -38,7 +39,7 @@ void EditorCamera::OnUpdate(f32 delta)
         auto const z = Input::GetAxis(Keys::S, Keys::W);
         auto input = Vector3(x, y, z);
 
-        Position += Vector3(Vector4(input, 0.0f) * rotation) * delta * Speed;
+        Position += Vector3(Vector4(input, 0.0f) * rotation) * Time::SmoothDeltaTime() * Speed;
     }
 
     m_Perspective = glm::perspective(glm::radians(Fov), m_ScreenSize.X / m_ScreenSize.Y, Near, Far);

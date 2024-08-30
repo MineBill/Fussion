@@ -50,7 +50,8 @@ layout (location = 0) in VertexOutput In;
 void Fragment()
 {
     float depth = texture(uShadowMapArray, vec3(In.UV, u_PerObjectData.CascadeIndex)).r;
-//    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 50.0);
-    o_Color = vec4(depth, 0, 0, 1.0);
+//    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 500.0);
+//    o_Color = vec4(z, z, z, 1.0);
+    o_Color = vec4(depth, depth, depth, 1.0);
 //    o_Color = vec4(1, 0.2, 0.4, 1.0);
 }

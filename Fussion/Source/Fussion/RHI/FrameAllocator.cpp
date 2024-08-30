@@ -4,7 +4,7 @@
 #include "Device.h"
 
 namespace Fussion::RHI {
-    constexpr s32 DEFAULT_MAX_RESOURCES = 20;
+    constexpr s32 DEFAULT_MAX_RESOURCES = 200;
 
     void FrameAllocator::Init(u32 frames, std::string const& name)
     {
@@ -18,7 +18,7 @@ namespace Fussion::RHI {
         }
     }
 
-    Ref<Resource> FrameAllocator::Alloc(Ref<ResourceLayout> layout, std::string const& name)
+    Ref<Resource> FrameAllocator::Alloc(Ref<ResourceLayout> const& layout, std::string const& name)
     {
         if (m_CurrentFramePools[m_CurrentFrame] == nullptr) {
             m_CurrentFramePools[m_CurrentFrame] = GetAvailablePool(DEFAULT_MAX_RESOURCES);
@@ -45,6 +45,7 @@ namespace Fussion::RHI {
 
     void FrameAllocator::Reset()
     {
+        m_CurrentFrame = (m_CurrentFrame + 1) % m_MaxFrames;
         for (auto const& pool : m_UsedPools[m_CurrentFrame]) {
             pool->Reset();
             m_FreePools[m_CurrentFrame].push_back(pool);
@@ -52,7 +53,6 @@ namespace Fussion::RHI {
 
         m_CurrentFramePools[m_CurrentFrame] = nullptr;
         m_UsedPools[m_CurrentFrame].clear();
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_MaxFrames;
     }
 
     Ref<ResourcePool> FrameAllocator::GetAvailablePool(s32 max_resources)
@@ -72,6 +72,7 @@ namespace Fussion::RHI {
             { ResourceType::InputAttachment, 1.0f },
             { ResourceType::UniformBuffer, 1.0f },
             { ResourceType::StorageBuffer, 1.0f },
+            { ResourceType::StorageBufferDynamic, 1.0f },
         };
 
         for (auto const& [type, multiplier] : multipliers) {

@@ -18,8 +18,19 @@ namespace Fussion::RHI {
 
     extern thread_local Ref<CommandPool> ThreadLocalCommandPool;
 
+    struct RenderStats {
+        u32 DrawCalls{};
+
+        void Reset()
+        {
+            DrawCalls = 0;
+        }
+    };
+
     class Device {
     public:
+        virtual ~Device() = default;
+
         using ImageCreationCallback = std::function<void(Ref<Image> const&, bool create)>;
         using ImageViewCreationCallback = std::function<void(Ref<ImageView> const&, Ref<Image> const&, bool create)>;
 
@@ -28,35 +39,35 @@ namespace Fussion::RHI {
         static Ptr<Device>& Instance() { return s_Instance; }
         static void SetInstance(Device* ptr);
 
-        virtual Ref<CommandPool> GetMainCommandPool() = 0;
+        virtual auto GetMainCommandPool() -> Ref<CommandPool> = 0;
 
-        virtual Ref<RenderPass> CreateRenderPass(RenderPassSpecification spec) = 0;
-        virtual Ref<CommandPool> CreateCommandPool() = 0;
+        virtual auto CreateRenderPass(RenderPassSpecification spec) -> Ref<RenderPass> = 0;
+        virtual auto CreateCommandPool() -> Ref<CommandPool> = 0;
 
-        virtual Ref<Sampler> CreateSampler(SamplerSpecification spec) = 0;
-        virtual Ref<Image> CreateImage(ImageSpecification spec) = 0;
-        virtual Ref<ImageView> CreateImageView(Ref<Image> image, ImageViewSpecification spec) = 0;
-        virtual Ref<Swapchain> CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec) = 0;
-        virtual Ref<FrameBuffer> CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec) = 0;
-        virtual Ref<FrameBuffer> CreateFrameBufferFromImages(
+        virtual auto CreateSampler(SamplerSpecification spec) -> Ref<Sampler> = 0;
+        virtual auto CreateImage(ImageSpecification spec) -> Ref<Image> = 0;
+        virtual auto CreateImageView(Ref<Image> image, ImageViewSpecification spec) -> Ref<ImageView> = 0;
+        virtual auto CreateSwapchain(Ref<RenderPass> render_pass, SwapChainSpecification spec) -> Ref<Swapchain> = 0;
+        virtual auto CreateFrameBuffer(Ref<RenderPass> render_pass, FrameBufferSpecification spec) -> Ref<FrameBuffer> = 0;
+        virtual auto CreateFrameBufferFromImages(
             Ref<RenderPass> render_pass,
             std::vector<Ref<Image>> images,
-            FrameBufferSpecification spec) = 0;
-        virtual Ref<FrameBuffer> CreateFrameBufferFromImageViews(
+            FrameBufferSpecification spec) -> Ref<FrameBuffer> = 0;
+        virtual auto CreateFrameBufferFromImageViews(
             Ref<RenderPass> render_pass,
             std::vector<Ref<ImageView>> images,
-            FrameBufferSpecification spec) = 0;
-        virtual Ref<ResourceLayout> CreateResourceLayout(std::span<ResourceUsage> resources) = 0;
-        virtual Ref<Shader> CreateShader(
+            FrameBufferSpecification spec) -> Ref<FrameBuffer> = 0;
+        virtual auto CreateResourceLayout(std::span<ResourceUsage> resources) -> Ref<ResourceLayout> = 0;
+        virtual auto CreateShader(
             Ref<RenderPass> render_pass,
             std::span<ShaderStage> stages,
-            ShaderMetadata metadata) = 0;
-        virtual Ref<Buffer> CreateBuffer(BufferSpecification spec) = 0;
-        virtual Ref<ResourcePool> CreateResourcePool(ResourcePoolSpecification spec) = 0;
+            ShaderMetadata metadata) -> Ref<Shader> = 0;
+        virtual auto CreateBuffer(BufferSpecification spec) -> Ref<Buffer> = 0;
+        virtual auto CreateResourcePool(ResourcePoolSpecification spec) -> Ref<ResourcePool> = 0;
 
         virtual void WaitIdle() = 0;
 
-        virtual Ref<CommandBuffer> BeginSingleTimeCommand() = 0;
+        virtual auto BeginSingleTimeCommand() -> Ref<CommandBuffer> = 0;
         virtual void EndSingleTimeCommand(Ref<CommandBuffer> cmd) = 0;
         virtual void RegisterImageCallback(ImageCreationCallback const& callback) = 0;
         virtual void RegisterImageViewCallback(ImageViewCreationCallback const& callback) = 0;
@@ -66,6 +77,8 @@ namespace Fussion::RHI {
         virtual void DestroyImageView(Ref<ImageView> const& image_view) = 0;
         virtual void DestroySampler(Ref<Sampler> const& sampler) = 0;
         virtual void DestroyFrameBuffer(Ref<Image> const& frame_buffer) = 0;
+
+        virtual auto GetRenderStats() -> RenderStats& = 0;
 
         template<typename T>
         T* As()

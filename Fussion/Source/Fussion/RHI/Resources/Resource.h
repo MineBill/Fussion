@@ -9,6 +9,7 @@ namespace Fussion::RHI {
         ResourceType Type;
         s32 Count = 1;
         ShaderTypeFlags Stages;
+        u32 Binding = 42069;
     };
 
     class ResourceLayout : public RenderHandle {

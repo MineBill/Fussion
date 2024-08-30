@@ -34,17 +34,19 @@ namespace Fussion::RHI {
         virtual void SetScissor(Vector4 size) = 0;
 
         virtual void Draw(u32 vertex_count, u32 instance_count) = 0;
-        virtual void DrawIndexed(u32 index_count, u32 instance_count) = 0;
+        virtual void DrawIndexed(u32 index_count, u32 instance_count, u32 first_instance = 0) = 0;
 
-        virtual void BindBuffer(Ref<Buffer> const& buffer) = 0;
+        virtual void BindBuffer(Ref<Buffer> const& buffer, u32 first_binding = 0) = 0;
         virtual void BindResource(Ref<Resource> const& resource, Ref<RHI::Shader> const& shader, u32 location) = 0;
 
         virtual void BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location) = 0;
         virtual void BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) = 0;
+        virtual void BindStorageBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) = 0;
 
         virtual void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) = 0;
 
         virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region) = 0;
+        virtual void TransitionImageLayout(Ref<Image> const& image, ImageLayout from, ImageLayout to) = 0;
 
         virtual void BlitImage(
             Ref<Image> const& source_image,

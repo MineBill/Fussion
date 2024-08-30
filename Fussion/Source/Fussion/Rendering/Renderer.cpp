@@ -40,6 +40,7 @@ namespace Fussion {
 
     auto Renderer::Begin() -> std::tuple<Ref<CommandBuffer>, u32>
     {
+        Device::Instance()->GetRenderStats().Reset();
         auto image = s_Renderer->m_Swapchain->GetNextImage();
         if (image.IsEmpty()) {
             auto& window = Application::Instance()->GetWindow();

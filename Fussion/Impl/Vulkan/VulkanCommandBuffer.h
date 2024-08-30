@@ -23,17 +23,19 @@ namespace Fussion::RHI {
         virtual void SetViewport(Vector2) override;
 
         virtual void Draw(u32 vertex_count, u32 instance_count) override;
-        virtual void DrawIndexed(u32 index_count, u32 instance_count) override;
+        virtual void DrawIndexed(u32 index_count, u32 instance_count, u32 first_instance) override;
 
-        virtual void BindBuffer(Ref<Buffer> const& buffer) override;
+        virtual void BindBuffer(Ref<Buffer> const& buffer, u32 first_binding) override;
         virtual void BindResource(Ref<Resource> const& resource, Ref<RHI::Shader> const& shader, u32 location) override;
 
         virtual void BindImage(Ref<Image> const& image, Ref<Resource> const& resource, u32 location) override;
         virtual void BindUniformBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) override;
+        virtual void BindStorageBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location) override;
 
         virtual void PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size) override;
 
         virtual void CopyImageToBuffer(Ref<Image> const& image, Ref<Buffer> const& buffer, Vector2 region) override;
+        virtual void TransitionImageLayout(Ref<Image> const& image, ImageLayout from, ImageLayout to) override;
 
         virtual void BlitImage(
             Ref<Image> const& source_image,

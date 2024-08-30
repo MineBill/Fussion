@@ -5,7 +5,6 @@
 #include "Fussion/RHI/Swapchain.h"
 
 namespace Fussion::RHI {
-    constexpr s32 MaxFramesInFlight = 1;
 
     class VulkanImage;
 
@@ -20,6 +19,9 @@ namespace Fussion::RHI {
         virtual void SubmitCommandBuffer(Ref<CommandBuffer> cmd) override;
         virtual void Resize(u32 width, u32 height) override;
         virtual auto GetImageCount() const -> u32 override;
+
+        /// @copydoc Swapchain::GetCurrentFrame()
+        virtual u32 GetCurrentFrame() const override { return m_CurrentFrame; }
 
         virtual auto GetFrameBuffer(u32 index) -> Ref<FrameBuffer> override;
 

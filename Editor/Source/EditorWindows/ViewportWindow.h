@@ -17,6 +17,7 @@ public:
 
     EDITOR_WINDOW(ViewportWindow)
 
+    void RenderStats() const;
     virtual void OnDraw() override;
     virtual void OnEvent(Fussion::Event& event) override;
 

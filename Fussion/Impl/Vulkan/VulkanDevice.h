@@ -63,6 +63,7 @@ namespace Fussion::RHI {
 
     class VulkanDevice final : public Device {
     public:
+        RenderStats Stats{};
         VkDevice Handle{};
         VkDebugUtilsMessengerEXT DebugMessenger{};
         VkPhysicalDevice PhysicalDevice{};
@@ -122,6 +123,7 @@ namespace Fussion::RHI {
         virtual void DestroySampler(Ref<Sampler> const& sampler) override;
         virtual void DestroyFrameBuffer(Ref<Image> const& frame_buffer) override;
 
+        virtual auto GetRenderStats() -> RenderStats& override { return Stats; }
         // ======================
         //    Vulkan Specific
         // ======================

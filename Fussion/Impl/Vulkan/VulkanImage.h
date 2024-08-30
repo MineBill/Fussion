@@ -34,9 +34,9 @@ namespace Fussion::RHI {
 
         VmaAllocation Allocation;
         VkImage Handle{};
+        u32 MipLevels{ 1 };
 
     private:
-        u32 m_MipLevels{ 1 };
         std::vector<VkImageLayout> m_MipLevelsLayouts{};
         bool m_DestroyHandle{ false };
     };

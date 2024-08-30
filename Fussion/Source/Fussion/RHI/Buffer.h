@@ -10,6 +10,7 @@ namespace Fussion::RHI {
         Uniform = 1 << 2,
         TransferSource = 1 << 3,
         TransferDestination = 1 << 4,
+        Storage = 1 << 5,
     };
 
     DECLARE_FLAGS(BufferUsage, BufferUsageFlags)

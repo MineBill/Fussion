@@ -260,6 +260,8 @@ namespace Fussion::RHI {
                 auto location = reflection_compiler.get_decoration(input.id, spv::DecorationLocation);
                 auto type = reflection_compiler.get_type(input.type_id);
                 auto attribute_type = type.basetype;
+                auto binding = reflection_compiler.get_decoration(input.id, spv::DecorationBinding);
+                LOG_DEBUGF("Vertex attribute location {}, binding {}", location, binding);
 
                 ElementType element = SpirvTypeToElementType(attribute_type, type.vecsize);
                 // LOG_DEBUGF("Vertex attribute at location {} with {} named {}", location, magic_enum::enum_name(element), input.name);
@@ -288,6 +290,24 @@ namespace Fussion::RHI {
                 usage.Type = ResourceType::UniformBuffer;
                 usage.Count = 1;
                 usage.Stages = ShaderType::Vertex;
+                usage.Binding = binding;
+            }
+
+            for (auto const& storage : resources.storage_buffers) {
+                auto set = reflection_compiler.get_decoration(storage.id, spv::DecorationDescriptorSet);
+                auto binding = reflection_compiler.get_decoration(storage.id, spv::DecorationBinding);
+
+                if (metadata.Uniforms[set].contains(binding)) {
+                    LOG_ERRORF("Shader delcared binding {}, of set {}, multiple times.", binding, set);
+                    LOG_ERRORF("\tName: {}", storage.name);
+                }
+
+                auto& usage = metadata.Uniforms[set][binding];
+                usage.Label = storage.name;
+                usage.Type = ResourceType::StorageBuffer;
+                usage.Count = 1;
+                usage.Stages = ShaderType::Vertex;
+                usage.Binding = binding;
             }
 
             for (auto const& push : resources.push_constant_buffers) {
@@ -320,6 +340,7 @@ namespace Fussion::RHI {
                         usage.Type = ResourceType::UniformBuffer;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
+                        usage.Binding = binding;
                     }
                 } else {
                     if (!metadata.Uniforms[set].contains(binding)) {
@@ -328,6 +349,7 @@ namespace Fussion::RHI {
                         usage.Type = ResourceType::UniformBuffer;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
+                        usage.Binding = binding;
                     } else {
                         auto& usage = metadata.Uniforms[set][binding];
                         usage.Stages = usage.Stages | ShaderType::Fragment;
@@ -338,7 +360,6 @@ namespace Fussion::RHI {
             for (auto const& image : resources.sampled_images) {
                 auto set = reflection_compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(image.id, spv::DecorationBinding);
-                LOG_DEBUGF("Fragmetn sampler: {}, Set: {}, Binding: {}", image.name, set, binding);
 
                 if (!metadata.Uniforms.contains(set)) {
                     if (!metadata.Uniforms[set].contains(binding)) {
@@ -347,6 +368,7 @@ namespace Fussion::RHI {
                         usage.Type = ResourceType::CombinedImageSampler;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
+                        usage.Binding = binding;
                     }
                 } else {
                     if (!metadata.Uniforms[set].contains(binding)) {
@@ -355,6 +377,7 @@ namespace Fussion::RHI {
                         usage.Type = ResourceType::CombinedImageSampler;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
+                        usage.Binding = binding;
                     } else {
                         auto& usage = metadata.Uniforms[set][binding];
                         usage.Stages = usage.Stages | ShaderType::Fragment;

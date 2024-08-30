@@ -75,7 +75,7 @@ namespace Fussion::RHI {
         device->GraphicsQueue.Access([&](VkQueue queue) {
             (void)queue;
             VK_CHECK(vkQueuePresentKHR(device->PresentQueue, &present_info))
-            m_CurrentFrame = (m_CurrentFrame + 1) % MaxFramesInFlight;
+            m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
         });
     }
 
@@ -201,9 +201,9 @@ namespace Fussion::RHI {
 
         CreateFrameBuffers();
 
-        m_InFlightFences = device->CreateFences(MaxFramesInFlight);
-        m_ImageAvailableSemaphores = device->CreateSemaphores(MaxFramesInFlight);
-        m_RenderFinishedSemaphores = device->CreateSemaphores(MaxFramesInFlight);
+        m_InFlightFences = device->CreateFences(MAX_FRAMES_IN_FLIGHT);
+        m_ImageAvailableSemaphores = device->CreateSemaphores(MAX_FRAMES_IN_FLIGHT);
+        m_RenderFinishedSemaphores = device->CreateSemaphores(MAX_FRAMES_IN_FLIGHT);
     }
 
     void VulkanSwapchain::GetImages()

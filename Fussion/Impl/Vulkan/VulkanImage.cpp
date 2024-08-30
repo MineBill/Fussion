@@ -16,9 +16,9 @@ namespace Fussion::RHI {
         Specification = spec;
 
         if (spec.GenerateMipMaps) {
-            m_MipLevels = CAST(u32, Math::FloorLog2(Math::Max(spec.Width, spec.Height))) + 1;
+            MipLevels = CAST(u32, Math::FloorLog2(Math::Max(spec.Width, spec.Height))) + 1;
         }
-        m_MipLevelsLayouts.resize(m_MipLevels);
+        m_MipLevelsLayouts.resize(MipLevels);
 
         auto ci = VkImageCreateInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -29,7 +29,7 @@ namespace Fussion::RHI {
                 .height = CAST(u32, spec.Height),
                 .depth = 1,
             },
-            .mipLevels = m_MipLevels,
+            .mipLevels = MipLevels,
             .arrayLayers = CAST(u32, spec.LayerCount),
             .samples = SampleCountToVulkan(spec.Samples),
             .tiling = VK_IMAGE_TILING_OPTIMAL,
@@ -50,7 +50,7 @@ namespace Fussion::RHI {
             .Format = spec.Format,
             .BaseLayerIndex = 0,
             .LayerCount = spec.LayerCount,
-            .MipLevels = m_MipLevels,
+            .MipLevels = MipLevels,
         };
 
         View = std::make_unique<VulkanImageView>(device, this, view_spec);
@@ -63,9 +63,9 @@ namespace Fussion::RHI {
         auto view_spec = ImageViewSpecification{
             .ViewType = ImageViewType::D2,
             .Format = spec.Format,
-            .MipLevels = m_MipLevels,
+            .MipLevels = MipLevels,
         };
-        m_MipLevelsLayouts.resize(m_MipLevels);
+        m_MipLevelsLayouts.resize(MipLevels);
         View = std::make_unique<VulkanImageView>(device, this, view_spec);
     }
 
@@ -131,13 +131,13 @@ namespace Fussion::RHI {
             .subresourceRange = VkImageSubresourceRange{
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                 .baseMipLevel = 0,
-                .levelCount = m_MipLevels,
+                .levelCount = MipLevels,
                 .baseArrayLayer = 0,
                 .layerCount = 1,
             },
         };
 
-        for (u32 i = 0; i < m_MipLevels; i++) {
+        for (u32 i = 0; i < MipLevels; i++) {
             m_MipLevelsLayouts[i] = barrier.newLayout;
         }
 
@@ -209,7 +209,7 @@ namespace Fussion::RHI {
 
     void VulkanImage::GenerateMipmaps()
     {
-        if (m_MipLevels == 1) return;
+        if (MipLevels == 1) return;
         auto cmd = Device::Instance()->BeginSingleTimeCommand();
         defer(Device::Instance()->EndSingleTimeCommand(cmd));
 
@@ -232,7 +232,7 @@ namespace Fussion::RHI {
         s32 width = Specification.Width;
         s32 height = Specification.Height;
 
-        for (u32 i = 1; i < m_MipLevels; i++) {
+        for (u32 i = 1; i < MipLevels; i++) {
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -272,12 +272,12 @@ namespace Fussion::RHI {
             if (height > 1) height /= 2;
         }
 
-        barrier.subresourceRange.baseMipLevel = m_MipLevels - 1;
+        barrier.subresourceRange.baseMipLevel = MipLevels - 1;
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        m_MipLevelsLayouts[m_MipLevels - 1] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        m_MipLevelsLayouts[MipLevels - 1] = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         Specification.Layout = ImageLayout::ShaderReadOnlyOptimal;
         vkCmdPipelineBarrier(cmd->GetRenderHandle<VkCommandBuffer>(),

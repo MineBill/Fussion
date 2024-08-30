@@ -8,6 +8,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
 #include <Fussion/Core/SmallVector.h>
+#include <magic_enum/magic_enum.hpp>
 
 namespace Fussion::RHI {
     VulkanCommandBuffer::VulkanCommandBuffer(Ref<VulkanCommandPool> pool, CommandBufferSpecification spec)
@@ -140,14 +141,16 @@ namespace Fussion::RHI {
     void VulkanCommandBuffer::Draw(u32 vertex_count, u32 instance_count)
     {
         vkCmdDraw(Handle, vertex_count, instance_count, 0, 0);
+        Device::Instance()->As<VulkanDevice>()->Stats.DrawCalls++;
     }
 
-    void VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count)
+    void VulkanCommandBuffer::DrawIndexed(u32 index_count, u32 instance_count, u32 first_instance)
     {
-        vkCmdDrawIndexed(Handle, index_count, instance_count, 0, 0, 0);
+        vkCmdDrawIndexed(Handle, index_count, instance_count, 0, 0, first_instance);
+        Device::Instance()->As<VulkanDevice>()->Stats.DrawCalls++;
     }
 
-    void VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer)
+    void VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer, u32 first_binding)
     {
         auto const& spec = buffer->GetSpec();
         if (spec.Usage.Test(BufferUsage::Index)) {
@@ -155,7 +158,7 @@ namespace Fussion::RHI {
         } else if (spec.Usage.Test(BufferUsage::Vertex)) {
             const auto handle = buffer->GetRenderHandle<VkBuffer>();
             constexpr auto offsets = VkDeviceSize{};
-            vkCmdBindVertexBuffers(Handle, 0, 1, &handle, &offsets);
+            vkCmdBindVertexBuffers(Handle, first_binding, 1, &handle, &offsets);
         }
     }
 
@@ -212,6 +215,27 @@ namespace Fussion::RHI {
         vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
     }
 
+    void VulkanCommandBuffer::BindStorageBuffer(Ref<Buffer> const& buffer, Ref<Resource> const& resource, u32 location)
+    {
+        auto buffer_info = VkDescriptorBufferInfo{
+            .buffer = buffer->GetRenderHandle<VkBuffer>(),
+            .offset = 0,
+            .range = VK_WHOLE_SIZE,
+        };
+
+        auto write = VkWriteDescriptorSet{
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = resource->GetRenderHandle<VkDescriptorSet>(),
+            .dstBinding = location,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .pBufferInfo = &buffer_info,
+        };
+
+        vkUpdateDescriptorSets(Device::Instance()->As<VulkanDevice>()->Handle, 1, &write, 0, nullptr);
+    }
+
     void VulkanCommandBuffer::PushConstants(Ref<RHI::Shader> const& shader, void* data, size_t size)
     {
         auto layout = shader->GetPipeline()->GetLayout()->GetRenderHandle<VkPipelineLayout>();
@@ -233,6 +257,90 @@ namespace Fussion::RHI {
         };
 
         vkCmdCopyImageToBuffer(Handle, image->GetRenderHandle<VkImage>(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer->GetRenderHandle<VkBuffer>(), 1, &copy);
+    }
+
+    void VulkanCommandBuffer::TransitionImageLayout(Ref<Image> const& image, ImageLayout from, ImageLayout to)
+    {
+        auto barrier = VkImageMemoryBarrier{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .oldLayout = ImageLayoutToVulkan(from),
+            .newLayout = ImageLayoutToVulkan(to),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = image->GetRenderHandle<VkImage>(),
+            .subresourceRange = VkImageSubresourceRange{
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = image->As<VulkanImage>()->MipLevels,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        };
+
+        auto src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        auto dst_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+
+        using enum ImageLayout;
+        if (from == Undefined && to == TransferDstOptimal) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == Undefined && to == TransferSrcOptimal) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_HOST_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == TransferSrcOptimal && to == TransferDstOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == TransferDstOptimal && to == TransferSrcOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == TransferDstOptimal && to == ShaderReadOnlyOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (from == ShaderReadOnlyOptimal && to == TransferDstOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == ShaderReadOnlyOptimal && to == TransferSrcOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == TransferSrcOptimal && to == ShaderReadOnlyOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (from == ColorAttachmentOptimal && to == ShaderReadOnlyOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (from == ColorAttachmentOptimal && to == TransferSrcOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (from == TransferSrcOptimal && to == ColorAttachmentOptimal) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        } else {
+            PANIC("Unsupported image transition from '{}' to '{}'", magic_enum::enum_name(from), magic_enum::enum_name(to));
+        }
+
+        vkCmdPipelineBarrier(Handle, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
     }
 
     void VulkanCommandBuffer::BlitImage(

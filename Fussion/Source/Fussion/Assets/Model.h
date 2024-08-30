@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <Fussion/Assets/Asset.h>
 #include <Fussion/RHI/Buffer.h>
-#include <Fussion/Rendering/RenderContext.h>
+#include <Fussion/Rendering/RenderTypes.h>
 #include <Fussion/Math/Vector2.h>
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
@@ -21,6 +21,7 @@ namespace Fussion {
 
         Ref<RHI::Buffer> VertexBuffer{};
         Ref<RHI::Buffer> IndexBuffer{};
+        Ref<RHI::Buffer> InstanceBuffer{};
         u32 IndexCount{};
 
         s32 MaterialIndex{};

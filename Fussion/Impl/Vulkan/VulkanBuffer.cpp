@@ -26,7 +26,6 @@ namespace Fussion::RHI {
 
         VK_CHECK(vmaCreateBuffer(device->Allocator, &buffer_ci, &allocation_info, &m_Handle, &m_Allocation, &m_AllocationInfo))
 
-        // device->SetHandleName(reinterpret_cast<u64>(Handle), VK_OBJECT_TYPE_BUFFER, spec.Label);
         device->SetHandleName(TRANSMUTE(u64, m_Handle), VK_OBJECT_TYPE_BUFFER, spec.Label);
     }
 
@@ -104,7 +103,8 @@ namespace Fussion::RHI {
             ret |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         if (usage.Test(TransferDestination))
             ret |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
+        if (usage.Test(Storage))
+            ret |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         return ret;
     }
 }

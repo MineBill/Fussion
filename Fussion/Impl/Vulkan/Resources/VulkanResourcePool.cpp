@@ -17,6 +17,8 @@ namespace Fussion::RHI {
             return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         case StorageBuffer:
             return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        case StorageBufferDynamic:
+            return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
         case Sampler:
             return VK_DESCRIPTOR_TYPE_SAMPLER;
         }

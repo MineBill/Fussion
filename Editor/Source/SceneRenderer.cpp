@@ -2,6 +2,7 @@
 #include "SceneRenderer.h"
 
 #include "Fussion/Input/Input.h"
+#include "Fussion/Rendering/Renderer.h"
 #include "Project/Project.h"
 
 #include <Fussion/Assets/ShaderAsset.h>
@@ -99,9 +100,12 @@ void SceneRenderer::Init()
                     .Usage = ImageUsage::Transient | ImageUsage::DepthStencilAttachment,
                     .Samples = 8,
                 }
-            }
+            },
+            .Label = "Scene FrameBuffer",
         };
-        m_FrameBuffer = Device::Instance()->CreateFrameBuffer(m_SceneRenderPass, fb_spec);
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            m_FrameBuffers[i] = Device::Instance()->CreateFrameBuffer(m_SceneRenderPass, fb_spec);
+        }
     }
 
     {
@@ -155,6 +159,7 @@ void SceneRenderer::Init()
         auto fb_spec = FrameBufferSpecification{
             .Width = ShadowMapResolution,
             .Height = ShadowMapResolution,
+            .Label = "Shadow Pass FrameBuffer"
         };
 
         for (size_t i = 0; i < ShadowCascades; i++) {
@@ -215,9 +220,12 @@ void SceneRenderer::Init()
                     .Usage = ImageUsage::Sampled | ImageUsage::ColorAttachment,
                     .Samples = 1,
                 },
-            }
+            },
+            .Label = "ShadowViewer FrameBuffer"
         };
-        m_ShadowViewerFrameBuffer = Device::Instance()->CreateFrameBuffer(m_ShadowPassDebugRenderPass, fb_spec);
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+            m_ShadowViewerFrameBuffers[i] = Device::Instance()->CreateFrameBuffer(m_ShadowPassDebugRenderPass, fb_spec);
+        }
     }
 
     {
@@ -279,7 +287,8 @@ void SceneRenderer::Init()
                     .Usage = ImageUsage::DepthStencilAttachment | ImageUsage::Transient,
                     .Samples = 1
                 }
-            }
+            },
+            .Label = "Object picking FrameBuffer"
         };
 
         m_ObjectPickingFrameBuffer = Device::Instance()->CreateFrameBuffer(m_ObjectPickingRenderPass, fb_spec);
@@ -319,34 +328,41 @@ void SceneRenderer::Init()
     SceneLightData = UniformBuffer<LightData>::Create("Light Data");
 
     auto pool_spec = ResourcePoolSpecification::Default(100);
-    m_ResourcePool = Device::Instance()->CreateResourcePool(pool_spec);
+    m_ResourcePool.fill(Device::Instance()->CreateResourcePool(pool_spec));
 
+    auto current_frame = Renderer::GetInstance()->GetSwapchain()->GetCurrentFrame();
     {
         std::vector resource_usages = {
             ResourceUsage{
                 .Label = "ViewData",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
+                .Binding = 0,
             },
             ResourceUsage{
                 .Label = "DebugOptions",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
+                .Binding = 1,
             },
             ResourceUsage{
                 .Label = "GlobalData",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
+                .Binding = 2,
             }
         };
         auto layout = Device::Instance()->CreateResourceLayout(resource_usages);
-        auto result = m_ResourcePool->Allocate(layout);
-        if (result.IsError()) {
-            LOG_ERRORF("Error while allocating resource: {}", magic_enum::enum_name(result.Error()));
-            return;
-        }
 
-        m_GlobalResource = result.Value();
+        for (int i = 0; i < ::RHI::MAX_FRAMES_IN_FLIGHT; ++i) {
+            auto result = m_ResourcePool[current_frame]->Allocate(layout);
+            if (result.IsError()) {
+                LOG_ERRORF("Error while allocating resource: {}", magic_enum::enum_name(result.Error()));
+                return;
+            }
+
+            m_GlobalResource[i] = result.Value();
+        }
     }
 
     {
@@ -355,31 +371,111 @@ void SceneRenderer::Init()
                 .Label = "SceneData",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
+                .Binding = 0,
             },
             ResourceUsage{
                 .Label = "LightData",
                 .Type = ResourceType::UniformBuffer,
                 .Stages = ShaderType::Vertex | ShaderType::Fragment,
+                .Binding = 1,
             },
             ResourceUsage{
                 .Label = "ShadowMap",
                 .Type = ResourceType::CombinedImageSampler,
                 .Count = 1,
                 .Stages = ShaderType::Fragment,
+                .Binding = 2
             },
         };
         auto layout = Device::Instance()->CreateResourceLayout(resource_usages);
-        auto result = m_ResourcePool->Allocate(layout);
-        if (result.IsError()) {
-            LOG_ERRORF("Error while allocating resource: {}", magic_enum::enum_name(result.Error()));
-            return;
-        }
 
-        m_SceneResource = result.Value();
+        for (int i = 0; i < ::RHI::MAX_FRAMES_IN_FLIGHT; ++i) {
+            auto result = m_ResourcePool[current_frame]->Allocate(layout);
+            if (result.IsError()) {
+                LOG_ERRORF("Error while allocating resource: {}", magic_enum::enum_name(result.Error()));
+                return;
+            }
+            m_SceneResource[i] = result.Value();
+        }
     }
 
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        BufferSpecification spec{
+            .Label = fmt::format("Instance Buffer {}", i),
+            .Usage = BufferUsage::Storage,
+            .Size = sizeof(Mat4) * 2 * 1'000,
+            .Mapped = true,
+        };
+        m_InstanceBuffers[i] = Device::Instance()->CreateBuffer(spec);
+        m_PBRInstanceBuffers[i] = Device::Instance()->CreateBuffer(spec);
+    }
+
+    m_FrameAllocator.Init(MAX_FRAMES_IN_FLIGHT, "Object Frame Allocator");
+    m_ObjectDepthResourceUsages = {
+        ResourceUsage{
+            .Label = "Instance Data",
+            .Type = ResourceType::StorageBuffer,
+            .Count = 1,
+            .Stages = ShaderType::Vertex,
+            .Binding = 0,
+        },
+    };
+
+    // TODO: This shouldn't be needed at all. You should be able to retrieve
+    //       this from the shader.
+    m_PBRResourceUsages = {
+        ResourceUsage{
+            .Label = "Material",
+            .Type = ResourceType::UniformBuffer,
+            .Count = 1,
+            .Stages = ShaderType::Vertex | ShaderType::Fragment,
+            .Binding = 0,
+        },
+        ResourceUsage{
+            .Label = "Albedo Map",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+            .Binding = 1,
+        },
+        ResourceUsage{
+            .Label = "Normal Map",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+            .Binding = 2,
+        },
+        ResourceUsage{
+            .Label = "AmbientOcclusion Map",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+            .Binding = 3,
+        },
+        ResourceUsage{
+            .Label = "MetallicRoughness Map",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+            .Binding = 4,
+        },
+        ResourceUsage{
+            .Label = "Emissive Map",
+            .Type = ResourceType::CombinedImageSampler,
+            .Count = 1,
+            .Stages = ShaderType::Fragment,
+            .Binding = 5,
+        },
+        ResourceUsage{
+            .Label = "Instance Data",
+            .Type = ResourceType::StorageBuffer,
+            .Count = 1,
+            .Stages = ShaderType::Vertex,
+            .Binding = 6,
+        },
+    };
+
     Debug::Initialize(m_SceneRenderPass);
-    m_TestTexture = TextureImporter::LoadTextureFromFile(std::filesystem::current_path() / "Assets" / "coords.png");
 }
 
 void SceneRenderer::Resize(Vector2 const& new_size)
@@ -387,7 +483,9 @@ void SceneRenderer::Resize(Vector2 const& new_size)
     ZoneScoped;
     Device::Instance()->WaitIdle();
     m_RenderArea = new_size;
-    m_FrameBuffer->Resize(new_size);
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        m_FrameBuffers[i]->Resize(new_size);
+    }
     m_ObjectPickingFrameBuffer->Resize(new_size);
 }
 
@@ -404,6 +502,10 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 {
     ZoneScoped;
     using namespace Fussion;
+    auto current_frame = Renderer::GetInstance()->GetSwapchain()->GetCurrentFrame();
+    m_CurrentFrame = current_frame;
+
+    m_RenderContext.Reset();
 
     // TODO: Hack
     SceneGlobalData.Data.Time += Time::DeltaTime();
@@ -424,22 +526,28 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     m_RenderContext.DirectionalLights.clear();
     m_RenderContext.PointLights.clear();
 
-    cmd->BindUniformBuffer(SceneViewData.GetBuffer(), m_GlobalResource, 0);
-    cmd->BindUniformBuffer(SceneDebugOptions.GetBuffer(), m_GlobalResource, 1);
-    cmd->BindUniformBuffer(SceneGlobalData.GetBuffer(), m_GlobalResource, 2);
+    cmd->BindUniformBuffer(SceneViewData.GetBuffer(), m_GlobalResource[current_frame], 0);
+    cmd->BindUniformBuffer(SceneDebugOptions.GetBuffer(), m_GlobalResource[current_frame], 1);
+    cmd->BindUniformBuffer(SceneGlobalData.GetBuffer(), m_GlobalResource[current_frame], 2);
 
-    cmd->BindUniformBuffer(SceneSceneData.GetBuffer(), m_SceneResource, 0);
-    cmd->BindUniformBuffer(SceneLightData.GetBuffer(), m_SceneResource, 1);
-    cmd->BindImage(m_DepthImage, m_SceneResource, 2);
+    cmd->BindUniformBuffer(SceneSceneData.GetBuffer(), m_SceneResource[current_frame], 0);
+    cmd->BindUniformBuffer(SceneLightData.GetBuffer(), m_SceneResource[current_frame], 1);
 
     {
-        ZoneScopedN("Light Collection");
+        ZoneScopedN("Render Object Collection");
         m_RenderContext.RenderFlags = RenderState::LightCollection;
         if (packet.Scene) {
             packet.Scene->ForEachEntity([&](Entity* entity) {
                 entity->OnDraw(m_RenderContext);
             });
         }
+
+        // {
+        //     ZoneScopedN("Sorting");
+        //     std::ranges::sort(m_RenderContext.RenderObjects, [](RenderObject const& first, RenderObject const& second) {
+        //         return first.IndexBuffer < second.IndexBuffer;
+        //     });
+        // }
     }
 
     if (!m_RenderContext.DirectionalLights.empty()) {
@@ -447,13 +555,19 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
     }
     SceneLightData.Flush();
 
+    m_FrameAllocator.Reset();
+
     {
         ZoneScopedN("Depth Pass");
         m_RenderContext.RenderFlags = RenderState::Depth;
 
+        u32 buffer_offset = 0;
         for (auto& light : m_RenderContext.DirectionalLights) {
+
+            std::array<f32, ShadowCascades> shadow_splits{};
             for (auto i = 0; i < ShadowCascades; i++) {
-                SceneLightData.Data.ShadowSplitDistances[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
+                // SceneLightData.Data.ShadowSplitDistances[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
+                shadow_splits[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
             }
 
             cmd->SetViewport({ ShadowMapResolution, -ShadowMapResolution });
@@ -461,6 +575,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
             f32 last_split{ 0 };
             for (auto i = 0; i < ShadowCascades; i++) {
+                ZoneScopedN("Shadow Cascade");
 
                 Vector3 frustum_corners[8] = {
                     Vector3(-1.0f, 1.0f, 0.0f),
@@ -480,7 +595,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
                     frustum_corner = inv_corner / inv_corner.W;
                 }
 
-                auto split = SceneLightData.Data.ShadowSplitDistances[i];
+                auto split = shadow_splits[i];
                 for (u32 j = 0; j < 4; j++) {
                     Vector3 dist = frustum_corners[j + 4] - frustum_corners[j];
                     frustum_corners[j + 4] = frustum_corners[j] + dist * split;
@@ -511,63 +626,122 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
                 cmd->BeginRenderPass(m_DepthPass, m_ShadowFrameBuffers[i]);
                 auto depth_shader = m_DepthShader.Get()->GetShader();
                 cmd->UseShader(depth_shader);
+                SceneLightData.Data.ShadowSplitDistances[i] = packet.Camera.Near + split * (packet.Camera.Far - packet.Camera.Near) * -1.0f;
                 SceneLightData.Data.DirectionalLight.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
-                if (packet.Scene) {
-                    m_RenderContext.CurrentShader = depth_shader;
-                    m_RenderContext.CurrentLightSpace = light.ShaderData.LightSpaceMatrix[i];
-                    packet.Scene->ForEachEntity([&](Entity* entity) {
-                        ZoneScopedN("Entity Draw");
-                        entity->OnDraw(m_RenderContext);
-                    });
+
+                // for (auto const& obj : m_RenderContext.RenderObjects) {
+                //     struct PushData {
+                //         Mat4 Model, LightSpace;
+                //     } push;
+                //     push.Model = obj.WorldMatrix;
+                //     push.LightSpace = light.ShaderData.LightSpaceMatrix[i];
+                //     cmd->PushConstants(depth_shader, &push);
+                //
+                //     cmd->BindBuffer(obj.VertexBuffer);
+                //     cmd->BindBuffer(obj.IndexBuffer);
+                //     cmd->DrawIndexed(obj.IndexCount, 1);
+                // }
+                for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+                    ZoneScopedN("Command Buffer Dispatch");
+                    (void)buffer;
+                    auto object_layout = Device::Instance()->CreateResourceLayout(m_ObjectDepthResourceUsages);
+                    auto resource = m_FrameAllocator.Alloc(object_layout, "Depth Object Instance Data");
+                    cmd->BindResource(resource, depth_shader, 0);
+
+                    auto const& hack = m_RenderContext.RenderObjects[list[0]];
+                    struct InstanceData {
+                        Mat4 Model;
+                        Mat4 LightSpace;
+                    };
+
+                    auto data = CAST(InstanceData*, m_InstanceBuffers[current_frame]->GetMappedData()) + buffer_offset;
+                    int j = 0;
+                    for (auto index : list) {
+                        // Fill vertex buffer with transforms
+                        auto& obj = m_RenderContext.RenderObjects[index];
+                        data[j].Model = obj.WorldMatrix;
+                        data[j++].LightSpace = light.ShaderData.LightSpaceMatrix[i];
+                        // transforms.push_back(obj.WorldMatrix);
+                        // transforms.push_back(light.ShaderData.LightSpaceMatrix[i]);
+                    }
+                    // m_InstanceBuffers[current_frame]->SetData(std::span(transforms));
+
+                    // Access the first render object from out index list in order to
+                    // get access to the mesh. This is a hack. Probably the render
+                    // list should include a pointer to the mesh.
+                    // hack.InstanceBuffer->SetData(std::span(transforms));
+
+                    cmd->BindBuffer(hack.IndexBuffer);
+                    cmd->BindBuffer(hack.VertexBuffer);
+                    cmd->BindStorageBuffer(m_InstanceBuffers[current_frame], resource, 0);
+
+                    cmd->DrawIndexed(hack.IndexCount, list.size(), buffer_offset);
+                    buffer_offset += list.size();
                 }
+                // if (packet.Scene) {
+                //     m_RenderContext.CurrentShader = depth_shader;
+                //     m_RenderContext.CurrentLightSpace = light.ShaderData.LightSpaceMatrix[i];
+                //     packet.Scene->ForEachEntity([&](Entity* entity) {
+                //         ZoneScopedN("Entity Draw");
+                //         entity->OnDraw(m_RenderContext);
+                //     });
+                // }
                 cmd->EndRenderPass(m_DepthPass);
                 last_split = split;
             }
             SceneLightData.Flush();
 
-            cmd->BeginRenderPass(m_ShadowPassDebugRenderPass, m_ShadowViewerFrameBuffer);
-            {
-                ZoneScopedN("ShadowMap Debug Viewer");
-
-                auto shader = m_DepthViewerShader.Get()->GetShader();
-                cmd->UseShader(shader);
-                cmd->BindResource(m_SceneResource, shader, 1);
-                struct {
-                    s32 CascadeIndex;
-                } pc;
-                pc.CascadeIndex = RenderDebugOptions.CascadeIndex;;
-                cmd->PushConstants(shader, &pc, sizeof(pc));
-                cmd->Draw(6, 1);
-            }
-            cmd->EndRenderPass(m_ShadowPassDebugRenderPass);
         }
+    }
+
+    cmd->BindImage(m_DepthImage, m_SceneResource[current_frame], 2);
+
+    if (!m_RenderContext.DirectionalLights.empty()) {
+        ZoneScopedN("ShadowMap Debug Viewer");
+        cmd->SetViewport({ ShadowMapResolution, -ShadowMapResolution });
+        cmd->SetScissor(Vector4(0, 0, ShadowMapResolution, ShadowMapResolution));
+
+        cmd->BeginRenderPass(m_ShadowPassDebugRenderPass, m_ShadowViewerFrameBuffers[current_frame]);
+        {
+
+            auto shader = m_DepthViewerShader.Get()->GetShader();
+            cmd->UseShader(shader);
+            cmd->BindResource(m_SceneResource[current_frame], shader, 1);
+            struct {
+                s32 CascadeIndex;
+            } pc;
+            pc.CascadeIndex = RenderDebugOptions.CascadeIndex;
+            cmd->PushConstants(shader, &pc, sizeof(pc));
+            cmd->Draw(6, 1);
+        }
+        cmd->EndRenderPass(m_ShadowPassDebugRenderPass);
     }
 
     cmd->SetViewport({ m_RenderArea.X, -m_RenderArea.Y });
     cmd->SetScissor(Vector4(0, 0, m_RenderArea.X, m_RenderArea.Y));
 
-    cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
-    {
-        ZoneScopedN("Object Picking Render Pass");
-        auto object_pick_shader = m_ObjectPickingShader.Get()->GetShader();
+    // cmd->BeginRenderPass(m_ObjectPickingRenderPass, m_ObjectPickingFrameBuffer);
+    // {
+    //     ZoneScopedN("Object Picking Render Pass");
+    //     auto object_pick_shader = m_ObjectPickingShader.Get()->GetShader();
+    //
+    //     m_RenderContext.RenderFlags = RenderState::ObjectPicking;
+    //     m_RenderContext.CurrentPass = m_ObjectPickingRenderPass;
+    //     m_RenderContext.CurrentShader = object_pick_shader;
+    //
+    //     cmd->UseShader(object_pick_shader);
+    //     cmd->BindResource(m_GlobalResource[current_frame], object_pick_shader, 0);
+    //
+    //     // if (packet.Scene) {
+    //     //     packet.Scene->ForEachEntity([&](Entity* entity) {
+    //     //         ZoneScopedN("Object Picking Draw");
+    //     //         entity->OnDraw(m_RenderContext);
+    //     //     });
+    //     // }
+    // }
+    // cmd->EndRenderPass(m_ObjectPickingRenderPass);
 
-        m_RenderContext.RenderFlags = RenderState::ObjectPicking;
-        m_RenderContext.CurrentPass = m_ObjectPickingRenderPass;
-        m_RenderContext.CurrentShader = object_pick_shader;
-
-        cmd->UseShader(object_pick_shader);
-        cmd->BindResource(m_GlobalResource, object_pick_shader, 0);
-
-        if (packet.Scene) {
-            packet.Scene->ForEachEntity([&](Entity* entity) {
-                ZoneScopedN("Object Picking Draw");
-                entity->OnDraw(m_RenderContext);
-            });
-        }
-    }
-    cmd->EndRenderPass(m_ObjectPickingRenderPass);
-
-    cmd->BeginRenderPass(m_SceneRenderPass, m_FrameBuffer);
+    cmd->BeginRenderPass(m_SceneRenderPass, m_FrameBuffers[current_frame]);
     {
         m_RenderContext.CurrentPass = m_SceneRenderPass;
 
@@ -580,8 +754,8 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
 
             auto sky_shader = m_SkyShader.Get()->GetShader();
             cmd->UseShader(sky_shader);
-            cmd->BindResource(m_GlobalResource, sky_shader, 0);
-            cmd->BindResource(m_SceneResource, sky_shader, 1);
+            cmd->BindResource(m_GlobalResource[current_frame], sky_shader, 0);
+            cmd->BindResource(m_SceneResource[current_frame], sky_shader, 1);
             cmd->Draw(4, 1);
         }
 
@@ -590,22 +764,90 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
             m_RenderContext.RenderFlags = RenderState::Mesh;
             auto pbr_shader = m_PbrShader.Get()->GetShader();
             cmd->UseShader(pbr_shader);
-            cmd->BindResource(m_GlobalResource, pbr_shader, 0);
-            cmd->BindResource(m_SceneResource, pbr_shader, 1);
+            cmd->BindResource(m_GlobalResource[current_frame], pbr_shader, 0);
+            cmd->BindResource(m_SceneResource[current_frame], pbr_shader, 1);
 
-            m_RenderContext.CurrentShader = pbr_shader;
-            if (packet.Scene) {
-                packet.Scene->ForEachEntity([&](Entity* entity) {
-                    ZoneScopedN("Entity Draw");
-                    entity->OnDraw(m_RenderContext);
-                });
+            u32 buffer_offset = 0;
+            for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+                ZoneScopedN("PBR Command Buffer Dispatch");
+                (void)buffer;
+                auto object_layout = Device::Instance()->CreateResourceLayout(m_PBRResourceUsages);
+                auto resource = m_FrameAllocator.Alloc(object_layout, "PBR Object Instance Data");
+                cmd->BindResource(resource, pbr_shader, 2);
+
+                auto const& hack = m_RenderContext.RenderObjects[list[0]];
+
+                hack.Material->MaterialUniformBuffer.Data.ObjectColor = hack.Material->ObjectColor;
+                hack.Material->MaterialUniformBuffer.Data.Metallic = hack.Material->Metallic;
+                hack.Material->MaterialUniformBuffer.Data.Roughness = hack.Material->Roughness;
+                hack.Material->MaterialUniformBuffer.Flush();
+
+                cmd->BindUniformBuffer(hack.Material->MaterialUniformBuffer.GetBuffer(), resource, 0);
+                auto albedo = hack.Material->AlbedoMap.Get();
+                if (!albedo) {
+                    albedo = Renderer::WhiteTexture().Get();
+                }
+
+                auto normal = hack.Material->NormalMap.Get();
+                if (!normal) {
+                    normal = Renderer::DefaultNormalMap().Get();
+                }
+
+                auto ao = hack.Material->AmbientOcclusionMap.Get();
+                if (!ao) {
+                    ao = Renderer::WhiteTexture().Get();
+                }
+
+                auto metallic_roughness = hack.Material->MetallicRoughnessMap.Get();
+                if (!metallic_roughness) {
+                    metallic_roughness = Renderer::WhiteTexture().Get();
+                }
+
+                auto emissive = hack.Material->EmissiveMap.Get();
+                if (!emissive) {
+                    emissive = Renderer::BlackTexture().Get();
+                }
+
+                cmd->BindImage(albedo->GetImage(), resource, 1);
+                cmd->BindImage(normal->GetImage(), resource, 2);
+
+                cmd->BindImage(ao->GetImage(), resource, 3);
+                cmd->BindImage(metallic_roughness->GetImage(), resource, 4);
+                cmd->BindImage(emissive->GetImage(), resource, 5);
+
+                struct InstanceData {
+                    Mat4 Model;
+                };
+
+                auto data = CAST(InstanceData*, m_PBRInstanceBuffers[current_frame]->GetMappedData()) + buffer_offset;
+                int j = 0;
+                for (auto index : list) {
+                    // Fill vertex buffer with transforms
+                    auto& obj = m_RenderContext.RenderObjects[index];
+                    data[j++].Model = obj.WorldMatrix;
+                    // transforms.push_back(obj.WorldMatrix);
+                    // transforms.push_back(light.ShaderData.LightSpaceMatrix[i]);
+                }
+                // m_InstanceBuffers[current_frame]->SetData(std::span(transforms));
+
+                // Access the first render object from out index list in order to
+                // get access to the mesh. This is a hack. Probably the render
+                // list should include a pointer to the mesh.
+                // hack.InstanceBuffer->SetData(std::span(transforms));
+
+                cmd->BindBuffer(hack.IndexBuffer);
+                cmd->BindBuffer(hack.VertexBuffer);
+                cmd->BindStorageBuffer(m_PBRInstanceBuffers[current_frame], resource, 6);
+
+                cmd->DrawIndexed(hack.IndexCount, list.size(), buffer_offset);
+                buffer_offset += list.size();
             }
         }
 
         if (!game_view) {
             {
                 ZoneScopedN("Debug Draw");
-                Debug::Render(cmd, m_GlobalResource);
+                Debug::Render(cmd, m_GlobalResource[current_frame]);
             }
 
             {
@@ -613,7 +855,7 @@ void SceneRenderer::Render(Ref<CommandBuffer> const& cmd, RenderPacket const& pa
                 auto grid_shader = m_GridShader.Get()->GetShader();
                 m_RenderContext.CurrentShader = grid_shader;
                 cmd->UseShader(grid_shader);
-                cmd->BindResource(m_GlobalResource, grid_shader, 0);
+                cmd->BindResource(m_GlobalResource[current_frame], grid_shader, 0);
                 // cmd->BindResource(m_SceneResource, m_GridShader, 1);
                 cmd->Draw(6, 1);
             }

@@ -30,6 +30,15 @@ namespace Fussion {
         IndexBuffer = device->CreateBuffer(index_spec);
         IndexBuffer->SetData(std::span{ indices });
         IndexCount = CAST(u32, indices.size());
+
+        auto instance_spec = RHI::BufferSpecification{
+            .Label = "Instance Buffer",
+            .Usage = RHI::BufferUsage::Storage,
+            .Size = sizeof(Mat4) * 2 * 1'000,
+            .Mapped = true,
+        };
+
+        InstanceBuffer = device->CreateBuffer(instance_spec);
     }
 
     Ref<Model> Model::Create(std::vector<Mesh>& meshes)
