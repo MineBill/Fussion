@@ -1,3 +1,5 @@
+add_requires("wgpu-native")
+
 target("Fussion")
     set_kind("static")
     set_languages("c++23")
@@ -6,6 +8,7 @@ target("Fussion")
 
     add_files (
         "Source/**.cpp",
+        "Source/**.c",
         "Impl/**.cpp",
 
         "Vendor/tracy/public/TracyClient.cpp"
@@ -32,7 +35,7 @@ target("Fussion")
     add_includedirs("Vendor/entt/src", {public = true})
 
     add_packages("fmt", "cpptrace", {public = true})
-    add_packages("glfw", "VMA")
+    add_packages("glfw", "VMA", "wgpu-native")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
@@ -46,7 +49,7 @@ target("Fussion")
         "VMA_DYNAMIC_VULKAN_FUNCTIONS",
         "VK_NO_PROTOTYPES"
     )
-	
+
     add_rules("CompilerFlags")
     add_rules("CommonFlags")
     add_options("Tracy")
@@ -63,9 +66,6 @@ target("Fussion")
         )
         add_cxxflags("cl::/bigobj")
         add_cxxflags("cl::/utf-8", {public = true})
-		
-
-
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})
         add_links("shaderc_shared")
@@ -78,7 +78,7 @@ target("Fussion")
 	-- Needed by cpptrace
 	-- TODO: Figure out how to put this in the package declaration.
 	if is_plat("windows") then
-		add_syslinks("dbghelp")
+		add_syslinks("dbghelp", {public = true})
 	elseif is_plat("macosx") then
 		add_deps("libdwarf")
 	elseif is_plat("linux") then

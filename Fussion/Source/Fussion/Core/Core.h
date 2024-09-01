@@ -89,8 +89,13 @@ namespace Fussion {
     void Panic(fmt::format_string<Args...> message, Args&&... args)
     {
         auto trace = cpptrace::generate_trace(1, 1);
-        auto frame = trace.frames[0];
-        LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
+        if (!trace.frames.empty()) {
+            auto frame = trace.frames[0];
+            LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
+        } else {
+            LOG_ERRORF("PANIC hit. Unable to generate trace");
+
+        }
         LOG_ERRORF(message, std::forward<Args>(args)...);
         BUILTIN_TRAP_FUNCTION();
 

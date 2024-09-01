@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+
+
 #define DECLARE_FLAGS(Enum, Flags)                                                       \
     struct Flags {                                                                       \
         using EnumType = Enum;                                                           \
@@ -26,3 +28,7 @@
     inline Flags operator|(Flags::EnumType a, Flags b) { return Flags(Flags::EnumType(int(a) | b.value)); }          \
     inline Flags operator|(Flags a, Flags b) { return Flags(Flags::EnumType(a.value | b.value)); }                   \
     inline Flags operator|=(Flags& a, Flags::EnumType b) { return a = Flags(Flags::EnumType(a.value | int(b))); }
+
+#define BITFLAGS(Enum) \
+    DECLARE_FLAGS(Enum, Enum ## Flags) \
+    DECLARE_OPERATORS_FOR_FLAGS(Enum ## Flags)

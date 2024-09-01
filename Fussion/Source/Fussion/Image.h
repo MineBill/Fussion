@@ -11,5 +11,11 @@ namespace Fussion {
         {
             return !Data.empty();
         }
+
+        u32 Size() const
+        {
+            constexpr u32 channels = 4;
+            return Width * Height * channels;
+        }
     };
 }
