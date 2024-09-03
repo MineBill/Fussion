@@ -1,3 +1,5 @@
+includes("Vendor/xmake.lua")
+
 target "Editor"
     set_kind("binary")
     set_languages("c++23")
@@ -41,7 +43,7 @@ target "Editor"
 
     add_deps("Fussion", "argparse")
     -- We need an explicit link to glfw here to be able to build the glfw imgui backend.
-    add_packages("glfw")
+    add_packages("glfw", "wgpu-native", "meshoptimizer")
 
     set_pcxxheader("Source/EditorPCH.h")
 
