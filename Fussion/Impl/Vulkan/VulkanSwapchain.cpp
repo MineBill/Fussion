@@ -47,7 +47,7 @@ namespace Fussion::RHI {
         switch (result) {
         case VK_ERROR_OUT_OF_DATE_KHR:
         case VK_SUBOPTIMAL_KHR:
-            return {};
+            return None();
         default: ;
         }
 

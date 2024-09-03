@@ -13,7 +13,7 @@ public:
     static bool Load(fs::path const& path);
 
     static auto GetName() -> std::string_view { return s_ActiveProject->m_Name; }
-    static auto GetAssetManager() -> Ref<EditorAssetManager>& { return s_ActiveProject->m_AssetManager; }
+    static auto GetAssetManager() -> EditorAssetManager* { return s_ActiveProject->m_AssetManager.get(); }
     static auto GetRoot() -> fs::path const& { return s_ActiveProject->m_ProjectPath; }
     static auto GetAssetRegistry() -> fs::path const& { return s_ActiveProject->m_AssetRegistryPath; }
     static auto GetAssetsFolder() -> fs::path const& { return s_ActiveProject->m_AssetsFolderPath; }
@@ -32,7 +32,7 @@ public:
 private:
     static Ptr<Project> s_ActiveProject;
 
-    Ref<EditorAssetManager> m_AssetManager{};
+    Ptr<EditorAssetManager> m_AssetManager{};
 
     std::string m_Name{ "Unnamed Project" };
 

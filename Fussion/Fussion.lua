@@ -60,7 +60,15 @@ target("Fussion")
         set_runtimes("MDd")
         add_sysincludedirs(os.getenv("VULKAN_SDK") .. "/Include", {public = true})
         add_links (
+            -- Shader compiler
             os.getenv("VULKAN_SDK") .. "/Lib/shaderc_sharedd.lib",
+
+            -- Shader linker
+            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Tools-linkd.lib",
+            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Tools-optd.lib",
+            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Toolsd.lib",
+
+            -- Shader reflection
             os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-cored.lib",
             os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-glsld.lib"
         )

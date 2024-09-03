@@ -62,6 +62,11 @@ namespace Fussion::GPU {
         return user_data.Device;
     }
 
+    void Sampler::Release()
+    {
+        wgpuSamplerRelease(As<WGPUSampler>());
+    }
+
     auto Buffer::GetSize() const -> u64
     {
         return wgpuBufferGetSize(CAST(WGPUBuffer, Handle));
@@ -72,6 +77,11 @@ namespace Fussion::GPU {
         return BufferSlice(*this, start, size);
     }
 
+    auto Buffer::GetSlice() -> BufferSlice
+    {
+        return BufferSlice(*this, 0, GetSize());
+    }
+
     void Buffer::Release()
     {
         wgpuBufferRelease(CAST(WGPUBuffer, Handle));
@@ -80,6 +90,11 @@ namespace Fussion::GPU {
     BufferSlice::BufferSlice(Buffer const& buffer, u32 start, u32 size): BackingBuffer(buffer), Start(start), Size(size) {}
 
     BufferSlice::BufferSlice(Buffer const& buffer): BackingBuffer(buffer), Start(0), Size(buffer.GetSize()) {}
+
+    auto BufferSlice::GetMappedRange() -> void*
+    {
+        return wgpuBufferGetMappedRange(BackingBuffer.As<WGPUBuffer>(), Start, Size);
+    }
 
     void TextureView::Release()
     {
@@ -97,7 +112,7 @@ namespace Fussion::GPU {
             .MipLevelCount = Spec.MipLevelCount,
             .BaseArrayLayer = 0, // TODO: Make configurable
             .ArrayLayerCount = 1, // TODO: Make configurable
-            .Aspect = TextureAspect::All // TODO: Make configurable
+            .Aspect = Spec.Aspect // TODO: Make configurable
         });
     }
 
@@ -124,6 +139,11 @@ namespace Fussion::GPU {
         wgpuTextureRelease(CAST(WGPUTexture, Handle));
     }
 
+    void BindGroup::Release()
+    {
+        wgpuBindGroupRelease(As<WGPUBindGroup>());
+    }
+
     void PipelineLayout::Release()
     {
         wgpuPipelineLayoutRelease(As<WGPUPipelineLayout>());
@@ -132,6 +152,70 @@ namespace Fussion::GPU {
     void ShaderModule::Release()
     {
         wgpuShaderModuleRelease(As<WGPUShaderModule>());
+    }
+
+    auto PrimitiveState::Default() -> PrimitiveState
+    {
+        return PrimitiveState{
+            .Topology = PrimitiveTopology::TriangleList,
+            .StripIndexFormat = None(),
+            .FrontFace = FrontFace::Ccw,
+            .Cull = Face::None,
+        };
+    }
+
+    auto DepthStencilState::Default() -> DepthStencilState
+    {
+        return {
+            .Format = TextureFormat::Depth24Plus,
+            .DepthWriteEnabled = true,
+            .DepthCompare = CompareFunction::Less,
+            .Stencil = {
+                .Front = {
+                    .Compare = CompareFunction::Always,
+                    .FailOp = StencilOperation::Keep,
+                    .DepthFailOp = StencilOperation::Keep,
+                    .PassOp = StencilOperation::Keep
+                },
+                .Back = {
+                    .Compare = CompareFunction::Always,
+                    .FailOp = StencilOperation::Keep,
+                    .DepthFailOp = StencilOperation::Keep,
+                    .PassOp = StencilOperation::Keep },
+                .ReadMask = 0xFFFFFFFF,
+                .WriteMask = 0xFFFFFFFF,
+            },
+            .Bias = {
+                .Constant = 0,
+                .SlopeScale = 0,
+                .Clamp = 0,
+            }
+        };
+    }
+
+    auto BlendState::Default() -> BlendState
+    {
+        return {
+            .Color = {
+                .SrcFactor = BlendFactor::SrcAlpha,
+                .DstFactor = BlendFactor::OneMinusSrcAlpha,
+                .Operation = BlendOperation::Add
+            },
+            .Alpha = {
+                .SrcFactor = BlendFactor::Zero,
+                .DstFactor = BlendFactor::One,
+                .Operation = BlendOperation::Add
+            }
+        };
+    }
+
+    auto MultiSampleState::Default() -> MultiSampleState
+    {
+        return {
+            .Count = 1,
+            .Mask = ~0u,
+            .AlphaToCoverageEnabled = false,
+        };
     }
 
     void RenderPipeline::Release()
@@ -159,6 +243,11 @@ namespace Fussion::GPU {
         wgpuRenderPassEncoderSetVertexBuffer(As<WGPURenderPassEncoder>(), slot, slice.BackingBuffer.As<WGPUBuffer>(), slice.Start, slice.Size);
     }
 
+    void RenderPassEncoder::SetIndexBuffer(BufferSlice const& slice) const
+    {
+        wgpuRenderPassEncoderSetIndexBuffer(As<WGPURenderPassEncoder>(), slice.BackingBuffer.As<WGPUBuffer>(), WGPUIndexFormat_Uint32, slice.Start, slice.Size);
+    }
+
     void RenderPassEncoder::SetPipeline(RenderPipeline const& pipeline) const
     {
         wgpuRenderPassEncoderSetPipeline(As<WGPURenderPassEncoder>(), pipeline.As<WGPURenderPipeline>());
@@ -167,6 +256,17 @@ namespace Fussion::GPU {
     void RenderPassEncoder::Draw(Range<u32> vertices, Range<u32> instances) const
     {
         wgpuRenderPassEncoderDraw(As<WGPURenderPassEncoder>(), vertices.Count(), instances.Count(), vertices.Start, instances.Start);
+    }
+
+    void RenderPassEncoder::DrawIndex(Range<u32> indices, Range<u32> instances) const
+    {
+        wgpuRenderPassEncoderDrawIndexed(
+            As<WGPURenderPassEncoder>(),
+            indices.Count(),
+            instances.End,
+            indices.Start,
+            0,
+            instances.Start);
     }
 
     void RenderPassEncoder::End() const
@@ -239,26 +339,26 @@ namespace Fussion::GPU {
         return CommandBuffer{ cmd };
     }
 
+    void CommandEncoder::CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const
+    {
+        wgpuCommandEncoderCopyBufferToBuffer(CAST(WGPUCommandEncoder, Handle), from.As<WGPUBuffer>(), from_offset, to.As<WGPUBuffer>(), to_offset, size);
+    }
+
     void CommandEncoder::Release() const
     {
         wgpuCommandEncoderRelease(CAST(WGPUCommandEncoder, Handle));
     }
 
-    Device::Device(HandleT handle): Handle(handle)
+    Device::Device(HandleT handle): GPUHandle(handle)
     {
         Queue = wgpuDeviceGetQueue(CAST(WGPUDevice, Handle));
-    }
-
-    void Device::Release() const
-    {
-        wgpuDeviceRelease(CAST(WGPUDevice, Handle));
     }
 
     auto Device::CreateBuffer(BufferSpec const& spec) const -> Buffer
     {
         WGPUBufferDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label,
+            .label = spec.Label.ValueOr("Buffer").data(),
             .usage = ToWgpu(spec.Usage),
             .size = spec.Size,
             .mappedAtCreation = spec.Mapped
@@ -273,7 +373,7 @@ namespace Fussion::GPU {
         WGPUTextureDescriptor texture_descriptor{
             .nextInChain = nullptr,
             .label = spec.Label.ValueOr("Texture"),
-            .usage = WGPUTextureUsage_CopyDst | WGPUTextureUsage_TextureBinding,
+            .usage = ToWgpu(spec.Usage),
             .dimension = ToWgpu(spec.Dimension),
             .size = {
                 .width = CAST(u32, spec.Size.X),
@@ -292,6 +392,27 @@ namespace Fussion::GPU {
         Texture texture{ texture_handle, spec };
         texture.InitializeView();
         return texture;
+    }
+
+    auto Device::CreateSampler(SamplerSpec const& spec) const -> Sampler
+    {
+        WGPUSamplerDescriptor desc{
+            .nextInChain = nullptr,
+            .label = spec.Label.ValueOr("Sampler"),
+            .addressModeU = ToWgpu(spec.AddressModeU),
+            .addressModeV = ToWgpu(spec.AddressModeV),
+            .addressModeW = ToWgpu(spec.AddressModeW),
+            .magFilter = ToWgpu(spec.MagFilter),
+            .minFilter = ToWgpu(spec.MinFilter),
+            .mipmapFilter = CAST(WGPUMipmapFilterMode, ToWgpu(spec.MipMapFilter)),
+            .lodMinClamp = spec.LodMinClamp,
+            .lodMaxClamp = spec.LodMaxClamp,
+            .compare = ToWgpu(spec.Compare.ValueOr(CompareFunction::Undefined)),
+            .maxAnisotropy = spec.AnisotropyClamp,
+        };
+
+        auto sampler = wgpuDeviceCreateSampler(As<WGPUDevice>(), &desc);
+        return Sampler{ sampler };
     }
 
     auto Device::CreateCommandEncoder(const char* label) const -> CommandEncoder
@@ -438,20 +559,44 @@ namespace Fussion::GPU {
 
     auto Device::CreateShaderModule(ShaderModuleSpec const& spec) const -> ShaderModule
     {
-        WGPUShaderModuleWGSLDescriptor wgsl_descriptor{
-            .chain = {
-                .next = nullptr,
-                .sType = WGPUSType_ShaderModuleWGSLDescriptor,
-            },
-            .code = spec.Source.data(),
-        };
+        auto desc = std::visit(overloaded{
+                [](WGSLShader const& wgsl) {
+                    WGPUShaderModuleWGSLDescriptor wgsl_descriptor{
+                        .chain = {
+                            .next = nullptr,
+                            .sType = WGPUSType_ShaderModuleWGSLDescriptor,
+                        },
+                        .code = wgsl.Source.data(),
+                    };
+                    WGPUShaderModuleDescriptor desc{
+                        .nextInChain = &wgsl_descriptor.chain,
+                        .label = "Shader",
+                        .hintCount = 0,
+                        .hints = nullptr,
+                    };
+                    return desc;
+                },
+                [](SPIRVShader const& spirv) {
+                    WGPUShaderModuleSPIRVDescriptor spirv_descriptor{
+                        .chain = {
+                            .next = nullptr,
+                            .sType = WGPUSType_ShaderModuleSPIRVDescriptor,
+                        },
+                        .codeSize = CAST(u32, spirv.Binary.size_bytes()),
+                        .code = spirv.Binary.data(),
+                    };
+                    WGPUShaderModuleDescriptor desc{
+                        .nextInChain = &spirv_descriptor.chain,
+                        .label = "Shader",
+                        .hintCount = 0,
+                        .hints = nullptr,
+                    };
 
-        WGPUShaderModuleDescriptor desc{
-            .nextInChain = &wgsl_descriptor.chain,
-            .label = "Shader",
-            .hintCount = 0,
-            .hints = nullptr,
-        };
+                    return desc;
+                },
+                [](auto&&) {},
+            },
+            spec.Type);
 
         auto module = wgpuDeviceCreateShaderModule(CAST(WGPUDevice, Handle), &desc);
 
@@ -479,9 +624,12 @@ namespace Fussion::GPU {
     auto Device::CreateRenderPipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline
     {
         std::vector<WGPUVertexBufferLayout> vertex_buffer_layouts{};
-        std::ranges::transform(spec.Vertex.AttributeLayouts, std::back_inserter(vertex_buffer_layouts), [](VertexBufferLayout const& layout) {
-            std::vector<WGPUVertexAttribute> attributes{};
-            std::ranges::transform(layout.Attributes, std::back_inserter(attributes), [](VertexAttribute const& attribute) {
+        std::vector<std::vector<WGPUVertexAttribute>> attributes{};
+        attributes.resize(spec.Vertex.AttributeLayouts.size());
+
+        size_t attribute_index = 0;
+        std::ranges::transform(spec.Vertex.AttributeLayouts, std::back_inserter(vertex_buffer_layouts), [&](VertexBufferLayout const& layout) {
+            std::ranges::transform(layout.Attributes, std::back_inserter(attributes[attribute_index]), [](VertexAttribute const& attribute) {
                 return WGPUVertexAttribute{
                     .format = ToWgpu(attribute.Type),
                     .offset = attribute.Offset,
@@ -492,10 +640,11 @@ namespace Fussion::GPU {
             WGPUVertexBufferLayout wgpu_layout{
                 .arrayStride = layout.ArrayStride,
                 .stepMode = ToWgpu(layout.StepMode),
-                .attributeCount = CAST(u32, attributes.size()),
-                .attributes = attributes.data(),
+                .attributeCount = CAST(u32, attributes[attribute_index].size()),
+                .attributes = attributes[attribute_index].data(),
             };
 
+            attribute_index++;
             return wgpu_layout;
         });
 
@@ -512,7 +661,7 @@ namespace Fussion::GPU {
         WGPUPrimitiveState primitive{
             .nextInChain = nullptr,
             .topology = ToWgpu(spec.Primitive.Topology),
-            .stripIndexFormat = WGPUIndexFormat_Undefined,
+            .stripIndexFormat = ToWgpu(spec.Primitive.StripIndexFormat.ValueOr(IndexFormat::Undefined)),
             .frontFace = ToWgpu(spec.Primitive.FrontFace),
             .cullMode = ToWgpu(spec.Primitive.Cull),
         };
@@ -532,6 +681,10 @@ namespace Fussion::GPU {
         // We need to save these here because the color
         // target state gets a pointer to the blend state.
         std::vector<WGPUBlendState> blends{};
+
+        // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
+        // and dangling pointers.
+        blends.reserve(spec.Fragment.Targets.size());
 
         std::ranges::transform(spec.Fragment.Targets, std::back_inserter(color_targets), [&blends](ColorTargetState const& state) {
             WGPUColorTargetState wgpu_state{
@@ -660,6 +813,11 @@ namespace Fussion::GPU {
 
     }
 
+    void Device::Release()
+    {
+        wgpuDeviceRelease(As<WGPUDevice>());
+    }
+
     void Device::WriteBuffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const
     {
         wgpuQueueWriteBuffer(CAST(WGPUQueue, Queue), CAST(WGPUBuffer, buffer.Handle), offset, data, size);
@@ -690,7 +848,7 @@ namespace Fussion::GPU {
                 .label = "Default Queue"
             },
             .deviceLostCallback = [](WGPUDeviceLostReason reason, char const* message, void* /* pUserData */) {
-                PANIC("Device lost: {}\n\tMessage: {}", magic_enum::enum_name(reason), message);
+                PANIC("!DEVICE LOST!: \n\tREASON: {}\n\tMESSAGE: {}", magic_enum::enum_name(reason), message);
             },
             .deviceLostUserdata = this,
         };
@@ -730,13 +888,24 @@ namespace Fussion::GPU {
         Format = FromWgpu(surface_format);
     }
 
-    auto Surface::GetNextView() -> TextureView
+    auto Surface::GetNextView() const -> Result<TextureView, Error>
     {
         WGPUSurfaceTexture texture;
         wgpuSurfaceGetCurrentTexture(CAST(WGPUSurface, Handle), &texture);
 
         if (texture.status != WGPUSurfaceGetCurrentTextureStatus_Success) {
-            return {};
+            switch (texture.status) {
+            case WGPUSurfaceGetCurrentTextureStatus_Timeout:
+                return Error::Timeout;
+            case WGPUSurfaceGetCurrentTextureStatus_Outdated:
+                return Error::Outdated;
+            case WGPUSurfaceGetCurrentTextureStatus_Lost:
+                return Error::Lost;
+            case WGPUSurfaceGetCurrentTextureStatus_OutOfMemory:
+                return Error::OutOfMemory;
+            default:
+                PANIC("Unknown GetCurrentTexture error: {}", magic_enum::enum_name(texture.status));
+            }
         }
 
         WGPUTextureViewDescriptor view_descriptor;

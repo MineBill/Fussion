@@ -39,7 +39,7 @@ void AssetRegistryViewer::OnDraw()
             ImGui::TextWrapped("%s", magic_enum::enum_name(metadata.LoadState).data());
 
             ImGui::TableNextColumn();
-            ImGui::TextWrapped("%s", metadata.Path.c_str());
+            ImGui::TextWrapped("%s", metadata.Path.string().c_str());
         }
         ImGui::EndTable();
     }, { .Opened = &m_IsVisible });

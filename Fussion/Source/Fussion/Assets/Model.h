@@ -1,10 +1,9 @@
 ﻿#pragma once
 #include <Fussion/Assets/Asset.h>
-#include <Fussion/RHI/Buffer.h>
-#include <Fussion/Rendering/RenderTypes.h>
 #include <Fussion/Math/Vector2.h>
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
+#include <Fussion/GPU/GPU.h>
 
 namespace Fussion {
     struct Vertex {
@@ -19,9 +18,9 @@ namespace Fussion {
         std::vector<Vertex> Vertices{};
         Vector3 Offset{};
 
-        Ref<RHI::Buffer> VertexBuffer{};
-        Ref<RHI::Buffer> IndexBuffer{};
-        Ref<RHI::Buffer> InstanceBuffer{};
+        GPU::Buffer VertexBuffer{};
+        GPU::Buffer IndexBuffer{};
+        GPU::Buffer InstanceBuffer{};
         u32 IndexCount{};
 
         s32 MaterialIndex{};

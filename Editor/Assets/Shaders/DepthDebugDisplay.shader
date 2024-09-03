@@ -1,9 +1,11 @@
 #version 450 core
 #pragma depth_clamp: false
 
-#include "Global.glsl"
+#include "Defines.glsl"
+
 #include "Scene.glsl"
 #include "Lighting.glsl"
+#include "Global.glsl"
 
 layout (push_constant) uniform PushConstants {
     int CascadeIndex;
@@ -16,16 +18,16 @@ struct VertexOutput {
 #pragma type: vertex
 
 const vec4 plane[6] = vec4[](
-    vec4(-1.0,  1.0,  0.0, 1.0),
-    vec4(-1.0, -1.0,  0.0, 0.0),
-    vec4( 1.0, -1.0,  1.0, 0.0),
+vec4(-1.0, 1.0, 0.0, 1.0),
+vec4(-1.0, -1.0, 0.0, 0.0),
+vec4(1.0, -1.0, 1.0, 0.0),
 
-    vec4(-1.0,  1.0,  0.0, 1.0),
-    vec4( 1.0, -1.0,  1.0, 0.0),
-    vec4( 1.0,  1.0,  1.0, 1.0)
+vec4(-1.0, 1.0, 0.0, 1.0),
+vec4(1.0, -1.0, 1.0, 0.0),
+vec4(1.0, 1.0, 1.0, 1.0)
 );
 
-layout(location = 0) out VertexOutput Out;
+layout (location = 0) out VertexOutput Out;
 void Vertex()
 {
     Out.UV = plane[gl_VertexIndex].zw;
@@ -35,8 +37,7 @@ void Vertex()
 
 #pragma type: fragment
 
-#define SCENE_SET 1
-layout(set = SCENE_SET,  binding = 2) uniform sampler2DArray uShadowMapArray;
+layout (set = SCENE_SET, binding = 2) uniform sampler2DArray uShadowMapArray;
 
 layout (location = 0) out vec4 o_Color;
 
@@ -50,8 +51,8 @@ layout (location = 0) in VertexOutput In;
 void Fragment()
 {
     float depth = texture(uShadowMapArray, vec3(In.UV, u_PerObjectData.CascadeIndex)).r;
-//    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 500.0);
-//    o_Color = vec4(z, z, z, 1.0);
+    //    float z = LinearizeDepth(gl_FragCoord.z, 0.1, 500.0);
+    //    o_Color = vec4(z, z, z, 1.0);
     o_Color = vec4(depth, depth, depth, 1.0);
-//    o_Color = vec4(1, 0.2, 0.4, 1.0);
+    //    o_Color = vec4(1, 0.2, 0.4, 1.0);
 }

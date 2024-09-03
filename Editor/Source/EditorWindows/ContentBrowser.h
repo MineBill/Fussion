@@ -52,6 +52,7 @@ private:
     std::filesystem::path m_Root;
     std::filesystem::path m_CurrentPath;
     std::filesystem::path m_RelativeToRoot;
+    std::string m_RelativeToRootStringPath{};
 
     f32 m_Padding{ 8 }, m_ThumbnailSize{ 64 };
 

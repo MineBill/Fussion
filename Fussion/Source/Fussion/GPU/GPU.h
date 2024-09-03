@@ -12,6 +12,7 @@
 #include <span>
 #include <variant>
 #include <concepts>
+#include <memory_resource>
 
 template<Fussion::ScalarType T>
 struct Range {
@@ -62,8 +63,28 @@ namespace Fussion::GPU {
         virtual void Release() = 0;
     };
 
+    struct SamplerSpec {
+        Maybe<const char*> Label{};
+        AddressMode AddressModeU{};
+        AddressMode AddressModeV{};
+        AddressMode AddressModeW{};
+        FilterMode MagFilter{};
+        FilterMode MinFilter{};
+        FilterMode MipMapFilter{};
+        f32 LodMinClamp{};
+        f32 LodMaxClamp{};
+        Maybe<CompareFunction> Compare{};
+        u16 AnisotropyClamp{};
+    };
+
+    struct Sampler : GPUHandle<void> {
+        using GPUHandle::GPUHandle;
+
+        virtual void Release() override;
+    };
+
     struct BufferSpec {
-        const char* Label{};
+        Maybe<std::string_view> Label{};
         BufferUsageFlags Usage{};
         u64 Size{};
         bool Mapped{ false };
@@ -76,6 +97,7 @@ namespace Fussion::GPU {
 
         auto GetSize() const -> u64;
         auto GetSlice(u32 start, u32 size) -> BufferSlice;
+        auto GetSlice() -> BufferSlice;
 
         virtual void Release() override;
     };
@@ -87,6 +109,11 @@ namespace Fussion::GPU {
 
         BufferSlice(Buffer const& buffer, u32 start, u32 size);
         BufferSlice(Buffer const& buffer);
+
+        /// Returns the slice as a mapped ranged.
+        /// This assumes buffer was created with Mapped = true
+        /// or that this call is a result from map of the buffer.
+        auto GetMappedRange() -> void*;
     };
 
     struct TextureSpec {
@@ -97,6 +124,7 @@ namespace Fussion::GPU {
         TextureFormat Format{};
         u32 MipLevelCount{ 1 };
         u32 SampleCount{ 1 };
+        TextureAspect Aspect{};
     };
 
     struct TextureViewSpec {
@@ -116,6 +144,11 @@ namespace Fussion::GPU {
     struct TextureView final : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
+        operator HandleT() const
+        {
+            return Handle;
+        }
+
         virtual void Release() override;
     };
 
@@ -130,10 +163,6 @@ namespace Fussion::GPU {
         virtual void Release() override;
     };
 
-    struct Sampler {
-        HandleT Handle{};
-    };
-
     namespace BufferBindingType {
         struct Uniform {};
 
@@ -146,7 +175,7 @@ namespace Fussion::GPU {
 
     namespace TextureSampleType {
         struct Float {
-            bool Filterable{};
+            bool Filterable{ true };
         };
 
         struct Depth {};
@@ -160,8 +189,22 @@ namespace Fussion::GPU {
 
     namespace BindingType {
         struct Buffer {
+            /// Sub-type of the buffer binding.
             BufferBindingType::Type Type{};
+            /// Indicates that the binding has a dynamic offset.
+            /// One offset must be passed to RenderPass::set_bind_group
+            /// for each dynamic binding in increasing order of binding number.
             bool HasDynamicOffset{};
+            /// The minimum size for a BufferBinding matching this entry, in bytes.
+            /// If this is Some(size):
+            ///     When calling create_bind_group, the resource at this bind
+            ///     point must be a BindingResource::Buffer whose effective size is at least size.
+            ///     When calling create_render_pipeline or create_compute_pipeline,
+            ///     size must be at least the minimum buffer binding size for the
+            ///     shader module global at this bind point: large enough to hold the
+            ///     global’s value, along with one element of a trailing runtime-sized array, if present.
+            /// If this is None:
+            ///     Each draw or dispatch command checks that the buffer range at this bind point satisfies the minimum buffer binding size.
             Maybe<u64> MinBindingSize{};
         };
 
@@ -202,9 +245,24 @@ namespace Fussion::GPU {
         HandleT Handle{};
     };
 
+    /// Binding for uniform or storage buffers.
     struct BufferBinding {
+        /// The buffer to bind.
         Buffer Buffer{};
+
+        /// Base offset of the buffer, in bytes.
+        ///
+        /// If the has_dynamic_offset field of this buffer’s layout entry is true,
+        /// the offset here will be added to the dynamic offset passed
+        /// to RenderPass::set_bind_group or ComputePass::set_bind_group.
+        ///
+        /// If the buffer was created with BufferUsages::UNIFORM,
+        /// then this offset must be a multiple of Limits::min_uniform_buffer_offset_alignment.
+        ///
+        /// If the buffer was created with BufferUsages::STORAGE,
+        /// then this offset must be a multiple of Limits::min_storage_buffer_offset_alignment.
         u64 Offset{};
+        /// Size of the binding in bytes, or None for using the rest of the buffer.
         u64 Size{};
     };
 
@@ -225,8 +283,10 @@ namespace Fussion::GPU {
     /// described by a BindGroupLayout. It can be created with Device::CreateBindGroup.
     /// A BindGroup can be bound to a particular RenderPass with RenderPassEncoder::SetBindGroup,
     /// or to a ComputePass with ComputePassEncoder::SetBindGroup.
-    struct BindGroup {
-        HandleT Handle{};
+    struct BindGroup : GPUHandle<void> {
+        using GPUHandle::GPUHandle;
+
+        virtual void Release() override;
     };
 
     struct PipelineLayoutSpec {
@@ -240,9 +300,19 @@ namespace Fussion::GPU {
         virtual void Release() override;
     };
 
+    struct WGSLShader {
+        std::string_view Source{};
+    };
+
+    struct SPIRVShader {
+        std::span<u32> Binary{};
+    };
+
+    using ShaderType = std::variant<WGSLShader, SPIRVShader>;
+
     struct ShaderModuleSpec {
         Maybe<const char*> Label{};
-        std::string_view Source{};
+        ShaderType Type{};
 
         std::string_view VertexEntryPoint{};
         std::string_view FragmentEntryPoint{};
@@ -300,7 +370,7 @@ namespace Fussion::GPU {
         // /// The name of the entry point in the compiled shader. There must be a function with this name in the shader.
         // std::string_view EntryPoint{};
         /// The format of any vertex buffers used with this pipeline.
-        std::span<VertexBufferLayout> AttributeLayouts{};
+        std::vector<VertexBufferLayout> AttributeLayouts{};
     };
 
     struct PrimitiveState {
@@ -308,6 +378,8 @@ namespace Fussion::GPU {
         Maybe<IndexFormat> StripIndexFormat{};
         FrontFace FrontFace{};
         Face Cull{};
+
+        static auto Default() -> PrimitiveState;
     };
 
     struct StencilFaceState {
@@ -341,6 +413,8 @@ namespace Fussion::GPU {
         CompareFunction DepthCompare{};
         StencilState Stencil{};
         DepthBiasState Bias{};
+
+        static auto Default() -> DepthStencilState;
     };
 
     struct BlendComponent {
@@ -351,6 +425,8 @@ namespace Fussion::GPU {
 
     struct BlendState {
         BlendComponent Color{}, Alpha{};
+
+        static auto Default() -> BlendState;
     };
 
     struct ColorTargetState {
@@ -364,13 +440,13 @@ namespace Fussion::GPU {
     };
 
     struct FragmentStage {
-        std::span<ColorTargetState> Targets{};
+        std::vector<ColorTargetState> Targets{};
     };
 
     struct MultiSampleState {
         /// The number of samples calculated per pixel (for MSAA).
         /// For non-multi-sampled textures, this should be 1
-        u32 Count{ 1 };
+        u32 Count{};
         /// Bitmask that restricts the samples of a pixel modified by this pipeline.
         /// All samples can be enabled using the value !0
         u32 Mask{};
@@ -379,7 +455,9 @@ namespace Fussion::GPU {
         /// primitive coverage to restrict the set of samples affected by a primitive.
         /// The implicit mask produced for alpha of zero is guaranteed to be zero,
         /// and for alpha of one is guaranteed to be all 1-s.
-        bool AlphaToCoverageEnabled{ false };
+        bool AlphaToCoverageEnabled{};
+
+        static auto Default() -> MultiSampleState;
     };
 
     struct RenderPipelineSpec {
@@ -422,12 +500,16 @@ namespace Fussion::GPU {
         /// Subsequent draw calls will only draw within this region.
         /// If this method has not been called, the viewport defaults
         /// to the entire bounds of the render targets.
-        void SetViewport(Vector2 const& origin, Vector2 const& size, f32 min_depth, f32 max_depth) const;
+        void SetViewport(Vector2 const& origin, Vector2 const& size, f32 min_depth = 0.0f, f32 max_depth = 1.0f) const;
 
         void SetBindGroup(BindGroup group, u32 index) const;
         void SetVertexBuffer(u32 slot, BufferSlice const& slice) const;
+        void SetIndexBuffer(BufferSlice const& slice) const;
+        // void SetStorageBuffer(u32 slot, BufferSlice const& slice) const;
+
         void SetPipeline(RenderPipeline const& pipeline) const;
         void Draw(Range<u32> vertices, Range<u32> instances) const;
+        void DrawIndex(Range<u32> indices, Range<u32> instances) const;
 
         void End() const;
         virtual void Release() override;
@@ -443,20 +525,22 @@ namespace Fussion::GPU {
         auto BeginRendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
         auto Finish() -> CommandBuffer;
 
+        void CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
+
         void Release() const;
     };
 
-    struct Device {
-        HandleT Handle{};
+    struct Device : GPUHandle<void> {
         HandleT Queue{};
 
+        Device() = default;
         explicit Device(HandleT handle);
-        void Release() const;
 
         void SetErrorCallback(ErrorFn const& function);
 
         auto CreateBuffer(BufferSpec const& spec) const -> Buffer;
         auto CreateTexture(TextureSpec const& spec) const -> Texture;
+        auto CreateSampler(SamplerSpec const& spec) const -> Sampler;
         auto CreateCommandEncoder(const char* label = "") const -> CommandEncoder;
         auto CreateBindGroup(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup;
         auto CreateBindGroupLayout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout;
@@ -467,8 +551,21 @@ namespace Fussion::GPU {
 
         void SubmitCommandBuffer(CommandBuffer cmd) const;
 
+        /// Schedule a data write into buffer starting at offset.
+        /// This method fails if data overruns the size of buffer starting at offset.
+        /// This does not submit the transfer to the GPU immediately.
+        /// Calls to write_buffer begin execution only on the next call to Queue::submit
         void WriteBuffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const;
+
+        template<typename T>
+        void WriteBuffer(Buffer const& buffer, u64 offset, std::span<T> data) const
+        {
+            WriteBuffer(buffer, offset, data.data(), data.size_bytes());
+        }
+
         void WriteTexture(Texture const& texture, void const* data, size_t data_size, Vector2 const& origin, Vector2 const& size, u32 mip_level = 0) const;
+
+        virtual void Release() override;
 
     private:
         ErrorFn m_Function{};
@@ -487,6 +584,13 @@ namespace Fussion::GPU {
     };
 
     struct Surface {
+        enum class Error {
+            Timeout,
+            Outdated,
+            Lost,
+            OutOfMemory,
+        };
+
         struct Config {
             PresentMode PresentMode{ PresentMode::Immediate };
             Vector2 Size{};
@@ -498,7 +602,7 @@ namespace Fussion::GPU {
         void Release() const;
 
         void Configure(Device const& device, Adapter adapter, Config const& config);
-        auto GetNextView() -> TextureView;
+        auto GetNextView() const -> Result<TextureView, Error>;
         void Present() const;
     };
 
@@ -514,6 +618,8 @@ namespace Fussion::GPU {
         void Release() const;
 
         auto GetAdapter(Surface surface, AdapterOptions const& opt = {}) const -> Adapter;
+
+        // TODO: Make this take a reference.
         auto GetSurface(Window const* window) const -> Surface;
     };
 

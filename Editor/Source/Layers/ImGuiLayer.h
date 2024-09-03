@@ -1,13 +1,9 @@
 ﻿#pragma once
 #include "Fussion/Core/Layer.h"
-#include "Fussion/RHI/CommandBuffer.h"
+#include "Fussion/GPU/GPU.h"
 
-class ImGuiLayer : public Fussion::Layer {
+class ImGuiLayer final : public Fussion::Layer {
 public:
-    ImGuiLayer();
-
-    static ImGuiLayer* This() { return s_Instance; }
-
     /**
      * Init is used to set up ImGui and register some image callbacks. These callbacks are required to associate
      * created images with the ImGui backend and make them available for displaying. This means that any
@@ -18,24 +14,17 @@ public:
     virtual void OnUpdate(f32) override;
 
     void Begin();
-    void End(Ref<Fussion::RHI::CommandBuffer> const&);
 
-    /**
-     * This function will load various different fonts into ImGui. It must only be called AFTER Init.
-     */
-    void LoadFonts();
-
-    // @Todo The VkDescriptorSet could be changed to void*.
-    std::map<u64, void*> ImageToVkSet;
+    /// Calls the necessary ImGui function to end the frame.
+    /// @param encoder In the case the surface cannot return
+    /// a view, the encoder should be empty to indicate that
+    /// no rendering is to be performed.
+    void End(Maybe<Fussion::GPU::RenderPassEncoder> encoder);
 
 private:
-    static ImGuiLayer* s_Instance;
-    std::mutex m_RegistrationMutex;
+    /// This function will load various different fonts into ImGui. It must only be called AFTER Init.
+    void LoadFonts();
+    void SetupImGuiStyle();
+
+    // std::mutex m_RegistrationMutex;
 };
-
-void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image);
-
-void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view);
-
-#define IMGUI_IMAGE(image) ToImGuiTexture(image)
-

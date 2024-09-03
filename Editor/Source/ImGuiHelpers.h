@@ -3,6 +3,10 @@
 #include "Fussion/Math/Vector4.h"
 #include <imgui.h>
 
+namespace Fussion::GPU {
+    struct TextureView;
+}
+
 namespace Fussion::RHI {
     class Image;
 }
@@ -43,21 +47,21 @@ namespace ImGuiHelpers {
 
     void InputText(const char* label, std::string& value, ImGuiInputTextFlags flags = 0);
 
-    bool ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> const& image, bool& toggled, Vector2 const& size);
+    bool ImageToggleButton(const char* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size);
 
     template<typename... Args>
-    void Text(std::format_string<Args...> fmt, Args&&... args)
+    void Text(fmt::format_string<Args...> fmt, Args&&... args)
     {
-        ImGui::TextUnformatted(std::format(fmt, std::forward<Args>(args)...).c_str());
+        ImGui::TextUnformatted(fmt::format(fmt, std::forward<Args>(args)...).c_str());
     }
 
     template<typename... Args>
-    bool Button(std::format_string<Args...> fmt, Args&&... args)
+    bool Button(fmt::format_string<Args...> fmt, Args&&... args)
     {
-        return ImGui::Button(std::format(fmt, std::forward<Args>(args)...).c_str());
+        return ImGui::Button(fmt::format(fmt, std::forward<Args>(args)...).c_str());
     }
 
-    bool TreeNode(std::string_view label, Ref<Fussion::RHI::Image> const& image, ImGuiTreeNodeFlags flags = 0);
+    bool TreeNode(std::string_view label, Fussion::GPU::TextureView const& view, ImGuiTreeNodeFlags flags = 0);
 
 } // namespace ImGuiHelpers
 

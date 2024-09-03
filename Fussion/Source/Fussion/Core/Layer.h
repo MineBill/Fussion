@@ -2,7 +2,7 @@
 #include "Fussion/Core/Types.h"
 #include "Fussion/Events/Event.h"
 #include "Fussion/Log/Log.h"
-#include "Fussion/RHI/CommandBuffer.h"
+#include <Fussion/GPU/GPU.h>
 
 #include <source_location>
 
@@ -19,7 +19,7 @@ namespace Fussion {
         virtual void OnUpdate([[maybe_unused]] f32 delta) {}
         virtual void OnEvent([[maybe_unused]] Event& event) {}
 
-        virtual void OnDraw([[maybe_unused]] Ref<RHI::CommandBuffer> const& cmd) {}
+        virtual void OnDraw([[maybe_unused]] GPU::CommandEncoder& encoder) {}
 
         virtual void OnLogReceived(
             [[maybe_unused]] LogLevel level,

@@ -10,8 +10,13 @@
 
 #include <cstring>
 
-std::vector g_RequiredVulkanLayers = {
-    "VK_LAYER_KHRONOS_validation",
+enum class LayerRequirement {
+    Needed,
+    Optional,
+};
+
+std::unordered_map<const char*, LayerRequirement> g_RequiredVulkanLayers = {
+    { "VK_LAYER_KHRONOS_validation", LayerRequirement::Optional }
 };
 
 std::vector<const char*> GetRequiredExtensions()
@@ -99,12 +104,15 @@ namespace Fussion::RHI {
 
 #define USE_VALIDATION_LAYERS
 #ifdef USE_VALIDATION_LAYERS
-        CheckValidationLayers();
+        auto found_layers = CheckValidationLayers();
+        if (!found_layers) {
+            PANIC("A required validation layer was not found");
+        }
         LOG_INFO("Setting up validation layers and debug messenger");
         auto debug_utils_messenger_create_info_ext = CreateDebugMessenger();
 
-        instance_create_info.enabledLayerCount = CAST(u32, g_RequiredVulkanLayers.size());
-        instance_create_info.ppEnabledLayerNames = g_RequiredVulkanLayers.data();
+        instance_create_info.enabledLayerCount = CAST(u32, found_layers->size());
+        instance_create_info.ppEnabledLayerNames = found_layers->data();
         instance_create_info.pNext = &debug_utils_messenger_create_info_ext;
 #endif
 
@@ -121,8 +129,9 @@ namespace Fussion::RHI {
         LOG_DEBUGF("Destroying vulkan instance");
     }
 
-    bool VulkanInstance::CheckValidationLayers()
+    auto VulkanInstance::CheckValidationLayers() -> Maybe<std::vector<const char*>>
     {
+        std::vector<const char*> found_layers{};
         u32 count;
         vkEnumerateInstanceLayerProperties(&count, nullptr);
 
@@ -131,22 +140,30 @@ namespace Fussion::RHI {
 
         vkEnumerateInstanceLayerProperties(&count, properties.data());
 
-        for (auto const required : g_RequiredVulkanLayers) {
+        for (auto [name, requirement] : g_RequiredVulkanLayers) {
             bool found{ false };
 
             for (auto const& prop : properties) {
-                if (strcmp(required, prop.layerName) == 0) {
+                if (strcmp(name, prop.layerName) == 0) {
                     found = true;
                 }
             }
 
             if (!found) {
-                LOG_ERRORF("Required validation layer {} not found", required);
-                return false;
+                switch (requirement) {
+                case LayerRequirement::Needed:
+                    LOG_ERRORF("Required validation layer {} not found", name);
+                    return None();
+                case LayerRequirement::Optional:
+                    LOG_WARNF("Optional validation layer {} not found", name);
+                    break;
+                }
+            } else {
+                found_layers.push_back(name);
             }
         }
 
-        return true;
+        return found_layers;
     }
 
     auto VulkanInstance::CreateDebugMessenger() -> VkDebugUtilsMessengerCreateInfoEXT

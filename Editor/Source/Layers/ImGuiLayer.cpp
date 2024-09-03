@@ -8,7 +8,7 @@
 
 #include <imgui.h>
 #include "ImGuizmo.h"
-#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_wgpu.h>
 #include <backends/imgui_impl_glfw.h>
 #include <tracy/Tracy.hpp>
 
@@ -16,26 +16,15 @@
 #include "EditorStyle.h"
 
 #define VK_NO_PROTOTYPES
+#include "Fussion/GPU/EnumConversions.h"
 #include "Fussion/Rendering/Renderer.h"
 
-#include <vulkan/vulkan.h>
-#include "Vulkan/VulkanImage.h"
-#include "Vulkan/VulkanImageView.h"
-#include "Vulkan/Common.h"
+// #include <webgpu/webgpu.h>
+// #include <vulkan/vulkan.h>
+// #include "Vulkan/VulkanImage.h"
+// #include "Vulkan/VulkanImageView.h"
+// #include "Vulkan/Common.h"
 
-ImGuiLayer* ImGuiLayer::s_Instance;
-
-void SetupImGuiStyle();
-
-ImGuiLayer::ImGuiLayer()
-{
-    if (s_Instance != nullptr) {
-        LOG_FATAL("Multiple instances of ImGuiLayer detected. Cannot proceed.");
-        PANIC();
-    }
-
-    s_Instance = this;
-}
 
 void ImGuiLayer::LoadFonts()
 {
@@ -52,16 +41,6 @@ void ImGuiLayer::LoadFonts()
     io.FontDefault = style.Fonts[RegularNormal];
 }
 
-void* ToImGuiTexture(Ref<Fussion::RHI::Image> const& image)
-{
-    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, image->GetRenderHandle<VkImage>())];
-}
-
-void* ToImGuiTexture(Ref<Fussion::RHI::ImageView> const& view)
-{
-    return ImGuiLayer::This()->ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())];
-}
-
 void ImGuiLayer::Init()
 {
     ZoneScoped;
@@ -75,131 +54,26 @@ void ImGuiLayer::Init()
     auto& io = ImGui::GetIO();
 
     io.ConfigFlags = ImGuiConfigFlags_DockingEnable;
-#if !defined(OS_LINUX)
+#if 0
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-    auto device = Device::Instance()->As<VulkanDevice>();
     auto window = CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle());
 
-    ImGui_ImplGlfw_InitForVulkan(window, true);
+    ImGui_ImplGlfw_InitForOther(window, true);
 
-    auto pool_spec = ResourcePoolSpecification{
-        .MaxSets = 100,
-        .ResourceLimits = {
-            ResourceLimit{ ResourceType::StorageBuffer, 100 },
-            ResourceLimit{ ResourceType::CombinedImageSampler, 100 },
-            ResourceLimit{ ResourceType::UniformBuffer, 100 },
-            ResourceLimit{ ResourceType::InputAttachment, 100 },
-            ResourceLimit{ ResourceType::Sampler, 100 },
-        }
-    };
-    auto imgui_pool = device->CreateResourcePool(pool_spec);
-    auto info = ImGui_ImplVulkan_InitInfo{
-        .Instance = device->Instance->Instance,
-        .PhysicalDevice = device->PhysicalDevice,
-        .Device = device->Handle,
-        .QueueFamily = 0,
-        .Queue = *device->GraphicsQueue.UnsafePtr(),
-        .DescriptorPool = imgui_pool->GetRenderHandle<VkDescriptorPool>(),
-        .RenderPass = Renderer::GetInstance()->GetMainRenderPass()->GetRenderHandle<VkRenderPass>(),
-        .MinImageCount = 2,
-        .ImageCount = 2,
-        .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-        .PipelineCache = nullptr,
-        .Subpass = 0,
-        .UseDynamicRendering = false,
-        .Allocator = nullptr,
-        .CheckVkResultFn = [](VkResult err) {
-            if (err != VK_SUCCESS) {
-                LOG_ERRORF("Vulkan Error from imgui: {}", string_VkResult(err));
-            }
-        },
-    };
-    ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void* device) {
-        return vkGetInstanceProcAddr(CAST(VulkanDevice*, device)->Instance->Instance, function_name);
-    }, device);
-    ImGui_ImplVulkan_Init(&info);
-    Device::Instance()->RegisterImageCallback([this](Ref<Fussion::RHI::Image> const& image, bool create) {
-        std::lock_guard lock(m_RegistrationMutex);
-        if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
-            if (create) {
-                auto vk_image = image->As<VulkanImage>();
-                VkImageLayout layout;
-                auto image_layout = vk_image->GetSpec().FinalLayout;
-                switch (image_layout) {
-                case ImageLayout::Undefined:
-                case ImageLayout::ColorAttachmentOptimal: {
-                    layout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
-                }
-                break;
-                case ImageLayout::DepthStencilAttachmentOptimal: {
-                    layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-                }
-                break;
-                case ImageLayout::DepthStencilReadOnlyOptimal: {
-                    layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-                }
-                break;
-                default: {
-                    layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                }
-                break;
-                }
-
-                ImageToVkSet[TRANSMUTE(u64, vk_image->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
-                    vk_image->Sampler->GetRenderHandle<VkSampler>(),
-                    vk_image->View->GetRenderHandle<VkImageView>(), layout);
-
-            } else {
-                auto handle = TRANSMUTE(u64, image->GetRawHandle());
-                if (ImageToVkSet.contains(handle))
-                    ImGui_ImplVulkan_RemoveTexture(TRANSMUTE(VkDescriptorSet, ImageToVkSet[handle]));
-            }
-        }
-    });
-
-    Device::Instance()->RegisterImageViewCallback([this](Ref<ImageView> const& view, Ref<Fussion::RHI::Image> const& image, bool create) {
-        std::lock_guard lock(m_RegistrationMutex);
-        if (image->GetSpec().Usage.Test(ImageUsage::Sampled)) {
-            if (create) {
-                auto vk_image = image->As<VulkanImage>();
-                VkImageLayout layout;
-                auto image_layout = vk_image->GetSpec().FinalLayout;
-                switch (image_layout) {
-                case ImageLayout::Undefined:
-                case ImageLayout::ColorAttachmentOptimal: {
-                    layout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
-                }
-                break;
-                case ImageLayout::DepthStencilAttachmentOptimal: {
-                    layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-                }
-                break;
-                default: {
-                    layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                }
-                break;
-                }
-
-                ImageToVkSet[TRANSMUTE(u64, view->GetRawHandle())] = ImGui_ImplVulkan_AddTexture(
-                    vk_image->Sampler->GetRenderHandle<VkSampler>(),
-                    view->GetRenderHandle<VkImageView>(), layout);
-
-            } else {
-                auto handle = TRANSMUTE(u64, view->GetRawHandle());
-                if (ImageToVkSet.contains(handle))
-                    ImGui_ImplVulkan_RemoveTexture(TRANSMUTE(VkDescriptorSet, ImageToVkSet[handle]));
-            }
-        }
-    });
+    ImGui_ImplWGPU_InitInfo info{};
+    info.Device = Renderer::Device().As<WGPUDevice>();
+    info.RenderTargetFormat = ToWgpu(Renderer::Surface().Format);
+    ImGui_ImplWGPU_Init(&info);
 
     SetupImGuiStyle();
+    LoadFonts();
 }
 
 void ImGuiLayer::OnStart() {}
 
-void ImGuiLayer::OnUpdate(const f32 delta)
+void ImGuiLayer::OnUpdate(f32 delta)
 {
     (void)delta;
 }
@@ -208,12 +82,12 @@ void ImGuiLayer::Begin()
 {
     ZoneScoped;
     ImGui_ImplGlfw_NewFrame();
-    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplWGPU_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 }
 
-void ImGuiLayer::End(Ref<Fussion::RHI::CommandBuffer> const& cmd)
+void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
 {
     ZoneScoped;
     ImGui::Render();
@@ -224,12 +98,13 @@ void ImGuiLayer::End(Ref<Fussion::RHI::CommandBuffer> const& cmd)
         ImGui::RenderPlatformWindowsDefault();
         // ImGui::SetCurrentContext(ctx);
     }
-    if (cmd != nullptr) {
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd->GetRenderHandle<VkCommandBuffer>());
+
+    if (encoder.HasValue()) {
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->As<WGPURenderPassEncoder>());
     }
 }
 
-void SetupImGuiStyle()
+void ImGuiLayer::SetupImGuiStyle()
 {
     // Fork of Photoshop style from ImThemes
     ImGuiStyle& style = ImGui::GetStyle();

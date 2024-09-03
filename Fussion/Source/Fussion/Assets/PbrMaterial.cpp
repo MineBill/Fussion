@@ -1,11 +1,12 @@
 ﻿#include "FussionPCH.h"
 #include "PbrMaterial.h"
-
-#include <Fussion/Serialization/Serializer.h>
+#include "Rendering/Renderer.h"
+#include "Serialization/Serializer.h"
 
 Fussion::PbrMaterial::PbrMaterial()
 {
-    MaterialUniformBuffer = RHI::UniformBuffer<MaterialBlock>::Create("Material");
+    using namespace std::string_view_literals;
+    MaterialUniformBuffer = UniformBuffer<MaterialBlock>::Create(Renderer::Device(), "Material"sv);
 }
 
 void Fussion::PbrMaterial::Serialize(Serializer& ctx) const

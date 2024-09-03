@@ -53,7 +53,7 @@ class VertexAttributeLayout {
 public:
     VertexAttributeLayout() = default;
 
-    static VertexAttributeLayout Create(std::span<VertexAttribute> attributes);
+        static VertexAttributeLayout Create(std::span<VertexAttribute> attributes);
 
     std::vector<VertexAttribute> Attributes{};
     s32 Stride{};

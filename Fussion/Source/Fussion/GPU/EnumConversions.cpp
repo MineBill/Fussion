@@ -10,6 +10,8 @@ namespace Fussion::GPU {
         switch (backend) {
         case BackendRenderer::Vulkan:
             return WGPUInstanceBackend_Vulkan;
+        case BackendRenderer::DX11:
+            return WGPUInstanceBackend_DX11;
         case BackendRenderer::DX12:
             return WGPUInstanceBackend_DX12;
         case BackendRenderer::OpenGL:
@@ -174,7 +176,7 @@ namespace Fussion::GPU {
 
     auto ToWgpu(ShaderStageFlags flags) -> WGPUShaderStageFlags
     {
-        WGPUShaderStageFlags result = WGPUShaderStage_None;
+        WGPUShaderStageFlags result = 0;
         if (flags.Test(ShaderStage::Vertex))
             result |= WGPUShaderStage_Vertex;
         if (flags.Test(ShaderStage::Fragment))
@@ -227,12 +229,40 @@ namespace Fussion::GPU {
     auto ToWgpu(IndexFormat format) -> WGPUIndexFormat
     {
         switch (format) {
+        case IndexFormat::Undefined:
+            return WGPUIndexFormat_Undefined;
         case IndexFormat::U16:
             return WGPUIndexFormat_Uint16;
         case IndexFormat::U32:
             return WGPUIndexFormat_Uint32;
         }
         UNREACHABLE;
+    }
+
+    auto ToWgpu(AddressMode mode) -> WGPUAddressMode
+    {
+        switch (mode) {
+        case AddressMode::ClampToEdge:
+            return WGPUAddressMode_ClampToEdge;
+        case AddressMode::Repeat:
+            return WGPUAddressMode_Repeat;
+        case AddressMode::MirrorRepeat:
+            return WGPUAddressMode_MirrorRepeat;
+        case AddressMode::ClampToBorder:
+            PANIC("Not yet implemented in wgpu-native");
+        }
+        PANIC("AddressMode");
+    }
+
+    auto ToWgpu(FilterMode mode) -> WGPUFilterMode
+    {
+        switch (mode) {
+        case FilterMode::Linear:
+            return WGPUFilterMode_Linear;
+        case FilterMode::Nearest:
+            return WGPUFilterMode_Nearest;
+        }
+        PANIC("FilterMode");
     }
 
     auto ToWgpu(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags
@@ -308,6 +338,8 @@ namespace Fussion::GPU {
     auto ToWgpu(CompareFunction compare) -> WGPUCompareFunction
     {
         switch (compare) {
+        case CompareFunction::Undefined:
+            return WGPUCompareFunction_Undefined;
         case CompareFunction::Never:
             return WGPUCompareFunction_Never;
         case CompareFunction::Less:
@@ -380,6 +412,22 @@ namespace Fussion::GPU {
             break;
         }
         UNREACHABLE;
+    }
+
+    auto ToWgpu(TextureUsageFlags usage) -> WGPUTextureUsageFlags
+    {
+        WGPUTextureUsageFlags result = 0;
+        if (usage.Test(TextureUsage::CopyDst))
+            result |= WGPUTextureUsage_CopyDst;
+        if (usage.Test(TextureUsage::CopySrc))
+            result |= WGPUTextureUsage_CopySrc;
+        if (usage.Test(TextureUsage::RenderAttachment))
+            result |= WGPUTextureUsage_RenderAttachment;
+        if (usage.Test(TextureUsage::StorageBinding))
+            result |= WGPUTextureUsage_StorageBinding;
+        if (usage.Test(TextureUsage::TextureBinding))
+            result |= WGPUTextureUsage_TextureBinding;
+        return result;
     }
 
     auto ToWgpu(StencilOperation op) -> WGPUStencilOperation

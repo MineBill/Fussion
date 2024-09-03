@@ -33,7 +33,7 @@ namespace EUI {
             ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
 
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                Editor::Get().OpenAsset(asset_metadata.Handle);
+                Editor::Inst().OpenAsset(asset_metadata.Handle);
             }
 
             if (ImGui::BeginPopupContextItem()) {

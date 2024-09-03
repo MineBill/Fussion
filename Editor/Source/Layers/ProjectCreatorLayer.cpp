@@ -6,6 +6,7 @@
 #include "ImGuiHelpers.h"
 #include "Fussion/Core/Application.h"
 #include "Fussion/OS/Dialog.h"
+#include "Fussion/Util/TextureImporter.h"
 
 #include <imgui_internal.h>
 
@@ -18,6 +19,9 @@ void ProjectCreatorLayer::OnStart()
     ImGui::ClearWindowSettings("Window");
 
     Application::Instance()->GetWindow().SetTitle("Fussion - Project Creator");
+
+    LOG_INFOF("{}", std::filesystem::current_path());
+    m_TestTexture = TextureImporter::LoadTextureFromFile("Assets/coords.png").Value();
 }
 
 void ProjectCreatorLayer::OnUpdate(f32 delta)
@@ -53,6 +57,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         if (ImGui::BeginTabBar("MyTabBar")) {
 
             if (ImGui::BeginTabItem("Projects")) {
+                ImGui::Image(m_TestTexture->GetImage().View, ImGui::GetContentRegionAvail());
                 ImGui::EndTabItem();
             }
 

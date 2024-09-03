@@ -5,6 +5,7 @@
 namespace Fussion::GPU {
     enum class BackendRenderer {
         Vulkan,
+        DX11,
         DX12,
         OpenGL,
     };
@@ -27,20 +28,20 @@ namespace Fussion::GPU {
     BITFLAGS(BufferUsage)
 
     enum class TextureUsage {
-        None,
-        CopySrc,
-        CopyDst,
-        TextureBinding,
-        StorageBinding,
-        RenderAttachment,
+        None = 1 << 0,
+        CopySrc = 1 << 1,
+        CopyDst = 1 << 2,
+        TextureBinding = 1 << 3,
+        StorageBinding = 1 << 4,
+        RenderAttachment = 1 << 5,
     };
 
     BITFLAGS(TextureUsage);
 
     enum class ShaderStage {
-        Vertex,
-        Fragment,
-        Compute,
+        Vertex = 1 << 0,
+        Fragment = 1 << 1,
+        Compute = 1 << 2,
     };
 
     BITFLAGS(ShaderStage)
@@ -56,6 +57,18 @@ namespace Fussion::GPU {
         FifoRelaxed,
         Immediate,
         Mailbox,
+    };
+
+    enum class AddressMode {
+        ClampToEdge,
+        Repeat,
+        MirrorRepeat,
+        ClampToBorder,
+    };
+
+    enum class FilterMode {
+        Nearest = 0,
+        Linear = 1,
     };
 
     enum class ErrorType {
@@ -140,6 +153,7 @@ namespace Fussion::GPU {
     };
 
     enum class IndexFormat {
+        Undefined,
         U16,
         U32,
     };
@@ -156,6 +170,7 @@ namespace Fussion::GPU {
     };
 
     enum class CompareFunction {
+        Undefined,
         Never,
         Less,
         Equal,

@@ -32,6 +32,7 @@ namespace Fussion {
 
     void Application::Run()
     {
+        LOG_DEBUG("Initializing application");
         s_Instance = this;
         Log::DefaultLogger()->SetLogLevel(LogLevel::Debug);
         Log::DefaultLogger()->RegisterSink(MakeRef<SimpleSink>(this));
@@ -54,17 +55,19 @@ namespace Fussion {
         ScriptingEngine::Initialize();
         defer(ScriptingEngine::Shutdown());
 
-        Renderer::Init(*m_Window.get());
-        Renderer::GetInstance()->CreateDefaultRenderpasses();
+        Renderer::Initialize(*m_Window.get());
 
         OnStart();
 
-        Renderer::GetInstance()->CreateDefaultResources();
+        Renderer::Inst().CreateDefaultResources();
 
         Clock clock;
         while (!m_Quit) {
+            ZoneScopedN("Main Loop");
+
             auto const delta = CAST(f32, clock.Reset());
             Time::SetDeltaTime(delta);
+
             m_Window->Update();
             OnUpdate(delta);
 

@@ -24,17 +24,25 @@ using namespace Fussion;
 WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_AssetManager(asset_manager)
 {
     auto max_threads = std::thread::hardware_concurrency();
+    // auto max_threads = 1;
     LOG_INFOF("Creating {} worker threads for background asset loading.", max_threads);
+    m_Quit = false;
     for (u32 i = 0; i < max_threads; i++) {
         m_Workers.emplace_back(&WorkerPool::Work, this, i);
     }
 }
 
+WorkerPool::~WorkerPool()
+{
+    m_Quit = true;
+    m_ConditionVariable.notify_all();
+    for (auto& worker : m_Workers) {
+        worker.join();
+    }
+}
+
 void WorkerPool::Work(s32 index)
 {
-    auto pool = RHI::Device::Instance()->CreateCommandPool();
-    RHI::ThreadLocalCommandPool = pool;
-
     // NOTE: This probably doesn't hurt much since these are pointers to functions, no data are created.
     std::map<AssetType, Ptr<AssetSerializer>> asset_serializers{};
     asset_serializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
@@ -61,12 +69,13 @@ void WorkerPool::Work(s32 index)
         Maybe<EditorAssetMetadata> task;
         {
             std::unique_lock lock(m_Mutex);
-            // This condition variable will unblock iff m_Tasks is not empty.
-            // This is to prevent a case where the condition is notified but no tasks are available.
-            m_ConditionVariable.wait(lock, [this] { return !m_Tasks.empty(); });
 
-            task = m_Tasks.front();
-            m_Tasks.pop();
+            m_ConditionVariable.wait(lock, [this] { return !m_Tasks.empty() || m_Quit; });
+
+            if (!m_Tasks.empty()) {
+                task = m_Tasks.front();
+                m_Tasks.pop();
+            }
         }
 
         if (task.HasValue()) {
@@ -89,13 +98,10 @@ void WorkerPool::Work(s32 index)
                     });
                 }
             }
+        }
 
-            // // TODO: This whole thing screams thread safety :) m_LoadedAssets probably needs to be guarded too.
-            // m_AssetManager->m_LoadedAssets[task->Handle] = m_AssetManager->m_AssetSerializers[task->Type]->Load(*task);
-            //
-            // m_AssetManager->m_Registry.Access([&](EditorAssetManager::Registry& registry) {
-            //     registry[task->Handle].LoadState = AssetLoadState::Loaded;
-            // });
+        if (m_Quit) {
+            break;
         }
     }
 }

@@ -330,12 +330,12 @@ void Editor::OnUpdate(f32 delta)
     }
 
     // TODO: Is there a better place to put this?
-    if (m_ShadowMapDisplayOpened) {
-        EUI::Window("Shadow Map", [&] {
-            EUI::Property("Cascade Index", &m_SceneRenderer.RenderDebugOptions.CascadeIndex, EUI::PropTypeRange{ .Min = 0.0f, .Max = ShadowCascades - 1 });
-            ImGui::Image(IMGUI_IMAGE(m_SceneRenderer.GetShadowDebugFrameBuffer()->GetColorAttachment(0)), ImGui::GetContentRegionAvail());
-        }, { .Opened = &m_ShadowMapDisplayOpened });
-    }
+    // if (m_ShadowMapDisplayOpened) {
+    //     EUI::Window("Shadow Map", [&] {
+    //         EUI::Property("Cascade Index", &m_SceneRenderer.RenderDebugOptions.CascadeIndex, EUI::PropTypeRange{ .Min = 0.0f, .Max = ShadowCascades - 1 });
+    //         ImGui::Image(IMGUI_IMAGE(m_SceneRenderer.GetShadowDebugFrameBuffer()->GetColorAttachment(0)), ImGui::GetContentRegionAvail());
+    //     }, { .Opened = &m_ShadowMapDisplayOpened });
+    // }
 
     m_ViewportWindow->OnDraw();
     m_InspectorWindow->OnDraw();
@@ -420,10 +420,10 @@ void Editor::OnEvent(Event& event)
     m_ContentBrowser->OnEvent(event);
 }
 
-void Editor::OnDraw(Ref<::RHI::CommandBuffer> const& cmd)
+void Editor::OnDraw(GPU::CommandEncoder& encoder)
 {
     auto RenderEditorView = [&](Ref<Scene> const& scene) {
-        m_SceneRenderer.Render(cmd, {
+        m_SceneRenderer.Render(encoder, {
             .Camera = RenderCamera{
                 .Perspective = m_Camera.GetPerspective(),
                 .View = m_Camera.GetView(),
@@ -437,7 +437,7 @@ void Editor::OnDraw(Ref<::RHI::CommandBuffer> const& cmd)
     };
     auto RenderGameView = [&](Camera const& camera) {
         auto entity = camera.GetOwner();
-        m_SceneRenderer.Render(cmd, {
+        m_SceneRenderer.Render(encoder, {
             .Camera = RenderCamera{
                 .Perspective = camera.GetPerspective(),
                 .View = entity->Transform.GetCameraMatrix(),

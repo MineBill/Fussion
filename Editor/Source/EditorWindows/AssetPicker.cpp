@@ -44,7 +44,7 @@ void AssetPicker::Update()
             }
             size.X = texture->Metadata().Aspect() * size.Y;
 
-            EUI::ImageButton(texture->GetImage(), [&] {
+            EUI::ImageButton(texture->GetImage().View, [&] {
                 m_Member.set(m_Instance, handle);
                 m_Opened = false;
             }, { .Size = size });

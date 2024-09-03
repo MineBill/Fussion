@@ -8,6 +8,8 @@
 #include "GLFW/glfw3.h"
 #include "OS/System.h"
 
+#include <tracy/Tracy.hpp>
+
 #ifdef OS_WINDOWS
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "Glfw/glfw3native.h"
@@ -203,6 +205,7 @@ namespace Fussion {
 
     void GlfwWindow::Update()
     {
+        ZoneScopedN("Window Update");
         glfwPollEvents();
     }
 

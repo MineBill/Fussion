@@ -19,9 +19,9 @@ constexpr auto LogsFolder = "Logs";
 void Project::Initialize()
 {
     s_ActiveProject = MakePtr<Project>();
-    s_ActiveProject->m_AssetManager = MakeRef<EditorAssetManager>();
+    s_ActiveProject->m_AssetManager = MakePtr<EditorAssetManager>();
 
-    AssetManager::SetActive(s_ActiveProject->m_AssetManager);
+    AssetManager::SetActive(s_ActiveProject->m_AssetManager.get());
 }
 
 void Project::Save()

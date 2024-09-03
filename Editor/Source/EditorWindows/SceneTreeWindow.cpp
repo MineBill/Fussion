@@ -87,7 +87,7 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     ImGui::PushID(CAST(s32, CAST(u64, handle)));
     defer(ImGui::PopID());
 
-    auto opened = ImGuiH::TreeNode(entity->Name, EditorStyle::GetStyle().EditorIcons[EditorIcon::Entity]->GetImage(), flags);
+    auto opened = ImGuiH::TreeNode(entity->Name, EditorStyle::GetStyle().EditorIcons[EditorIcon::Entity]->GetImage().View, flags);
 
     if (ImGui::IsItemClicked()) {
         SelectEntity(entity->GetHandle(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));

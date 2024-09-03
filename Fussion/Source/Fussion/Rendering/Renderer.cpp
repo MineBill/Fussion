@@ -6,57 +6,100 @@
 #include "Fussion/Core/Application.h"
 #include "Fussion/Assets/PbrMaterial.h"
 
+#include <magic_enum/magic_enum.hpp>
+
 using namespace Fussion::RHI;
 
 namespace Fussion {
     Renderer* Renderer::s_Renderer = nullptr;
 
-    Renderer::~Renderer()
-    {
-        LOG_DEBUGF("Destroying renderer!");
-    }
-
-    void Renderer::Init(Window const& window)
+    void Renderer::Initialize(Window const& window)
     {
         LOG_INFO("Initializing Renderer");
         s_Renderer = new Renderer();
 
-        auto instance = Instance::Create(window);
-        auto* device = Device::Create(instance);
-        Device::SetInstance(device);
+        // auto instance = Instance::Create(window);
+        // auto* device = Device::Create(instance);
+        // Device::SetInstance(device);
+
+        auto instance = GPU::Instance::Create({
+            .Backend = GPU::BackendRenderer::Vulkan,
+        });
+
+        auto surface = instance.GetSurface(&window);
+        auto adapter = instance.GetAdapter(surface, {
+            .PowerPreference = GPU::DevicePower::HighPerformance
+        });
+
+        auto device = adapter.GetDevice();
+
+        s_Renderer->m_WindowSize = window.GetSize();
+
+        surface.Configure(device, adapter, {
+            .PresentMode = GPU::PresentMode::Immediate,
+            .Size = s_Renderer->m_WindowSize
+        });
+
+        s_Renderer->m_Device = device;
+        s_Renderer->m_Adapter = adapter;
+        s_Renderer->m_Instance = instance;
+        s_Renderer->m_Surface = surface;
+
+        // NOTE: Setting the callback on m_Device, rather than the device local variable, because
+        //       the GPU::Device will set up WGPU user data with its pointer.
+        s_Renderer->m_Device.SetErrorCallback([&](GPU::ErrorType type, std::string_view message) {
+            LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
+        });
     }
 
     void Renderer::Shutdown()
     {
-        LOG_DEBUGF("Shutdown Renderer!");
-        s_Renderer->~Renderer();
-        s_Renderer = nullptr;
+        LOG_DEBUGF("Shutting down Renderer!");
+
+        s_Renderer->m_Device.Release();
+        s_Renderer->m_Adapter.Release();
+        s_Renderer->m_Surface.Release();
+        s_Renderer->m_Instance.Release();
     }
 
-    Renderer* Renderer::GetInstance()
+    auto Renderer::Begin() -> Maybe<GPU::TextureView>
     {
-        return s_Renderer;
-    }
-
-    auto Renderer::Begin() -> std::tuple<Ref<CommandBuffer>, u32>
-    {
-        Device::Instance()->GetRenderStats().Reset();
-        auto image = s_Renderer->m_Swapchain->GetNextImage();
-        if (image.IsEmpty()) {
-            auto& window = Application::Instance()->GetWindow();
-            // @note Is there a better way to handle resizing?
-            Device::Instance()->WaitIdle();
-            s_Renderer->m_Swapchain->Resize(window.GetWidth(), window.GetHeight());
-            return {};
+        auto new_size = Application::Instance()->GetWindow().GetSize();
+        if (s_Renderer->m_WindowSize != new_size) {
+            Resize(new_size);
         }
-        s_Renderer->m_CurrentImage = *image;
-        return { s_Renderer->m_CommandBuffers.at(*image), *image };
+
+        if (s_Renderer->m_SkipRender)
+            return None();
+
+        auto view = s_Renderer->m_Surface.GetNextView();
+        if (view.IsError()) {
+            // Handle resize or the reason the view is empty
+            // ...
+            return None();
+        }
+        return view.Value();
     }
 
-    void Renderer::End(Ref<CommandBuffer> const& cmd)
+    void Renderer::End(GPU::CommandBuffer cmd)
     {
-        s_Renderer->m_Swapchain->SubmitCommandBuffer(cmd);
-        s_Renderer->m_Swapchain->Present(s_Renderer->m_CurrentImage);
+        s_Renderer->m_Device.SubmitCommandBuffer(cmd);
+        s_Renderer->m_Surface.Present();
+    }
+
+    void Renderer::Resize(Vector2 const& new_size)
+    {
+        if (new_size.IsZero()) {
+            s_Renderer->m_SkipRender = true;
+            return;
+        }
+        s_Renderer->m_SkipRender = false;
+
+        s_Renderer->m_WindowSize = new_size;
+        s_Renderer->m_Surface.Configure(s_Renderer->m_Device, s_Renderer->m_Adapter, {
+            .PresentMode = GPU::PresentMode::Immediate,
+            .Size = new_size
+        });
     }
 
     auto Renderer::DefaultNormalMap() -> AssetRef<Texture2D> { return s_Renderer->m_NormalMap; }
@@ -65,96 +108,96 @@ namespace Fussion {
 
     auto Renderer::BlackTexture() -> AssetRef<Texture2D> { return s_Renderer->m_BlackTexture; }
 
-    void Renderer::CreateDefaultRenderpasses()
-    {
-        auto& device = Device::Instance();
-        auto main_rp_spec = RenderPassSpecification{
-            .Label = "Main RenderPass",
-            .Attachments = {
-                RenderPassAttachment{
-                    .Label = "Color Attachment",
-                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                    .StoreOp = RenderPassAttachmentStoreOp::Store,
-                    .Format = ImageFormat::B8G8R8A8_UNORM,
-                    .FinalLayout = ImageLayout::PresentSrc,
-                    .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
-                },
-                RenderPassAttachment{
-                    .Label = "Depth Attachment",
-                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                    .Format = ImageFormat::D32_SFLOAT,
-                    .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
-                    .ClearDepth = 1.f,
-                }
-            },
-            .SubPasses = {
-                RenderPassSubPass{
-                    .ColorAttachments = {
-                        {
-                            .Attachment = 0,
-                            .Layout = ImageLayout::ColorAttachmentOptimal,
-                        }
-                    },
-                    .DepthStencilAttachment = RenderPassAttachmentRef{
-                        .Attachment = 1,
-                        .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-                    }
-                },
-            }
-        };
-
-        m_MainRenderPass = device->CreateRenderPass(main_rp_spec);
-
-        auto ui_rp_spec = RenderPassSpecification{
-            .Label = "UI RenderPass",
-            .Attachments = {
-                RenderPassAttachment{
-                    .Label = "Color Attachment",
-                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                    .StoreOp = RenderPassAttachmentStoreOp::Store,
-                    .Format = ImageFormat::B8G8R8A8_UNORM,
-                    .FinalLayout = ImageLayout::ColorAttachmentOptimal,
-                    .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
-                },
-                RenderPassAttachment{
-                    .Label = "Depth Attachment",
-                    .LoadOp = RenderPassAttachmentLoadOp::Clear,
-                    .Format = ImageFormat::D32_SFLOAT,
-                    .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
-                    .ClearDepth = 1.f,
-                }
-            },
-            .SubPasses = {
-                RenderPassSubPass{
-                    .ColorAttachments = {
-                        {
-                            .Attachment = 0,
-                            .Layout = ImageLayout::ColorAttachmentOptimal,
-                        }
-                    },
-                    .DepthStencilAttachment = RenderPassAttachmentRef{
-                        .Attachment = 1,
-                        .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-                    }
-                },
-            }
-        };
-
-        m_UIRenderPass = device->CreateRenderPass(ui_rp_spec);
-
-        auto& window = Application::Instance()->GetWindow();
-        auto swapchain_spec = SwapChainSpecification{
-            .Size = { CAST(f32, window.GetWidth()), CAST(f32, window.GetHeight()) },
-            .PresentMode = VideoPresentMode::Immediate,
-            .Format = ImageFormat::B8G8R8A8_UNORM,
-        };
-        m_Swapchain = device->CreateSwapchain(m_MainRenderPass, swapchain_spec);
-
-        auto cmd_spec = CommandBufferSpecification{
-            .Label = "Renderer Command Buffers",
-        };
-        m_CommandBuffers = device->GetMainCommandPool()->AllocateCommandBuffers(m_Swapchain->GetImageCount(), cmd_spec);
-    }
+    // void Renderer::CreateDefaultRenderpasses()
+    // {
+    //     auto& device = Device::Instance();
+    //     auto main_rp_spec = RenderPassSpecification{
+    //         .Label = "Main RenderPass",
+    //         .Attachments = {
+    //             RenderPassAttachment{
+    //                 .Label = "Color Attachment",
+    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
+    //                 .StoreOp = RenderPassAttachmentStoreOp::Store,
+    //                 .Format = ImageFormat::B8G8R8A8_UNORM,
+    //                 .FinalLayout = ImageLayout::PresentSrc,
+    //                 .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
+    //             },
+    //             RenderPassAttachment{
+    //                 .Label = "Depth Attachment",
+    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
+    //                 .Format = ImageFormat::D32_SFLOAT,
+    //                 .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
+    //                 .ClearDepth = 1.f,
+    //             }
+    //         },
+    //         .SubPasses = {
+    //             RenderPassSubPass{
+    //                 .ColorAttachments = {
+    //                     {
+    //                         .Attachment = 0,
+    //                         .Layout = ImageLayout::ColorAttachmentOptimal,
+    //                     }
+    //                 },
+    //                 .DepthStencilAttachment = RenderPassAttachmentRef{
+    //                     .Attachment = 1,
+    //                     .Layout = ImageLayout::DepthStencilAttachmentOptimal,
+    //                 }
+    //             },
+    //         }
+    //     };
+    //
+    //     m_MainRenderPass = device->CreateRenderPass(main_rp_spec);
+    //
+    //     auto ui_rp_spec = RenderPassSpecification{
+    //         .Label = "UI RenderPass",
+    //         .Attachments = {
+    //             RenderPassAttachment{
+    //                 .Label = "Color Attachment",
+    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
+    //                 .StoreOp = RenderPassAttachmentStoreOp::Store,
+    //                 .Format = ImageFormat::B8G8R8A8_UNORM,
+    //                 .FinalLayout = ImageLayout::ColorAttachmentOptimal,
+    //                 .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
+    //             },
+    //             RenderPassAttachment{
+    //                 .Label = "Depth Attachment",
+    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
+    //                 .Format = ImageFormat::D32_SFLOAT,
+    //                 .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
+    //                 .ClearDepth = 1.f,
+    //             }
+    //         },
+    //         .SubPasses = {
+    //             RenderPassSubPass{
+    //                 .ColorAttachments = {
+    //                     {
+    //                         .Attachment = 0,
+    //                         .Layout = ImageLayout::ColorAttachmentOptimal,
+    //                     }
+    //                 },
+    //                 .DepthStencilAttachment = RenderPassAttachmentRef{
+    //                     .Attachment = 1,
+    //                     .Layout = ImageLayout::DepthStencilAttachmentOptimal,
+    //                 }
+    //             },
+    //         }
+    //     };
+    //
+    //     m_UIRenderPass = device->CreateRenderPass(ui_rp_spec);
+    //
+    //     auto& window = Application::Instance()->GetWindow();
+    //     auto swapchain_spec = SwapChainSpecification{
+    //         .Size = { CAST(f32, window.GetWidth()), CAST(f32, window.GetHeight()) },
+    //         .PresentMode = VideoPresentMode::Immediate,
+    //         .Format = ImageFormat::B8G8R8A8_UNORM,
+    //     };
+    //     m_Swapchain = device->CreateSwapchain(m_MainRenderPass, swapchain_spec);
+    //
+    //     auto cmd_spec = CommandBufferSpecification{
+    //         .Label = "Renderer Command Buffers",
+    //     };
+    //     m_CommandBuffers = device->GetMainCommandPool()->AllocateCommandBuffers(m_Swapchain->GetImageCount(), cmd_spec);
+    // }
 
     static unsigned char g_white_texture_png[] = {
 #include "white_texture.png.h"
@@ -174,9 +217,9 @@ namespace Fussion {
         material->ObjectColor = Color(1, 1, 1, 1);
         s_Renderer->m_DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
 
-        s_Renderer->m_WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png), "Default White Texture");
-        s_Renderer->m_BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png), "Default Black Texture");
-        s_Renderer->m_NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true), "Default Normal Map");
+        s_Renderer->m_WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png).Value(), "Default White Texture");
+        s_Renderer->m_BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png).Value(), "Default Black Texture");
+        s_Renderer->m_NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Value(), "Default Normal Map");
 
     }
 }

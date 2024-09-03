@@ -2,27 +2,29 @@
 #include <Fussion/RHI/Device.h>
 #include <Fussion/Assets/AssetRef.h>
 #include <Fussion/Assets/PbrMaterial.h>
+#include <Fussion/GPU/GPU.h>
 
 namespace Fussion {
     class Renderer {
     public:
-        ~Renderer();
-
-        static void Init(Window const& window);
+        static void Initialize(Window const& window);
         static void Shutdown();
-        static Renderer* GetInstance();
 
-        static auto Begin() -> std::tuple<Ref<RHI::CommandBuffer>, u32>;
-        static void End(Ref<RHI::CommandBuffer> const& cmd);
+        static Renderer& Inst() { return *s_Renderer; }
 
-        [[nodiscard]]
-        Ref<RHI::RenderPass> GetMainRenderPass() const { return m_MainRenderPass; }
+        static auto Begin() -> Maybe<GPU::TextureView>;
+        static void End(GPU::CommandBuffer cmd);
+        static void Resize(Vector2 const& new_size);
 
-        [[nodiscard]]
-        Ref<RHI::RenderPass> GetUIRenderPass() const { return m_UIRenderPass; }
+        static auto Device() -> GPU::Device&
+        {
+            return s_Renderer->m_Device;
+        }
 
-        [[nodiscard]]
-        Ref<RHI::Swapchain> GetSwapchain() const { return m_Swapchain; }
+        static auto Surface() -> GPU::Surface&
+        {
+            return s_Renderer->m_Surface;
+        }
 
         [[nodiscard]]
         static auto GetDefaultMaterial() -> AssetRef<PbrMaterial> { return s_Renderer->m_DefaultMaterial; }
@@ -36,20 +38,20 @@ namespace Fussion {
         [[nodiscard]]
         static auto BlackTexture() -> AssetRef<Texture2D>;
 
-        void CreateDefaultRenderpasses();
         void CreateDefaultResources();
 
     private:
         static Renderer* s_Renderer;
 
-        Ref<RHI::RenderPass> m_MainRenderPass{}, m_UIRenderPass{};
-        Ref<RHI::Swapchain> m_Swapchain{};
-        std::vector<Ref<RHI::CommandBuffer>> m_CommandBuffers{};
-        u32 m_CurrentImage{};
-
         AssetRef<PbrMaterial> m_DefaultMaterial;
         AssetRef<Texture2D> m_WhiteTexture, m_BlackTexture, m_NormalMap;
 
-        RHI::Device* m_Device{};
+        Vector2 m_WindowSize{};
+        bool m_SkipRender{};
+
+        GPU::Instance m_Instance{};
+        GPU::Device m_Device{};
+        GPU::Adapter m_Adapter{};
+        GPU::Surface m_Surface{};
     };
 }

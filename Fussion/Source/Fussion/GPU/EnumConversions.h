@@ -24,6 +24,9 @@ namespace Fussion::GPU {
     auto ToWgpu(PrimitiveTopology topology) -> WGPUPrimitiveTopology;
     auto ToWgpu(IndexFormat format) -> WGPUIndexFormat;
 
+    auto ToWgpu(AddressMode mode) -> WGPUAddressMode;
+    auto ToWgpu(FilterMode mode) -> WGPUFilterMode;
+
     auto ToWgpu(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags;
 
     auto ToWgpu(ElementType type) -> WGPUVertexFormat;
@@ -35,6 +38,8 @@ namespace Fussion::GPU {
     auto ToWgpu(CompareFunction compare) -> WGPUCompareFunction;
     auto ToWgpu(BlendOperation op) -> WGPUBlendOperation;
     auto ToWgpu(BlendFactor factor) -> WGPUBlendFactor;
+
+    auto ToWgpu(TextureUsageFlags usage) -> WGPUTextureUsageFlags;
 
     auto ToWgpu(StencilOperation op) -> WGPUStencilOperation;
 

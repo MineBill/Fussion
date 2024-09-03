@@ -2,13 +2,15 @@
 #include "ShaderCompiler.h"
 #include "Device.h"
 #include "OS/FileSystem.h"
-#include "Vulkan/Common.h"
 
 #include <shaderc/shaderc.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
-#include <sstream>
+#include <spirv-tools/linker.hpp>
+
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
+
+#include <sstream>
 #include <cstring>
 
 namespace Fussion::RHI {
@@ -180,27 +182,26 @@ namespace Fussion::RHI {
         }
     };
 
-    auto ShaderCompiler::Compile(std::string const& source_code, std::string const& file_name) -> Maybe<CompileResult>
+    auto ShaderCompiler::Compile(std::string const& source_code, std::string const& file_name) -> Maybe<CompiledShader>
     {
-        std::vector<ShaderStage> ret;
-        ShaderMetadata metadata;
+        CompiledShader shader;
 
         std::string vertex, fragment;
-        PreProcessShader(source_code, vertex, fragment, metadata.ParsedPragmas);
+        PreProcessShader(source_code, vertex, fragment, shader.Metadata.ParsedPragmas);
 
         using namespace std::string_literals;
 
-        if (auto pragma = std::ranges::find_if(metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
+        if (auto pragma = std::ranges::find_if(shader.Metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
             return pragma.Key == "samples";
-        }); pragma != metadata.ParsedPragmas.end()) {
+        }); pragma != shader.Metadata.ParsedPragmas.end()) {
             auto samples = atoi(pragma->Value.data());
-            metadata.Samples = CAST(u32, samples);
+            shader.Metadata.Samples = CAST(u32, samples);
         }
 
-        if (auto pragma = std::ranges::find_if(metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
+        if (auto pragma = std::ranges::find_if(shader.Metadata.ParsedPragmas, [](ParsedPragma const& pragma) {
             return pragma.Key == "blending";
-        }); pragma != metadata.ParsedPragmas.end()) {
-            metadata.UseBlending = pragma->Value == "on";
+        }); pragma != shader.Metadata.ParsedPragmas.end()) {
+            shader.Metadata.UseBlending = pragma->Value == "on";
         }
 
         shaderc::Compiler compiler;
@@ -208,45 +209,75 @@ namespace Fussion::RHI {
 
         // Needed to keep names.
         options.SetGenerateDebugInfo();
-        options.SetPreserveBindings(true);
-        options.SetTargetEnvironment(shaderc_target_env_vulkan, VK_MAKE_VERSION(1, 3, 0));
-        options.SetAutoBindUniforms(true);
-        options.SetAutoMapLocations(true);
+        // options.SetPreserveBindings(true);
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+        // options.SetAutoBindUniforms(true);
+        // options.SetAutoMapLocations(true);
         options.AddMacroDefinition("Vertex", "main");
         options.AddMacroDefinition("Fragment", "main");
 
         auto includer = MakePtr<Includer>();
         options.SetIncluder(std::move(includer));
 
-        auto result = compiler.CompileGlslToSpv(vertex.c_str(), vertex.size(), shaderc_vertex_shader, file_name.data(), options);
+        auto result = compiler.CompileGlslToSpv(vertex.c_str(), vertex.size(), shaderc_vertex_shader, file_name.data(), "main", options);
         VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
             LOG_ERRORF("Shader compilation failed:\n{}", result.GetErrorMessage());
-            return {};
+            return None();
         }
 
         auto vertex_stage = ShaderStage{
             .Type = ShaderType::Vertex,
             .Bytecode = { result.begin(), result.end() },
         };
-        ret.emplace_back(vertex_stage);
+        shader.ShaderStages.emplace_back(vertex_stage);
 
-        result = compiler.CompileGlslToSpv(fragment.c_str(), fragment.size(), shaderc_fragment_shader, file_name.data(), options);
+        result = compiler.CompileGlslToSpv(fragment.c_str(), fragment.size(), shaderc_fragment_shader, file_name.data(), "main", options);
         VERIFY(result.GetCompilationStatus() != shaderc_compilation_status_internal_error);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
             LOG_ERRORF("Shader compilation failed:\n{}", result.GetErrorMessage());
-            return {};
+            return None();
         }
 
         auto fragment_stage = ShaderStage{
             .Type = ShaderType::Fragment,
             .Bytecode = { result.begin(), result.end() },
         };
-        ret.emplace_back(fragment_stage);
+        shader.ShaderStages.emplace_back(fragment_stage);
 
-        auto& device = Device::Instance();
+        spvtools::Context link_context{ SPV_ENV_VULKAN_1_3 };
+        link_context.SetMessageConsumer([](spv_message_level_t level, const char* source,
+            const spv_position_t& position, const char* message) {
+                switch (level) {
+                case SPV_MSG_FATAL:
+                    LOG_FATALF("FATAL LINKER ERROR: {}", message);
+                    break;
+                case SPV_MSG_INTERNAL_ERROR:
+                    LOG_FATALF("INTERNAL LINKER ERROR: {}", message);
+                    break;
+                case SPV_MSG_ERROR:
+                    LOG_ERRORF("LINKER ERROR: {}", message);
+                    break;
+                case SPV_MSG_WARNING:
+                    LOG_WARNF("LINKER WARN: {}", message);
+                    break;
+                case SPV_MSG_INFO:
+                    LOG_INFOF("LINKER INFO: {}", message);
+                    break;
+                case SPV_MSG_DEBUG:
+                    LOG_DEBUG("LINKER DEBUG: {}", message);
+                    break;
+                }
+            });
+        spvtools::LinkerOptions link_options{};
+        link_options.SetCreateLibrary(true);
+
+        auto link_result = Link(link_context, { vertex_stage.Bytecode, fragment_stage.Bytecode }, &shader.LinkedStage, link_options);
+        if (link_result != SPV_SUCCESS) {
+            LOG_ERRORF("Linking result: {}", magic_enum::enum_name(link_result));
+        }
 
         // ==============
         //  Vertex Stage
@@ -265,14 +296,14 @@ namespace Fussion::RHI {
 
                 ElementType element = SpirvTypeToElementType(attribute_type, type.vecsize);
                 // LOG_DEBUGF("Vertex attribute at location {} with {} named {}", location, magic_enum::enum_name(element), input.name);
-                metadata.VertexAttributes.push_back(VertexAttribute{
+                shader.Metadata.VertexAttributes.push_back(VertexAttribute{
                     .Name = input.name,
                     .Type = element,
                     .Location = location,
                 });
             }
 
-            std::ranges::sort(metadata.VertexAttributes, [](VertexAttribute const& a, VertexAttribute const& b) {
+            std::ranges::sort(shader.Metadata.VertexAttributes, [](VertexAttribute const& a, VertexAttribute const& b) {
                 return a.Location < b.Location;
             });
 
@@ -280,12 +311,12 @@ namespace Fussion::RHI {
                 auto set = reflection_compiler.get_decoration(input.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(input.id, spv::DecorationBinding);
 
-                if (metadata.Uniforms[set].contains(binding)) {
+                if (shader.Metadata.Uniforms[set].contains(binding)) {
                     LOG_ERRORF("Shader delcared binding {}, of set {}, multiple times.", binding, set);
                     LOG_ERRORF("\tName: {}", input.name);
                 }
 
-                auto& usage = metadata.Uniforms[set][binding];
+                auto& usage = shader.Metadata.Uniforms[set][binding];
                 usage.Label = input.name;
                 usage.Type = ResourceType::UniformBuffer;
                 usage.Count = 1;
@@ -297,12 +328,12 @@ namespace Fussion::RHI {
                 auto set = reflection_compiler.get_decoration(storage.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(storage.id, spv::DecorationBinding);
 
-                if (metadata.Uniforms[set].contains(binding)) {
+                if (shader.Metadata.Uniforms[set].contains(binding)) {
                     LOG_ERRORF("Shader delcared binding {}, of set {}, multiple times.", binding, set);
                     LOG_ERRORF("\tName: {}", storage.name);
                 }
 
-                auto& usage = metadata.Uniforms[set][binding];
+                auto& usage = shader.Metadata.Uniforms[set][binding];
                 usage.Label = storage.name;
                 usage.Type = ResourceType::StorageBuffer;
                 usage.Count = 1;
@@ -314,7 +345,7 @@ namespace Fussion::RHI {
                 auto const& type = reflection_compiler.get_type(push.type_id);
                 auto struct_size = reflection_compiler.get_declared_struct_size(type);
                 // LOG_DEBUGF("Push constant '{}' with size '{}'", push.name, struct_size);
-                metadata.PushConstants.push_back(PushConstant{
+                shader.Metadata.PushConstants.push_back(PushConstant{
                     .Stage = ShaderType::Vertex,
                     .Name = push.name,
                     .Size = struct_size,
@@ -333,9 +364,9 @@ namespace Fussion::RHI {
                 auto set = reflection_compiler.get_decoration(input.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(input.id, spv::DecorationBinding);
 
-                if (!metadata.Uniforms.contains(set)) {
-                    if (!metadata.Uniforms[set].contains(binding)) {
-                        auto& usage = metadata.Uniforms[set][binding];
+                if (!shader.Metadata.Uniforms.contains(set)) {
+                    if (!shader.Metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Label = input.name;
                         usage.Type = ResourceType::UniformBuffer;
                         usage.Count = 1;
@@ -343,15 +374,15 @@ namespace Fussion::RHI {
                         usage.Binding = binding;
                     }
                 } else {
-                    if (!metadata.Uniforms[set].contains(binding)) {
-                        auto& usage = metadata.Uniforms[set][binding];
+                    if (!shader.Metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Label = input.name;
                         usage.Type = ResourceType::UniformBuffer;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
                         usage.Binding = binding;
                     } else {
-                        auto& usage = metadata.Uniforms[set][binding];
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Stages = usage.Stages | ShaderType::Fragment;
                     }
                 }
@@ -361,9 +392,9 @@ namespace Fussion::RHI {
                 auto set = reflection_compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
                 auto binding = reflection_compiler.get_decoration(image.id, spv::DecorationBinding);
 
-                if (!metadata.Uniforms.contains(set)) {
-                    if (!metadata.Uniforms[set].contains(binding)) {
-                        auto& usage = metadata.Uniforms[set][binding];
+                if (!shader.Metadata.Uniforms.contains(set)) {
+                    if (!shader.Metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Label = image.name;
                         usage.Type = ResourceType::CombinedImageSampler;
                         usage.Count = 1;
@@ -371,15 +402,15 @@ namespace Fussion::RHI {
                         usage.Binding = binding;
                     }
                 } else {
-                    if (!metadata.Uniforms[set].contains(binding)) {
-                        auto& usage = metadata.Uniforms[set][binding];
+                    if (!shader.Metadata.Uniforms[set].contains(binding)) {
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Label = image.name;
                         usage.Type = ResourceType::CombinedImageSampler;
                         usage.Count = 1;
                         usage.Stages = ShaderType::Fragment;
                         usage.Binding = binding;
                     } else {
-                        auto& usage = metadata.Uniforms[set][binding];
+                        auto& usage = shader.Metadata.Uniforms[set][binding];
                         usage.Stages = usage.Stages | ShaderType::Fragment;
                     }
                 }
@@ -387,18 +418,18 @@ namespace Fussion::RHI {
 
             for (const auto& output : resources.stage_outputs) {
                 auto location = reflection_compiler.get_decoration(output.id, spv::DecorationLocation);
-                metadata.ColorOutputs.push_back(location);
+                shader.Metadata.ColorOutputs.push_back(location);
             }
 
             for (auto const& push : resources.push_constant_buffers) {
                 auto const& type = reflection_compiler.get_type(push.type_id);
                 auto struct_size = reflection_compiler.get_declared_struct_size(type);
-                auto pos = std::ranges::find_if(metadata.PushConstants, [&push](PushConstant const& pc) -> bool {
+                auto pos = std::ranges::find_if(shader.Metadata.PushConstants, [&push](PushConstant const& pc) -> bool {
                     return pc.Name == push.name;
                 });
 
-                if (pos != metadata.PushConstants.end()) {
-                    metadata.PushConstants.push_back(PushConstant{
+                if (pos != shader.Metadata.PushConstants.end()) {
+                    shader.Metadata.PushConstants.push_back(PushConstant{
                         .Stage = ShaderType::Fragment,
                         .Name = push.name,
                         .Size = struct_size,
@@ -407,6 +438,6 @@ namespace Fussion::RHI {
             }
         }
 
-        return CompileResult{ ret, metadata };
+        return shader;
     }
 }

@@ -212,13 +212,15 @@ namespace Fussion {
         REGISTER_ENUM(RHI::FilterMode)
         REGISTER_ENUM(RHI::WrapMode)
 
+        REGISTER_ENUM(GPU::TextureFormat);
+
         meta::class_<AssetMetadata>(metadata_()("Name"s, "AssetMetadata"s));
 
         meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DMetadata"s))
             .constructor_<>(as_raw_pointer)
             .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap, as_pointer)
-            .member_("Filter", &Texture2DMetadata::Filter, as_pointer)
-            .member_("Wrap", &Texture2DMetadata::Wrap, as_pointer)
+            // .member_("Filter", &Texture2DMetadata::Filter, as_pointer)
+            // .member_("Wrap", &Texture2DMetadata::Wrap, as_pointer)
             .member_("Format", &Texture2DMetadata::Format, as_pointer);
     }
 }

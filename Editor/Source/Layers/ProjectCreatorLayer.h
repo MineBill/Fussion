@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Layer.h"
 
 class ProjectCreatorLayer final : public Fussion::Layer {
@@ -13,4 +14,6 @@ private:
 
     bool m_OpenNewProjectPopup{};
     bool m_ProjectNameValidated{ false };
+
+    Ref<Fussion::Texture2D> m_TestTexture{};
 };

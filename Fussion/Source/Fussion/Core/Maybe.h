@@ -4,10 +4,16 @@
 #include <type_traits>
 
 namespace Fussion {
+
+    struct None {};
+
     template<typename T>
     class Maybe {
+
     public:
-        constexpr Maybe(): m_NullableValue(nullptr) {}
+        explicit constexpr Maybe(): m_NullableValue(nullptr) {}
+        constexpr Maybe(None): Maybe() {}
+
         constexpr ~Maybe() { Reset(); }
 
         constexpr Maybe(T const& _value):
@@ -90,6 +96,7 @@ namespace Fussion {
 
         constexpr T& Value() const
         {
+            VERIFY(m_NullableValue, "Tried to access empty Maybe");
             return *m_NullableValue;
         }
 

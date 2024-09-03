@@ -6,11 +6,11 @@
 namespace Fussion {
     class TextureImporter {
     public:
-        static auto LoadImageFromMemory(std::span<u8> data) -> Image;
-        static auto LoadImageFromFile(std::filesystem::path const& path) -> Image;
-        static auto LoadTextureFromFile(std::filesystem::path const& path) -> Ref<Texture2D>;
-        static auto LoadTextureFromMemory(std::span<u8> data, bool is_normal_map = false) -> Ref<Texture2D>;
+        static auto LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>;
+        static auto LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>;
+        static auto LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>;
+        static auto LoadTextureFromMemory(std::span<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
 
-        static void SaveImageToFile(Ref<RHI::Image> const& image, std::filesystem::path const& path);
+        static void SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path);
     };
 }

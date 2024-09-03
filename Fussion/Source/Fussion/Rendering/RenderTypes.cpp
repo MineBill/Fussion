@@ -8,12 +8,13 @@ namespace Fussion {
         size_t index = RenderObjects.size();
         RenderObjects.push_back(obj);
 
-        MeshRenderLists[obj.VertexBuffer].push_back(index);
+        MeshRenderLists[obj.VertexBuffer.Handle].push_back(index);
     }
 
     void RenderContext::Reset()
     {
         RenderObjects.clear();
+        DirectionalLights.clear();
 
         for (auto& list : MeshRenderLists) {
             list.second.clear();

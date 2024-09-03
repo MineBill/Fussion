@@ -16,7 +16,7 @@ void ConsoleWindow::OnStart() {}
 void ConsoleWindow::OnDraw()
 {
     ZoneScoped;
-    auto const& entries = Editor::Get().GetLogEntries();
+    auto const& entries = Editor::Inst().GetLogEntries();
     std::ranges::copy(entries, std::back_inserter(m_LogEntries));
 
     if (ImGui::Begin("Console")) {
@@ -25,11 +25,11 @@ void ConsoleWindow::OnDraw()
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(5, 5));
 
         auto& style = EditorStyle::GetStyle();
-        ImGuiH::ImageToggleButton("##info_toggle", style.EditorIcons[EditorIcon::Info]->GetImage(), m_InfoEnable, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##info_toggle", style.EditorIcons[EditorIcon::Info]->GetImage().View, m_InfoEnable, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##warn_toggle", style.EditorIcons[EditorIcon::Warning]->GetImage(), m_WarningEnabled, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##warn_toggle", style.EditorIcons[EditorIcon::Warning]->GetImage().View, m_WarningEnabled, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##error_toggle", style.EditorIcons[EditorIcon::Error]->GetImage(), m_ErrorEnabled, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##error_toggle", style.EditorIcons[EditorIcon::Error]->GetImage().View, m_ErrorEnabled, Vector2(15, 15));
 
         ImGui::PopStyleVar();
 

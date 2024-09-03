@@ -17,8 +17,8 @@ void Texture2DWindow::OnDraw(f32 delta)
     ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
     {
         auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
-        modified |= EUI::Property("Wrapping", &settings->Wrap);
-        modified |= EUI::Property("Filter", &settings->Filter);
+        // modified |= EUI::Property("Wrapping", &settings->Wrap);
+        // modified |= EUI::Property("Filter", &settings->Filter);
         modified |= EUI::Property("Format", &settings->Format);
         modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
         if (modified) {
@@ -41,7 +41,7 @@ void Texture2DWindow::OnDraw(f32 delta)
 
         size.x = texture->Metadata().Aspect() * size.y;
 
-        ImGui::Image(IMGUI_IMAGE(texture->GetImage()), size, m_UvO, m_Uv1);
+        ImGui::Image(texture->GetImage().View, size, m_UvO, m_Uv1);
     }
     ImGui::EndChild();
 }

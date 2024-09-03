@@ -26,15 +26,15 @@ namespace EUI {
 
     struct ImageButtonParams {
         ButtonStyles StyleType = ButtonStyleImageButton;
-        Maybe<f32> Alignment;
-        Maybe<Vector2> Size;
+        Maybe<f32> Alignment{};
+        Maybe<Vector2> Size{};
         bool Disabled = false;
     };
 
     /// Draws a button with a texture.
-    /// @param image The texture to use.
+    /// @param texture The texture to use.
     /// @param func The callback to call when the button is pressed.
-    void ImageButton(Ref<Fussion::RHI::Image> const& image, auto&& func, ImageButtonParams params = {})
+    void ImageButton(Fussion::GPU::TextureView const& texture, auto&& func, ImageButtonParams params = {})
     {
         auto style = Detail::GetButtonStyle(params.StyleType);
 
@@ -62,7 +62,7 @@ namespace EUI {
         if (params.Disabled)
             ImGui::BeginDisabled();
 
-        bool pressed = ImGui::ImageButton(IMGUI_IMAGE(image), size);
+        bool pressed = ImGui::ImageButton(texture, size);
         ImGui::PopStyleVar(3);
         ImGui::PopStyleColor(6);
 
@@ -76,7 +76,7 @@ namespace EUI {
 
     void ImageButton(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
     {
-        ImageButton(texture->GetImage(), func, params);
+        ImageButton(texture->GetImage().View, func, params);
     }
 
     void AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data);

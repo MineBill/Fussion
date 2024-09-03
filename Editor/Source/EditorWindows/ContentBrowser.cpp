@@ -49,7 +49,7 @@ void ContentBrowser::NamePopup::Update()
         }
 
         if (m_ShowError) {
-            ImGui::Image(IMGUI_IMAGE(EditorStyle::GetStyle().EditorIcons[EditorIcon::Error]->GetImage()), Vector2(16, 16));
+            ImGui::Image(EditorStyle::GetStyle().EditorIcons[EditorIcon::Error]->GetImage().View, Vector2(16, 16));
             ImGui::SameLine();
             ImGui::TextUnformatted("Path already exists");
         }
@@ -109,7 +109,7 @@ void ContentBrowser::OnDraw()
         ImGui::Spacing();
         ImGui::SameLine();
 
-        ImGuiH::Text("Path: {}", m_RelativeToRoot.string());
+        ImGuiH::Text("Path: {}", m_RelativeToRootStringPath);
 
         ImGui::SameLine();
         auto width = ImGui::GetContentRegionAvail().x - (16 * 2 + ImGui::GetStyle().FramePadding.x);
@@ -180,10 +180,12 @@ void ContentBrowser::OnDraw()
 
         if (m_CurrentPath != m_Root) {
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
-            ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::FolderBack]->GetImage()), size);
+            ImGui::ImageButton(style.EditorIcons[EditorIcon::FolderBack]->GetImage().View, size);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                 ChangeDirectory(m_CurrentPath.parent_path());
             }
+            ImGui::TextWrapped("..");
+            ImGui::NextColumn();
         }
 
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
@@ -194,7 +196,7 @@ void ContentBrowser::OnDraw()
             Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
 
             if (entry.IsDirectory) {
-                ImGui::ImageButton(IMGUI_IMAGE(style.EditorIcons[EditorIcon::Folder]->GetImage()), size);
+                ImGui::ImageButton(style.EditorIcons[EditorIcon::Folder]->GetImage().View, size);
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     requested_directory_change = entry.Path;
                     break;
@@ -237,7 +239,7 @@ void ContentBrowser::OnDraw()
                     PANIC("idk");
                 }
 
-                ImGui::ImageButton(IMGUI_IMAGE(texture->GetImage()), size);
+                ImGui::ImageButton(texture->GetImage().View, size);
 
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     m_Editor->OpenAsset(entry.Metadata.Handle);
@@ -268,6 +270,7 @@ void ContentBrowser::ChangeDirectory(fs::path const& path) // NOLINT(performance
 {
     m_CurrentPath = path;
     m_RelativeToRoot = fs::relative(m_CurrentPath, m_Root);
+    m_RelativeToRootStringPath = m_RelativeToRoot.string();
 
     m_Entries.clear();
     for (auto const& entry : fs::directory_iterator(path)) {

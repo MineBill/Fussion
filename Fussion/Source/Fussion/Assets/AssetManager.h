@@ -5,7 +5,7 @@
 namespace Fussion {
 class AssetManager {
 public:
-    static void SetActive(Ref<AssetManagerBase>);
+    static void SetActive(AssetManagerBase*);
 
     static AssetHandle CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
     {
@@ -71,6 +71,6 @@ public:
     }
 
 private:
-    static Ref<AssetManagerBase> s_Active;
+    static AssetManagerBase* s_Active;
 };
 }

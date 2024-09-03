@@ -5,70 +5,70 @@
 #include "Fussion/Events/Event.h"
 
 namespace Fussion {
-class Application {
-public:
-    virtual ~Application();
+    class Application {
+    public:
+        virtual ~Application();
 
-    virtual void OnStart()
-    {
-        for (auto const& layer : m_Layers) {
-            layer->OnStart();
-        }
-    }
-
-    virtual void OnUpdate(f32 delta)
-    {
-        for (auto const& layer : m_Layers) {
-            layer->OnUpdate(delta);
-        }
-    }
-
-    virtual void OnEvent(Event& event)
-    {
-        for (auto const& layer : m_Layers) {
-            if (event.Handled) {
-                break;
+        virtual void OnStart()
+        {
+            for (auto const& layer : m_Layers) {
+                layer->OnStart();
             }
-            layer->OnEvent(event);
         }
-    }
 
-    virtual void OnLogReceived(
-        LogLevel level,
-        std::string_view message,
-        std::source_location const& loc)
-    {
-        for (auto const& layer : m_Layers) {
-            layer->OnLogReceived(level, message, loc);
+        virtual void OnUpdate(f32 delta)
+        {
+            for (auto const& layer : m_Layers) {
+                layer->OnUpdate(delta);
+            }
         }
-    }
 
-    Window& GetWindow() const { return *m_Window.get(); }
-    static Application* Instance() { return s_Instance; }
+        virtual void OnEvent(Event& event)
+        {
+            for (auto const& layer : m_Layers) {
+                if (event.Handled) {
+                    break;
+                }
+                layer->OnEvent(event);
+            }
+        }
 
-    void Run();
+        virtual void OnLogReceived(
+            LogLevel level,
+            std::string_view message,
+            std::source_location const& loc)
+        {
+            for (auto const& layer : m_Layers) {
+                layer->OnLogReceived(level, message, loc);
+            }
+        }
 
-    Layer* PushLayer(Ptr<Layer> layer);
+        Window& GetWindow() const { return *m_Window.get(); }
+        static Application* Instance() { return s_Instance; }
 
-    template<std::derived_from<Layer> T>
-    T* PushLayer()
-    {
-        auto layer = MakePtr<T>();
-        return dynamic_cast<T*>(PushLayer(std::move(layer)));
-    }
+        void Run();
 
-    void PopLayer();
+        Layer* PushLayer(Ptr<Layer> layer);
 
-    void Quit();
+        template<std::derived_from<Layer> T>
+        T* PushLayer()
+        {
+            auto layer = MakePtr<T>();
+            return dynamic_cast<T*>(PushLayer(std::move(layer)));
+        }
 
-protected:
-    std::vector<Ptr<Layer>> m_Layers{};
-    Ptr<Window> m_Window{};
-    bool m_Quit{ false };
+        void PopLayer();
 
-private:
-    static Application* s_Instance;
-};
+        void Quit();
+
+    protected:
+        std::vector<Ptr<Layer>> m_Layers{};
+        Ptr<Window> m_Window{};
+        bool m_Quit{ false };
+
+    private:
+        static Application* s_Instance;
+    };
 }
 
 namespace Fsn = Fussion;

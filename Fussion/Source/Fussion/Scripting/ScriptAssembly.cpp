@@ -134,7 +134,7 @@ auto ScriptAssembly::GetClass(std::string const& name) -> Maybe<ScriptClass*>
 {
     if (m_Classes.contains(name))
         return &m_Classes[name];
-    return {};
+    return None();
 }
 
 auto ScriptAssembly::GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>

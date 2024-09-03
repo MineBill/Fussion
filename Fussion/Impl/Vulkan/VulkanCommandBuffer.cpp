@@ -277,65 +277,105 @@ namespace Fussion::RHI {
             },
         };
 
+        if (Image::IsDepthFormat(image->GetSpec().Format)) {
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+
         auto src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
         auto dst_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
         using enum ImageLayout;
         if (from == Undefined && to == TransferDstOptimal) {
+
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             src_stage = VK_PIPELINE_STAGE_HOST_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == Undefined && to == TransferSrcOptimal) {
+
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_HOST_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == TransferSrcOptimal && to == TransferDstOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == TransferDstOptimal && to == TransferSrcOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == TransferDstOptimal && to == ShaderReadOnlyOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
         } else if (from == ShaderReadOnlyOptimal && to == TransferDstOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == ShaderReadOnlyOptimal && to == TransferSrcOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == TransferSrcOptimal && to == ShaderReadOnlyOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
         } else if (from == ColorAttachmentOptimal && to == ShaderReadOnlyOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+        } else if (from == DepthStencilAttachmentOptimal && to == ShaderReadOnlyOptimal) {
+
+            barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            src_stage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+        } else if (from == ShaderReadOnlyOptimal && to == DepthStencilAttachmentOptimal) {
+
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            src_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
         } else if (from == ColorAttachmentOptimal && to == TransferSrcOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             src_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
         } else if (from == TransferSrcOptimal && to == ColorAttachmentOptimal) {
+
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
             dst_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
         } else {
             PANIC("Unsupported image transition from '{}' to '{}'", magic_enum::enum_name(from), magic_enum::enum_name(to));
         }

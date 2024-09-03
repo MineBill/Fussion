@@ -82,25 +82,25 @@ void EditorStyle::Initialize()
     }
 
     using enum EditorIcon;
-    EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png");
-    EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png");
-    EditorIcons[GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png");
-    EditorIcons[Scene] = TextureImporter::LoadTextureFromFile("Assets/Icons/Scene.png");
-    EditorIcons[Script] = TextureImporter::LoadTextureFromFile("Assets/Icons/Script.png");
-    EditorIcons[PbrMaterial] = TextureImporter::LoadTextureFromFile("Assets/Icons/PbrMaterial.png");
-    EditorIcons[Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png");
-    EditorIcons[Search] = TextureImporter::LoadTextureFromFile("Assets/Icons/Search.png");
+    EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png").Value();
+    EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png").Value();
+    EditorIcons[GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png").Value();
+    EditorIcons[Scene] = TextureImporter::LoadTextureFromFile("Assets/Icons/Scene.png").Value();
+    EditorIcons[Script] = TextureImporter::LoadTextureFromFile("Assets/Icons/Script.png").Value();
+    EditorIcons[PbrMaterial] = TextureImporter::LoadTextureFromFile("Assets/Icons/PbrMaterial.png").Value();
+    EditorIcons[Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png").Value();
+    EditorIcons[Search] = TextureImporter::LoadTextureFromFile("Assets/Icons/Search.png").Value();
 
-    EditorIcons[Error] = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png");
-    EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png");
-    EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png");
-    EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png");
-    EditorIcons[Entity] = TextureImporter::LoadTextureFromFile("Assets/Icons/Entity.png");
+    EditorIcons[Error] = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png").Value();
+    EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png").Value();
+    EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png").Value();
+    EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png").Value();
+    EditorIcons[Entity] = TextureImporter::LoadTextureFromFile("Assets/Icons/Entity.png").Value();
 
-    EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png");
-    EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png");
-    EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png");
-    EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png");
+    EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png").Value();
+    EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png").Value();
+    EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png").Value();
+    EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png").Value();
 }
 
 EditorStyle& EditorStyle::GetStyle()

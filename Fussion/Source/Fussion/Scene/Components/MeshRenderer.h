@@ -42,10 +42,5 @@ namespace Fussion {
         virtual void Deserialize(Deserializer& ctx) override;
 
     private:
-        Ref<RHI::Shader> m_PbrShader;
-        Ref<RHI::ResourceLayout> m_ObjectLayout;
-        RHI::FrameAllocator m_FrameAllocator;
-
-        std::array<RHI::ResourceUsage, 6> m_MaterialResourceUsages{};
     };
 }

@@ -178,25 +178,25 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
     }
 
     if (spec.IsShadowMap) {
-        dependencies.push_back(VkSubpassDependency{
-            .srcSubpass = VK_SUBPASS_EXTERNAL,
-            .dstSubpass = 0,
-            .srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-            .srcAccessMask = VK_ACCESS_SHADER_READ_BIT,
-            .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-        });
-
-        dependencies.push_back(VkSubpassDependency{
-            .srcSubpass = 0,
-            .dstSubpass = VK_SUBPASS_EXTERNAL,
-            .srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-            .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-        });
+        // dependencies.push_back(VkSubpassDependency{
+        //     .srcSubpass = VK_SUBPASS_EXTERNAL,
+        //     .dstSubpass = 0,
+        //     .srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        //     .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+        //     .srcAccessMask = VK_ACCESS_SHADER_READ_BIT,
+        //     .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        //     .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+        // });
+        //
+        // dependencies.push_back(VkSubpassDependency{
+        //     .srcSubpass = 0,
+        //     .dstSubpass = VK_SUBPASS_EXTERNAL,
+        //     .srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+        //     .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        //     .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        //     .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
+        //     .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+        // });
     } else {
         // Depth
         dependencies.push_back(VkSubpassDependency{
@@ -206,6 +206,7 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
             .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
             .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
             .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
         });
 
         // Color
@@ -216,6 +217,7 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
             .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             .srcAccessMask = {},
             .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+            .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
         });
     }
 

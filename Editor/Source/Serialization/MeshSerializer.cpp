@@ -7,6 +7,7 @@
 #include "tiny_gltf.h"
 #include <vulkan/vulkan_core.h>
 #include "mikktspace.h"
+#include "meshoptimizer.h"
 
 using namespace Fussion;
 
@@ -182,6 +183,22 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
             LOG_ERRORF("Failed to generate tangents, skipping mesh");
             continue;
         }
+
+        auto index_count = indices.size();
+        auto vertex_count = vertices.size();
+
+        float threshold = 0.01f;
+        size_t target_index_count = CAST(size_t, CAST(f32, index_count) * threshold);
+        float target_error = 1e-1f;
+
+        // std::vector<unsigned int> lod(index_count);
+        // float lod_error = 0.f;
+        // lod.resize(meshopt_simplifySloppy(lod.data(), indices.data(), index_count, &vertices[0].Position.X, vertex_count, sizeof(Vertex),
+        //     target_index_count, target_error, &lod_error));
+
+        meshopt_optimizeVertexCache(indices.data(), indices.data(), indices.size(), vertices.size());
+        meshopt_optimizeOverdraw(indices.data(), indices.data(), indices.size(), &vertices[0].Position.X, vertices.size(), sizeof(Vertex), 1.05f);
+        meshopt_optimizeVertexFetch(vertices.data(), indices.data(), indices.size(), vertices.data(), vertices.size(), sizeof(Vertex));
 
         Vector3 offset{};
         if (node.translation.size() == 3) {

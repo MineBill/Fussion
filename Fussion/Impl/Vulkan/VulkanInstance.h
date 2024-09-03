@@ -9,7 +9,7 @@ namespace Fussion::RHI {
         explicit VulkanInstance(Window const& window);
         virtual ~VulkanInstance() override;
 
-        bool CheckValidationLayers();
+        auto CheckValidationLayers() -> Maybe<std::vector<const char*>>;
 
         static auto CreateDebugMessenger() -> VkDebugUtilsMessengerCreateInfoEXT;
         virtual void* GetRawHandle() override { return Instance; }

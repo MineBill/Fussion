@@ -35,7 +35,7 @@ target "Editor"
         "FSN_CORE_USE_GLOBALLY"
     )
 
-    add_extrafiles("Assets/**.shader", "Assets/**.glsl")
+    add_extrafiles("Assets/**.shader", "Assets/**.glsl", "Assets/**.wgsl")
 
     -- IMGUI
     add_sysincludedirs("Vendor/imgui")

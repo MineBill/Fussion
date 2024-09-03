@@ -18,9 +18,9 @@
 
 namespace Fussion::RHI {
     struct QueueFamilyIndices {
-        Maybe<u32> GraphicsFamily;
-        Maybe<u32> PresentFamily;
-        Maybe<u32> TransferFamily;
+        Maybe<u32> GraphicsFamily{};
+        Maybe<u32> PresentFamily{};
+        Maybe<u32> TransferFamily{};
 
         [[nodiscard]]
         bool IsComplete() const

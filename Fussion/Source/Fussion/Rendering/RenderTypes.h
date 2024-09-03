@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <Fussion/Math/Color.h>
-#include <Fussion/RHI/CommandBuffer.h>
+#include <Fussion/Core/BitFlags.h>
+#include <Fussion/GPU/GPU.h>
+
 #include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
@@ -23,15 +25,16 @@ namespace Fussion {
 
     struct GPUDirectionalLight {
         struct ShaderStruct {
+            std::array<Mat4, 4> LightSpaceMatrix{};
             Vector4 Direction{};
             Color Color{};
-            std::array<Mat4, 4> LightSpaceMatrix{};
         } ShaderData;
 
         f32 Split{};
     };
 
     static_assert(sizeof(GPUDirectionalLight) == 292, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
+    static_assert(sizeof(GPUDirectionalLight::ShaderStruct) % 16 == 0, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
 
     enum class RenderState {
         None = 1 << 0,
@@ -68,16 +71,15 @@ namespace Fussion {
 
         DrawPassFlags Pass;
         PbrMaterial* Material{};
-        Ref<RHI::Buffer> VertexBuffer{};
-        Ref<RHI::Buffer> IndexBuffer{};
-        Ref<RHI::Buffer> InstanceBuffer{};
+        GPU::Buffer VertexBuffer{};
+        GPU::Buffer IndexBuffer{};
+        GPU::Buffer InstanceBuffer{};
         u32 IndexCount{};
     };
 
     struct RenderContext {
-        Ref<RHI::CommandBuffer> Cmd;
-        Ref<RHI::RenderPass> CurrentPass;
-        Ref<RHI::Shader> CurrentShader;
+        // Ref<RHI::CommandBuffer> Cmd;
+
         RenderStateFlags RenderFlags;
 
         std::vector<GPUPointLight> PointLights{};
@@ -87,7 +89,7 @@ namespace Fussion {
         std::vector<RenderObject> RenderObjects{};
 
         /// This maps unique mesh buffers to an index of the @ref RenderContext::RenderObjects vector.
-        std::unordered_map<Ref<RHI::Buffer>, std::vector<size_t>> MeshRenderLists{};
+        std::unordered_map<GPU::HandleT, std::vector<size_t>> MeshRenderLists{};
 
         void AddRenderObject(RenderObject& obj);
         void Reset();

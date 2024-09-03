@@ -3,7 +3,7 @@
 #include "Texture2D.h"
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Math/Color.h"
-#include "Fussion/RHI/UniformBuffer.h"
+#include "Fussion/Rendering/UniformBuffer.h"
 
 namespace Fussion {
     class PbrMaterial final : public Asset {
@@ -30,8 +30,10 @@ namespace Fussion {
             Color ObjectColor;
             f32 Metallic;
             f32 Roughness;
+            f32 __padding1;
+            f32 __padding2;
         };
 
-        RHI::UniformBuffer<MaterialBlock> MaterialUniformBuffer;
+        UniformBuffer<MaterialBlock> MaterialUniformBuffer;
     };
 }

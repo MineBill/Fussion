@@ -72,7 +72,7 @@ void ViewportWindow::RenderStats() const
     if (ImGui::Begin("Stats Overlay", nullptr, window_flags)) {
         auto delta = Time::DeltaTime();
         ImGui::Text("CPU Time: %4.2fms", Time::SmoothDeltaTime() * 1000.0f);
-        ImGui::Text("Draw Calls: %d", Fussion::RHI::Device::Instance()->GetRenderStats().DrawCalls);
+        // ImGui::Text("Draw Calls: %d", Fussion::RHI::Device::Instance()->GetRenderStats().DrawCalls);
         if (ImGui::BeginPopupContextWindow()) {
             if (ImGui::MenuItem("Custom", nullptr, location == -1))
                 location = -1;
@@ -113,14 +113,14 @@ void ViewportWindow::OnDraw()
             if (m_IsFocused && Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
                 auto mouse = Input::GetMousePosition() - (m_ContentOriginScreen - Application::Instance()->GetWindow().GetPosition());
                 if (Rect::FromSize(m_Size).Contains(mouse)) {
-                    if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
-                        if (auto id = color.Value()[0]; id != 0) {
-                            auto entity = Editor::GetActiveScene()->GetEntityFromLocalID(id);
-                            Editor::GetSceneTree().SelectEntity(entity->GetHandle(), Input::IsKeyUp(Keys::LeftShift));
-                        } else {
-                            Editor::GetSceneTree().ClearSelection();
-                        }
-                    }
+                    // if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
+                    //     if (auto id = color.Value()[0]; id != 0) {
+                    //         auto entity = Editor::GetActiveScene()->GetEntityFromLocalID(id);
+                    //         Editor::GetSceneTree().SelectEntity(entity->GetHandle(), Input::IsKeyUp(Keys::LeftShift));
+                    //     } else {
+                    //         Editor::GetSceneTree().ClearSelection();
+                    //     }
+                    // }
                 }
             }
         }
@@ -132,14 +132,11 @@ void ViewportWindow::OnDraw()
 
         Vector2 origin = ImGui::GetCursorPos();
 
-        // TODO: Fails sync-hazard validation with Read-After-Write
         {
             ZoneScopedN("Get image from set");
-            static int i = 0;
-            if (i++ >= 20) {
-                auto image = Editor::Get().GetSceneRenderer().GetFrameBuffer()->GetColorAttachment(1);
-                ImGui::Image(IMGUI_IMAGE(image), m_Size);
-            }
+            auto image = Editor::Inst().GetSceneRenderer().GetRenderTarget();
+
+            ImGui::Image(image.View, m_Size);
         }
 
         if (Editor::GetActiveScene() == nullptr) {
@@ -216,7 +213,7 @@ void ViewportWindow::OnDraw()
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Drawing")) {
-                    auto& ctx = Editor::Get().DebugDrawContext;
+                    auto& ctx = Editor::Inst().DebugDrawContext;
                     auto flags = ImGuiSelectableFlags_DontClosePopups;
                     for (auto const& [value, name] : magic_enum::enum_entries<DebugDrawFlag>()) {
                         if (ImGui::Selectable(name.data(), ctx.Flags.Test(value), flags)) {
@@ -235,7 +232,11 @@ void ViewportWindow::OnDraw()
         ImGui::Dummy({ 10, 0 });
         ImGui::SameLine();
 
-        EUI::Button(std::format("Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode)), [&] {
+        fmt::memory_buffer out{};
+        std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode));
+        std::string_view fuck{ out.data(), out.size() };
+
+        EUI::Button(fuck.data(), [&] {
             ImGui::OpenPopup("GizmoSelection");
         }, { .Style = ButtonStyleViewportButton });
 
@@ -253,7 +254,11 @@ void ViewportWindow::OnDraw()
 
         ImGui::SameLine();
 
-        EUI::Button(std::format("Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace)), [&] {
+        out.clear();
+        std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode));
+        fuck = { out.data(), out.size() };
+
+        EUI::Button(fuck.data(), [&] {
             if (m_GizmoSpace == GizmoSpace::Local) {
                 m_GizmoSpace = GizmoSpace::World;
             } else if (m_GizmoSpace == GizmoSpace::World) {

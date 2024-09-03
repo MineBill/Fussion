@@ -51,7 +51,7 @@ public:
     virtual void OnUpdate(f32) override;
     virtual void OnEvent(Fsn::Event&) override;
 
-    virtual void OnDraw(Ref<Fsn::RHI::CommandBuffer> const& cmd) override;
+    virtual void OnDraw(Fussion::GPU::CommandEncoder& encoder) override;
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     void Save() const;
@@ -82,7 +82,7 @@ public:
 
     static void OnViewportResized(Vector2 const& new_size);
 
-    static auto Get() -> Editor& { return *s_EditorInstance; }
+    static auto Inst() -> Editor& { return *s_EditorInstance; }
 
     static auto GetCamera() -> EditorCamera& { return s_EditorInstance->m_Camera; }
     static auto GetProject() -> Project& { return s_EditorInstance->m_Project; }

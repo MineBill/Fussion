@@ -2,6 +2,8 @@
 #include "ImGuiHelpers.h"
 
 #include "Fussion/Core/Core.h"
+#include "Fussion/Math/Rect.h"
+
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -259,14 +261,14 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> const& image, bool& toggled, Vector2 const& size)
+bool ImGuiHelpers::ImageToggleButton(const char* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size)
 {
     auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
 
     if (toggled) {
         ImGui::PushStyleColor(ImGuiCol_Button, button);
     }
-    const auto pressed = ImGui::ImageButton(id, IMGUI_IMAGE(image), size);
+    const auto pressed = ImGui::ImageButton(id, texture, size);
     if (toggled) {
         ImGui::PopStyleColor();
     }
@@ -277,7 +279,7 @@ bool ImGuiHelpers::ImageToggleButton(const char* id, Ref<Fussion::RHI::Image> co
     return pressed;
 }
 
-bool ImGuiHelpers::TreeNode(std::string_view label, Ref<Fussion::RHI::Image> const& image, ImGuiTreeNodeFlags flags)
+bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView const& view, ImGuiTreeNodeFlags flags)
 {
     ImGuiContext& g = *ImGui::GetCurrentContext();
     ImGuiWindow* window = g.CurrentWindow;
@@ -389,7 +391,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Ref<Fussion::RHI::Image> con
     }
     // Icon, text
     auto button_pos = Vector2(pos) + Vector2(button_sz, 0);
-    window->DrawList->AddImage(IMGUI_IMAGE(image), button_pos, button_pos + button_sz);
+    window->DrawList->AddImage(view, button_pos, button_pos + button_sz);
     ImGui::RenderText(text_pos + Vector2(button_sz * 2, 0), label.data());
 
     ImGui::ItemSize(bb, g.Style.FramePadding.y);

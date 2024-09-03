@@ -5,10 +5,10 @@
 
 namespace Fussion
 {
-    Ref<AssetManagerBase> AssetManager::s_Active;
+    AssetManagerBase* AssetManager::s_Active;
 
-    void AssetManager::SetActive(Ref<AssetManagerBase> manager)
+    void AssetManager::SetActive(AssetManagerBase* manager)
     {
-        s_Active = std::move(manager);
+        s_Active = manager;
     }
 }

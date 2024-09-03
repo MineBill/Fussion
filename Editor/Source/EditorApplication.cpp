@@ -43,7 +43,7 @@ void EditorApplication::OnStart()
 
     Project::Initialize();
 
-    auto image = TextureImporter::LoadImageFromMemory({ g_logo_32_data });
+    auto image = TextureImporter::LoadImageFromMemory({ g_logo_32_data }).Value();
     m_Window->SetIcon(image);
 
     m_ImGuiLayer = PushLayer<ImGuiLayer>();
@@ -66,8 +66,6 @@ void EditorApplication::OnStart()
         }
     }
 
-    m_ImGuiLayer->LoadFonts();
-
     Application::OnStart();
 }
 
@@ -80,36 +78,76 @@ void EditorApplication::OnUpdate(f32 delta)
 
     Application::OnUpdate(delta);
 
-    auto [cmd, image] = Renderer::Begin();
-    if (cmd == nullptr) {
-        m_ImGuiLayer->End(cmd);
+    auto view = Renderer::Begin();
+    if (!view) {
+        m_ImGuiLayer->End(None());
         return;
     }
 
-    cmd->Begin();
-    auto window_size = Vector2{ CAST(f32, m_Window->GetWidth()), CAST(f32, m_Window->GetHeight()) };
+    auto encoder = Renderer::Device().CreateCommandEncoder();
+
+    std::array color_attachments{
+        GPU::RenderPassColorAttachment{
+            .View = *view,
+            .LoadOp = GPU::LoadOp::Clear,
+            .StoreOp = GPU::StoreOp::Store,
+            .ClearColor = Color::Coral,
+        }
+    };
+    GPU::RenderPassSpec rp_spec{
+        .Label = "Main RenderPass",
+        .ColorAttachments = color_attachments
+    };
 
     for (auto const& layer : m_Layers) {
-        layer->OnDraw(cmd);
+        layer->OnDraw(encoder);
     }
 
-    auto main = Renderer::GetInstance()->GetMainRenderPass();
-    cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
-    cmd->SetViewport({ window_size.X, -window_size.Y });
-    cmd->SetScissor({ 0, 0, window_size.X, window_size.Y });
+    auto main_rp = encoder.BeginRendering(rp_spec);
 
-    m_ImGuiLayer->End(cmd);
+    m_ImGuiLayer->End(main_rp);
 
-    cmd->EndRenderPass(main);
+    main_rp.End();
 
-    cmd->End();
+    view->Release();
+    Renderer::End(encoder.Finish());
 
-    Renderer::End(cmd);
+    // auto [cmd, image] = Renderer::Begin();
+    // if (cmd == nullptr) {
+    //     m_ImGuiLayer->End(cmd);
+    //     return;
+    // }
+    //
+    // cmd->Begin();
+    // auto window_size = Vector2{ CAST(f32, m_Window->GetWidth()), CAST(f32, m_Window->GetHeight()) };
+    //
+    // for (auto const& layer : m_Layers) {
+    //     layer->OnDraw(cmd);
+    // }
+    //
+    // auto main = Renderer::GetInstance()->GetMainRenderPass();
+    // cmd->BeginRenderPass(main, Renderer::GetInstance()->GetSwapchain()->GetFrameBuffer(image));
+    // cmd->SetViewport({ window_size.X, -window_size.Y });
+    // cmd->SetScissor({ 0, 0, window_size.X, window_size.Y });
+    //
+    // m_ImGuiLayer->End(cmd);
+    //
+    // cmd->EndRenderPass(main);
+    //
+    // cmd->End();
+    //
+    // Renderer::End(cmd);
 }
 
 void EditorApplication::OnEvent(Event& event)
 {
     Application::OnEvent(event);
+
+    EventDispatcher dispatcher(event);
+    dispatcher.Dispatch<WindowResized>([](WindowResized const& e) {
+        Renderer::Resize({ e.Width, e.Height });
+        return false;
+    });
 }
 
 void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)

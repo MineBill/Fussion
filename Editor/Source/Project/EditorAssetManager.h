@@ -44,6 +44,7 @@ struct EditorAssetMetadata final {
 class WorkerPool final {
 public:
     explicit WorkerPool(EditorAssetManager* asset_manager);
+    ~WorkerPool();
 
     void Load(EditorAssetMetadata const& metadata);
 
@@ -57,6 +58,7 @@ private:
     std::mutex m_Mutex{};
     std::vector<std::thread> m_Workers{};
     std::condition_variable m_ConditionVariable{};
+    std::atomic_bool m_Quit{};
     EditorAssetManager* m_AssetManager{ nullptr };
 };
 
@@ -148,7 +150,7 @@ private:
     void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
 
     Fussion::ThreadProtected<Registry> m_Registry{};
-    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets;
+    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets{};
 
     std::unordered_map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetImporters{};
 

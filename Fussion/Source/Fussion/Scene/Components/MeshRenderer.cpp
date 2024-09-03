@@ -16,46 +16,6 @@ namespace Fussion {
         ZoneScoped;
 
         m_Data.Model = glm::mat4(1.0f);
-        m_FrameAllocator.Init(1);
-
-        m_MaterialResourceUsages = {
-            RHI::ResourceUsage{
-                .Label = "Material",
-                .Type = RHI::ResourceType::UniformBuffer,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Vertex | RHI::ShaderType::Fragment,
-            },
-            RHI::ResourceUsage{
-                .Label = "Albedo Map",
-                .Type = RHI::ResourceType::CombinedImageSampler,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Fragment,
-            },
-            RHI::ResourceUsage{
-                .Label = "Normal Map",
-                .Type = RHI::ResourceType::CombinedImageSampler,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Fragment,
-            },
-            RHI::ResourceUsage{
-                .Label = "AmbientOcclusion Map",
-                .Type = RHI::ResourceType::CombinedImageSampler,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Fragment,
-            },
-            RHI::ResourceUsage{
-                .Label = "MetallicRoughness Map",
-                .Type = RHI::ResourceType::CombinedImageSampler,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Fragment,
-            },
-            RHI::ResourceUsage{
-                .Label = "Emissive Map",
-                .Type = RHI::ResourceType::CombinedImageSampler,
-                .Count = 1,
-                .Stages = RHI::ShaderType::Fragment,
-            },
-        };
     }
 
     void MeshRenderer::OnUpdate([[maybe_unused]] f32 delta) {}
@@ -68,8 +28,6 @@ namespace Fussion {
         auto model = Model.Get();
         if (model == nullptr)
             return;
-
-        // m_FrameAllocator.Reset();
 
         Materials.resize(model->Meshes.size());
         for (auto& mesh : model->Meshes) {
@@ -98,74 +56,7 @@ namespace Fussion {
             obj.Pass = DrawPass::All;
 
             ctx.AddRenderObject(obj);
-
-            // auto object_layout = RHI::Device::Instance()->CreateResourceLayout(m_MaterialResourceUsages);
-            // auto resource = m_FrameAllocator.Alloc(object_layout, "MeshRenderer Material");
-            //
-            // material->MaterialUniformBuffer.Data.ObjectColor = material->ObjectColor;
-            // material->MaterialUniformBuffer.Data.Metallic = material->Metallic;
-            // material->MaterialUniformBuffer.Data.Roughness = material->Roughness;
-            // material->MaterialUniformBuffer.Flush();
-            //
-            // ctx.Cmd->BindUniformBuffer(material->MaterialUniformBuffer.GetBuffer(), resource, 0);
-            // ctx.Cmd->BindResource(resource, ctx.CurrentShader, 2);
-            // auto albedo = material->AlbedoMap.Get();
-            // if (!albedo) {
-            //     albedo = Renderer::WhiteTexture().Get();
-            // }
-            //
-            // auto normal = material->NormalMap.Get();
-            // if (!normal) {
-            //     normal = Renderer::DefaultNormalMap().Get();
-            // }
-            //
-            // auto ao = material->AmbientOcclusionMap.Get();
-            // if (!ao) {
-            //     ao = Renderer::WhiteTexture().Get();
-            // }
-            //
-            // auto metallic_roughness = material->MetallicRoughnessMap.Get();
-            // if (!metallic_roughness) {
-            //     metallic_roughness = Renderer::WhiteTexture().Get();
-            // }
-            //
-            // auto emissive = material->EmissiveMap.Get();
-            // if (!emissive) {
-            //     emissive = Renderer::BlackTexture().Get();
-            // }
-            //
-            // ctx.Cmd->BindImage(albedo->GetImage(), resource, 1);
-            // ctx.Cmd->BindImage(normal->GetImage(), resource, 2);
-            //
-            // ctx.Cmd->BindImage(ao->GetImage(), resource, 3);
-            // ctx.Cmd->BindImage(metallic_roughness->GetImage(), resource, 4);
-            // ctx.Cmd->BindImage(emissive->GetImage(), resource, 5);
-            //
-            // ctx.Cmd->PushConstants(ctx.CurrentShader, &m_Data);
-            //
-            // ctx.Cmd->BindBuffer(mesh.VertexBuffer);
-            // ctx.Cmd->BindBuffer(mesh.IndexBuffer);
-            // ctx.Cmd->DrawIndexed(mesh.IndexCount, 1);
         }
-
-        // for (auto const& mesh : model->Meshes) {
-        //     if (ctx.RenderFlags.Test(RenderState::Depth)) {
-        //         m_DepthPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
-        //         m_DepthPushData.LightSpace = ctx.CurrentLightSpace;
-        //         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_DepthPushData);
-        //     } else if (ctx.RenderFlags.Test(RenderState::ObjectPicking)) {
-        //         m_ObjectPickingPushData.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
-        //         m_ObjectPickingPushData.LocalID = m_Owner->GetSceneLocalID();
-        //         ctx.Cmd->PushConstants(ctx.CurrentShader, &m_ObjectPickingPushData);
-        //     } else {
-        //         return;
-        //     }
-        //
-        //     ctx.Cmd->BindBuffer(mesh.VertexBuffer);
-        //     ctx.Cmd->BindBuffer(mesh.IndexBuffer);
-        //     ctx.Cmd->DrawIndexed(mesh.IndexCount, 1);
-        //
-        // }
     }
 
     void MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
