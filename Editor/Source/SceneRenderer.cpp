@@ -1063,6 +1063,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
             };
 
             auto object_group = Renderer::Device().CreateBindGroup(m_ObjectBindGroupLayout, global_bg_spec);
+            m_DeadObjectGroups.push_back(object_group);
             // defer(object_group.Release());
 
             auto data = TRANSMUTE(InstanceData*, m_PbrInstanceStagingBuffer.data()) + buffer_offset;
@@ -1096,6 +1097,11 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
         scene_rp.End();
         scene_rp.Release();
     }
+
+    for (auto& group : m_DeadObjectGroups) {
+        group.Release();
+    }
+    m_DeadObjectGroups.clear();
 
     Debug::Reset();
     /* #if 0
