@@ -111,3 +111,6 @@ namespace Fussion {
 #define DEFER_2(x, y) DEFER_1(x, y)
 #define DEFER_3(x)    DEFER_2(x, __COUNTER__)
 #define defer(code)   auto DEFER_3(_defer_) = Fussion::MakeDefer([&](){code;})
+
+#include <string_view>
+using namespace std::string_view_literals;

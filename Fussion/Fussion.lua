@@ -78,7 +78,7 @@ target("Fussion")
         add_defines("OS_LINUX", {public = true})
         add_links("shaderc_shared")
 
-        add_packages("spirv-cross")
+        add_packages("spirv-cross", "spirv-tools")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end
@@ -90,8 +90,7 @@ target("Fussion")
 	elseif is_plat("macosx") then
 		add_deps("libdwarf")
 	elseif is_plat("linux") then
-		add_deps("libdwarf")
-		add_syslinks("dl")
+		add_syslinks("dl", "dwarf", "z", "zstd")
 	elseif is_plat("mingw") then
 		add_deps("libdwarf")
 		add_syslinks("dbghelp")

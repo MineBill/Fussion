@@ -64,7 +64,7 @@ namespace Fussion::GPU {
     };
 
     struct SamplerSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         AddressMode AddressModeU{};
         AddressMode AddressModeV{};
         AddressMode AddressModeW{};
@@ -117,7 +117,7 @@ namespace Fussion::GPU {
     };
 
     struct TextureSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         TextureUsageFlags Usage{};
         TextureDimension Dimension{};
         Vector3 Size{};
@@ -128,7 +128,7 @@ namespace Fussion::GPU {
     };
 
     struct TextureViewSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         TextureUsageFlags Usage{};
         TextureViewDimension Dimension{};
         TextureFormat Format{};
@@ -237,7 +237,7 @@ namespace Fussion::GPU {
     };
 
     struct BindGroupLayoutSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         std::span<BindGroupLayoutEntry> Entries{};
     };
 
@@ -275,7 +275,7 @@ namespace Fussion::GPU {
 
     struct BindGroupSpec {
         /// Label for the bind group.
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         std::span<BindGroupEntry> Entries{};
     };
 
@@ -290,7 +290,7 @@ namespace Fussion::GPU {
     };
 
     struct PipelineLayoutSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         std::span<BindGroupLayout> BindGroupLayouts{};
     };
 
@@ -311,7 +311,7 @@ namespace Fussion::GPU {
     using ShaderType = std::variant<WGSLShader, SPIRVShader>;
 
     struct ShaderModuleSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         ShaderType Type{};
 
         std::string_view VertexEntryPoint{};
@@ -461,7 +461,7 @@ namespace Fussion::GPU {
     };
 
     struct RenderPipelineSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         Maybe<PipelineLayout> Layout{};
         VertexState Vertex{};
         PrimitiveState Primitive{};
@@ -487,7 +487,7 @@ namespace Fussion::GPU {
     };
 
     struct RenderPassSpec {
-        Maybe<const char*> Label{};
+        Maybe<std::string_view> Label{};
         std::span<RenderPassColorAttachment> ColorAttachments{};
         Maybe<RenderPassColorAttachment> DepthStencilAttachment{};
     };

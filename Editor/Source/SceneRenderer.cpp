@@ -509,7 +509,7 @@ void SceneRenderer::Init()
         };
 
         GPU::BindGroupLayoutSpec spec{
-            .Label = "Global BGL",
+            .Label = "Global BGL"sv,
             .Entries = entries,
         };
 
@@ -535,7 +535,7 @@ void SceneRenderer::Init()
         };
 
         GPU::BindGroupSpec global_bg_spec{
-            .Label = "Global Bind Group",
+            .Label = "Global Bind Group"sv,
             .Entries = bind_group_entries
         };
 
@@ -668,7 +668,7 @@ void SceneRenderer::Init()
         };
 
         GPU::BindGroupLayoutSpec spec{
-            .Label = "Object BGL",
+            .Label = "Object BGL"sv,
             .Entries = entries,
         };
 
@@ -701,7 +701,7 @@ void SceneRenderer::Init()
         auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/simple.wgsl").Value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "Simple WGSL Shader",
+            .Label = "Simple WGSL Shader"sv,
             .Type = GPU::WGSLShader{
                 .Source = shader_src,
             },
@@ -715,13 +715,12 @@ void SceneRenderer::Init()
             m_GlobalBindGroupLayout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .Label = None(),
             .BindGroupLayouts = bind_group_layouts
         };
         auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "Simple RP",
+            .Label = "Simple RP"sv,
             .Layout = layout,
             .Vertex = {},
             .Primitive = GPU::PrimitiveState::Default(),
@@ -745,7 +744,7 @@ void SceneRenderer::Init()
         auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/PBR.wgsl").Value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "PBR Shader",
+            .Label = "PBR Shader"sv,
             .Type = GPU::WGSLShader{
                 .Source = shader_src,
             },
@@ -760,7 +759,6 @@ void SceneRenderer::Init()
             m_ObjectBindGroupLayout,
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .Label = None(),
             .BindGroupLayouts = bind_group_layouts
         };
         auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
@@ -790,7 +788,7 @@ void SceneRenderer::Init()
         auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "PBR Render Pass",
+            .Label = "PBR Render Pass"sv,
             .Layout = layout,
             .Vertex = {
                 .AttributeLayouts = { attribute_layout }
@@ -821,7 +819,7 @@ void SceneRenderer::Init()
         auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/Editor/Grid.wgsl").Value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "Grid Shader",
+            .Label = "Grid Shader"sv,
             .Type = GPU::WGSLShader{
                 .Source = shader_src,
             },
@@ -835,13 +833,12 @@ void SceneRenderer::Init()
             m_GlobalBindGroupLayout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .Label = None(),
             .BindGroupLayouts = bind_group_layouts
         };
         auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "Grid RP",
+            .Label = "Grid RP"sv,
             .Layout = layout,
             .Vertex = {},
             .Primitive = GPU::PrimitiveState::Default(),
@@ -862,7 +859,7 @@ void SceneRenderer::Init()
     }
 
     GPU::BufferSpec ibs{
-        .Label = "PBR Instance Buffer",
+        .Label = "PBR Instance Buffer"sv,
         .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
         .Size = sizeof(Mat4) * 1'000,
         .Mapped = false,
@@ -872,7 +869,7 @@ void SceneRenderer::Init()
     m_PbrInstanceStagingBuffer.reserve(sizeof(Mat4) * 1'000);
 
     GPU::SamplerSpec bilinear_sampler_spec{
-        .Label = "Bilinear Sampler",
+        .Label = "Bilinear Sampler"sv,
         .AddressModeU = GPU::AddressMode::Repeat,
         .AddressModeV = GPU::AddressMode::Repeat,
         .AddressModeW = GPU::AddressMode::Repeat,
@@ -952,7 +949,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
         };
 
         GPU::RenderPassSpec scene_rp_spec{
-            .Label = "Scene Render Pass",
+            .Label = "Scene Render Pass"sv,
             .ColorAttachments = color_attachments,
             .DepthStencilAttachment = GPU::RenderPassColorAttachment{
                 .View = m_SceneRenderDepthTarget.View,
@@ -1058,7 +1055,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
             };
 
             GPU::BindGroupSpec global_bg_spec{
-                .Label = "Object Bind Group",
+                .Label = "Object Bind Group"sv,
                 .Entries = bind_group_entries
             };
 
@@ -1465,7 +1462,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
 void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
 {
     GPU::TextureSpec spec{
-        .Label = "Main Render Target",
+        .Label = "Main Render Target"sv,
         .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
         .Dimension = GPU::TextureDimension::D2,
         .Size = Vector3{ size, 1 },
@@ -1478,7 +1475,7 @@ void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
     m_SceneRenderTarget.InitializeView();
 
     GPU::TextureSpec depth_spec{
-        .Label = "Main Render Depth Target",
+        .Label = "Main Render Depth Target"sv,
         .Usage = GPU::TextureUsage::RenderAttachment,
         .Dimension = GPU::TextureDimension::D2,
         .Size = Vector3{ size, 1 },

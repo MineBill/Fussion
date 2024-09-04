@@ -267,7 +267,7 @@ namespace Fussion::RHI {
                     LOG_INFOF("LINKER INFO: {}", message);
                     break;
                 case SPV_MSG_DEBUG:
-                    LOG_DEBUG("LINKER DEBUG: {}", message);
+                    LOG_DEBUGF("LINKER DEBUG: {}", message);
                     break;
                 }
             });

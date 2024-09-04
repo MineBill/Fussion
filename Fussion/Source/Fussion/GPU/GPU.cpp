@@ -104,7 +104,7 @@ namespace Fussion::GPU {
     void Texture::InitializeView()
     {
         View = CreateView({
-            .Label = "View",
+            .Label = "View"sv,
             .Usage = Spec.Usage,
             .Dimension = TextureViewDimension::D2, // TODO: Make configurable
             .Format = Spec.Format,
@@ -120,7 +120,7 @@ namespace Fussion::GPU {
     {
         WGPUTextureViewDescriptor texture_view_descriptor{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("View"),
+            .label = spec.Label.ValueOr("View"sv).data(),
             .format = ToWgpu(spec.Format),
             .dimension = ToWgpu(spec.Dimension),
             .baseMipLevel = spec.BaseMipLevel,
@@ -301,7 +301,7 @@ namespace Fussion::GPU {
         }
         WGPURenderPassDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pass"),
+            .label = spec.Label.ValueOr("Render Pass"sv).data(),
             .colorAttachmentCount = spec.ColorAttachments.size(),
             .colorAttachments = stack_attachments.data(),
             .depthStencilAttachment = nullptr,
@@ -358,7 +358,7 @@ namespace Fussion::GPU {
     {
         WGPUBufferDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Buffer").data(),
+            .label = spec.Label.ValueOr("Buffer"sv).data(),
             .usage = ToWgpu(spec.Usage),
             .size = spec.Size,
             .mappedAtCreation = spec.Mapped
@@ -372,7 +372,7 @@ namespace Fussion::GPU {
     {
         WGPUTextureDescriptor texture_descriptor{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Texture"),
+            .label = spec.Label.ValueOr("Texture"sv).data(),
             .usage = ToWgpu(spec.Usage),
             .dimension = ToWgpu(spec.Dimension),
             .size = {
@@ -398,7 +398,7 @@ namespace Fussion::GPU {
     {
         WGPUSamplerDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Sampler"),
+            .label = spec.Label.ValueOr("Sampler"sv).data(),
             .addressModeU = ToWgpu(spec.AddressModeU),
             .addressModeV = ToWgpu(spec.AddressModeV),
             .addressModeW = ToWgpu(spec.AddressModeW),
@@ -459,7 +459,7 @@ namespace Fussion::GPU {
 
         WGPUBindGroupDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"),
+            .label = spec.Label.ValueOr("Bind Group"sv).data(),
             .layout = CAST(WGPUBindGroupLayout, layout.Handle),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
@@ -549,7 +549,7 @@ namespace Fussion::GPU {
 
         WGPUBindGroupLayoutDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"),
+            .label = spec.Label.ValueOr("Bind Group"sv).data(),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
         };
@@ -612,7 +612,7 @@ namespace Fussion::GPU {
 
         WGPUPipelineLayoutDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Pipeline Layout"),
+            .label = spec.Label.ValueOr("Pipeline Layout"sv).data(),
             .bindGroupLayoutCount = CAST(u32, layouts.size()),
             .bindGroupLayouts = layouts.data(),
         };
@@ -726,7 +726,7 @@ namespace Fussion::GPU {
 
         WGPURenderPipelineDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pipeline"),
+            .label = spec.Label.ValueOr("Render Pipeline"sv).data(),
             .vertex = vertex,
             .primitive = primitive,
             .depthStencil = nullptr,

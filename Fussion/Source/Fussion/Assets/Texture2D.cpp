@@ -56,7 +56,7 @@ namespace Fussion {
 
         texture->m_Metadata = metadata;
         GPU::TextureSpec spec{
-            .Label = "Texture2D Texture",
+            .Label = "Texture2D Texture"sv,
             .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding,
             .Dimension = GPU::TextureDimension::D2,
             .Size = { metadata.Width, metadata.Height, 1 },

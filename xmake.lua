@@ -7,8 +7,8 @@ set_runtimes("MDd")
 
 rule("CompilerFlags")
     on_load(function (target)
-        target:add("cxxflags", "gcc::-Wno-changes-meaning")
-        target:add("cxxflags", "clang::-Wno-changes-meaning")
+        --[[ target:add("cxxflags", "gcc::-Wno-changes-meaning")
+        target:add("cxxflags", "clang::-Wno-changes-meaning") ]]
         target:add("cxxflags", "clang::-Wno-c++98-compat")
 
         target:add("cxxflags", "cl::/EHsc")
@@ -38,4 +38,4 @@ option_end();
 includes("Vendor.lua")
 includes("Fussion/Fussion.lua")
 includes("Editor/Editor.lua")
-includes("TestBed/TestBed.lua")
+-- includes("TestBed/TestBed.lua")

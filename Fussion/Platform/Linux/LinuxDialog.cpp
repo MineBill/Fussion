@@ -175,8 +175,9 @@ namespace Fussion::Dialogs {
         return g_NativeDialog->OpenFilePicker(filters);
     }
 
-    auto ShowDirectoryPicker() -> std::filesystem::path
+    auto ShowDirectoryPicker(std::filesystem::path const& path) -> std::filesystem::path
     {
+        (void)path;
         CreateNativeDialog();
         return g_NativeDialog->OpenDirectoryPicker();
     }

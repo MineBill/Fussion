@@ -143,5 +143,5 @@ target("argparse", function()
 end)
 
 if is_plat("linux") then
-    add_requires("spirv-cross")
+    add_requires("spirv-cross", "spirv-tools")
 end

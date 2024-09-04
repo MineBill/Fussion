@@ -95,7 +95,7 @@ void EditorApplication::OnUpdate(f32 delta)
         }
     };
     GPU::RenderPassSpec rp_spec{
-        .Label = "Main RenderPass",
+        .Label = "Main RenderPass"sv,
         .ColorAttachments = color_attachments
     };
 

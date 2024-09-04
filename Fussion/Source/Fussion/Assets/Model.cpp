@@ -13,7 +13,7 @@ namespace Fussion {
         auto& device = Renderer::Device();
 
         auto vertex_spec = GPU::BufferSpec{
-            .Label = "Mesh Vertex Buffer",
+            .Label = "Mesh Vertex Buffer"sv,
             .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
             .Size = CAST(u32, vertices.size() * sizeof(Vertex)),
         };
@@ -21,7 +21,7 @@ namespace Fussion {
         device.WriteBuffer(VertexBuffer, 0, std::span{ vertices });
 
         auto index_spec = GPU::BufferSpec{
-            .Label = "Index Vertex Buffer",
+            .Label = "Index Vertex Buffer"sv,
             .Usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
             .Size = CAST(u32, indices.size() * sizeof(u32)),
         };
@@ -31,7 +31,7 @@ namespace Fussion {
         IndexCount = CAST(u32, indices.size());
 
         auto instance_spec = GPU::BufferSpec{
-            .Label = "Instance Buffer",
+            .Label = "Instance Buffer"sv,
             .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
             .Size = sizeof(Mat4) * 1'000,
         };
