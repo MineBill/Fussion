@@ -45,6 +45,6 @@ f64 Clock::Reset()
     u64 diff = (now - m_TickCount) / 1000; // to ms
     m_TickCount = now;
 
-    return diff;
+    return CAST(f64, diff) / 1000.0f / 1000.0f;
 #endif
 }
