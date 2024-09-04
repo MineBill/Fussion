@@ -99,8 +99,9 @@ void ContentBrowser::OnDraw()
         m_NamePopup.Update();
 
         EUI::Button("Import", [&] {
-            auto file = Fussion::Dialogs::ShowFilePicker(m_ImportFilter);
-            ImportFile(file);
+            for (auto const& path : Fussion::Dialogs::ShowFilePicker(m_ImportFilter, true)) {
+                ImportFile(path);
+            }
             Refresh();
         });
         ImGui::SameLine();

@@ -167,7 +167,7 @@ auto EditorApplication::CreateProject(Maybe<fs::path> path) -> fs::path
 void EditorApplication::CreateEditor(Maybe<fs::path> path)
 {
     if (path.IsEmpty() || !exists(*path)) {
-        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
     }
 
     bool loaded = Project::Load(*path);
@@ -187,7 +187,7 @@ void EditorApplication::CreateEditorFromProjectCreator(fs::path path)
     s_EditorInstance->PopLayer();
 
     if (!exists(path)) {
-        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" });
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
     }
 
     bool loaded = Project::Load(path);

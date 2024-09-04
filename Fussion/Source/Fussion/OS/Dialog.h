@@ -56,9 +56,9 @@ namespace Fussion::Dialogs {
         FilePatternList FilePatterns;
     };
 
-    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files) -> std::filesystem::path;
-    auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path;
-    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path;
+    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
+    auto ShowFilePicker(FilePickerFilter const& filter, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
 
     auto ShowDirectoryPicker(std::filesystem::path const& base = std::filesystem::current_path()) -> std::filesystem::path;
 }
