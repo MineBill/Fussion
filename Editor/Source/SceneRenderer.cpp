@@ -972,7 +972,6 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
 
             auto const& hack = m_RenderContext.RenderObjects[list[0]];
 
-#if 1
             hack.Material->MaterialUniformBuffer.Data.ObjectColor = hack.Material->ObjectColor;
             hack.Material->MaterialUniformBuffer.Data.Metallic = hack.Material->Metallic;
             hack.Material->MaterialUniformBuffer.Data.Roughness = hack.Material->Roughness;
@@ -1002,14 +1001,6 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
             if (!emissive) {
                 emissive = Renderer::BlackTexture().Get();
             }
-
-            // cmd->BindImage(albedo->GetImage(), resource, 1);
-            // cmd->BindImage(normal->GetImage(), resource, 2);
-            //
-            // cmd->BindImage(ao->GetImage(), resource, 3);
-            // cmd->BindImage(metallic_roughness->GetImage(), resource, 4);
-            // cmd->BindImage(emissive->GetImage(), resource, 5);
-#endif
 
             std::array bind_group_entries{
                 GPU::BindGroupEntry{
@@ -1060,8 +1051,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
             };
 
             auto object_group = Renderer::Device().CreateBindGroup(m_ObjectBindGroupLayout, global_bg_spec);
-            m_DeadObjectGroups.push_back(object_group);
-            // defer(object_group.Release());
+            m_ObjectGroupsToRelease.push_back(object_group);
 
             auto data = TRANSMUTE(InstanceData*, m_PbrInstanceStagingBuffer.data()) + buffer_offset;
             int j = 0;
@@ -1095,10 +1085,10 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
         scene_rp.Release();
     }
 
-    for (auto& group : m_DeadObjectGroups) {
+    for (auto& group : m_ObjectGroupsToRelease) {
         group.Release();
     }
-    m_DeadObjectGroups.clear();
+    m_ObjectGroupsToRelease.clear();
 
     Debug::Reset();
     /* #if 0

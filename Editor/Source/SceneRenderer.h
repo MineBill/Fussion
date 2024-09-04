@@ -122,7 +122,7 @@ private:
 
     Fsn::RenderContext m_RenderContext{};
 
-    std::vector<Fussion::GPU::BindGroup> m_DeadObjectGroups {};
+    std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease {};
 #if 0
     Fsn::AssetRef<Fsn::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
     Fsn::AssetRef<Fsn::ShaderAsset> m_SkyShader{};
