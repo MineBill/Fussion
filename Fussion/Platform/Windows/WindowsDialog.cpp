@@ -121,6 +121,12 @@ namespace Fussion::Dialogs {
 
         if (GetOpenFileNameW(&arg)) {
             auto buffer = std::string(file.begin(), file.end());
+            // When multiple items are selected, windows returns the containing
+            // folder as the first item and then only the names of the selected
+            // files, seperated by 0. We assume multiple files and parse the first item
+            // as the containing folder. If however, that was not the case,
+            // check if the strings are empty and push that first item
+            // as the only item in the selected files.
             std::vector<std::filesystem::path> strings{};
             std::filesystem::path root;
             size_t pos = 0;
@@ -137,6 +143,13 @@ namespace Fussion::Dialogs {
                     }
                     pos = i + 1;
                 }
+            }
+
+            // If strings is empty, it means that only one item was
+            // selected from the file picker, which we parsed as
+            // the root earlier.
+            if (strings.empty()) {
+                strings.emplace_back(root);
             }
 
             return strings;
@@ -168,5 +181,10 @@ namespace Fussion::Dialogs {
             }
         }
         return "";
+    }
+
+    void OpenDirectory(std::filesystem::path const& path)
+    {
+        ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
     }
 }

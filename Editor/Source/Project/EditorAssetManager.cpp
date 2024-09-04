@@ -357,6 +357,36 @@ void EditorAssetManager::SaveAsset(Ref<Asset> const& asset)
     });
 }
 
+void EditorAssetManager::RenameAsset(AssetHandle handle, std::string_view new_name)
+{
+    m_Registry.Access([&](Registry& registry) {
+        if (!registry.contains(handle))
+            return;
+
+        auto& meta = registry[handle];
+        auto old_path = Project::GetAssetsFolder() / meta.Path;
+        auto new_path = Project::GetAssetsFolder() / (meta.Path.has_parent_path() ? meta.Path.parent_path() : "") / new_name;
+        LOG_DEBUGF("Renaming asset: '{}' -> '{}'", old_path, new_path);
+
+        if (auto pos = std::ranges::find_if(registry, [&new_path](std::pair<AssetHandle, EditorAssetMetadata> const& pair) {
+            return pair.second.Path == relative(new_path, Project::GetAssetsFolder());
+        }); pos != registry.end()) {
+            LOG_ERRORF("Rename will overwrite existing asset, aborting.");
+            return;
+        }
+
+        try {
+            std::filesystem::rename(old_path, new_path);
+            meta.Name = new_name;
+            meta.Path = relative(new_path, Project::GetAssetsFolder());
+        } catch (std::filesystem::filesystem_error& error) {
+            LOG_ERRORF("Failed to rename asset: {}", error.what());
+        }
+    });
+
+    SaveToFile();
+}
+
 auto DeserializeCustomMetadata(json const& j, AssetType type) -> Ref<AssetMetadata>
 {
     using enum AssetType;

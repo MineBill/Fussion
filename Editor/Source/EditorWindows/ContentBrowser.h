@@ -14,6 +14,7 @@ public:
         void Show(std::function<void(std::string)> const& callback);
 
         void Update();
+        void Accept();
 
     private:
         bool m_Show{}, m_Opened{};
@@ -23,12 +24,15 @@ public:
     };
 
     struct Entry {
+        Fussion::AssetHandle Id;
         std::filesystem::path Path;
         std::string StringPath;
         std::string Name;
         bool IsDirectory;
         Fsn::AssetType Type;
         EditorAssetMetadata Metadata;
+
+        bool Renaming{};
     };
 
     EDITOR_WINDOW(ContentBrowser)
@@ -48,9 +52,13 @@ private:
     void ImportFile(std::filesystem::path const& path);
 
     std::vector<Entry> m_Entries;
+    std::set<Fussion::AssetHandle> m_Selection{};
 
+    // Root path to the project, absolute.
     std::filesystem::path m_Root;
+    // Current path of the content browser view, absolute.
     std::filesystem::path m_CurrentPath;
+    // Current path of the content browser view, relative to the root.
     std::filesystem::path m_RelativeToRoot;
     std::string m_RelativeToRootStringPath{};
 
