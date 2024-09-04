@@ -136,6 +136,7 @@ public:
     void SaveAsset(Ref<Fussion::Asset> const& asset);
 
     void RenameAsset(Fussion::AssetHandle handle, std::string_view new_name);
+    void MoveAsset(Fussion::AssetHandle handle, std::filesystem::path const& path);
 
     void SaveToFile();
     void LoadFromFile();

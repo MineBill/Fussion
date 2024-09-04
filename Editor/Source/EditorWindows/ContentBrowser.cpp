@@ -205,6 +205,9 @@ void ContentBrowser::OnDraw()
             ImGui::NextColumn();
         }
 
+        // Used to signal a refresh of the content folder,
+        // to prevent modifying m_Entries while looping.
+        bool refresh{ false };
         ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
         Maybe<std::filesystem::path> requested_directory_change;
         for (auto& entry : m_Entries) {
@@ -217,6 +220,15 @@ void ContentBrowser::OnDraw()
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     requested_directory_change = entry.Path;
                     break;
+                }
+
+                if (ImGui::BeginDragDropTarget()) {
+                    if (auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET"); payload) {
+                        auto handle = *CAST(AssetHandle*, payload->Data);
+                        Project::GetAssetManager()->MoveAsset(handle, entry.Path);
+                        refresh = true;
+                    }
+                    ImGui::EndDragDropTarget();
                 }
             } else {
                 Texture2D* texture;
@@ -265,6 +277,8 @@ void ContentBrowser::OnDraw()
                     ImGui::PopStyleColor();
                 }
 
+                auto current_font = ImGui::GetFont();
+                ImGui::PopFont();
                 if (ImGui::BeginPopupContextItem()) {
                     if (ImGui::MenuItem("Open")) {
                         m_Editor->OpenAsset(entry.Metadata.Handle);
@@ -274,6 +288,7 @@ void ContentBrowser::OnDraw()
                     }
                     ImGui::EndPopup();
                 }
+                ImGui::PushFont(current_font);
 
                 if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     // m_Selection.insert(entry.Id);
@@ -282,7 +297,7 @@ void ContentBrowser::OnDraw()
                     m_Editor->OpenAsset(entry.Metadata.Handle);
                 }
                 if (ImGui::BeginDragDropSource()) {
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.Metadata.Handle, sizeof(Fussion::AssetHandle));
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.Metadata.Handle, sizeof(AssetHandle));
                     ImGui::EndDragDropSource();
                 }
             }
@@ -293,15 +308,20 @@ void ContentBrowser::OnDraw()
                     if (!entry.Name.empty()) {
                         Project::GetAssetManager()->RenameAsset(entry.Id, entry.Name);
                     }
-                    Refresh();
+                    refresh = true;
                 }
             } else {
-                ImGui::TextWrapped(entry.Name.c_str());
+                ImGui::TextWrapped("%s", entry.Name.c_str());
             }
             ImGui::NextColumn();
         }
+
         if (requested_directory_change.HasValue()) {
             ChangeDirectory(*requested_directory_change);
+        }
+
+        if (refresh) {
+            Refresh();
         }
 
         ImGui::PopFont();

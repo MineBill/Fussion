@@ -20,6 +20,7 @@
 #include <future>
 
 using namespace Fussion;
+namespace fs = std::filesystem;
 
 WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_AssetManager(asset_manager)
 {
@@ -117,19 +118,19 @@ void WorkerPool::Load(EditorAssetMetadata const& metadata)
 }
 
 EditorAssetManager::EditorAssetManager()
-    : m_EditorWatcher(FileWatcher::Create(std::filesystem::current_path() / "Assets" / "Shaders"))
+    : m_EditorWatcher(FileWatcher::Create(fs::current_path() / "Assets" / "Shaders"))
 {
     m_AssetImporters[AssetType::Texture2D] = MakePtr<TextureSerializer>();
     m_AssetImporters[AssetType::Model] = MakePtr<MeshSerializer>();
 
-    m_EditorWatcher->RegisterListener([this](std::filesystem::path const& path, FileWatcher::EventType type) {
+    m_EditorWatcher->RegisterListener([this](fs::path const& path, FileWatcher::EventType type) {
         LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
         if (type == FileWatcher::EventType::FileModified) {
             using namespace std::chrono_literals;
 
             std::this_thread::sleep_for(100ms);
             using namespace std::string_literals;
-            auto full_path = std::filesystem::path("Assets") / "Shaders"s / path;
+            auto full_path = fs::path("Assets") / "Shaders"s / path;
             auto meta = GetMetadata(full_path);
             if (meta.IsEmpty()) {
                 return;
@@ -205,7 +206,7 @@ bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
     });
 }
 
-AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name, std::filesystem::path const& path)
+AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name, fs::path const& path)
 {
     auto handle = AssetHandle();
     m_Registry.Access([&](Registry& registry) {
@@ -242,7 +243,7 @@ bool EditorAssetManager::IsAssetLoading(AssetHandle handle)
     });
 }
 
-bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool include_virtual) const
+bool EditorAssetManager::IsPathAnAsset(fs::path const& path, bool include_virtual) const
 {
     ZoneScoped;
     return m_Registry.Access([&](Registry const& registry) {
@@ -258,7 +259,7 @@ bool EditorAssetManager::IsPathAnAsset(std::filesystem::path const& path, bool i
     });
 }
 
-Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(std::filesystem::path const& path) const
+Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(fs::path const& path) const
 {
     ZoneScoped;
     return m_Registry.Access([&](Registry const& registry) -> EditorAssetMetadata {
@@ -295,7 +296,7 @@ auto MetadataForAsset(AssetType type) -> Ref<AssetMetadata>
     return nullptr;
 }
 
-void EditorAssetManager::RegisterAsset(std::filesystem::path const& path, AssetType type)
+void EditorAssetManager::RegisterAsset(fs::path const& path, AssetType type)
 {
     if (type == AssetType::Invalid) {
         LOG_WARNF("Ignoring Invalid asset type.");
@@ -376,10 +377,10 @@ void EditorAssetManager::RenameAsset(AssetHandle handle, std::string_view new_na
         }
 
         try {
-            std::filesystem::rename(old_path, new_path);
+            fs::rename(old_path, new_path);
             meta.Name = new_name;
             meta.Path = relative(new_path, Project::GetAssetsFolder());
-        } catch (std::filesystem::filesystem_error& error) {
+        } catch (fs::filesystem_error& error) {
             LOG_ERRORF("Failed to rename asset: {}", error.what());
         }
     });
@@ -458,7 +459,7 @@ void EditorAssetManager::LoadFromFile()
             auto const handle = asset["Handle"].get<Fsn::Uuid>();
             auto const type = asset["Type"].get<std::string>();
             auto const asset_path = asset["Path"].get<std::string>();
-            auto name = asset.value("Name", std::filesystem::path(asset_path).filename().string());
+            auto name = asset.value("Name", fs::path(asset_path).filename().string());
 
             Uuid h{ handle };
 
@@ -484,6 +485,30 @@ void EditorAssetManager::RefreshAsset(AssetHandle handle)
         return;
 
     SaveAsset(handle);
+}
+
+void EditorAssetManager::MoveAsset(AssetHandle handle, fs::path const& path)
+{
+    m_Registry.Access([&](Registry& registry) {
+        if (!registry.contains(handle) || !fs::is_directory(path) || !fs::exists(path)) {
+            return;
+        }
+
+        auto& meta = registry[handle];
+
+        auto filename = meta.Path.filename();
+        auto new_path = Project::GetAssetsFolder() / path / filename;
+        LOG_INFOF("Moving asset '{}' -> '{}'", filename, new_path);
+
+        try {
+            fs::rename(Project::GetAssetsFolder() / meta.Path, new_path);
+            meta.Path = relative(new_path, Project::GetAssetsFolder());
+        } catch (fs::filesystem_error& error) {
+            LOG_ERRORF("Failed to move asset: {}", error.what());
+        }
+    });
+
+    SaveToFile();
 }
 
 void EditorAssetManager::CheckForLoadedAssets()
