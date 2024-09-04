@@ -70,26 +70,26 @@ namespace Fussion::Dialogs {
         return MessageButton::Ok;
     }
 
-    std::filesystem::path ShowFilePicker(std::string_view name, FilePatternList const& supported_files)
+    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
         return ShowFilePicker(FilePickerFilter{
             .Name = std::string(name),
             .FilePatterns = supported_files,
-        });
+        }, allow_multiple);
     }
 
-    auto ShowFilePicker(FilePickerFilter const& filter) -> std::filesystem::path
+    auto ShowFilePicker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
         return ShowFilePicker(std::vector{ filter });
     }
 
-    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter) -> std::filesystem::path
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
         auto handle = glfwGetWin32Window(CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle()));
         VERIFY(handle != nullptr);
 
         std::wstring file;
-        file.resize(256);
+        file.resize(1024);
 
         using namespace std::string_literals;
         std::string filter_string;
@@ -117,14 +117,31 @@ namespace Fussion::Dialogs {
         arg.nMaxFile = CAST(DWORD, file.size());
         arg.lpstrFilter = w_filter.c_str();
         arg.nFilterIndex = 1;
-        arg.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+        arg.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 
         if (GetOpenFileNameW(&arg)) {
-            auto s = std::string(file.begin(), file.end());
-            std::erase(s, 0);
-            return s;
+            auto buffer = std::string(file.begin(), file.end());
+            std::vector<std::filesystem::path> strings{};
+            std::filesystem::path root;
+            size_t pos = 0;
+            for (size_t i = 0; i < buffer.size(); ++i) {
+                if (buffer[i] == 0) {
+                    if (i > 1 && buffer[i - 1] == 0) {
+                        break;
+                    }
+
+                    if (!root.empty()) {
+                        strings.emplace_back(root / buffer.substr(pos, i - pos));
+                    } else [[unlikely]] {
+                        root = buffer.substr(pos, i - pos);
+                    }
+                    pos = i + 1;
+                }
+            }
+
+            return strings;
         }
-        return "";
+        return {};
     }
 
     std::filesystem::path ShowDirectoryPicker(std::filesystem::path const& base)
