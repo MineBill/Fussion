@@ -312,4 +312,11 @@ namespace EUI {
 
         ImGui::End();
     }
+
+    void WithFont(ImFont* font, auto&& callback)
+    {
+        ImGui::PushFont(font);
+        callback();
+        ImGui::PopFont();
+    }
 }

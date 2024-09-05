@@ -7,6 +7,8 @@
 namespace Fussion {
     namespace fs = std::filesystem;
 
+
+
     class FileSystem {
     public:
         /// Read entire file as a string.
@@ -17,5 +19,6 @@ namespace Fussion {
         static auto ReadEntireFileBinary(fs::path const& path) -> Maybe<std::vector<u8>>;
 
         static void WriteEntireFile(fs::path const& path, std::string const& string);
+
     };
 }

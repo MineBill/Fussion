@@ -5,6 +5,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 #include <dwmapi.h>
+#include <ShlObj_core.h>
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Advapi32.lib")
 
@@ -42,5 +43,26 @@ namespace Fussion::System {
             buffer[0];
 
         return i == 1;
+    }
+
+    auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path
+    {
+        GUID folder_id;
+        switch (folder) {
+        case KnownFolders::Downloads:
+            folder_id = FOLDERID_Downloads;
+        case KnownFolders::AppData:
+            folder_id = FOLDERID_LocalAppData;
+        }
+
+        PWSTR path;
+        if (SUCCEEDED(SHGetKnownFolderPath(folder_id, 0, nullptr, &path))) {
+            std::wstring wpath{ path };
+            return wpath;
+        }
+
+        CoTaskMemFree(path);
+
+        return {};
     }
 }

@@ -20,6 +20,33 @@ struct Range {
     T End{};
 
     T Count() const { return End - Start; }
+
+    class Iterator {
+        T m_Number{}, m_Start{}, m_End{};
+
+    public:
+        explicit Iterator(T start, T end, T number = 0) : m_Number(number), m_Start(start), m_End(end) {}
+
+        Iterator& operator++()
+        {
+            m_Number = m_End >= m_Start ? m_Number + 1 : m_Number - 1;
+            return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator retval = *this;
+            ++(*this);
+            return retval;
+        }
+
+        bool operator==(Iterator other) const { return m_Number == other.m_Number; }
+        bool operator!=(Iterator other) const { return !(*this == other); }
+        T const& operator*() const { return m_Number; }
+    };
+
+    Iterator begin() { return Iterator(Start, End, Start); }
+    Iterator end() { return Iterator(Start, End, End >= Start ? End + 1 : End - 1); }
 };
 
 namespace Fussion::GPU {

@@ -32,7 +32,7 @@ public:
     virtual void OnEvent(Fussion::Event&) override;
     virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
-    static auto CreateProject(Maybe<fs::path> path) -> fs::path;
+    static auto CreateProject(Maybe<fs::path> path, std::string_view name) -> fs::path;
 
     static EditorApplication* Instance() { return s_EditorInstance; }
 

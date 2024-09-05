@@ -81,27 +81,35 @@ auto Project::GenerateProject(fs::path const& path, std::string_view name) -> fs
 {
     ordered_json project;
 
-    project["Name"] = name;
-    project[AssetsFolder] = "Assets";
-    project[CacheFolder] = "Cache";
-    project[ScriptsFolder] = "Scripts";
-    project[AssetRegistry] = "AssetRegistry.json";
-    project[LogsFolder] = "Logs";
+    auto full_path = path / name;
+    try {
+        fs::create_directories(full_path);
 
-    create_directory(path / project[AssetsFolder]);
-    create_directory(path / project[CacheFolder]);
-    create_directory(path / project[ScriptsFolder]);
-    create_directory(path / project[LogsFolder]);
+        project["Name"] = name;
+        project[AssetsFolder] = "Assets";
+        project[CacheFolder] = "Cache";
+        project[ScriptsFolder] = "Scripts";
+        project[AssetRegistry] = "AssetRegistry.json";
+        project[LogsFolder] = "Logs";
 
-    json asset_registry;
-    asset_registry["$Type"] = "AssetRegistry";
-    FileSystem::WriteEntireFile(path / project[AssetRegistry], asset_registry.dump(2));
+        create_directory(full_path / project[AssetsFolder]);
+        create_directory(full_path / project[CacheFolder]);
+        create_directory(full_path / project[ScriptsFolder]);
+        create_directory(full_path / project[LogsFolder]);
 
-    std::string name_with_ext(name);
-    name_with_ext += ".fsnproj";
+        json asset_registry;
+        asset_registry["$Type"] = "AssetRegistry";
+        FileSystem::WriteEntireFile(full_path / project[AssetRegistry], asset_registry.dump(2));
 
-    auto project_path = path / name_with_ext;
-    LOG_DEBUGF("Writing project file to {}", project_path);
-    FileSystem::WriteEntireFile(project_path, project.dump(2));
-    return project_path;
+        std::string name_with_ext(name);
+        name_with_ext += ".fsnproj";
+
+        auto project_path = full_path / name_with_ext;
+        LOG_DEBUGF("Writing project file to {}", project_path);
+        FileSystem::WriteEntireFile(project_path, project.dump(2));
+        return project_path;
+    } catch (fs::filesystem_error const& error) {
+        LOG_ERRORF("Failed to create directory for project creation: {}", error.what());
+        return {};
+    }
 }

@@ -34,6 +34,9 @@ namespace Fussion {
 
     void FileSystem::WriteEntireFile(fs::path const& path, std::string const& string)
     {
+        if (!exists(path.parent_path())) {
+            fs::create_directories(path.parent_path());
+        }
         std::ofstream file(path);
         file << string;
         file.close();

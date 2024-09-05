@@ -53,7 +53,7 @@ void EditorApplication::OnStart()
 
     if (m_Args.CreateProject) {
         if (auto project = m_Args.ProjectPath) {
-            auto path = CreateProject(std::filesystem::path(*project));
+            auto path = CreateProject(std::filesystem::path(*project), "EmptyProject");
             CreateEditor(path);
         } else {
             PANIC("Must provide path with the create option");
@@ -155,13 +155,13 @@ void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, 
     Application::OnLogReceived(level, message, loc);
 }
 
-auto EditorApplication::CreateProject(Maybe<fs::path> path) -> fs::path
+auto EditorApplication::CreateProject(Maybe<fs::path> path, std::string_view name) -> fs::path
 {
-    if (path.IsEmpty() || !exists(*path) || !is_directory(*path)) {
+    if (path.IsEmpty() || !is_directory(*path)) {
         path = Dialogs::ShowDirectoryPicker();
     }
 
-    return Project::GenerateProject(*path, "Simple Project");
+    return Project::GenerateProject(*path, name);
 }
 
 void EditorApplication::CreateEditor(Maybe<fs::path> path)

@@ -125,7 +125,7 @@ void ViewportWindow::OnDraw()
             }
         }
 
-        if (auto size = ImGui::GetContentRegionAvail(); m_Size != size) {
+        if (auto size = ImGui::GetContentRegionAvail(); m_Size != Vector2(size)) {
             Editor::OnViewportResized(size);
             m_Size = size;
         }
