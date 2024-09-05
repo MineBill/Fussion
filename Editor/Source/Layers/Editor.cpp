@@ -116,6 +116,10 @@ void Editor::OnDisable() {}
 
 void Editor::Save() const
 {
+    for (auto& asd: m_AssetWindows) {
+        asd.second->OnSave();
+    }
+
     Project::Save();
 
     if (m_State == PlayState::Editing && m_ActiveScene != nullptr) {
