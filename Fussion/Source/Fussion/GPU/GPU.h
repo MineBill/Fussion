@@ -98,10 +98,10 @@ namespace Fussion::GPU {
         FilterMode MagFilter{};
         FilterMode MinFilter{};
         FilterMode MipMapFilter{};
-        f32 LodMinClamp{};
-        f32 LodMaxClamp{};
+        f32 LodMinClamp{ 1.0f };
+        f32 LodMaxClamp{ 1.0f };
         Maybe<CompareFunction> Compare{};
-        u16 AnisotropyClamp{};
+        u16 AnisotropyClamp{ 1_u16 };
     };
 
     struct Sampler : GPUHandle<void> {

@@ -8,6 +8,7 @@
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 #include "Fussion/Rendering/UniformBuffer.h"
+#include "Fussion/Rendering/Pipelines/HDRPipeline.h"
 
 namespace Fsn = Fussion;
 
@@ -105,6 +106,8 @@ private:
 
     void CreateSceneRenderTarget(Vector2 const& size);
 
+    Fussion::HDRPipeline m_HDRPipeline{};
+
     Fussion::GPU::Texture m_SceneRenderTarget{};
     Fussion::GPU::Texture m_SceneRenderDepthTarget{};
 
@@ -122,7 +125,7 @@ private:
 
     Fsn::RenderContext m_RenderContext{};
 
-    std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease {};
+    std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease{};
 #if 0
     Fsn::AssetRef<Fsn::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
     Fsn::AssetRef<Fsn::ShaderAsset> m_SkyShader{};

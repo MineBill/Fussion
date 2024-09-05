@@ -804,7 +804,7 @@ void SceneRenderer::Init()
             .Fragment = {
                 .Targets = {
                     GPU::ColorTargetState{
-                        .Format = GPU::TextureFormat::RGBA8Unorm,
+                        .Format = HDRPipeline::Format,
                         .Blend = GPU::BlendState::Default(),
                         .WriteMask = GPU::ColorWrite::All,
                     },
@@ -847,7 +847,7 @@ void SceneRenderer::Init()
             .Fragment = {
                 .Targets = {
                     GPU::ColorTargetState{
-                        .Format = GPU::TextureFormat::RGBA8Unorm,
+                        .Format = HDRPipeline::Format,
                         .Blend = GPU::BlendState::Default(),
                         .WriteMask = GPU::ColorWrite::All,
                     }
@@ -882,6 +882,8 @@ void SceneRenderer::Init()
     };
 
     m_LinearSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+
+    m_HDRPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
 }
 
 void SceneRenderer::Resize(Vector2 const& new_size)
@@ -892,6 +894,7 @@ void SceneRenderer::Resize(Vector2 const& new_size)
     m_SceneRenderTarget.Release();
     m_SceneRenderDepthTarget.Release();
     CreateSceneRenderTarget(new_size);
+    m_HDRPipeline.Resize(new_size);
     /* #if 0
         ZoneScoped;
         Device::Instance()->WaitIdle();
@@ -941,7 +944,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     {
         std::array color_attachments{
             GPU::RenderPassColorAttachment{
-                .View = m_SceneRenderTarget.View,
+                .View = m_HDRPipeline.View(),
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::Black,
@@ -1084,6 +1087,8 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
         scene_rp.End();
         scene_rp.Release();
     }
+
+    m_HDRPipeline.Process(encoder, m_SceneRenderTarget.View);
 
     for (auto& group : m_ObjectGroupsToRelease) {
         group.Release();

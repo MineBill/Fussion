@@ -318,6 +318,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
         button_flags |= ImGuiButtonFlags_PressedOnDragDropHold;
 
     auto& style = ImGui::GetStyle();
+    (void)style;
 
     // Open behaviors can be altered with the _OpenOnArrow and _OnOnDoubleClick flags.
     // Some alteration have subtle effects (e.g. toggle on MouseUp vs MouseDown events) due to requirements for multi-selection and drag and drop support.
