@@ -5,6 +5,7 @@
 #include "RHI/Device.h"
 #include "Rendering/Renderer.h"
 #include "Serialization/Serializer.h"
+#include "GPU/Utils.h"
 
 namespace Fussion {
     void Texture2DMetadata::Serialize(Serializer& ctx) const
@@ -35,42 +36,24 @@ namespace Fussion {
     {
         Ref<Texture2D> texture = MakeRef<Texture2D>();
 
-        // RHI::ImageSpecification image_spec{};
-        // image_spec.Width = metadata.Width;
-        // image_spec.Height = metadata.Height;
-        // // Since normal maps have non-color data, the image format HAS to be UNORM.
-        // image_spec.Format = metadata.IsNormalMap ? RHI::ImageFormat::R8G8B8A8_UNORM : metadata.Format;
-        // image_spec.SamplerSpec.Filter = metadata.Filter;
-        // image_spec.SamplerSpec.UseAnisotropy = false;
-        // image_spec.SamplerSpec.Wrap = metadata.Wrap;
-        // image_spec.GenerateMipMaps = metadata.GenerateMipmaps;
-        //
-        // using enum RHI::ImageUsage;
-        // image_spec.Usage = ColorAttachment | Sampled | TransferDst | TransferSrc;
-        // image_spec.FinalLayout = RHI::ImageLayout::ShaderReadOnlyOptimal;
-        //
-        // texture->m_Metadata = metadata;
-        // texture->m_Image = RHI::Device::Instance()->CreateImage(image_spec);
-        // texture->m_Image->SetData(data);
-        // texture->m_Image->TransitionLayout(RHI::ImageLayout::ShaderReadOnlyOptimal);
-
         texture->m_Metadata = metadata;
         GPU::TextureSpec spec{
             .Label = "Texture2D Texture"sv,
-            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding,
+            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
             .Dimension = GPU::TextureDimension::D2,
             .Size = { metadata.Width, metadata.Height, 1 },
             .Format = metadata.Format,
-            .MipLevelCount = 1,
             .SampleCount = 1,
+            .GenerateMipMaps = metadata.GenerateMipmaps,
         };
 
         auto& device = Renderer::Device();
 
         texture->m_Image = device.CreateTexture(spec);
-        texture->m_Image.InitializeView();
 
         device.WriteTexture(texture->m_Image, data.data(), data.size_bytes(), Vector2::Zero, { metadata.Width, metadata.Height });
+
+        texture->m_Image.GenerateMipmaps(device);
 
         return texture;
     }

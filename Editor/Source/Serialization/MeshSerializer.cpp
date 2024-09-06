@@ -196,6 +196,8 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
         // lod.resize(meshopt_simplifySloppy(lod.data(), indices.data(), index_count, &vertices[0].Position.X, vertex_count, sizeof(Vertex),
         //     target_index_count, target_error, &lod_error));
 
+        std::vector<u32> shadow_indices(index_count);
+        meshopt_generateShadowIndexBuffer(shadow_indices.data(), indices.data(), index_count, vertices.data(), vertex_count, sizeof(Vector3), sizeof(Vertex));
         meshopt_optimizeVertexCache(indices.data(), indices.data(), indices.size(), vertices.size());
         meshopt_optimizeOverdraw(indices.data(), indices.data(), indices.size(), &vertices[0].Position.X, vertices.size(), sizeof(Vertex), 1.05f);
         meshopt_optimizeVertexFetch(vertices.data(), indices.data(), indices.size(), vertices.data(), vertices.size(), sizeof(Vertex));
@@ -204,7 +206,7 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
         if (node.translation.size() == 3) {
             offset = { node.translation[0], node.translation[1], node.translation[2] };
         }
-        meshes.emplace_back(vertices, indices, primitive.material, offset);
+        meshes.emplace_back(vertices, indices, shadow_indices, primitive.material, offset);
     }
 
     auto the_model = Model::Create(meshes);

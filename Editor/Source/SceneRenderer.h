@@ -104,6 +104,16 @@ private:
         Mat4 Model;
     };
 
+    struct DepthInstanceData {
+        Mat4 Model;
+        Mat4 LightSpace;
+    };
+
+    void SetupShadowPassRenderTarget();
+    void SetupShadowPass();
+    void DepthPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
+    void PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view);
+
     void CreateSceneRenderTarget(Vector2 const& size);
 
     Fussion::HDRPipeline m_HDRPipeline{};
@@ -111,13 +121,17 @@ private:
     Fussion::GPU::Texture m_SceneRenderTarget{};
     Fussion::GPU::Texture m_SceneRenderDepthTarget{};
 
-    Fussion::GPU::RenderPipeline m_SimpleRp{}, m_GridRp{}, m_PbrRp{};
+    Fussion::GPU::Texture m_ShadowPassRenderTarget{};
+    std::array<Fussion::GPU::TextureView, ShadowCascades> m_ShadowPassRenderTargetViews{};
+
+    Fussion::GPU::RenderPipeline m_SimplePipeline{}, m_GridPipeline{}, m_PbrPipeline{}, m_DepthPipeline{}, m_SkyPipeline{};
 
     Fussion::GPU::BindGroup m_GlobalBindGroup{}, m_SceneBindGroup{};
-    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout{}, m_SceneBindGroupLayout{}, m_ObjectBindGroupLayout{};
+    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout{}, m_SceneBindGroupLayout{}, m_ObjectBindGroupLayout{}, m_ObjectDepthBGL{};
 
-    Fussion::GPU::Buffer m_PbrInstanceBuffer{};
+    Fussion::GPU::Buffer m_PbrInstanceBuffer{}, m_DepthInstanceBuffer{};
     std::vector<u8> m_PbrInstanceStagingBuffer{};
+    std::vector<u8> m_DepthInstanceStagingBuffer{};
 
     Fussion::GPU::Sampler m_LinearSampler{};
 

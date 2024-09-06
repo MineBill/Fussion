@@ -20,12 +20,13 @@ namespace Fussion {
 
         GPU::Buffer VertexBuffer{};
         GPU::Buffer IndexBuffer{};
+        // GPU::Buffer ShadowIndexBuffer{};
         GPU::Buffer InstanceBuffer{};
         u32 IndexCount{};
 
         s32 MaterialIndex{};
 
-        Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, s32 material_index, Vector3 offset);
+        Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset);
     };
 
     class Model final : public Asset {

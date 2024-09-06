@@ -16,7 +16,7 @@ void ConsoleWindow::OnStart() {}
 void ConsoleWindow::OnDraw()
 {
     ZoneScoped;
-    auto const& entries = Editor::Inst().GetLogEntries();
+ /*   auto const& entries = Editor::Inst().GetLogEntries();
     std::ranges::copy(entries, std::back_inserter(m_LogEntries));
 
     if (ImGui::Begin("Console")) {
@@ -91,5 +91,5 @@ void ConsoleWindow::OnDraw()
         }
         ImGui::EndChild();
     }
-    ImGui::End();
+    ImGui::End();*/
 }

@@ -42,7 +42,6 @@ namespace Fussion {
             .Dimension = GPU::TextureDimension::D2,
             .Size = { size.X, size.Y, 1 },
             .Format = Format,
-            .MipLevelCount = 1,
             .SampleCount = 1,
             .Aspect = GPU::TextureAspect::All,
         };
@@ -112,7 +111,7 @@ namespace Fussion {
             },
             .DepthStencil = None(),
             .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = {
+            .Fragment = GPU::FragmentStage {
                 .Targets = {
                     GPU::ColorTargetState{
                         .Format = output_format,
@@ -139,7 +138,7 @@ namespace Fussion {
         };
 
         RenderPassSpec spec{
-            .Label = "HDR::RenderPass",
+            .Label = "HDR::RenderPass"sv,
             .ColorAttachments = color_attachments,
             .DepthStencilAttachment = None(),
         };
@@ -147,7 +146,7 @@ namespace Fussion {
 
         rp.SetPipeline(m_Pipeline);
         rp.SetBindGroup(m_BindGroup, 0);
-        rp.Draw({ 0, 6 }, { 0, 1 });
+        rp.Draw({ 0, 4 }, { 0, 1 });
 
         rp.End();
         rp.Release();
@@ -162,7 +161,6 @@ namespace Fussion {
             .Dimension = GPU::TextureDimension::D2,
             .Size = { size.X, size.Y, 1 },
             .Format = Format,
-            .MipLevelCount = 1,
             .SampleCount = 1,
             .Aspect = GPU::TextureAspect::All,
         };

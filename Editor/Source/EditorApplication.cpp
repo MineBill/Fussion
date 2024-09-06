@@ -108,9 +108,11 @@ void EditorApplication::OnUpdate(f32 delta)
     m_ImGuiLayer->End(main_rp);
 
     main_rp.End();
+    main_rp.Release();
 
     view->Release();
     Renderer::End(encoder.Finish());
+    encoder.Release();
 
     // auto [cmd, image] = Renderer::Begin();
     // if (cmd == nullptr) {

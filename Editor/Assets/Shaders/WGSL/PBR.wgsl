@@ -21,6 +21,10 @@ struct VertexOutput {
     @location(6) bitangent: vec3f,
     @location(7) normal: vec3f,
 
+    @location(8) pos_light_space1: vec4f,
+    @location(9) pos_light_space2: vec4f,
+    @location(10) pos_light_space3: vec4f,
+    @location(11) pos_light_space4: vec4f,
     // @location(5) tangent_light_dir: vec3f,
     // @location(6) tangent_view_pos: vec3f,
     // @location(7) tangent_frag_pos: vec3f,
@@ -63,6 +67,7 @@ struct InstanceData {
 
 @group(0) @binding(0) var<uniform> view_data: ViewData;
 @group(0) @binding(1) var<uniform> light_data: LightData;
+@group(0) @binding(2) var shadow_texture: texture_depth_2d_array;
 @group(1) @binding(0) var<storage, read> instance_data: InstanceData;
 
 // @group(1) @binding(1) var shadow_map_texture: texture_2d<f32>;
@@ -86,12 +91,63 @@ fn vs_main(in: VertexInput) -> VertexOutput {
     out.frag_color = in.color;
     out.frag_uv = in.uv;
     out.position = view_data.projection * view_data.view * model * vec4f(in.position, 1.0);
+
+    out.pos_light_space1 = shadow_bias * light_data.directional.light_space_matrix[0] * out.frag_pos;
+    out.pos_light_space2 = shadow_bias * light_data.directional.light_space_matrix[1] * out.frag_pos;
+    out.pos_light_space3 = shadow_bias * light_data.directional.light_space_matrix[2] * out.frag_pos;
+    out.pos_light_space4 = shadow_bias * light_data.directional.light_space_matrix[3] * out.frag_pos;
+
     return out;
 }
 
-// fn sample_shadow(index: f32, coords: vec2f, compare: f32) -> f32 {
-//     return step(compare, textureSample())
-// }
+fn sample_shadow(index: u32, coords: vec2f, compare: f32) -> f32 {
+    return step(compare, textureSample(shadow_texture, linear_sampler, coords, index));
+}
+
+fn sample_shadow_linear(index: u32, coords: vec2<f32>, compare: f32, texel_size: vec2<f32>) -> f32 {
+    let pp = coords / texel_size + vec2f(0.5);
+    let fraction = fract(pp);
+    let texel = (pp - fraction) * texel_size;
+
+    let a = sample_shadow(index, texel, compare);
+    let b = sample_shadow(index, texel + vec2f(1.0, 0.0) * texel_size, compare);
+    let c = sample_shadow(index, texel + vec2f(0.0, 1.0) * texel_size, compare);
+    let d = sample_shadow(index, texel + vec2f(1.0, 1.0) * texel_size, compare);
+
+    let aa = mix(a, c, fraction.y);
+    let bb = mix(b, d, fraction.y);
+
+    return mix(aa, bb, fraction.x);
+}
+
+fn do_directional_shadow(in: VertexOutput, light: DirectionalLight, index: u32) -> f32 {
+    var shadow = 0.0;
+    // wgsl in all it's glory :)
+    var pos_light_space = mat4x4f(
+        in.pos_light_space1,
+        in.pos_light_space2,
+        in.pos_light_space3,
+        in.pos_light_space4
+    );
+    let frag_pos_light_space: vec4f = pos_light_space[index];
+    var coords = (frag_pos_light_space.xyz / frag_pos_light_space.w);
+    if (coords.z > 1.0 || coords.z < -1.0) {
+        return 1.0;
+    }
+    coords.y = 1.0 - coords.y;
+    let bias = max((1.0 / 4096.0) * (1.0 - dot(in.normal, normalize(light.direction.xyz))), 0.003);
+    let texel_size = vec2f(1.0, 1.0) / vec2f(textureDimensions(shadow_texture));
+
+    let samples = 1;
+    let samples_start = (samples - 1) / 2;
+    let samples_squared = samples * samples;
+    for (var x = -samples_start; x <= samples_start; x++) {
+        for (var y = -samples_start; y <= samples_start; y++) {
+            shadow += sample_shadow_linear(index, coords.xy + vec2f(f32(x), f32(y)), coords.z - bias, texel_size);
+        }
+    }
+    return shadow / f32(samples_squared);
+}
 
 fn frensel_schlick(cos_theta: f32, f0: vec3f) -> vec3f {
     return f0 + (1.0 - f0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
@@ -179,7 +235,15 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
 
     let ndotl = max(dot(n, l), 0.0);
 
-    let shadow = 1.0;
+    let shadow_cascades: u32 = u32(4);
+    var index: u32 = 0;
+    for (var i = u32(0); i < shadow_cascades; i++) {
+        if (in.view_pos.z < light_data.shadow_split_distances[i]) {
+            index = i + 1;
+        }
+    }
+
+    let shadow = do_directional_shadow(in, light, index);
 
     let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv).r;
 

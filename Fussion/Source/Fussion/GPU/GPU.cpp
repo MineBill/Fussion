@@ -1,19 +1,236 @@
-#include "FussionPCH.h"
 #include "GPU.h"
+
 #include "EnumConversions.h"
-
+#include "FussionPCH.h"
 #include "glfw3webgpu.h"
-#include <webgpu/wgpu.h>
-#include <GLFW/glfw3.h>
+#include "Utils.h"
 
+#include <GLFW/glfw3.h>
 #include <magic_enum/magic_enum.hpp>
+#include <webgpu/wgpu.h>
+
+constexpr auto MipMapGeneratorSource = R"wgsl(
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vtx: u32) -> VertexOutput {
+    var out: VertexOutput;
+    var plane: array<vec3f, 6> = array(
+        vec3f(-1, -1, 0), vec3f(1, -1, 0), vec3f(-1, 1, 0),
+        vec3f(-1, 1, 0), vec3f(1, -1, 0), vec3f(1, 1, 0)
+    );
+    var uvs: array<vec2<f32>, 6> = array(
+        vec2f(0, 1), vec2f(1, 1), vec2f(0, 0),
+        vec2f(0, 0), vec2f(1, 1), vec2f(1, 0),
+    );
+    let p = plane[vtx].xyz;
+
+    out.position = vec4<f32>(p, 1.0);
+    out.uv = uvs[vtx];
+    // out.uv = vec2f(f32((vtx << 1) & 2), f32(vtx & 2));
+    // out.position = vec4f(out.uv * vec2f(2.0f, -2.0f) + vec2f( -1.0f, 1.0f), 0.0f, 1.0f);
+    return out;
+}
+
+@group(0) @binding(0) var tex: texture_2d<f32>;
+@group(0) @binding(1) var sam: sampler;
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    return textureSample(tex, sam, in.uv);
+})wgsl";
 
 namespace Fussion::GPU {
-    template<class... Ts> struct overloaded : Ts... {
+    template<class... Ts>
+    struct overloaded : Ts... {
         using Ts::operator()...;
     };
 
-    template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+    template<class... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
+
+    struct MipMapPipeline {
+        ShaderModule Shader{};
+        RenderPipeline Pipeline{};
+        BindGroupLayout Layout{};
+        BindGroup BindGroup{};
+        Sampler TheSampler{};
+        Texture RenderTexture{};
+        Texture TargetTexture{};
+        u32 MipLevels{};
+        std::vector<TextureView> Views{};
+
+        void Initalize(Device const& device, Texture& texture)
+        {
+            TargetTexture = texture;
+            {
+                Vector2 size = { texture.Spec.Size.X, texture.Spec.Size.Y };
+                RenderTexture = device.CreateTexture({
+                    .Usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
+                    .Dimension = TextureDimension::D2,
+                    .Size = { texture.Spec.Size.X, texture.Spec.Size.Y, 1 },
+                    .Format = texture.Spec.Format,
+                    .SampleCount = 1,
+                    .Aspect = TextureAspect::All,
+                    .GenerateMipMaps = true,
+                });
+                RenderTexture.InitializeView();
+
+                auto encoder = device.CreateCommandEncoder();
+                encoder.CopyTextureToTexture(texture, RenderTexture, size);
+                auto cmd = encoder.Finish();
+                device.SubmitCommandBuffer(cmd);
+            }
+            MipLevels = texture.MipLevelCount;
+            ShaderModuleSpec shader_spec{
+                .Label = "MipMap Generator"sv,
+                .Type = GPU::WGSLShader{
+                    .Source = MipMapGeneratorSource,
+                },
+                .VertexEntryPoint = "vs_main",
+                .FragmentEntryPoint = "fs_main",
+            };
+            Shader = device.CreateShaderModule(shader_spec);
+
+            RenderPipelineSpec spec{
+                .Label = "fuck"sv,
+                .Layout = None(),
+                .Primitive = {
+                    .Topology = PrimitiveTopology::TriangleList,
+                    .StripIndexFormat = None(),
+                    .FrontFace = FrontFace::Ccw,
+                    .Cull = Face::None,
+                },
+                .DepthStencil = None(),
+                .MultiSample = MultiSampleState::Default(),
+                .Fragment = FragmentStage{
+                    .Targets = {
+                        ColorTargetState{
+                            .Format = texture.Spec.Format,
+                            .Blend = BlendState::Default(),
+                            .WriteMask = ColorWrite::All,
+                        }
+                    },
+                },
+            };
+            spec.Primitive.Topology = PrimitiveTopology::TriangleStrip;
+
+            Pipeline = device.CreateRenderPipeline(Shader, spec);
+
+            Layout = Pipeline.GetBindGroupLayout(0);
+
+            SamplerSpec sampler_spec{
+                .LodMinClamp = 0.f,
+                .LodMaxClamp = 0.f,
+                .AnisotropyClamp = 2,
+            };
+            TheSampler = device.CreateSampler(sampler_spec);
+
+            std::array entries = {
+                BindGroupEntry{
+                    .Binding = 0,
+                    .Resource = texture.View,
+                },
+                BindGroupEntry{
+                    .Binding = 1,
+                    .Resource = TheSampler
+                },
+            };
+            BindGroupSpec bg_spec{
+                .Label = "fuck2"sv,
+                .Entries = entries,
+            };
+
+            BindGroup = device.CreateBindGroup(Layout, bg_spec);
+
+            //LOG_DEBUGF("Creating {} views", MipLevels);
+            for (u32 i = 1; i < MipLevels; ++i) {
+                //LOG_DEBUGF("View {}", i);
+                Views.emplace_back(RenderTexture.CreateView({
+                    .Label = "View"sv,
+                    .Usage = RenderTexture.Spec.Usage,
+                    .Dimension = TextureViewDimension::D2,
+                    .Format = RenderTexture.Spec.Format,
+                    .BaseMipLevel = i,
+                    .MipLevelCount = 1,
+                    .BaseArrayLayer = 0,
+                    .ArrayLayerCount = 1,
+                    .Aspect = RenderTexture.Spec.Aspect
+                }));
+            }
+        }
+
+        void Process(Device const& device)
+        {
+            //LOG_DEBUGF("Generating mipmaps");
+            auto encoder = device.CreateCommandEncoder("MipMap Generation");
+            u32 i = 1;
+            Vector2 size = RenderTexture.Spec.Size;
+            for (auto& view : Views) {
+                if (size.X > 1)
+                    size.X = CAST(f32, CAST(u32, size.X) / 2);
+                if (size.Y > 1)
+                    size.Y = CAST(f32, CAST(u32, size.Y) / 2);
+
+                std::array colors = {
+                    RenderPassColorAttachment{
+                        .View = view,
+                        .LoadOp = LoadOp::Clear,
+                        .StoreOp = StoreOp::Store,
+                        .ClearColor = Color::Magenta,
+                    },
+                };
+                RenderPassSpec spec{
+                    .ColorAttachments = colors
+                };
+                auto rp = encoder.BeginRendering(spec);
+
+                rp.SetPipeline(Pipeline);
+                rp.SetBindGroup(BindGroup, 0);
+                rp.Draw({ 0, 6 }, { 0, 1 });
+                rp.End();
+
+
+                encoder.CopyTextureToTexture(RenderTexture, TargetTexture, size, i, i);
+
+                // std::vector<uint8_t> pixels(4 * size.X * size.Y);
+                // for (uint32_t k = 0; k < size.X; ++k) {
+                //     for (uint32_t j = 0; j < size.Y; ++j) {
+                //         uint8_t* p = &pixels[4 * (j * size.X + k)];
+                //         if (k == 0) {
+                //             // Our initial texture formula
+                //             p[0] = (k / 16) % 2 == (j / 16) % 2 ? 255 : 0; // r
+                //             p[1] = ((k - j) / 16) % 2 == 0 ? 255 : 0; // g
+                //             p[2] = ((k + j) / 16) % 2 == 0 ? 255 : 0; // b
+                //         } else {
+                //             // Some debug value for visualizing mip levels
+                //             p[0] = i % 2 == 0 ? 255 : 0;
+                //             p[1] = (i / 2) % 2 == 0 ? 255 : 0;
+                //             p[2] = (i / 4) % 2 == 0 ? 255 : 0;
+                //         }
+                //         p[3] = 255; // a
+                //     }
+                // }
+                // device.WriteTexture(TargetTexture, pixels.data(), pixels.size(), {}, size, i);
+                ++i;
+            }
+
+            auto cmd = encoder.Finish();
+            device.SubmitCommandBuffer(cmd);
+
+            encoder.Release();
+            for (auto& view : Views) {
+                view.Release();
+            }
+            Pipeline.Release();
+            TheSampler.Release();
+            BindGroup.Release();
+            Shader.Release();
+        }
+    };
 
     // Utility function to retrieve the adapter without callbacks.
     WGPUAdapter RequestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
@@ -22,7 +239,8 @@ namespace Fussion::GPU {
             WGPUAdapter Adapter;
             bool RequestEnded;
         } user_data;
-        wgpuInstanceRequestAdapter(instance, options,
+        wgpuInstanceRequestAdapter(
+            instance, options,
             [](WGPURequestAdapterStatus status, WGPUAdapter adapter, char const* message,
             void* pUserData) {
                 auto user_data = static_cast<UserData*>(pUserData);
@@ -33,7 +251,8 @@ namespace Fussion::GPU {
                     LOG_ERRORF("Could not get adapter: {}", message);
                 }
                 user_data->RequestEnded = true;
-            }, &user_data);
+            },
+            &user_data);
 
         return user_data.Adapter;
     }
@@ -46,7 +265,8 @@ namespace Fussion::GPU {
             bool RequestEnded;
         } user_data;
 
-        wgpuAdapterRequestDevice(adapter, descriptor,
+        wgpuAdapterRequestDevice(
+            adapter, descriptor,
             [](WGPURequestDeviceStatus status, WGPUDevice device, char const* message,
             void* pUserData) {
                 auto user_data = static_cast<UserData*>(pUserData);
@@ -57,7 +277,8 @@ namespace Fussion::GPU {
                     LOG_ERRORF("Could not get device: {}", message);
                 }
                 user_data->RequestEnded = true;
-            }, &user_data);
+            },
+            &user_data);
 
         return user_data.Device;
     }
@@ -87,9 +308,15 @@ namespace Fussion::GPU {
         wgpuBufferRelease(CAST(WGPUBuffer, Handle));
     }
 
-    BufferSlice::BufferSlice(Buffer const& buffer, u32 start, u32 size): BackingBuffer(buffer), Start(start), Size(size) {}
+    BufferSlice::BufferSlice(Buffer const& buffer, u32 start, u32 size)
+        : BackingBuffer(buffer)
+          , Start(start)
+          , Size(size) {}
 
-    BufferSlice::BufferSlice(Buffer const& buffer): BackingBuffer(buffer), Start(0), Size(buffer.GetSize()) {}
+    BufferSlice::BufferSlice(Buffer const& buffer)
+        : BackingBuffer(buffer)
+          , Start(0)
+          , Size(buffer.GetSize()) {}
 
     auto BufferSlice::GetMappedRange() -> void*
     {
@@ -101,19 +328,31 @@ namespace Fussion::GPU {
         wgpuTextureViewRelease(CAST(WGPUTextureView, Handle));
     }
 
-    void Texture::InitializeView()
+    void Texture::InitializeView(u32 array_count)
     {
         View = CreateView({
             .Label = "View"sv,
             .Usage = Spec.Usage,
-            .Dimension = TextureViewDimension::D2, // TODO: Make configurable
+            .Dimension = array_count == 1 ? TextureViewDimension::D2 : TextureViewDimension::D2_Array, // TODO: Make configurable
             .Format = Spec.Format,
             .BaseMipLevel = 0, // TODO: Make configurable
-            .MipLevelCount = Spec.MipLevelCount,
+            .MipLevelCount = MipLevelCount,
             .BaseArrayLayer = 0, // TODO: Make configurable
-            .ArrayLayerCount = 1, // TODO: Make configurable
+            .ArrayLayerCount = array_count, // TODO: Make configurable
             .Aspect = Spec.Aspect // TODO: Make configurable
         });
+    }
+
+    void Texture::GenerateMipmaps(Device const& device)
+    {
+        if (Spec.GenerateMipMaps && MipLevelCount > 1) {
+            MipMapPipeline mmp;
+            mmp.Initalize(device, *this);
+
+            //Utils::RenderDoc::StartCapture();
+            mmp.Process(device);
+            //Utils::RenderDoc::EndCapture();
+        }
     }
 
     TextureView Texture::CreateView(TextureViewSpec const& spec) const
@@ -175,13 +414,8 @@ namespace Fussion::GPU {
                     .Compare = CompareFunction::Always,
                     .FailOp = StencilOperation::Keep,
                     .DepthFailOp = StencilOperation::Keep,
-                    .PassOp = StencilOperation::Keep
-                },
-                .Back = {
-                    .Compare = CompareFunction::Always,
-                    .FailOp = StencilOperation::Keep,
-                    .DepthFailOp = StencilOperation::Keep,
                     .PassOp = StencilOperation::Keep },
+                .Back = { .Compare = CompareFunction::Always, .FailOp = StencilOperation::Keep, .DepthFailOp = StencilOperation::Keep, .PassOp = StencilOperation::Keep },
                 .ReadMask = 0xFFFFFFFF,
                 .WriteMask = 0xFFFFFFFF,
             },
@@ -199,13 +433,8 @@ namespace Fussion::GPU {
             .Color = {
                 .SrcFactor = BlendFactor::SrcAlpha,
                 .DstFactor = BlendFactor::OneMinusSrcAlpha,
-                .Operation = BlendOperation::Add
-            },
-            .Alpha = {
-                .SrcFactor = BlendFactor::Zero,
-                .DstFactor = BlendFactor::One,
-                .Operation = BlendOperation::Add
-            }
+                .Operation = BlendOperation::Add },
+            .Alpha = { .SrcFactor = BlendFactor::Zero, .DstFactor = BlendFactor::One, .Operation = BlendOperation::Add }
         };
     }
 
@@ -216,6 +445,12 @@ namespace Fussion::GPU {
             .Mask = ~0u,
             .AlphaToCoverageEnabled = false,
         };
+    }
+
+    auto RenderPipeline::GetBindGroupLayout(u32 index) -> BindGroupLayout
+    {
+        auto layout = wgpuRenderPipelineGetBindGroupLayout(As<WGPURenderPipeline>(), index);
+        return BindGroupLayout{ layout };
     }
 
     void RenderPipeline::Release()
@@ -344,12 +579,38 @@ namespace Fussion::GPU {
         wgpuCommandEncoderCopyBufferToBuffer(CAST(WGPUCommandEncoder, Handle), from.As<WGPUBuffer>(), from_offset, to.As<WGPUBuffer>(), to_offset, size);
     }
 
+    void CommandEncoder::CopyTextureToTexture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level, u32 to_mip_level) const
+    {
+        WGPUImageCopyTexture source{
+            .nextInChain = nullptr,
+            .texture = from.As<WGPUTexture>(),
+            .mipLevel = from_mip_level,
+            .origin = { 0, 0, 0 },
+            .aspect = WGPUTextureAspect_All,
+        };
+        WGPUImageCopyTexture dest{
+            .nextInChain = nullptr,
+            .texture = to.As<WGPUTexture>(),
+            .mipLevel = to_mip_level,
+            .origin = { 0, 0, 0 },
+            .aspect = WGPUTextureAspect_All,
+        };
+        WGPUExtent3D copy_size{
+            .width = CAST(u32, size.X),
+            .height = CAST(u32, size.Y),
+            .depthOrArrayLayers = 1,
+        };
+
+        wgpuCommandEncoderCopyTextureToTexture(CAST(WGPUCommandEncoder, Handle), &source, &dest, &copy_size);
+    }
+
     void CommandEncoder::Release() const
     {
         wgpuCommandEncoderRelease(CAST(WGPUCommandEncoder, Handle));
     }
 
-    Device::Device(HandleT handle): GPUHandle(handle)
+    Device::Device(HandleT handle)
+        : GPUHandle(handle)
     {
         Queue = wgpuDeviceGetQueue(CAST(WGPUDevice, Handle));
     }
@@ -381,15 +642,20 @@ namespace Fussion::GPU {
                 .depthOrArrayLayers = CAST(u32, spec.Size.Z),
             },
             .format = ToWgpu(spec.Format),
-            .mipLevelCount = spec.MipLevelCount,
+            .mipLevelCount = 1,
             .sampleCount = spec.SampleCount,
             .viewFormatCount = 0,
             .viewFormats = nullptr,
         };
 
+        if (spec.GenerateMipMaps) {
+            texture_descriptor.mipLevelCount = CAST(u32, Math::FloorLog2(Math::Max(CAST(s32, spec.Size.X), CAST(s32, spec.Size.Y)))) + 1;
+        }
+
         auto texture_handle = wgpuDeviceCreateTexture(CAST(WGPUDevice, Handle), &texture_descriptor);
 
         Texture texture{ texture_handle, spec };
+        texture.MipLevelCount = texture_descriptor.mipLevelCount;
         texture.InitializeView();
         return texture;
     }
@@ -415,7 +681,7 @@ namespace Fussion::GPU {
         return Sampler{ sampler };
     }
 
-    auto Device::CreateCommandEncoder(const char* label) const -> CommandEncoder
+    auto Device::CreateCommandEncoder(char const* label) const -> CommandEncoder
     {
         WGPUCommandEncoderDescriptor encoder_desc = {
             .nextInChain = nullptr,
@@ -440,19 +706,19 @@ namespace Fussion::GPU {
             };
 
             std::visit(overloaded{
-                [&](BufferBinding const& buffer_binding) {
-                    wgpu_entry.buffer = CAST(WGPUBuffer, buffer_binding.Buffer.Handle);
-                    wgpu_entry.offset = buffer_binding.Offset;
-                    wgpu_entry.size = buffer_binding.Size;
-                },
-                [&](Sampler const& sampler) {
-                    wgpu_entry.sampler = CAST(WGPUSampler, sampler.Handle);
-                },
-                [&](TextureView const& view) {
-                    wgpu_entry.textureView = CAST(WGPUTextureView, view.Handle);
-                },
-                [](auto&&) {}
-            }, entry.Resource);
+                    [&](BufferBinding const& buffer_binding) {
+                        wgpu_entry.buffer = CAST(WGPUBuffer, buffer_binding.Buffer.Handle);
+                        wgpu_entry.offset = buffer_binding.Offset;
+                        wgpu_entry.size = buffer_binding.Size;
+                    },
+                    [&](Sampler const& sampler) {
+                        wgpu_entry.sampler = CAST(WGPUSampler, sampler.Handle);
+                    },
+                    [&](TextureView const& view) {
+                        wgpu_entry.textureView = CAST(WGPUTextureView, view.Handle);
+                    },
+                    [](auto&&) {} },
+                entry.Resource);
 
             return wgpu_entry;
         });
@@ -479,70 +745,71 @@ namespace Fussion::GPU {
             };
 
             std::visit(overloaded{
-                [&](BindingType::Buffer const& buffer) {
-                    wgpu_entry.buffer = {
-                        .nextInChain = nullptr,
-                        .hasDynamicOffset = buffer.HasDynamicOffset,
-                    };
+                    [&](BindingType::Buffer const& buffer) {
+                        wgpu_entry.buffer = {
+                            .nextInChain = nullptr,
+                            .hasDynamicOffset = buffer.HasDynamicOffset,
+                        };
 
-                    wgpu_entry.buffer.type = std::visit(overloaded{
-                        [&](BufferBindingType::Uniform const&) {
-                            return WGPUBufferBindingType_Uniform;
-                        },
-                        [&](BufferBindingType::Storage const& storage) {
-                            if (storage.ReadOnly) {
-                                return WGPUBufferBindingType_ReadOnlyStorage;
-                            }
-                            return WGPUBufferBindingType_Storage;
-                        },
-                        [](auto&&) { return WGPUBufferBindingType_Undefined; }
-                    }, buffer.Type);
+                        wgpu_entry.buffer.type = std::visit(overloaded{
+                                [&](BufferBindingType::Uniform const&) {
+                                    return WGPUBufferBindingType_Uniform;
+                                },
+                                [&](BufferBindingType::Storage const& storage) {
+                                    if (storage.ReadOnly) {
+                                        return WGPUBufferBindingType_ReadOnlyStorage;
+                                    }
+                                    return WGPUBufferBindingType_Storage;
+                                },
+                                [](auto&&) { return WGPUBufferBindingType_Undefined; } },
+                            buffer.Type);
 
-                    if (buffer.MinBindingSize) {
-                        wgpu_entry.buffer.minBindingSize = *buffer.MinBindingSize;
-                    }
+                        if (buffer.MinBindingSize) {
+                            wgpu_entry.buffer.minBindingSize = *buffer.MinBindingSize;
+                        }
+                    },
+                    [&](BindingType::Sampler const& sampler) {
+                        wgpu_entry.sampler.type = ToWgpu(sampler.Type);
+                    },
+                    [&](BindingType::Texture const& texture) {
+                        wgpu_entry.texture = {
+                            .nextInChain = nullptr,
+                            .viewDimension = ToWgpu(texture.ViewDimension),
+                            .multisampled = texture.MultiSampled,
+                        };
+                        wgpu_entry.texture.sampleType = std::visit(overloaded{
+                                [](TextureSampleType::Float const& flt) {
+                                    if (flt.Filterable) {
+                                        return WGPUTextureSampleType_Float;
+                                    }
+                                    return WGPUTextureSampleType_UnfilterableFloat;
+                                },
+                                [](TextureSampleType::Depth const&) {
+                                    return WGPUTextureSampleType_Depth;
+                                },
+                                [](TextureSampleType::SInt const&) {
+                                    return WGPUTextureSampleType_Sint;
+                                },
+                                [](TextureSampleType::UInt const&) {
+                                    return WGPUTextureSampleType_Uint;
+                                },
+                                [](auto&&) { return WGPUTextureSampleType_Undefined; } },
+                            texture.SampleType);
+                    },
+                    [&](BindingType::StorageTexture const& storage_texture) {
+                        wgpu_entry.storageTexture = {
+                            .nextInChain = nullptr,
+                            .access = ToWgpu(storage_texture.Access),
+                            .format = ToWgpu(storage_texture.Format),
+                            .viewDimension = ToWgpu(storage_texture.ViewDimension),
+                        };
+                    },
+                    [](BindingType::AccelerationStructure&&) {
+                        PANIC("TODO!");
+                    },
+                    [](auto&&) {},
                 },
-                [&](BindingType::Sampler const& sampler) {
-                    wgpu_entry.sampler.type = ToWgpu(sampler.Type);
-                },
-                [&](BindingType::Texture const& texture) {
-                    wgpu_entry.texture = {
-                        .nextInChain = nullptr,
-                        .viewDimension = ToWgpu(texture.ViewDimension),
-                        .multisampled = texture.MultiSampled,
-                    };
-                    wgpu_entry.texture.sampleType = std::visit(overloaded{
-                        [](TextureSampleType::Float const& flt) {
-                            if (flt.Filterable) {
-                                return WGPUTextureSampleType_Float;
-                            }
-                            return WGPUTextureSampleType_UnfilterableFloat;
-                        },
-                        [](TextureSampleType::Depth const&) {
-                            return WGPUTextureSampleType_Depth;
-                        },
-                        [](TextureSampleType::SInt const&) {
-                            return WGPUTextureSampleType_Sint;
-                        },
-                        [](TextureSampleType::UInt const&) {
-                            return WGPUTextureSampleType_Uint;
-                        },
-                        [](auto&&) { return WGPUTextureSampleType_Undefined; }
-                    }, texture.SampleType);
-                },
-                [&](BindingType::StorageTexture const& storage_texture) {
-                    wgpu_entry.storageTexture = {
-                        .nextInChain = nullptr,
-                        .access = ToWgpu(storage_texture.Access),
-                        .format = ToWgpu(storage_texture.Format),
-                        .viewDimension = ToWgpu(storage_texture.ViewDimension),
-                    };
-                },
-                [](BindingType::AccelerationStructure&&) {
-                    PANIC("TODO!");
-                },
-                [](auto&&) {},
-            }, entry.Type);
+                entry.Type);
 
             return wgpu_entry;
         });
@@ -681,48 +948,48 @@ namespace Fussion::GPU {
         // We need to save these here because the color
         // target state gets a pointer to the blend state.
         std::vector<WGPUBlendState> blends{};
+        WGPUFragmentState fragment{};
 
-        // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
-        // and dangling pointers.
-        blends.reserve(spec.Fragment.Targets.size());
+        if (spec.Fragment.HasValue()) {
+            fragment.module = module.As<WGPUShaderModule>();
+            fragment.entryPoint = module.Spec.FragmentEntryPoint.data();
+            fragment.constantCount = 0;
+            fragment.constants = nullptr;
+            // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
+            // and dangling pointers.
+            blends.reserve(spec.Fragment->Targets.size());
 
-        std::ranges::transform(spec.Fragment.Targets, std::back_inserter(color_targets), [&blends](ColorTargetState const& state) {
-            WGPUColorTargetState wgpu_state{
-                .nextInChain = nullptr,
-                .format = ToWgpu(state.Format),
-                .writeMask = ToWgpu(state.WriteMask),
-            };
-
-            if (auto b = state.Blend) {
-                auto& blend = blends.emplace_back();
-                blend = {
-                    .color = {
-                        .operation = ToWgpu(b->Color.Operation),
-                        .srcFactor = ToWgpu(b->Color.SrcFactor),
-                        .dstFactor = ToWgpu(b->Color.DstFactor)
-                    },
-                    .alpha = {
-                        .operation = ToWgpu(b->Alpha.Operation),
-                        .srcFactor = ToWgpu(b->Alpha.SrcFactor),
-                        .dstFactor = ToWgpu(b->Alpha.DstFactor)
-                    }
+            std::ranges::transform(spec.Fragment->Targets, std::back_inserter(color_targets), [&blends](ColorTargetState const& state) {
+                WGPUColorTargetState wgpu_state{
+                    .nextInChain = nullptr,
+                    .format = ToWgpu(state.Format),
+                    .writeMask = ToWgpu(state.WriteMask),
                 };
 
-                wgpu_state.blend = &blend;
-            }
+                if (auto b = state.Blend) {
+                    auto& blend = blends.emplace_back();
+                    blend = {
+                        .color = {
+                            .operation = ToWgpu(b->Color.Operation),
+                            .srcFactor = ToWgpu(b->Color.SrcFactor),
+                            .dstFactor = ToWgpu(b->Color.DstFactor)
+                        },
+                        .alpha = {
+                            .operation = ToWgpu(b->Alpha.Operation),
+                            .srcFactor = ToWgpu(b->Alpha.SrcFactor),
+                            .dstFactor = ToWgpu(b->Alpha.DstFactor)
+                        }
+                    };
 
-            return wgpu_state;
-        });
+                    wgpu_state.blend = &blend;
+                }
 
-        WGPUFragmentState fragment{
-            .nextInChain = nullptr,
-            .module = module.As<WGPUShaderModule>(),
-            .entryPoint = module.Spec.FragmentEntryPoint.data(),
-            .constantCount = 0,
-            .constants = nullptr,
-            .targetCount = CAST(u32, color_targets.size()),
-            .targets = color_targets.data(),
-        };
+                return wgpu_state;
+            });
+
+            fragment.targetCount = CAST(u32, color_targets.size());
+            fragment.targets = color_targets.data();
+        }
 
         WGPURenderPipelineDescriptor desc{
             .nextInChain = nullptr,
@@ -731,7 +998,7 @@ namespace Fussion::GPU {
             .primitive = primitive,
             .depthStencil = nullptr,
             .multisample = multisample,
-            .fragment = &fragment,
+            .fragment = spec.Fragment ? &fragment : nullptr,
         };
         if (spec.Layout.HasValue()) {
             desc.layout = spec.Layout->As<WGPUPipelineLayout>();
@@ -769,8 +1036,12 @@ namespace Fussion::GPU {
         return RenderPipeline{ pipeline };
     }
 
+    std::mutex QueueMutex{};
+
     void Device::SubmitCommandBuffer(CommandBuffer cmd) const
     {
+        std::lock_guard lock(QueueMutex);
+
         WGPUCommandBuffer cmds[] = {
             CAST(WGPUCommandBuffer, cmd.Handle),
         };
@@ -810,7 +1081,7 @@ namespace Fussion::GPU {
             .depthOrArrayLayers = 1,
         };
         wgpuQueueWriteTexture(CAST(WGPUQueue, Queue), &copy_texture, data, data_size, &layout, &texture_size);
-
+        wgpuDevicePoll(As<WGPUDevice>(), true, nullptr);
     }
 
     void Device::Release()
@@ -827,12 +1098,14 @@ namespace Fussion::GPU {
     {
         m_Function = std::move(function);
 
-        wgpuDeviceSetUncapturedErrorCallback(CAST(WGPUDevice, Handle), [](WGPUErrorType type, char const* message, void* userdata) {
-            auto self = CAST(Device*, userdata);
+        wgpuDeviceSetUncapturedErrorCallback(
+            CAST(WGPUDevice, Handle), [](WGPUErrorType type, char const* message, void* userdata) {
+                auto self = CAST(Device*, userdata);
 
-            if (self->m_Function)
-                self->m_Function(FromWgpu(type), std::string_view(message));
-        }, this);
+                if (self->m_Function)
+                    self->m_Function(FromWgpu(type), std::string_view(message));
+            },
+            this);
     }
 
     auto Adapter::GetDevice() -> Device
@@ -845,8 +1118,7 @@ namespace Fussion::GPU {
             // .requiredLimits = ,
             .defaultQueue = {
                 .nextInChain = nullptr,
-                .label = "Default Queue"
-            },
+                .label = "Default Queue" },
             .deviceLostCallback = [](WGPUDeviceLostReason reason, char const* message, void* /* pUserData */) {
                 PANIC("!DEVICE LOST!: \n\tREASON: {}\n\tMESSAGE: {}", magic_enum::enum_name(reason), message);
             },
@@ -966,5 +1238,10 @@ namespace Fussion::GPU {
         };
         auto adapter = RequestAdapterSync(CAST(WGPUInstance, Handle), &options);
         return Adapter{ adapter };
+    }
+
+    void CommandBuffer::Release() const
+    {
+        wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, Handle));
     }
 }

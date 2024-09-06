@@ -13,7 +13,9 @@
 #include <variant>
 #include <concepts>
 #include <memory_resource>
+#include <mutex>
 
+// TODO: Add tests for this
 template<Fussion::ScalarType T>
 struct Range {
     T Start{};
@@ -54,6 +56,8 @@ namespace Fussion::GPU {
 
     using ErrorFn = std::function<void(ErrorType, std::string_view)>;
 
+    struct Device;
+
     template<typename SpecT>
     struct GPUHandle {
         HandleT Handle{};
@@ -91,17 +95,17 @@ namespace Fussion::GPU {
     };
 
     struct SamplerSpec {
-        Maybe<std::string_view> Label{};
-        AddressMode AddressModeU{};
-        AddressMode AddressModeV{};
-        AddressMode AddressModeW{};
-        FilterMode MagFilter{};
-        FilterMode MinFilter{};
-        FilterMode MipMapFilter{};
-        f32 LodMinClamp{ 1.0f };
-        f32 LodMaxClamp{ 1.0f };
-        Maybe<CompareFunction> Compare{};
-        u16 AnisotropyClamp{ 1_u16 };
+        Maybe<std::string_view> Label {};
+        AddressMode AddressModeU { AddressMode::Repeat };
+        AddressMode AddressModeV { AddressMode::Repeat };
+        AddressMode AddressModeW { AddressMode::Repeat };
+        FilterMode MagFilter { FilterMode::Linear };
+        FilterMode MinFilter { FilterMode::Linear };
+        FilterMode MipMapFilter { FilterMode::Linear };
+        f32 LodMinClamp { 0.0f };
+        f32 LodMaxClamp { 32.0f };
+        Maybe<CompareFunction> Compare {};
+        u16 AnisotropyClamp { 1_u16 };
     };
 
     struct Sampler : GPUHandle<void> {
@@ -149,9 +153,11 @@ namespace Fussion::GPU {
         TextureDimension Dimension{};
         Vector3 Size{};
         TextureFormat Format{};
-        u32 MipLevelCount{ 1 };
+        //u32 MipLevelCount{ 1 };
         u32 SampleCount{ 1 };
         TextureAspect Aspect{};
+
+        bool GenerateMipMaps { false };
     };
 
     struct TextureViewSpec {
@@ -182,9 +188,11 @@ namespace Fussion::GPU {
     struct Texture final : GPUHandle<TextureSpec> {
         using GPUHandle::GPUHandle;
 
-        TextureView View{};
+        u32 MipLevelCount {};
+        TextureView View {};
 
-        void InitializeView();
+        void InitializeView(u32 array_count = 1);
+        void GenerateMipmaps(Device const& device);
         TextureView CreateView(TextureViewSpec const& spec) const;
 
         virtual void Release() override;
@@ -494,7 +502,7 @@ namespace Fussion::GPU {
         PrimitiveState Primitive{};
         Maybe<DepthStencilState> DepthStencil{};
         MultiSampleState MultiSample{};
-        FragmentStage Fragment{};
+        Maybe<FragmentStage> Fragment{};
         // MutliView
         // Cache
     };
@@ -502,6 +510,7 @@ namespace Fussion::GPU {
     struct RenderPipeline : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
+        auto GetBindGroupLayout(u32 index) -> BindGroupLayout;
         virtual void Release() override;
     };
 
@@ -544,6 +553,8 @@ namespace Fussion::GPU {
 
     struct CommandBuffer {
         HandleT Handle{};
+
+        void Release() const;
     };
 
     struct CommandEncoder {
@@ -553,6 +564,7 @@ namespace Fussion::GPU {
         auto Finish() -> CommandBuffer;
 
         void CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
+        void CopyTextureToTexture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level = 0, u32 to_mip_level = 0) const;
 
         void Release() const;
     };

@@ -5,6 +5,7 @@
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Core/Application.h"
 #include "Fussion/Assets/PbrMaterial.h"
+#include "Fussion/GPU/Utils.h"
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -50,6 +51,8 @@ namespace Fussion {
         s_Renderer->m_Device.SetErrorCallback([&](GPU::ErrorType type, std::string_view message) {
             LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
         });
+
+        GPU::Utils::RenderDoc::Initialize();
     }
 
     void Renderer::Shutdown()
@@ -85,6 +88,7 @@ namespace Fussion {
     {
         s_Renderer->m_Device.SubmitCommandBuffer(cmd);
         s_Renderer->m_Surface.Present();
+        cmd.Release();
     }
 
     void Renderer::Resize(Vector2 const& new_size)
@@ -107,97 +111,6 @@ namespace Fussion {
     auto Renderer::WhiteTexture() -> AssetRef<Texture2D> { return s_Renderer->m_WhiteTexture; }
 
     auto Renderer::BlackTexture() -> AssetRef<Texture2D> { return s_Renderer->m_BlackTexture; }
-
-    // void Renderer::CreateDefaultRenderpasses()
-    // {
-    //     auto& device = Device::Instance();
-    //     auto main_rp_spec = RenderPassSpecification{
-    //         .Label = "Main RenderPass",
-    //         .Attachments = {
-    //             RenderPassAttachment{
-    //                 .Label = "Color Attachment",
-    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
-    //                 .StoreOp = RenderPassAttachmentStoreOp::Store,
-    //                 .Format = ImageFormat::B8G8R8A8_UNORM,
-    //                 .FinalLayout = ImageLayout::PresentSrc,
-    //                 .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
-    //             },
-    //             RenderPassAttachment{
-    //                 .Label = "Depth Attachment",
-    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
-    //                 .Format = ImageFormat::D32_SFLOAT,
-    //                 .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
-    //                 .ClearDepth = 1.f,
-    //             }
-    //         },
-    //         .SubPasses = {
-    //             RenderPassSubPass{
-    //                 .ColorAttachments = {
-    //                     {
-    //                         .Attachment = 0,
-    //                         .Layout = ImageLayout::ColorAttachmentOptimal,
-    //                     }
-    //                 },
-    //                 .DepthStencilAttachment = RenderPassAttachmentRef{
-    //                     .Attachment = 1,
-    //                     .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-    //                 }
-    //             },
-    //         }
-    //     };
-    //
-    //     m_MainRenderPass = device->CreateRenderPass(main_rp_spec);
-    //
-    //     auto ui_rp_spec = RenderPassSpecification{
-    //         .Label = "UI RenderPass",
-    //         .Attachments = {
-    //             RenderPassAttachment{
-    //                 .Label = "Color Attachment",
-    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
-    //                 .StoreOp = RenderPassAttachmentStoreOp::Store,
-    //                 .Format = ImageFormat::B8G8R8A8_UNORM,
-    //                 .FinalLayout = ImageLayout::ColorAttachmentOptimal,
-    //                 .ClearColor = { 0.2f, 0.6f, 0.15f, 1.0f },
-    //             },
-    //             RenderPassAttachment{
-    //                 .Label = "Depth Attachment",
-    //                 .LoadOp = RenderPassAttachmentLoadOp::Clear,
-    //                 .Format = ImageFormat::D32_SFLOAT,
-    //                 .FinalLayout = ImageLayout::DepthStencilAttachmentOptimal,
-    //                 .ClearDepth = 1.f,
-    //             }
-    //         },
-    //         .SubPasses = {
-    //             RenderPassSubPass{
-    //                 .ColorAttachments = {
-    //                     {
-    //                         .Attachment = 0,
-    //                         .Layout = ImageLayout::ColorAttachmentOptimal,
-    //                     }
-    //                 },
-    //                 .DepthStencilAttachment = RenderPassAttachmentRef{
-    //                     .Attachment = 1,
-    //                     .Layout = ImageLayout::DepthStencilAttachmentOptimal,
-    //                 }
-    //             },
-    //         }
-    //     };
-    //
-    //     m_UIRenderPass = device->CreateRenderPass(ui_rp_spec);
-    //
-    //     auto& window = Application::Instance()->GetWindow();
-    //     auto swapchain_spec = SwapChainSpecification{
-    //         .Size = { CAST(f32, window.GetWidth()), CAST(f32, window.GetHeight()) },
-    //         .PresentMode = VideoPresentMode::Immediate,
-    //         .Format = ImageFormat::B8G8R8A8_UNORM,
-    //     };
-    //     m_Swapchain = device->CreateSwapchain(m_MainRenderPass, swapchain_spec);
-    //
-    //     auto cmd_spec = CommandBufferSpecification{
-    //         .Label = "Renderer Command Buffers",
-    //     };
-    //     m_CommandBuffers = device->GetMainCommandPool()->AllocateCommandBuffers(m_Swapchain->GetImageCount(), cmd_spec);
-    // }
 
     static unsigned char g_white_texture_png[] = {
 #include "white_texture.png.h"

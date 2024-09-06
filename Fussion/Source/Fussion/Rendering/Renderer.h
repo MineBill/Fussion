@@ -38,6 +38,9 @@ namespace Fussion {
         [[nodiscard]]
         static auto BlackTexture() -> AssetRef<Texture2D>;
 
+        static void RD_StartCapture();
+        static void RD_EndCapture();
+
         void CreateDefaultResources();
 
     private:

@@ -6,18 +6,20 @@ struct VertexOutput {
 @vertex
 fn vs_main(@builtin(vertex_index) vtx: u32) -> VertexOutput {
     var out: VertexOutput;
-    var plane: array<vec3f, 6> = array(
-        vec3f(-1, -1, 0), vec3f(1, -1, 0), vec3f(-1, 1, 0),
-        vec3f(-1, 1, 0), vec3f(1, -1, 0), vec3f(1, 1, 0)
-    );
-    var uvs: array<vec2<f32>, 6> = array(
-        vec2f(0, 1), vec2f(1, 1), vec2f(0, 0),
-        vec2f(0, 0), vec2f(1, 1), vec2f(1, 0),
-    );
-    let p = plane[vtx].xyz;
+    // var plane: array<vec3f, 6> = array(
+    //     vec3f(-1, -1, 0), vec3f(1, -1, 0), vec3f(-1, 1, 0),
+    //     vec3f(-1, 1, 0), vec3f(1, -1, 0), vec3f(1, 1, 0)
+    // );
+    // var uvs: array<vec2<f32>, 6> = array(
+    //     vec2f(0, 1), vec2f(1, 1), vec2f(0, 0),
+    //     vec2f(0, 0), vec2f(1, 1), vec2f(1, 0),
+    // );
+    // let p = plane[vtx].xyz;
 
-    out.position = vec4<f32>(p, 1.0);
-    out.uv = uvs[vtx];
+    // out.position = vec4<f32>(p, 1.0);
+    // out.uv = uvs[vtx];
+        out.uv = vec2f(f32((vtx << 1) & 2), f32(vtx & 2));
+    out.position = vec4f(out.uv * vec2f(2.0f, -2.0f) + vec2f( -1.0f, 1.0f), 0.0f, 1.0f);
     return out;
 }
 
