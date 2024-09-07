@@ -7,10 +7,6 @@
 
 namespace Fussion {
     class MeshRenderer final : public Component {
-        struct PushConstantData {
-            Mat4 Model;
-        } m_Data;
-
         struct DepthPushConstantData {
             Mat4 Model;
             Mat4 LightSpace;

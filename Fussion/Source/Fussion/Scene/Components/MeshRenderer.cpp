@@ -11,12 +11,7 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    void MeshRenderer::OnStart()
-    {
-        ZoneScoped;
-
-        m_Data.Model = glm::mat4(1.0f);
-    }
+    void MeshRenderer::OnStart() {}
 
     void MeshRenderer::OnUpdate([[maybe_unused]] f32 delta) {}
 
@@ -43,12 +38,10 @@ namespace Fussion {
                 material = Renderer::GetDefaultMaterial().Get();
             }
 
-            m_Data.Model = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
-
             RenderObject obj;
             obj.Material = material;
             obj.Position = m_Owner->Transform.Position;
-            obj.WorldMatrix = translate(m_Owner->Transform.GetMatrix(), CAST(glm::vec3, mesh.Offset));
+            obj.WorldMatrix = translate(m_Owner->GetWorldMatrix(), CAST(glm::vec3, mesh.Offset));
             obj.VertexBuffer = mesh.VertexBuffer;
             obj.IndexBuffer = mesh.IndexBuffer;
             obj.IndexCount = mesh.IndexCount;

@@ -54,7 +54,11 @@ namespace Fussion {
         Entity& operator=(Entity&& other) noexcept;
 
         void SetParent(Entity const& new_parent);
+        auto GetParent() const -> Entity*;
         void AddChild(Entity& other);
+
+        auto GetWorldMatrix() const -> Mat4;
+        auto GetLocalMatrix() const -> Mat4;
 
         void SetEnabled(bool enabled);
         bool IsEnabled() const;

@@ -380,7 +380,8 @@ void Editor::OnEvent(Event& event)
             Save();
         }
 
-        if (e.Key == Keys::D && e.Mods.Test(KeyMod::Control)) {
+        // TODO: This is really fucky. Figure out a way to properly define what has input focus and what not.
+        if (m_SceneWindow->IsFocused() && !m_ViewportWindow->IsFocused() && e.Key == Keys::D && e.Mods.Test(KeyMod::Control)) {
             for (auto const& [entity, nothing] : m_SceneWindow->GetSelection()) {
                 (void)nothing;
                 auto new_handle = m_ActiveScene->CloneEntity(entity);
@@ -444,7 +445,7 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
         m_SceneRenderer.Render(encoder, {
             .Camera = RenderCamera{
                 .Perspective = camera.GetPerspective(),
-                .View = entity->Transform.GetCameraMatrix(),
+                .View = inverse(entity->GetWorldMatrix()),
                 .Position = entity->Transform.Position,
                 .Near = camera.Near,
                 .Far = camera.Far,
@@ -463,7 +464,7 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
     case PlayState::Paused: {
         auto camera = m_PlayScene->FindFirstComponent<Camera>();
 
-        if (camera == nullptr) {
+        if (camera == nullptr || m_Detached) {
             RenderEditorView(m_PlayScene);
         } else {
             RenderGameView(*camera.get());

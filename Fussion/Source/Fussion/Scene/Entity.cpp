@@ -147,9 +147,27 @@ namespace Fussion {
         m_Parent = new_parent.m_Handle;
     }
 
+    auto Entity::GetParent() const -> Entity*
+    {
+        return m_Scene->GetEntity(m_Parent);
+    }
+
     void Entity::AddChild(Entity& other)
     {
         other.SetParent(*this);
+    }
+
+    auto Entity::GetWorldMatrix() const -> Mat4
+    {
+        if (auto parent = m_Scene->GetEntity(m_Parent)) {
+            return parent->GetWorldMatrix() * GetLocalMatrix();
+        }
+        return GetLocalMatrix();
+    }
+
+    auto Entity::GetLocalMatrix() const -> Mat4
+    {
+        return Transform.GetMatrix();
     }
 
     void Entity::AddChildInternal(Entity const& child)

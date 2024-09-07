@@ -255,7 +255,7 @@ void ViewportWindow::OnDraw()
         ImGui::SameLine();
 
         out.clear();
-        std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode));
+        std::format_to(std::back_inserter(out), "Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace));
         fuck = { out.data(), out.size() };
 
         EUI::Button(fuck.data(), [&] {
@@ -278,13 +278,15 @@ void ViewportWindow::OnDraw()
             for (auto const& id : selection | std::views::keys) {
                 auto const& entity = Editor::GetActiveScene()->GetEntity(id);
 
-                auto m = entity->Transform.GetMatrix();
+                Vector3 snap {0.5, 0.5, 0.5};
+
+                auto m = entity->GetWorldMatrix();
                 if (ImGuizmo::Manipulate(
                     glm::value_ptr(Editor::GetCamera().GetView()),
                     glm::value_ptr(Editor::GetCamera().GetPerspective()),
                     GizmoModeToImGuizmo(m_GizmoMode),
                     GizmoSpaceToImGuizmo(m_GizmoSpace),
-                    glm::value_ptr(m))) {
+                    glm::value_ptr(m), nullptr, Input::IsKeyDown(Keys::LeftControl) ? snap.Raw : nullptr)) {
                     ImGuizmo::DecomposeMatrixToComponents(
                         glm::value_ptr(m),
                         entity->Transform.Position.Raw,
