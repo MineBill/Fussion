@@ -127,13 +127,17 @@ namespace Fussion::GPU {
         using GPUHandle::GPUHandle;
 
         auto GetSize() const -> u64;
-        auto GetSlice(u32 start, u32 size) -> BufferSlice;
-        auto GetSlice() -> BufferSlice;
+        auto GetSlice(u32 start, u32 size) const -> BufferSlice;
+        auto GetSlice() const -> BufferSlice;
+
+        void UnMap() const;
 
         virtual void Release() override;
     };
 
     struct BufferSlice {
+        using AsyncMapCallback = std::function<void()>;
+
         Buffer BackingBuffer;
         u32 Start{};
         u32 Size{};
@@ -145,6 +149,9 @@ namespace Fussion::GPU {
         /// This assumes buffer was created with Mapped = true
         /// or that this call is a result from map of the buffer.
         auto GetMappedRange() -> void*;
+
+
+        void MapAsync(AsyncMapCallback const& callback);
     };
 
     struct TextureSpec {

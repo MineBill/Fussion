@@ -8,6 +8,7 @@
 #include "Fussion/GPU/Utils.h"
 
 #include <magic_enum/magic_enum.hpp>
+#include <tracy/Tracy.hpp>
 
 using namespace Fussion::RHI;
 
@@ -67,6 +68,7 @@ namespace Fussion {
 
     auto Renderer::Begin() -> Maybe<GPU::TextureView>
     {
+        ZoneScoped;
         auto new_size = Application::Instance()->GetWindow().GetSize();
         if (s_Renderer->m_WindowSize != new_size) {
             Resize(new_size);
@@ -86,6 +88,7 @@ namespace Fussion {
 
     void Renderer::End(GPU::CommandBuffer cmd)
     {
+        ZoneScoped;
         s_Renderer->m_Device.SubmitCommandBuffer(cmd);
         s_Renderer->m_Surface.Present();
         cmd.Release();
@@ -93,6 +96,7 @@ namespace Fussion {
 
     void Renderer::Resize(Vector2 const& new_size)
     {
+        ZoneScoped;
         if (new_size.IsZero()) {
             s_Renderer->m_SkipRender = true;
             return;

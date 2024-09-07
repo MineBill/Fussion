@@ -1,10 +1,7 @@
 ﻿#pragma once
-#include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Types.h"
 
 #include "Fussion/Scene/Scene.h"
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 #include "Fussion/Rendering/UniformBuffer.h"
@@ -85,19 +82,6 @@ public:
     void Render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
 
     auto GetRenderTarget() const -> Fussion::GPU::Texture const& { return m_SceneRenderTarget; }
-#if 0
-    [[nodiscard]]
-    Ref<RHI::FrameBuffer> const& GetFrameBuffer() const { return m_FrameBuffers[(m_CurrentFrame - 1) % RHI::MAX_FRAMES_IN_FLIGHT]; }
-
-    [[nodiscard]]
-    auto GetDepthImage() const -> Ref<RHI::Image> { return m_DepthImage; }
-
-    [[nodiscard]]
-    auto GetObjectPickingFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ObjectPickingFrameBuffer; }
-
-    [[nodiscard]]
-    auto GetShadowDebugFrameBuffer() const -> Ref<RHI::FrameBuffer> const& { return m_ShadowViewerFrameBuffers[0]; }
-#endif
 
 private:
     struct InstanceData {
@@ -129,6 +113,8 @@ private:
     Fussion::GPU::BindGroup m_GlobalBindGroup{}, m_SceneBindGroup{};
     Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout{}, m_SceneBindGroupLayout{}, m_ObjectBindGroupLayout{}, m_ObjectDepthBGL{};
 
+    std::vector<Fussion::GPU::Buffer> m_InstanceBufferPool{};
+
     Fussion::GPU::Buffer m_PbrInstanceBuffer{}, m_DepthInstanceBuffer{};
     std::vector<u8> m_PbrInstanceStagingBuffer{};
     std::vector<u8> m_DepthInstanceStagingBuffer{};
@@ -141,36 +127,4 @@ private:
     Fsn::RenderContext m_RenderContext{};
 
     std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease{};
-#if 0
-    Fsn::AssetRef<Fsn::ShaderAsset> m_PbrShader{}, m_GridShader, m_DepthShader, m_ObjectPickingShader;
-    Fsn::AssetRef<Fsn::ShaderAsset> m_SkyShader{};
-
-    std::array<Ref<RHI::ResourcePool>, RHI::MAX_FRAMES_IN_FLIGHT> m_ResourcePool{};
-    std::array<Ref<RHI::Resource>, RHI::MAX_FRAMES_IN_FLIGHT> m_GlobalResource{};
-    std::array<Ref<RHI::Resource>, RHI::MAX_FRAMES_IN_FLIGHT> m_SceneResource;
-
-    std::array<Ref<RHI::Buffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_InstanceBuffers;
-    std::array<Ref<RHI::Buffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_PBRInstanceBuffers{};
-
-    RHI::FrameAllocator m_FrameAllocator;
-    std::array<RHI::ResourceUsage, 1> m_ObjectDepthResourceUsages{};
-    std::array<RHI::ResourceUsage, 7> m_PBRResourceUsages{};
-
-    Ref<RHI::RenderPass> m_SceneRenderPass{};
-    std::array<Ref<RHI::FrameBuffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_FrameBuffers{};
-
-    Ref<RHI::RenderPass> m_DepthPass{};
-    Ref<RHI::Image> m_DepthImage{};
-
-    Ref<RHI::RenderPass> m_ObjectPickingRenderPass{};
-    Ref<RHI::FrameBuffer> m_ObjectPickingFrameBuffer{};
-
-    std::array<Ref<RHI::FrameBuffer>, ShadowCascades> m_ShadowFrameBuffers{};
-
-    Ref<RHI::RenderPass> m_ShadowPassDebugRenderPass{};
-    Fsn::AssetRef<Fsn::ShaderAsset> m_DepthViewerShader{};
-    std::array<Ref<RHI::FrameBuffer>, RHI::MAX_FRAMES_IN_FLIGHT> m_ShadowViewerFrameBuffers{};
-
-    u32 m_CurrentFrame{ 0 };
-#endif
 };

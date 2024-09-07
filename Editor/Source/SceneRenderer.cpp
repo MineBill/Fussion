@@ -1,11 +1,11 @@
-﻿#include "SceneRenderer.h"
+﻿#include "EditorPCH.h"
 
-#include "EditorPCH.h"
-#include "Fussion/Core/Application.h"
-#include "Fussion/GPU/ShaderProcessor.h"
-#include "Fussion/Rendering/Renderer.h"
+#include "SceneRenderer.h"
 #include "Project/Project.h"
 
+#include <Fussion/Core/Application.h>
+#include <Fussion/GPU/ShaderProcessor.h>
+#include <Fussion/Rendering/Renderer.h>
 #include <Fussion/Core/Time.h>
 #include <Fussion/Debug/Debug.h>
 #include <Fussion/OS/FileSystem.h>
@@ -1042,7 +1042,6 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
     {
         ZoneScopedN("Depth Pass");
 
-        u32 buffer_offset = 0;
         for (auto& light : m_RenderContext.DirectionalLights) {
 
             std::array<f32, ShadowCascades> shadow_splits{};
@@ -1051,7 +1050,22 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 shadow_splits[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
             }
 
+            GPU::Buffer instance_buffer;
+            if (!m_InstanceBufferPool.empty()) {
+                instance_buffer = m_InstanceBufferPool.back();
+                m_InstanceBufferPool.pop_back();
+            } else {
+                GPU::BufferSpec spec{
+                    .Label = "Depth Instance Buffer"sv,
+                    .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+                    .Size = sizeof(Mat4) * 2 * 2'000,
+                    .Mapped = true,
+                };
+                instance_buffer = Renderer::Device().CreateBuffer(spec);
+            }
+
             f32 last_split{ 0 };
+            u32 buffer_offset = 0;
             for (auto i = 0; i < ShadowCascades; i++) {
                 ZoneScopedN("Shadow Cascade");
 
@@ -1111,6 +1125,36 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
 
                 light.ShaderData.LightSpaceMatrix[i] = proj * view;
 
+                SceneLightData.Data.ShadowSplitDistances[i] = packet.Camera.Near + split * (packet.Camera.Far - packet.Camera.Near) * -1.0f;
+                SceneLightData.Data.DirectionalLight.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
+
+                for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+                    auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.GetSlice().GetMappedRange()) + buffer_offset;
+                    int j = 0;
+                    for (auto index : list) {
+                        auto& obj = m_RenderContext.RenderObjects[index];
+                        data[j].Model = obj.WorldMatrix;
+                        data[j++].LightSpace = light.ShaderData.LightSpaceMatrix[i];
+                    }
+
+                    buffer_offset += list.size();
+                }
+                last_split = split;
+            }
+
+            instance_buffer.UnMap();
+            auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+
+            copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_DepthInstanceBuffer, 0, buffer_offset * sizeof(DepthInstanceData));
+            Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
+            copy_encoder.Release();
+
+            instance_buffer.GetSlice().MapAsync([instance_buffer, this] {
+                m_InstanceBufferPool.push_back(instance_buffer);
+            });
+
+            buffer_offset = 0;
+            for (auto i = 0; i < ShadowCascades; i++) {
                 GPU::RenderPassSpec rp_spec{
                     .Label = "DepthPass::RenderPass"sv,
                     .DepthStencilAttachment = GPU::RenderPassColorAttachment{
@@ -1120,10 +1164,6 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                         .DepthClear = 1.0f,
                     },
                 };
-
-                SceneLightData.Data.ShadowSplitDistances[i] = packet.Camera.Near + split * (packet.Camera.Far - packet.Camera.Near) * -1.0f;
-                SceneLightData.Data.DirectionalLight.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
-
                 auto rp = encoder.BeginRendering(rp_spec);
                 rp.SetViewport({}, { ShadowMapResolution, ShadowMapResolution });
                 rp.SetPipeline(m_DepthPipeline);
@@ -1153,19 +1193,6 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     auto object_group = Renderer::Device().CreateBindGroup(m_ObjectDepthBGL, bg_spec);
                     m_ObjectGroupsToRelease.push_back(object_group);
 
-                    auto data = TRANSMUTE(DepthInstanceData*, m_DepthInstanceStagingBuffer.data()) + buffer_offset;
-                    int j = 0;
-                    for (auto index : list) {
-                        auto& obj = m_RenderContext.RenderObjects[index];
-                        data[j].Model = obj.WorldMatrix;
-                        data[j++].LightSpace = light.ShaderData.LightSpaceMatrix[i];
-                    }
-
-                    auto byte_offset = buffer_offset * sizeof(DepthInstanceData);
-                    Renderer::Device().WriteBuffer(
-                        m_DepthInstanceBuffer, byte_offset,
-                        m_DepthInstanceStagingBuffer.data() + byte_offset, list.size() * sizeof(DepthInstanceData));
-
                     rp.SetVertexBuffer(0, hack.VertexBuffer);
                     rp.SetIndexBuffer(hack.IndexBuffer);
                     rp.SetBindGroup(object_group, 0);
@@ -1173,25 +1200,17 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     rp.DrawIndex({ 0, hack.IndexCount }, { buffer_offset, CAST(u32, list.size()) });
                     buffer_offset += list.size();
                 }
-                // if (packet.Scene) {
-                //     m_RenderContext.CurrentShader = depth_shader;
-                //     m_RenderContext.CurrentLightSpace = light.ShaderData.LightSpaceMatrix[i];
-                //     packet.Scene->ForEachEntity([&](Entity* entity) {
-                //         ZoneScopedN("Entity Draw");
-                //         entity->OnDraw(m_RenderContext);
-                //     });
-                // }
                 rp.End();
                 rp.Release();
-                last_split = split;
             }
             SceneLightData.Flush();
         }
     }
 }
 
-void SceneRenderer::PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
+void SceneRenderer::PbrPass(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
 {
+    ZoneScopedN("PBR Pass");
     std::array color_attachments{
         GPU::RenderPassColorAttachment{
             .View = m_HDRPipeline.View(),
@@ -1224,7 +1243,45 @@ void SceneRenderer::PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket 
     scene_rp.SetPipeline(m_PbrPipeline);
     scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
 
-    u32 buffer_offset = 0;
+    GPU::Buffer instance_buffer;
+    if (!m_InstanceBufferPool.empty()) {
+        instance_buffer = m_InstanceBufferPool.back();
+        m_InstanceBufferPool.pop_back();
+    } else {
+        GPU::BufferSpec spec{
+            .Label = "PBR Instance Buffer"sv,
+            .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+            .Size = sizeof(Mat4) * 2'000,
+            .Mapped = true,
+        };
+        instance_buffer = Renderer::Device().CreateBuffer(spec);
+    }
+
+    u32 buffer_count_offset = 0;
+
+    for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+        auto data = TRANSMUTE(InstanceData*, instance_buffer.GetSlice().GetMappedRange()) + buffer_count_offset;
+        int j = 0;
+        for (auto index : list) {
+            auto& obj = m_RenderContext.RenderObjects[index];
+            data[j++].Model = obj.WorldMatrix;
+        }
+
+        buffer_count_offset += list.size();
+    }
+    instance_buffer.UnMap();
+
+    auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+
+    copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_PbrInstanceBuffer, 0, buffer_count_offset * sizeof(InstanceData));
+    Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
+    copy_encoder.Release();
+
+    instance_buffer.GetSlice().MapAsync([instance_buffer, this] {
+        m_InstanceBufferPool.push_back(instance_buffer);
+    });
+
+    buffer_count_offset = 0;
     for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
         ZoneScopedN("PBR Command Buffer Dispatch");
         (void)buffer;
@@ -1315,24 +1372,12 @@ void SceneRenderer::PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket 
         auto object_group = Renderer::Device().CreateBindGroup(m_ObjectBindGroupLayout, global_bg_spec);
         m_ObjectGroupsToRelease.push_back(object_group);
 
-        auto data = TRANSMUTE(InstanceData*, m_PbrInstanceStagingBuffer.data()) + buffer_offset;
-        int j = 0;
-        for (auto index : list) {
-            auto& obj = m_RenderContext.RenderObjects[index];
-            data[j++].Model = obj.WorldMatrix;
-        }
-
-        auto byte_offset = buffer_offset * sizeof(InstanceData);
-        Renderer::Device().WriteBuffer(
-            m_PbrInstanceBuffer, byte_offset,
-            m_PbrInstanceStagingBuffer.data() + byte_offset, list.size() * sizeof(InstanceData));
-
         scene_rp.SetVertexBuffer(0, hack.VertexBuffer);
         scene_rp.SetIndexBuffer(hack.IndexBuffer);
         scene_rp.SetBindGroup(object_group, 1);
 
-        scene_rp.DrawIndex({ 0, hack.IndexCount }, { buffer_offset, CAST(u32, list.size()) });
-        buffer_offset += list.size();
+        scene_rp.DrawIndex({ 0, hack.IndexCount }, { buffer_count_offset, CAST(u32, list.size()) });
+        buffer_count_offset += list.size();
     }
 
     // Draw editor specific stuff only if we are not rendering a game view.

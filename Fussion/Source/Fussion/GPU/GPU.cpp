@@ -193,7 +193,6 @@ namespace Fussion::GPU {
                 rp.Draw({ 0, 6 }, { 0, 1 });
                 rp.End();
 
-
                 encoder.CopyTextureToTexture(RenderTexture, TargetTexture, size, i, i);
 
                 // std::vector<uint8_t> pixels(4 * size.X * size.Y);
@@ -293,14 +292,19 @@ namespace Fussion::GPU {
         return wgpuBufferGetSize(CAST(WGPUBuffer, Handle));
     }
 
-    auto Buffer::GetSlice(u32 start, u32 size) -> BufferSlice
+    auto Buffer::GetSlice(u32 start, u32 size) const -> BufferSlice
     {
         return BufferSlice(*this, start, size);
     }
 
-    auto Buffer::GetSlice() -> BufferSlice
+    auto Buffer::GetSlice() const -> BufferSlice
     {
         return BufferSlice(*this, 0, GetSize());
+    }
+
+    void Buffer::UnMap() const
+    {
+        wgpuBufferUnmap(As<WGPUBuffer>());
     }
 
     void Buffer::Release()
@@ -321,6 +325,23 @@ namespace Fussion::GPU {
     auto BufferSlice::GetMappedRange() -> void*
     {
         return wgpuBufferGetMappedRange(BackingBuffer.As<WGPUBuffer>(), Start, Size);
+    }
+
+    void BufferSlice::MapAsync(AsyncMapCallback const& callback)
+    {
+        struct UserData {
+            AsyncMapCallback Callback;
+        };
+        wgpuBufferMapAsync(BackingBuffer.As<WGPUBuffer>(), WGPUMapMode_Write, Start, Size, [](WGPUBufferMapAsyncStatus status, void* userdata) {
+            auto user_data = CAST(UserData*, userdata);
+            if (status == WGPUBufferMapAsyncStatus_Success) {
+                user_data->Callback();
+            } else {
+                LOG_ERRORF("Could not map buffer: {}", magic_enum::enum_name(status));
+            }
+
+            delete user_data;
+        }, new UserData(callback));
     }
 
     void TextureView::Release()
