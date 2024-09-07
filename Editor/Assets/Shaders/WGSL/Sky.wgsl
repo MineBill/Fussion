@@ -61,7 +61,7 @@ fn noise(p: vec3f) -> f32 {
     let o2 = fract(k4 * (1.0 / 41.0));
 
     let o3 = o2 * d.z + o1 * (1.0 - d.z);
-    let o4 = o3.yz * d.z + o3.xz * (1.0 - d.x);
+    let o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
 
     return o4.y * d.y + o4.x * (1.0 - d.y);
 }
@@ -71,15 +71,15 @@ const m = mat3x3f(0.0, 1.6, 1.2, -1.6, 0.72, -0.96, -1.2, -0.96, 1.28);
 fn fbm(pp: vec3f) -> f32 {
     var p = pp;
     var f = 0.0;
-    f += noise(p) / 2;
+    f += noise(p) / 2.0;
     p = m * p * 1.1;
-    f += noise(p) / 4;
+    f += noise(p) / 4.0;
     p = m * p * 1.2;
-    f += noise(p) / 6;
+    f += noise(p) / 6.0;
     p = m * p * 1.3;
-    f += noise(p) / 12;
+    f += noise(p) / 12.0;
     p = m * p * 1.4;
-    f += noise(p) / 24;
+    f += noise(p) / 24.0;
     return f;
 }
 
@@ -99,7 +99,7 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     }
     var out: FragmentOutput;
     var global_data: GlobalData;
-    global_data.time = 0.0;
+    global_data.time = 1.0;
 
     let Br = 0.0025;
     let Bm = 0.0003;
@@ -115,18 +115,18 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     let day_extinction = exp(-exp(-((in.pos.y + light_data.directional.direction.xyz.y * 4.0) * (exp(-in.pos.y * 16.0) + 0.1) / 80.0) / Br) * (exp(-in.pos.y * 16.0) + 0.1) * Kr / Br) * exp(-in.pos.y * exp(-in.pos.y * 8.0 ) * 4.0) * exp(-in.pos.y * 2.0) * 4.0;
     let night_extinction = vec3f(1.0 - exp(light_data.directional.direction.y)) * 0.2;
-    let extinction = mix(day_extinction, night_extinction, -light_data.directional.direction.y * 0.2 + 0.5);
+    let extinction = mix(day_extinction , night_extinction, -light_data.directional.direction.y * 0.2 + 0.5);
     var color = vec4f(rayleigh * mie * extinction, 1.0).xyz;
 
     let cirrus = 0.5;
-    // // Cirrus Clouds
+    // Cirrus Clouds
     var density = smoothstep(1.0 - cirrus, 1.0, fbm(in.pos.xyz / in.pos.y * 1.0 + global_data.time * 0.01)) * 0.3;
     color = vec4f(mix(color.rgb, extinction * 10.0, density * max(in.pos.y, 0.0)), 1.0).xyz;
 
     density = smoothstep(1.0 - cirrus, 1.0, fbm(in.pos.xyz / in.pos.y * 4.0 + global_data.time * 0.01)) * 0.3;
     color = vec4f(mix(color.rgb, extinction * 10.0, density * max(in.pos.y, 0.0)), 1.0).xyz;
 
-    color = pow(1.0 - exp(-1.3 * color.rgb), vec3f(1.3));
+    // color = pow(1.0 - exp(-1.3 * color.rgb), vec3f(1.3));
     out.color = vec4f(color, 1.0);
 
     out.depth = 1.0;
