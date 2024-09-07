@@ -229,6 +229,14 @@ void SceneRenderer::Init()
                 },
                 .Count = 1,
             },
+            GPU::BindGroupLayoutEntry{
+                .Binding = 8,
+                .Visibility = GPU::ShaderStage::Fragment,
+                .Type = GPU::BindingType::Sampler{
+                    .Type = GPU::SamplerBindingType::Filtering,
+                },
+                .Count = 1,
+            },
 
         };
 
@@ -477,6 +485,11 @@ void SceneRenderer::Init()
     };
 
     m_LinearSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+    bilinear_sampler_spec.MagFilter = GPU::FilterMode::Nearest;
+    bilinear_sampler_spec.MinFilter = GPU::FilterMode::Nearest;
+    bilinear_sampler_spec.AnisotropyClamp = 1_u16;
+
+    m_ShadowSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
 
     m_HDRPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
 
@@ -1287,6 +1300,10 @@ void SceneRenderer::PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket 
             GPU::BindGroupEntry{
                 .Binding = 7,
                 .Resource = m_LinearSampler,
+            },
+            GPU::BindGroupEntry{
+                .Binding = 8,
+                .Resource = m_ShadowSampler,
             },
         };
 

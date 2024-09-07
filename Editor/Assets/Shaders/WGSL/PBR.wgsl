@@ -101,7 +101,7 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 }
 
 fn sample_shadow(index: u32, coords: vec2f, compare: f32) -> f32 {
-    return step(compare, textureSample(shadow_texture, linear_sampler, coords, index));
+    return step(compare, textureSample(shadow_texture, shdadow_sampler, coords, index));
 }
 
 fn sample_shadow_linear(index: u32, coords: vec2<f32>, compare: f32, texel_size: vec2<f32>) -> f32 {
@@ -132,6 +132,12 @@ fn do_directional_shadow(in: VertexOutput, light: DirectionalLight, index: u32) 
     let frag_pos_light_space: vec4f = pos_light_space[index];
     var coords = (frag_pos_light_space.xyz / frag_pos_light_space.w);
     if (coords.z > 1.0 || coords.z < -1.0) {
+        return 1.0;
+    }
+    if (coords.y > 1.0 || coords.y < -1.0) {
+        return 1.0;
+    }
+    if (coords.x > 1.0 || coords.x < -1.0) {
         return 1.0;
     }
     coords.y = 1.0 - coords.y;
@@ -197,6 +203,7 @@ struct Material {
 @group(1) @binding(5) var occlusion_map: texture_2d<f32>;
 @group(1) @binding(6) var emissive_map: texture_2d<f32>;
 @group(1) @binding(7) var linear_sampler: sampler;
+@group(1) @binding(8) var shdadow_sampler: sampler;
 
 fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     var n = textureSample(normal_map, linear_sampler, in.frag_uv).rgb;

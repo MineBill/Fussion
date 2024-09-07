@@ -134,6 +134,7 @@ private:
     std::vector<u8> m_DepthInstanceStagingBuffer{};
 
     Fussion::GPU::Sampler m_LinearSampler{};
+    Fussion::GPU::Sampler m_ShadowSampler{};
 
     Vector2 m_RenderArea{};
 
