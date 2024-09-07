@@ -49,9 +49,9 @@ namespace Fussion {
 
         // NOTE: Setting the callback on m_Device, rather than the device local variable, because
         //       the GPU::Device will set up WGPU user data with its pointer.
-        s_Renderer->m_Device.SetErrorCallback([&](GPU::ErrorType type, std::string_view message) {
-            LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
-        });
+        // s_Renderer->m_Device.SetErrorCallback([&](GPU::ErrorType type, std::string_view message) {
+        //     LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
+        // });
 
         GPU::Utils::RenderDoc::Initialize();
     }

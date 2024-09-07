@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <magic_enum/magic_enum.hpp>
 #include <webgpu/wgpu.h>
+#include <webgpu/webgpu.h>
 
 constexpr auto MipMapGeneratorSource = R"wgsl(
 struct VertexOutput {
@@ -192,6 +193,7 @@ namespace Fussion::GPU {
                 rp.SetBindGroup(BindGroup, 0);
                 rp.Draw({ 0, 6 }, { 0, 1 });
                 rp.End();
+                rp.Release();
 
                 encoder.CopyTextureToTexture(RenderTexture, TargetTexture, size, i, i);
 
@@ -1115,19 +1117,19 @@ namespace Fussion::GPU {
         wgpuQueueWriteBuffer(CAST(WGPUQueue, Queue), CAST(WGPUBuffer, buffer.Handle), offset, data, size);
     }
 
-    void Device::SetErrorCallback(ErrorFn const& function)
-    {
-        m_Function = std::move(function);
-
-        wgpuDeviceSetUncapturedErrorCallback(
-            CAST(WGPUDevice, Handle), [](WGPUErrorType type, char const* message, void* userdata) {
-                auto self = CAST(Device*, userdata);
-
-                if (self->m_Function)
-                    self->m_Function(FromWgpu(type), std::string_view(message));
-            },
-            this);
-    }
+    // void Device::SetErrorCallback(ErrorFn const& function)
+    // {
+    //     m_Function = std::move(function);
+    //
+    //     wgpuDeviceSetUncapturedErrorCallback(
+    //         CAST(WGPUDevice, Handle), [](WGPUErrorType type, char const* message, void* userdata) {
+    //             auto self = CAST(Device*, userdata);
+    //
+    //             if (self->m_Function)
+    //                 self->m_Function(FromWgpu(type), std::string_view(message));
+    //         },
+    //         this);
+    // }
 
     auto Adapter::GetDevice() -> Device
     {
@@ -1144,6 +1146,12 @@ namespace Fussion::GPU {
                 PANIC("!DEVICE LOST!: \n\tREASON: {}\n\tMESSAGE: {}", magic_enum::enum_name(reason), message);
             },
             .deviceLostUserdata = this,
+            .uncapturedErrorCallbackInfo = {
+                .callback = [](WGPUErrorType type, char const* message, void* userdata) {
+                    LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
+                },
+                .userdata = this,
+            },
         };
 
         auto device = RequestDeviceSync(CAST(WGPUAdapter, Handle), &desc);
@@ -1163,11 +1171,14 @@ namespace Fussion::GPU {
 
     void Surface::Configure(Device const& device, Adapter adapter, Config const& config)
     {
-        WGPUTextureFormat surface_format = wgpuSurfaceGetPreferredFormat(CAST(WGPUSurface, Handle), CAST(WGPUAdapter, adapter.Handle));
+        WGPUSurfaceCapabilities caps {};
+        wgpuSurfaceGetCapabilities(CAST(WGPUSurface, Handle), CAST(WGPUAdapter, adapter.Handle), &caps);
+        VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
+
         WGPUSurfaceConfiguration conf{
             .nextInChain = nullptr,
             .device = CAST(WGPUDevice, device.Handle),
-            .format = surface_format,
+            .format = caps.formats[0], // TODO: Check this properly
             .usage = WGPUTextureUsage_RenderAttachment,
             .viewFormatCount = 0,
             .viewFormats = nullptr,
@@ -1178,7 +1189,7 @@ namespace Fussion::GPU {
         };
         wgpuSurfaceConfigure(CAST(WGPUSurface, Handle), &conf);
 
-        Format = FromWgpu(surface_format);
+        Format = FromWgpu(caps.formats[0]);
     }
 
     auto Surface::GetNextView() const -> Result<TextureView, Error>
@@ -1232,7 +1243,7 @@ namespace Fussion::GPU {
         };
 
         WGPUInstanceDescriptor desc{
-            .nextInChain = &instance_extras.chain
+            .nextInChain = &instance_extras.chain,
         };
         instance.Handle = wgpuCreateInstance(&desc);
         return instance;

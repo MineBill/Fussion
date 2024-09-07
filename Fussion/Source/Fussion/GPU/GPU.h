@@ -582,7 +582,7 @@ namespace Fussion::GPU {
         Device() = default;
         explicit Device(HandleT handle);
 
-        void SetErrorCallback(ErrorFn const& function);
+        // void SetErrorCallback(ErrorFn const& function);
 
         auto CreateBuffer(BufferSpec const& spec) const -> Buffer;
         auto CreateTexture(TextureSpec const& spec) const -> Texture;
