@@ -108,7 +108,7 @@ private:
     Fussion::GPU::Texture m_ShadowPassRenderTarget{};
     std::array<Fussion::GPU::TextureView, ShadowCascades> m_ShadowPassRenderTargetViews{};
 
-    Fussion::GPU::RenderPipeline m_SimplePipeline{}, m_GridPipeline{}, m_PbrPipeline{}, m_DepthPipeline{}, m_SkyPipeline{};
+    Fussion::GPU::RenderPipeline m_SimplePipeline{}, m_GridPipeline{}, m_PbrPipeline{}, m_DepthPipeline{}, m_SkyPipeline{}, m_DebugPipeline{};
 
     Fussion::GPU::BindGroup m_GlobalBindGroup{}, m_SceneBindGroup{};
     Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout{}, m_SceneBindGroupLayout{}, m_ObjectBindGroupLayout{}, m_ObjectDepthBGL{};

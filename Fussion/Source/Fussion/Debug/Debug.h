@@ -1,9 +1,9 @@
 ﻿#pragma once
+#include "Fussion/Core/BitFlags.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Math/Vector3.h"
-#include "Fussion/RHI/RenderPass.h"
-#include "Fussion/RHI/CommandBuffer.h"
 #include "Fussion/Math/Color.h"
+#include "Fussion/GPU/GPU.h"
 
 namespace Fussion {
     enum class DebugDrawFlag {
@@ -12,6 +12,7 @@ namespace Fussion {
     };
 
     DECLARE_FLAGS(DebugDrawFlag, DebugDrawFlags);
+
     DECLARE_OPERATORS_FOR_FLAGS(DebugDrawFlags)
 
     struct DebugDrawContext {
@@ -20,14 +21,17 @@ namespace Fussion {
 
     class Debug {
     public:
-        static void Initialize(Ref<RHI::RenderPass> const& render_pass);
+        static void Initialize(
+            GPU::Device& device,
+            GPU::BindGroupLayout global_bind_group_layout,
+            GPU::TextureFormat target_format);
 
         static void DrawLine(Vector3 start, Vector3 end, f32 time = 0.0f, Color color = Color::Red);
         static void DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time = 0.0f, Color color = Color::Red);
         static void DrawCube(Vector3 min_extents, Vector3 max_extents, f32 time = 0.0f, Color color = Color::Red);
         static void DrawSphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time = 0.0f, Color color = Color::Red);
 
-        static void Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> const& global_resource);
+        static void Render(GPU::RenderPassEncoder const& encoder);
         static void Reset();
     };
 }

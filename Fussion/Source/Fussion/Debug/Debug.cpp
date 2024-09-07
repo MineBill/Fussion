@@ -6,9 +6,9 @@
 #include "Assets/ShaderAsset.h"
 #include "Core/Time.h"
 #include "OS/FileSystem.h"
-#include "RHI/Device.h"
-#include "RHI/ShaderCompiler.h"
 #include "Fussion/Math/Color.h"
+#include "GPU/ShaderProcessor.h"
+#include "Rendering/Renderer.h"
 
 #include <ranges>
 #include <glm/gtx/euler_angles.hpp>
@@ -23,40 +23,100 @@ namespace Fussion {
 
     struct DebugData {
         AssetRef<ShaderAsset> DebugShader{};
-        Ref<RHI::Buffer> VertexBuffer{};
+        GPU::Buffer VertexBuffer{};
+        GPU::RenderPipeline Pipeline{};
 
         bool Initialized{ false };
         std::vector<Point> Points{};
 
         std::vector<Point> TimedPoints{};
         std::vector<f32> Timers{};
+
+        GPU::Device Device{};
     };
 
-    static DebugData g_DebugData;
+    namespace {
+        DebugData g_DebugData;
+    }
 
-    void Debug::Initialize(Ref<RHI::RenderPass> const& render_pass)
+    void Debug::Initialize(GPU::Device& device, GPU::BindGroupLayout global_bind_group_layout, GPU::TextureFormat target_format)
     {
         if (g_DebugData.Initialized) {
             LOG_ERROR("Debug is already initialized");
             return;
         }
-        auto src = FileSystem::ReadEntireFile("Assets/Shaders/Debug.shader");
-        VERIFY(src.HasValue());
-        auto result = RHI::ShaderCompiler::Compile(*src, "Debug.shader");
-        VERIFY(result.HasValue());
+        g_DebugData.Device = device;
 
-        auto shader = ShaderAsset::Create(render_pass, result->ShaderStages, result->Metadata);
-        g_DebugData.DebugShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, "Assets/Shaders/Debug.shader");
+        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DebugDraw.wgsl").Value();
 
-        g_DebugData.Initialized = true;
-
-        auto spec = RHI::BufferSpecification{
-            .Label = "Debug Vertex Buffer",
-            .Usage = RHI::BufferUsage::Vertex,
-            .Size = 20'000 * sizeof(Point),
-            .Mapped = true
+        GPU::ShaderModuleSpec shader_spec{
+            .Label = "DebugDraw::Shader"sv,
+            .Type = GPU::WGSLShader{
+                .Source = shader_src,
+            },
+            .VertexEntryPoint = "vs_main",
+            .FragmentEntryPoint = "fs_main",
         };
-        g_DebugData.VertexBuffer = RHI::Device::Instance()->CreateBuffer(spec);
+
+        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+
+        std::array bind_group_layouts{
+            global_bind_group_layout
+        };
+        GPU::PipelineLayoutSpec pl_spec{
+            .BindGroupLayouts = bind_group_layouts
+        };
+        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+
+        auto primitive = GPU::PrimitiveState::Default();
+        primitive.Topology = GPU::PrimitiveTopology::LineList;
+
+        std::array attributes{
+            GPU::VertexAttribute{
+                .Type = GPU::ElementType::Float3,
+                .ShaderLocation = 0,
+            },
+            GPU::VertexAttribute{
+                .Type = GPU::ElementType::Float,
+                .ShaderLocation = 1,
+            },
+            GPU::VertexAttribute{
+                .Type = GPU::ElementType::Float4,
+                .ShaderLocation = 2,
+            },
+        };
+        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+
+        GPU::RenderPipelineSpec rp_spec{
+            .Label = "DebugDraw::RenderPipeline"sv,
+            .Layout = layout,
+            .Vertex = {
+                .AttributeLayouts = { attribute_layout }
+            },
+            .Primitive = primitive,
+            .DepthStencil = GPU::DepthStencilState::Default(),
+            .MultiSample = GPU::MultiSampleState::Default(),
+            .Fragment = GPU::FragmentStage{
+                .Targets = {
+                    GPU::ColorTargetState{
+                        .Format = target_format,
+                        .Blend = GPU::BlendState::Default(),
+                        .WriteMask = GPU::ColorWrite::All,
+                    }
+                }
+            },
+        };
+
+        g_DebugData.Pipeline = device.CreateRenderPipeline(shader, rp_spec);
+
+        GPU::BufferSpec spec{
+            .Label = "Debug::VertexBuffer",
+            .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
+            .Size = 20'000 * sizeof(Point),
+            .Mapped = false,
+        };
+
+        g_DebugData.VertexBuffer = device.CreateBuffer(spec);
     }
 
     void Debug::DrawLine(Vector3 start, Vector3 end, f32 time, Color color)
@@ -153,7 +213,7 @@ namespace Fussion {
         }
     }
 
-    void Debug::Render(Ref<RHI::CommandBuffer> const& cmd, Ref<RHI::Resource> const& global_resource)
+    void Debug::Render(GPU::RenderPassEncoder const& encoder)
     {
         auto line_count = g_DebugData.Points.size() + g_DebugData.TimedPoints.size();
         if (line_count == 0) {
@@ -161,15 +221,13 @@ namespace Fussion {
         }
         VERIFY(line_count % 2 == 0);
 
-        auto shader = g_DebugData.DebugShader.Get()->GetShader();
-        cmd->UseShader(shader);
+        encoder.SetPipeline(g_DebugData.Pipeline);
 
-        g_DebugData.VertexBuffer->SetData(g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
-        g_DebugData.VertexBuffer->SetData(g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point), g_DebugData.Points.size() * sizeof(Point));
+        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
+        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));
 
-        cmd->BindResource(global_resource, shader, 0);
-        cmd->BindBuffer(g_DebugData.VertexBuffer);
-        cmd->Draw(CAST(u32, line_count), 1);
+        encoder.SetVertexBuffer(0, g_DebugData.VertexBuffer);
+        encoder.Draw({ 0, CAST(u32, line_count) }, { 0, 1 });
     }
 
     void Debug::Reset()

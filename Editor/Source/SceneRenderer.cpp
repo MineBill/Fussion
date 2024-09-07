@@ -493,6 +493,8 @@ void SceneRenderer::Init()
 
     m_HDRPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
 
+    Debug::Initialize(Renderer::Device(), m_GlobalBindGroupLayout, m_HDRPipeline.Format);
+
     SetupShadowPass();
 }
 
@@ -1105,7 +1107,7 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     f32 distance = (frustum_corner - center).Length();
                     radius = Math::Max(radius, distance);
                 }
-                radius = std::ceil(radius);
+                radius = std::ceil(radius * 16.f) / 16.f;
 
                 auto texel_size = CAST(f32, ShadowMapResolution) / (radius * 2.0f);
                 Mat4 scalar(texel_size);
@@ -1234,14 +1236,13 @@ void SceneRenderer::PbrPass(GPU::CommandEncoder& encoder, RenderPacket const& pa
 
     scene_rp.SetViewport(Vector2::Zero, { m_RenderArea.X, m_RenderArea.Y });
 
+    scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
     {
         scene_rp.SetPipeline(m_SkyPipeline);
-        scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
         scene_rp.Draw({ 0, 4 }, { 0, 1 });
     }
 
     scene_rp.SetPipeline(m_PbrPipeline);
-    scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
 
     GPU::Buffer instance_buffer;
     if (!m_InstanceBufferPool.empty()) {
@@ -1382,9 +1383,9 @@ void SceneRenderer::PbrPass(GPU::CommandEncoder& encoder, RenderPacket const& pa
 
     // Draw editor specific stuff only if we are not rendering a game view.
     if (!game_view) {
-        scene_rp.SetPipeline(m_GridPipeline);
-        scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
+        Debug::Render(scene_rp);
 
+        scene_rp.SetPipeline(m_GridPipeline);
         scene_rp.Draw({ 0, 6 }, { 0, 1 });
     }
 

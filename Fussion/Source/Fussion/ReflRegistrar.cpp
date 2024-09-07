@@ -208,9 +208,6 @@ namespace Fussion {
         REGISTER_ENUM(DebugDrawer::Type);
         REGISTER_ENUM(MouseButton)
         REGISTER_ENUM(Keys)
-        REGISTER_ENUM(RHI::ImageFormat)
-        REGISTER_ENUM(RHI::FilterMode)
-        REGISTER_ENUM(RHI::WrapMode)
 
         REGISTER_ENUM(GPU::TextureFormat);
 
