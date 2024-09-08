@@ -18,7 +18,7 @@
 // #include <webgpu/webgpu.h>
 
 
-void ImGuiLayer::LoadFonts()
+void ImGuiLayer::load_fonts()
 {
     auto& io = ImGui::GetIO();
     auto& style = EditorStyle::get_style();
@@ -33,11 +33,10 @@ void ImGuiLayer::LoadFonts()
     io.FontDefault = style.fonts[RegularNormal];
 }
 
-void ImGuiLayer::Init()
+void ImGuiLayer::init()
 {
     ZoneScoped;
     using namespace Fussion;
-    using namespace Fussion::RHI;
     LOG_DEBUGF("Initializing ImGui layer.");
 
     IMGUI_CHECKVERSION();
@@ -59,8 +58,8 @@ void ImGuiLayer::Init()
     info.RenderTargetFormat = to_wgpu(Renderer::surface().format);
     ImGui_ImplWGPU_Init(&info);
 
-    SetupImGuiStyle();
-    LoadFonts();
+    setup_im_gui_style();
+    load_fonts();
 }
 
 void ImGuiLayer::on_start() {}
@@ -70,7 +69,7 @@ void ImGuiLayer::on_update(f32 delta)
     (void)delta;
 }
 
-void ImGuiLayer::Begin()
+void ImGuiLayer::begin()
 {
     ZoneScoped;
     ImGui_ImplGlfw_NewFrame();
@@ -79,7 +78,7 @@ void ImGuiLayer::Begin()
     ImGuizmo::BeginFrame();
 }
 
-void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
+void ImGuiLayer::end(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
 {
     ZoneScoped;
     ImGui::Render();
@@ -96,7 +95,7 @@ void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
     }
 }
 
-void ImGuiLayer::SetupImGuiStyle()
+void ImGuiLayer::setup_im_gui_style()
 {
     // Fork of Photoshop style from ImThemes
     ImGuiStyle& style = ImGui::GetStyle();

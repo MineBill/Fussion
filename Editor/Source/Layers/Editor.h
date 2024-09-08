@@ -17,7 +17,6 @@
 #include <Fussion/Core/Layer.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/OS/FileWatcher.h>
-#include <Fussion/RHI/CommandBuffer.h>
 #include <Fussion/Scene/Scene.h>
 
 class AssetRegistryViewer;

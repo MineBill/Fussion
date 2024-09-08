@@ -1,30 +1,28 @@
 ﻿#pragma once
 #include "Fussion/Assets/Asset.h"
-#include "Fussion/RHI/Shader.h"
-#include "Fussion/RHI/RenderPass.h"
 
 namespace Fussion {
     class ShaderAsset final : public Asset {
     public:
-        ShaderAsset(
-            Ref<RHI::RenderPass> const& render_pass,
-            std::span<RHI::ShaderStage> stages,
-            RHI::ShaderMetadata const& metadata);
-
-        static Ref<ShaderAsset> Create(
-            Ref<RHI::RenderPass> const& render_pass,
-            std::span<RHI::ShaderStage> stages,
-            RHI::ShaderMetadata const& metadata);
+        // ShaderAsset(
+        //     Ref<RHI::RenderPass> const& render_pass,
+        //     std::span<RHI::ShaderStage> stages,
+        //     RHI::ShaderMetadata const& metadata);
+        //
+        // static Ref<ShaderAsset> Create(
+        //     Ref<RHI::RenderPass> const& render_pass,
+        //     std::span<RHI::ShaderStage> stages,
+        //     RHI::ShaderMetadata const& metadata);
 
         static AssetType static_type() { return AssetType::Shader; }
         virtual AssetType type() const override { return static_type(); }
 
-        Ref<RHI::Shader>& GetShader() { return m_Shader; }
-        Ref<RHI::RenderPass>& AssociatedRenderPass() { return m_TheRenderPass; }
+        // Ref<RHI::Shader>& GetShader() { return m_Shader; }
+        // Ref<RHI::RenderPass>& AssociatedRenderPass() { return m_TheRenderPass; }
 
     private:
-        Ref<RHI::Shader> m_Shader;
-        Ref<RHI::RenderPass> m_TheRenderPass{};
-        RHI::ShaderMetadata m_Metadata{};
+        // Ref<RHI::Shader> m_Shader;
+        // Ref<RHI::RenderPass> m_TheRenderPass{};
+        // RHI::ShaderMetadata m_Metadata{};
     };
 }

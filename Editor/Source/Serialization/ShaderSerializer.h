@@ -3,5 +3,5 @@
 
 class ShaderSerializer final : public AssetSerializer {
 public:
-    Ref<Fussion::Asset> Load(EditorAssetMetadata metadata) override;
+    virtual Ref<Fussion::Asset> Load(EditorAssetMetadata metadata) override;
 };

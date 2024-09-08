@@ -9,7 +9,6 @@
 #include <Fussion/Core/Time.h>
 #include <Fussion/Debug/Debug.h>
 #include <Fussion/OS/FileSystem.h>
-#include <Fussion/RHI/Device.h>
 #include <tracy/Tracy.hpp>
 
 #undef far
@@ -18,7 +17,6 @@
 #undef max
 
 using namespace Fussion;
-using namespace Fussion::RHI;
 
 void SceneRenderer::init()
 {

@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <Fussion/RHI/Device.h>
 #include <Fussion/Assets/AssetRef.h>
 #include <Fussion/Assets/PbrMaterial.h>
 #include <Fussion/GPU/GPU.h>

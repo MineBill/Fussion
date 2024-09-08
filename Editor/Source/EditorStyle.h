@@ -9,7 +9,7 @@ namespace Fussion {
     class Texture2D;
 }
 
-constexpr auto AccentColor = 0x568af2FF;
+constexpr auto ACCENT_COLOR = 0x568af2FF;
 
 struct ImFont;
 
@@ -37,7 +37,7 @@ struct InteractiveStyle {
 
     constexpr InteractiveStyle()
     {
-        auto accent = Color::from_hex(AccentColor);
+        auto accent = Color::from_hex(ACCENT_COLOR);
         normal_color = accent;
         hover_color = accent.lighten(0.1f);
         pressed_color = accent.darken(0.1f);
@@ -66,7 +66,7 @@ struct ButtonStyle : CommonStyle, InteractiveStyle {
     {
         ButtonStyle style;
         style.padding = Vector2(3, 3);
-        style.normal_color = Color::from_hex(AccentColor);
+        style.normal_color = Color::from_hex(ACCENT_COLOR);
         style.text_color = Color::White;
         style.border_color = style.normal_color.darken(0.1f);
         style.border_shadow_color = Color::Transparent;

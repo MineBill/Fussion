@@ -10,8 +10,6 @@
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
-using namespace Fussion::RHI;
-
 namespace Fussion {
     Renderer* Renderer::s_renderer = nullptr;
 

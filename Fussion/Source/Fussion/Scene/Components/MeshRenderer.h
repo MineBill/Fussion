@@ -3,7 +3,6 @@
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Assets/Model.h"
-#include "Fussion/RHI/FrameAllocator.h"
 
 namespace Fussion {
     class MeshRenderer final : public Component {

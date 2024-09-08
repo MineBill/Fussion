@@ -9,7 +9,6 @@
 #include "Serialization/MeshSerializer.h"
 
 #include <Fussion/OS/FileSystem.h>
-#include <Fussion/RHI/ShaderCompiler.h>
 #include <Fussion/Serialization/Json.h>
 #include <Fussion/Serialization/JsonSerializer.h>
 #include <Fussion/Scene/Scene.h>
@@ -137,12 +136,12 @@ EditorAssetManager::EditorAssetManager()
             }
             switch (meta->type) {
             case AssetType::Shader: {
-                auto shader = get_asset(meta->handle, AssetType::Shader)->as<ShaderAsset>();
-                auto data = FileSystem::read_entire_file(meta->path);
-                auto result = RHI::ShaderCompiler::Compile(*data);
-                if (result.has_value()) {
-                    *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
-                }
+                // auto shader = get_asset(meta->handle, AssetType::Shader)->as<ShaderAsset>();
+                // auto data = FileSystem::read_entire_file(meta->path);
+                // auto result = RHI::ShaderCompiler::Compile(*data);
+                // if (result.has_value()) {
+                //     *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
+                // }
             }
             break;
             default:

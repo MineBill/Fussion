@@ -1,13 +1,14 @@
 ﻿#include "Core/Core.h"
 #include "Core/Delegate.h"
 #include "Log/Log.h"
-#include "Vulkan/Common.h"
 
 #include <Fussion/OS/FileWatcher.h>
 #include <Fussion/Core/Types.h>
 #include <thread>
 #include <mutex>
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <fileapi.h>
 #include <synchapi.h>
 

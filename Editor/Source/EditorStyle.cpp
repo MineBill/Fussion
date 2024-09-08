@@ -33,7 +33,7 @@ void EditorStyle::initialize()
         style.border = false;
         style.rounding = 3.0f;
 
-        style.set_button_color(Color::from_hex(AccentColor));
+        style.set_button_color(Color::from_hex(ACCENT_COLOR));
 
         button_styles[ButtonStyleViewportButton] = style;
     }
@@ -44,7 +44,7 @@ void EditorStyle::initialize()
         style.rounding = 3.0f;
         style.font = EditorFont::RegularBig;
 
-        style.set_button_color(Color::from_hex(AccentColor));
+        style.set_button_color(Color::from_hex(ACCENT_COLOR));
 
         button_styles[ButtonStyleProjectCreator] = style;
     }
@@ -55,7 +55,7 @@ void EditorStyle::initialize()
         style.rounding = 3.0f;
         style.font = EditorFont::RegularNormal;
 
-        style.set_button_color(Color::from_hex(AccentColor));
+        style.set_button_color(Color::from_hex(ACCENT_COLOR));
 
         button_styles[ButtonStyleProjectCreatorSmall] = style;
     }

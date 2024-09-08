@@ -47,7 +47,7 @@ void EditorApplication::on_start()
     m_window->set_icon(image);
 
     m_im_gui_layer = push_layer<ImGuiLayer>();
-    m_im_gui_layer->Init();
+    m_im_gui_layer->init();
 
     EditorStyle::get_style().initialize();
 
@@ -74,13 +74,13 @@ void EditorApplication::on_update(f32 delta)
     ZoneScoped;
     using namespace Fussion;
 
-    m_im_gui_layer->Begin();
+    m_im_gui_layer->begin();
 
     Application::on_update(delta);
 
     auto view = Renderer::begin_rendering();
     if (!view) {
-        m_im_gui_layer->End(None());
+        m_im_gui_layer->end(None());
         return;
     }
 
@@ -105,7 +105,7 @@ void EditorApplication::on_update(f32 delta)
 
     auto main_rp = encoder.begin_rendering(rp_spec);
 
-    m_im_gui_layer->End(main_rp);
+    m_im_gui_layer->end(main_rp);
 
     main_rp.end();
     main_rp.release();

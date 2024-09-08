@@ -1,11 +1,8 @@
 ﻿#include "FussionPCH.h"
 #include "Texture2D.h"
 
-#include "AssetManager.h"
-#include "RHI/Device.h"
 #include "Rendering/Renderer.h"
 #include "Serialization/Serializer.h"
-#include "GPU/Utils.h"
 
 namespace Fussion {
     void Texture2DMetadata::serialize(Serializer& ctx) const

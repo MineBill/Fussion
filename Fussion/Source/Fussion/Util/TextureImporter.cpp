@@ -1,7 +1,6 @@
 ﻿#include "TextureImporter.h"
 
 #include "stb_image_write.h"
-#include "RHI/Device.h"
 #include "Rendering/Renderer.h"
 
 #include <Fussion/OS/FileSystem.h>
