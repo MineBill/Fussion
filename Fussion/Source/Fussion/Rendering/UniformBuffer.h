@@ -4,16 +4,16 @@
 namespace Fussion {
     template<typename T>
     class UniformBuffer {
-        explicit UniformBuffer(GPU::Device const& device, Maybe<std::string_view> const& label) : m_Device(device)
+        explicit UniformBuffer(GPU::Device const& device, Maybe<std::string_view> const& label) : m_device(device)
         {
             auto buffer_spec = GPU::BufferSpec{
-                .Label = label.ValueOr("Uniform Buffer<T>"),
-                .Usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
-                .Size = sizeof(T),
-                .Mapped = false,
+                .label = label.value_or("Uniform Buffer<T>"),
+                .usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
+                .size = sizeof(T),
+                .mapped = false,
             };
 
-            m_Buffer = m_Device.CreateBuffer(buffer_spec);
+            m_buffer = m_device.create_buffer(buffer_spec);
         }
 
     public:
@@ -21,27 +21,27 @@ namespace Fussion {
 
         UniformBuffer() = default;
 
-        static UniformBuffer Create(GPU::Device const& device, Maybe<std::string_view> label = None())
+        static UniformBuffer create(GPU::Device const& device, Maybe<std::string_view> label = None())
         {
             return UniformBuffer(device, label);
         }
 
-        void Flush()
+        void flush()
         {
-            VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            VERIFY(m_buffer.handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
 
-            m_Device.WriteBuffer(m_Buffer, 0, &Data, sizeof(T));
+            m_device.write_buffer(m_buffer, 0, &data, sizeof(T));
         }
 
-        size_t Size() const { return TypeSize; }
+        static size_t size() { return TypeSize; }
 
-        GPU::Buffer const& GetBuffer() const { return m_Buffer; }
+        GPU::Buffer const& buffer() const { return m_buffer; }
 
-        T Data{};
+        T data{};
 
     private:
-        GPU::Buffer m_Buffer{};
+        GPU::Buffer m_buffer{};
 
-        GPU::Device m_Device{};
+        GPU::Device m_device{};
     };
 }

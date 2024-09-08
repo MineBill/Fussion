@@ -7,13 +7,13 @@ namespace Fussion::RHI {
     VkShaderStageFlags ShaderStagesToVulkan(ShaderTypeFlags const stages)
     {
         VkShaderStageFlags flags = 0;
-        if (stages.Test(ShaderType::Vertex)) {
+        if (stages.test(ShaderType::Vertex)) {
             flags |= VK_SHADER_STAGE_VERTEX_BIT;
         }
-        if (stages.Test(ShaderType::Fragment)) {
+        if (stages.test(ShaderType::Fragment)) {
             flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
         }
-        if (stages.Test(ShaderType::Compute)) {
+        if (stages.test(ShaderType::Compute)) {
             flags |= VK_SHADER_STAGE_COMPUTE_BIT;
         }
         return flags;

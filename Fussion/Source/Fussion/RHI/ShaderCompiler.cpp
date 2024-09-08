@@ -160,7 +160,7 @@ namespace Fussion::RHI {
 
         static void ReadThingy(std::filesystem::path const& full_path, shaderc_include_result* result)
         {
-            if (auto data = FileSystem::ReadEntireFile(full_path)) {
+            if (auto data = FileSystem::read_entire_file(full_path)) {
                 auto str_path = full_path.string();
                 auto cstr_path = new char[str_path.size()];
                 std::memcpy(cstr_path, str_path.c_str(), str_path.size());
@@ -216,7 +216,7 @@ namespace Fussion::RHI {
         options.AddMacroDefinition("Vertex", "main");
         options.AddMacroDefinition("Fragment", "main");
 
-        auto includer = MakePtr<Includer>();
+        auto includer = make_ptr<Includer>();
         options.SetIncluder(std::move(includer));
 
         auto result = compiler.CompileGlslToSpv(vertex.c_str(), vertex.size(), shaderc_vertex_shader, file_name.data(), "main", options);

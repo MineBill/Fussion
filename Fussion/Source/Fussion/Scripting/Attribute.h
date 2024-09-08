@@ -1,11 +1,10 @@
 ﻿#pragma once
 
 namespace Fussion::Scripting {
-class Attribute {
-public:
-    virtual ~Attribute() {}
+    class Attribute {
+    public:
+        virtual ~Attribute() {}
 
-    virtual std::string ToString() = 0;
-};
-
+        virtual std::string to_string() = 0;
+    };
 }

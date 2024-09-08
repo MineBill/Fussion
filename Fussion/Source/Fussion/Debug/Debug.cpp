@@ -39,7 +39,7 @@ namespace Fussion {
         DebugData g_DebugData;
     }
 
-    void Debug::Initialize(GPU::Device& device, GPU::BindGroupLayout global_bind_group_layout, GPU::TextureFormat target_format)
+    void Debug::initialize(GPU::Device& device, GPU::BindGroupLayout global_bind_group_layout, GPU::TextureFormat target_format)
     {
         if (g_DebugData.Initialized) {
             LOG_ERROR("Debug is already initialized");
@@ -47,79 +47,79 @@ namespace Fussion {
         }
         g_DebugData.Device = device;
 
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DebugDraw.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/DebugDraw.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "DebugDraw::Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "DebugDraw::Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
             global_bind_group_layout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
-        auto primitive = GPU::PrimitiveState::Default();
-        primitive.Topology = GPU::PrimitiveTopology::LineList;
+        auto primitive = GPU::PrimitiveState::get_default();
+        primitive.topology = GPU::PrimitiveTopology::LineList;
 
         std::array attributes{
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 0,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float,
-                .ShaderLocation = 1,
+                .type = GPU::ElementType::Float,
+                .shader_location = 1,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
+                .type = GPU::ElementType::Float4,
+                .shader_location = 2,
             },
         };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+        auto attribute_layout = GPU::VertexBufferLayout::create(attributes);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "DebugDraw::RenderPipeline"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout }
+            .label = "DebugDraw::RenderPipeline"sv,
+            .layout = layout,
+            .vertex = {
+                .attribute_layouts = { attribute_layout }
             },
-            .Primitive = primitive,
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage{
-                .Targets = {
+            .primitive = primitive,
+            .depth_stencil = GPU::DepthStencilState::get_default(),
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = GPU::FragmentStage{
+                .targets = {
                     GPU::ColorTargetState{
-                        .Format = target_format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = target_format,
+                        .blend = GPU::BlendState::get_default(),
+                        .write_mask = GPU::ColorWrite::All,
                     }
                 }
             },
         };
 
-        g_DebugData.Pipeline = device.CreateRenderPipeline(shader, rp_spec);
+        g_DebugData.Pipeline = device.create_render_pipeline(shader, rp_spec);
 
         GPU::BufferSpec spec{
-            .Label = "Debug::VertexBuffer",
-            .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
-            .Size = 20'000 * sizeof(Point),
-            .Mapped = false,
+            .label = "Debug::VertexBuffer",
+            .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
+            .size = 20'000 * sizeof(Point),
+            .mapped = false,
         };
 
-        g_DebugData.VertexBuffer = device.CreateBuffer(spec);
+        g_DebugData.VertexBuffer = device.create_buffer(spec);
     }
 
-    void Debug::DrawLine(Vector3 start, Vector3 end, f32 time, Color color)
+    void Debug::draw_line(Vector3 start, Vector3 end, f32 time, Color color)
     {
         if (time > 0) {
             g_DebugData.TimedPoints.emplace_back(start, 0, color);
@@ -133,87 +133,87 @@ namespace Fussion {
         }
     }
 
-    void Debug::DrawCube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time, Color color)
+    void Debug::draw_cube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time, Color color)
     {
         auto half = size / 2;
         auto rotation = glm::mat3(glm::eulerAngleZXY(
-            glm::radians(euler_angles.Z),
-            glm::radians(euler_angles.X),
-            glm::radians(euler_angles.Y)));
+            glm::radians(euler_angles.z),
+            glm::radians(euler_angles.x),
+            glm::radians(euler_angles.y)));
 
-        DrawLine(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ -1, 1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, 1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
 
-        DrawLine(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, -1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
 
-        DrawLine(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ 1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ 1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
 
-        DrawLine(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, -1, 1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
 
-        DrawLine(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, 1, -1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
 
-        DrawLine(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
-        DrawLine(center + rotation * (Vector3{ 1, -1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3{ 1, -1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
 
     }
 
-    void Debug::DrawCube(Vector3 min_extents, Vector3 max_extents, f32 time, Color color)
+    void Debug::draw_cube(Vector3 min_extents, Vector3 max_extents, f32 time, Color color)
     {
-        DrawCube((min_extents + max_extents) / 2.0f, {}, max_extents - min_extents, time, color);
+        draw_cube((min_extents + max_extents) / 2.0f, {}, max_extents - min_extents, time, color);
     }
 
-    void Debug::DrawSphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time, Color color)
+    void Debug::draw_sphere(Vector3 center, Vector3 euler_angles, f32 radius, f32 time, Color color)
     {
         constexpr auto segments = 10; // Number of segments per circle
         constexpr auto latitude_segments = segments;
         constexpr auto longitude_segments = segments;
 
         auto rotation = glm::mat3(glm::eulerAngleZXY(
-            glm::radians(euler_angles.Z),
-            glm::radians(euler_angles.X),
-            glm::radians(euler_angles.Y)));
+            glm::radians(euler_angles.z),
+            glm::radians(euler_angles.x),
+            glm::radians(euler_angles.y)));
 
         // Draw latitude lines
         for (auto lat = 0; lat < latitude_segments; lat++) {
-            auto lat0 = Math::Pi * (-0.5 + (CAST(f32, lat) / CAST(f32, latitude_segments)));
-            auto lat1 = Math::Pi * (-0.5 + (CAST(f32, lat + 1) / CAST(f32, latitude_segments)));
+            auto lat0 = Math::PI * (-0.5 + (CAST(f32, lat) / CAST(f32, latitude_segments)));
+            auto lat1 = Math::PI * (-0.5 + (CAST(f32, lat + 1) / CAST(f32, latitude_segments)));
 
-            auto z0 = radius * Math::Sin(lat0);
-            auto z1 = radius * Math::Sin(lat1);
+            auto z0 = radius * Math::sin(lat0);
+            auto z1 = radius * Math::sin(lat1);
 
-            auto r0 = radius * Math::Cos(lat0);
-            auto r1 = radius * Math::Cos(lat1);
+            auto r0 = radius * Math::cos(lat0);
+            auto r1 = radius * Math::cos(lat1);
 
             for (auto lon = 0; lon < latitude_segments; lon++) {
-                auto lon0 = 2 * Math::Pi * (CAST(f32, lon) / CAST(f32, longitude_segments));
-                auto lon1 = 2 * Math::Pi * (CAST(f32, lon + 1) / CAST(f32, longitude_segments));
+                auto lon0 = 2 * Math::PI * (CAST(f32, lon) / CAST(f32, longitude_segments));
+                auto lon1 = 2 * Math::PI * (CAST(f32, lon + 1) / CAST(f32, longitude_segments));
 
-                auto x0 = Math::Cos(lon0) * r0;
-                auto y0 = Math::Sin(lon0) * r0;
+                auto x0 = Math::cos(lon0) * r0;
+                auto y0 = Math::sin(lon0) * r0;
 
-                auto x1 = Math::Cos(lon1) * r0;
-                auto y1 = Math::Sin(lon1) * r0;
+                auto x1 = Math::cos(lon1) * r0;
+                auto y1 = Math::sin(lon1) * r0;
 
-                auto x2 = Math::Cos(lon1) * r1;
-                auto y2 = Math::Sin(lon1) * r1;
+                auto x2 = Math::cos(lon1) * r1;
+                auto y2 = Math::sin(lon1) * r1;
 
-                auto x3 = Math::Cos(lon0) * r1;
-                auto y3 = Math::Sin(lon0) * r1;
+                auto x3 = Math::cos(lon0) * r1;
+                auto y3 = Math::sin(lon0) * r1;
 
                 // Draw the quad formed by these four points
-                DrawLine(center + rotation * Vector3{ x0, y0, z0 }, center + rotation * Vector3{ x1, y1, z0 }, time, color);
-                DrawLine(center + rotation * Vector3{ x1, y1, z0 }, center + rotation * Vector3{ x2, y2, z1 }, time, color);
-                DrawLine(center + rotation * Vector3{ x2, y2, z1 }, center + rotation * Vector3{ x3, y3, z1 }, time, color);
-                DrawLine(center + rotation * Vector3{ x3, y3, z1 }, center + rotation * Vector3{ x0, y0, z0 }, time, color);
+                draw_line(center + rotation * Vector3{ x0, y0, z0 }, center + rotation * Vector3{ x1, y1, z0 }, time, color);
+                draw_line(center + rotation * Vector3{ x1, y1, z0 }, center + rotation * Vector3{ x2, y2, z1 }, time, color);
+                draw_line(center + rotation * Vector3{ x2, y2, z1 }, center + rotation * Vector3{ x3, y3, z1 }, time, color);
+                draw_line(center + rotation * Vector3{ x3, y3, z1 }, center + rotation * Vector3{ x0, y0, z0 }, time, color);
             }
         }
     }
 
-    void Debug::Render(GPU::RenderPassEncoder const& encoder)
+    void Debug::render(GPU::RenderPassEncoder const& encoder)
     {
         auto line_count = g_DebugData.Points.size() + g_DebugData.TimedPoints.size();
         if (line_count == 0) {
@@ -221,22 +221,22 @@ namespace Fussion {
         }
         VERIFY(line_count % 2 == 0);
 
-        encoder.SetPipeline(g_DebugData.Pipeline);
+        encoder.set_pipeline(g_DebugData.Pipeline);
 
-        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
-        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));
+        g_DebugData.Device.write_buffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
+        g_DebugData.Device.write_buffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));
 
-        encoder.SetVertexBuffer(0, g_DebugData.VertexBuffer);
-        encoder.Draw({ 0, CAST(u32, line_count) }, { 0, 1 });
+        encoder.set_vertex_buffer(0, g_DebugData.VertexBuffer);
+        encoder.draw({ 0, CAST(u32, line_count) }, { 0, 1 });
     }
 
-    void Debug::Reset()
+    void Debug::reset()
     {
         g_DebugData.Points.clear();
 
         for (s32 i = CAST(s32, g_DebugData.TimedPoints.size()) - 1; i >= 0; i--) {
             auto& timer = g_DebugData.Timers[i];
-            timer -= Time::DeltaTime();
+            timer -= Time::delta_time();
             if (timer <= 0) {
                 g_DebugData.TimedPoints.erase(g_DebugData.TimedPoints.begin() + i);
                 g_DebugData.Timers.erase(g_DebugData.Timers.begin() + i);

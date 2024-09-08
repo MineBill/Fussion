@@ -106,7 +106,7 @@ void ImGuiHelpers::EndGroupPanel()
     s_GroupPanelLabelStack.pop_back();
 
     auto half_frame = Vector2(frameHeight * 0.25f, frameHeight) * 0.5f;
-    auto frame_rect = ImRect(item_min + half_frame, item_max - Vector2(half_frame.X, 0.0f));
+    auto frame_rect = ImRect(item_min + half_frame, item_max - Vector2(half_frame.x, 0.0f));
     label_rect.Min.x -= itemSpacing.x;
     label_rect.Max.x += itemSpacing.x;
     for (int i = 0; i < 4; ++i) {
@@ -130,7 +130,7 @@ void ImGuiHelpers::EndGroupPanel()
         }
 
         ImGui::GetWindowDrawList()->AddRect(frame_rect.Min, frame_rect.Max,
-            ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Border)), half_frame.X);
+            ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Border)), half_frame.x);
 
         ImGui::PopClipRect();
     }
@@ -185,7 +185,7 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, x_color);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, x_color_hover);
     ImGui::PushFont(font2);
-    modified |= ImGui::DragFloat("##x", &value->X, speed, min, max, format);
+    modified |= ImGui::DragFloat("##x", &value->x, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -198,7 +198,7 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, y_color);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, y_color_hover);
     ImGui::PushFont(font2);
-    modified |= ImGui::DragFloat("##y", &value->Y, speed, min, max, format);
+    modified |= ImGui::DragFloat("##y", &value->y, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -211,7 +211,7 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, z_color);
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, z_color_hover);
     ImGui::PushFont(font2);
-    modified |= ImGui::DragFloat("##z", &value->Z, speed, min, max, format);
+    modified |= ImGui::DragFloat("##z", &value->z, speed, min, max, format);
     ImGui::PopFont();
     ImGui::PopItemWidth();
     ImGui::PopStyleColor(2);
@@ -239,8 +239,8 @@ void ImGuiHelpers::RenderSimpleRect(ImDrawList* draw_list, Vector2 const& positi
     f32 width)
 {
     ImGui::RenderRectFilledWithHole(
-        draw_list, ImRect(position.X, position.Y, position.X + size.X, position.Y + size.Y),
-        ImRect(position.X + width, position.Y + width, position.X + size.X - width, position.Y + size.Y - width), color,
+        draw_list, ImRect(position.x, position.y, position.x + size.x, position.y + size.y),
+        ImRect(position.x + width, position.y + width, position.x + size.x - width, position.y + size.y - width), color,
         0.0f);
 }
 
@@ -292,7 +292,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // bool selected = flags & ImGuiTreeNodeFlags_Selected;
 
     float button_sz = g.FontSize + g.Style.FramePadding.y * 2;
-    auto arrow_rect = Fussion::Rect::FromStartEnd(pos, Vector2(pos.x + button_sz, bb.Max.y));
+    auto arrow_rect = Fussion::Rect::from_start_end(pos, Vector2(pos.x + button_sz, bb.Max.y));
     //
     // if (flags & ImGuiTreeNodeFlags_OpenOnArrow) {
     //     if (ImGui::ButtonBehavior(ImRect(pos, ImVec2(pos.x + button_sz, bb.Max.y)), id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
@@ -329,7 +329,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // - Double-click on arrow = Toggle on MouseDoubleClick (when _OpenOnDoubleClick=1 and _OpenOnArrow=0)
     // It is rather standard that arrow click react on Down rather than Up.
     // We set ImGuiButtonFlags_PressedOnClickRelease on OpenOnDoubleClick because we want the item to be active on the initial MouseDown in order for drag and drop to work.
-    auto is_mouse_x_over_arrow = arrow_rect.Contains(g.IO.MousePos);
+    auto is_mouse_x_over_arrow = arrow_rect.contains(g.IO.MousePos);
     if (is_mouse_x_over_arrow)
         button_flags |= ImGuiButtonFlags_PressedOnClick;
     else if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)

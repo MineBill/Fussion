@@ -6,25 +6,25 @@ namespace Fussion {
     class Uuid {
     public:
         Uuid();
-        explicit Uuid(u64 id) : m_Id(id) {}
+        explicit Uuid(u64 id) : m_id(id) {}
 
         operator u64() const
         {
-            return m_Id;
+            return m_id;
         }
 
-        bool IsValid() const { return m_Id == 0; }
+        bool is_valid() const { return m_id == 0; }
 
         static Uuid Invalid;
 
     private:
-        u64 m_Id{};
+        u64 m_id{};
     };
 }
 
 template<>
 struct std::hash<Fussion::Uuid> {
-    std::size_t operator()(const Fussion::Uuid& id) const noexcept
+    std::size_t operator()(Fussion::Uuid const& id) const noexcept
     {
         using std::hash;
         return hash<u64>()(id);

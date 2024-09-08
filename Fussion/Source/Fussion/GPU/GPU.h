@@ -11,27 +11,25 @@
 #include <functional>
 #include <span>
 #include <variant>
-#include <concepts>
 #include <memory_resource>
-#include <mutex>
 
 // TODO: Add tests for this
 template<Fussion::ScalarType T>
 struct Range {
-    T Start{};
-    T End{};
+    T start{};
+    T stop{};
 
-    T Count() const { return End - Start; }
+    T count() const { return stop - start; }
 
     class Iterator {
-        T m_Number{}, m_Start{}, m_End{};
+        T m_number{}, m_start{}, m_end{};
 
     public:
-        explicit Iterator(T start, T end, T number = 0) : m_Number(number), m_Start(start), m_End(end) {}
+        explicit Iterator(T start, T end, T number = 0) : m_number(number), m_start(start), m_end(end) {}
 
         Iterator& operator++()
         {
-            m_Number = m_End >= m_Start ? m_Number + 1 : m_Number - 1;
+            m_number = m_end >= m_start ? m_number + 1 : m_number - 1;
             return *this;
         }
 
@@ -42,13 +40,13 @@ struct Range {
             return retval;
         }
 
-        bool operator==(Iterator other) const { return m_Number == other.m_Number; }
+        bool operator==(Iterator other) const { return m_number == other.m_number; }
         bool operator!=(Iterator other) const { return !(*this == other); }
-        T const& operator*() const { return m_Number; }
+        T const& operator*() const { return m_number; }
     };
 
-    Iterator begin() { return Iterator(Start, End, Start); }
-    Iterator end() { return Iterator(Start, End, End >= Start ? End + 1 : End - 1); }
+    Iterator begin() { return Iterator(start, stop, start); }
+    Iterator end() { return Iterator(start, stop, stop >= start ? stop + 1 : stop - 1); }
 };
 
 namespace Fussion::GPU {
@@ -60,65 +58,65 @@ namespace Fussion::GPU {
 
     template<typename SpecT>
     struct GPUHandle {
-        HandleT Handle{};
-        SpecT Spec{};
+        HandleT handle{};
+        SpecT spec{};
 
         virtual ~GPUHandle() = default;
         GPUHandle() = default;
-        explicit GPUHandle(HandleT handle): Handle(handle) {}
-        GPUHandle(HandleT handle, SpecT const& spec): Handle(handle), Spec(spec) {}
+        explicit GPUHandle(HandleT handle): handle(handle) {}
+        GPUHandle(HandleT handle, SpecT const& spec): handle(handle), spec(spec) {}
 
         template<typename T>
-        auto As() const -> T
+        auto as() const -> T
         {
-            return CAST(T, Handle);
+            return CAST(T, handle);
         }
 
-        virtual void Release() = 0;
+        virtual void release() = 0;
     };
 
     template<>
     struct GPUHandle<void> {
-        HandleT Handle{};
+        HandleT handle{};
 
         virtual ~GPUHandle() = default;
         GPUHandle() = default;
-        explicit GPUHandle(HandleT handle): Handle(handle) {}
+        explicit GPUHandle(HandleT handle): handle(handle) {}
 
         template<typename T>
-        auto As() const -> T
+        auto as() const -> T
         {
-            return CAST(T, Handle);
+            return CAST(T, handle);
         }
 
-        virtual void Release() = 0;
+        virtual void release() = 0;
     };
 
     struct SamplerSpec {
-        Maybe<std::string_view> Label {};
-        AddressMode AddressModeU { AddressMode::Repeat };
-        AddressMode AddressModeV { AddressMode::Repeat };
-        AddressMode AddressModeW { AddressMode::Repeat };
-        FilterMode MagFilter { FilterMode::Linear };
-        FilterMode MinFilter { FilterMode::Linear };
-        FilterMode MipMapFilter { FilterMode::Linear };
-        f32 LodMinClamp { 0.0f };
-        f32 LodMaxClamp { 32.0f };
-        Maybe<CompareFunction> Compare {};
-        u16 AnisotropyClamp { 1_u16 };
+        Maybe<std::string_view> label {};
+        AddressMode address_mode_u { AddressMode::Repeat };
+        AddressMode address_mode_v { AddressMode::Repeat };
+        AddressMode address_mode_w { AddressMode::Repeat };
+        FilterMode mag_filter { FilterMode::Linear };
+        FilterMode min_filter { FilterMode::Linear };
+        FilterMode mip_map_filter { FilterMode::Linear };
+        f32 lod_min_clamp { 0.0f };
+        f32 lod_max_clamp { 32.0f };
+        Maybe<CompareFunction> compare {};
+        u16 anisotropy_clamp { 1_u16 };
     };
 
     struct Sampler : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     struct BufferSpec {
-        Maybe<std::string_view> Label{};
-        BufferUsageFlags Usage{};
-        u64 Size{};
-        bool Mapped{ false };
+        Maybe<std::string_view> label{};
+        BufferUsageFlags usage{};
+        u64 size{};
+        bool mapped{ false };
     };
 
     struct BufferSlice;
@@ -126,21 +124,21 @@ namespace Fussion::GPU {
     struct Buffer final : GPUHandle<BufferSpec> {
         using GPUHandle::GPUHandle;
 
-        auto GetSize() const -> u64;
-        auto GetSlice(u32 start, u32 size) const -> BufferSlice;
-        auto GetSlice() const -> BufferSlice;
+        auto size() const -> u64;
+        auto slice(u32 start, u32 size) const -> BufferSlice;
+        auto slice() const -> BufferSlice;
 
-        void UnMap() const;
+        void unmap() const;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     struct BufferSlice {
         using AsyncMapCallback = std::function<void()>;
 
-        Buffer BackingBuffer;
-        u32 Start{};
-        u32 Size{};
+        Buffer backing_buffer;
+        u32 start{};
+        u32 size{};
 
         BufferSlice(Buffer const& buffer, u32 start, u32 size);
         BufferSlice(Buffer const& buffer);
@@ -148,37 +146,37 @@ namespace Fussion::GPU {
         /// Returns the slice as a mapped ranged.
         /// This assumes buffer was created with Mapped = true
         /// or that this call is a result from map of the buffer.
-        auto GetMappedRange() -> void*;
+        auto mapped_range() -> void*;
 
 
-        void MapAsync(AsyncMapCallback const& callback);
+        void map_async(AsyncMapCallback const& callback);
     };
 
     struct TextureSpec {
-        Maybe<std::string_view> Label{};
-        TextureUsageFlags Usage{};
-        TextureDimension Dimension{};
-        Vector3 Size{};
-        TextureFormat Format{};
+        Maybe<std::string_view> label{};
+        TextureUsageFlags usage{};
+        TextureDimension dimension{};
+        Vector3 size{};
+        TextureFormat format{};
         //u32 MipLevelCount{ 1 };
-        u32 SampleCount{ 1 };
-        TextureAspect Aspect{};
+        u32 sample_count{ 1 };
+        TextureAspect aspect{};
 
-        bool GenerateMipMaps { false };
+        bool generate_mip_maps { false };
     };
 
     struct TextureViewSpec {
-        Maybe<std::string_view> Label{};
-        TextureUsageFlags Usage{};
-        TextureViewDimension Dimension{};
-        TextureFormat Format{};
+        Maybe<std::string_view> label{};
+        TextureUsageFlags usage{};
+        TextureViewDimension dimension{};
+        TextureFormat format{};
 
-        u32 BaseMipLevel{ 0 };
-        u32 MipLevelCount{ 1 };
-        u32 BaseArrayLayer{ 0 };
-        u32 ArrayLayerCount{ 1 };
+        u32 base_mip_level{ 0 };
+        u32 mip_level_count{ 1 };
+        u32 base_array_layer{ 0 };
+        u32 array_layer_count{ 1 };
 
-        TextureAspect Aspect{};
+        TextureAspect aspect{};
     };
 
     struct TextureView final : GPUHandle<void> {
@@ -186,30 +184,30 @@ namespace Fussion::GPU {
 
         operator HandleT() const
         {
-            return Handle;
+            return handle;
         }
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     struct Texture final : GPUHandle<TextureSpec> {
         using GPUHandle::GPUHandle;
 
-        u32 MipLevelCount {};
-        TextureView View {};
+        u32 mip_level_count {};
+        TextureView view {};
 
-        void InitializeView(u32 array_count = 1);
-        void GenerateMipmaps(Device const& device);
-        TextureView CreateView(TextureViewSpec const& spec) const;
+        void initialize_view(u32 array_count = 1);
+        void generate_mipmaps(Device const& device);
+        auto create_view(TextureViewSpec const& spec) const -> TextureView;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     namespace BufferBindingType {
         struct Uniform {};
 
         struct Storage {
-            bool ReadOnly{};
+            bool read_only{};
         };
 
         using Type = std::variant<Uniform, Storage>;
@@ -217,7 +215,7 @@ namespace Fussion::GPU {
 
     namespace TextureSampleType {
         struct Float {
-            bool Filterable{ true };
+            bool filterable{ true };
         };
 
         struct Depth {};
@@ -232,11 +230,11 @@ namespace Fussion::GPU {
     namespace BindingType {
         struct Buffer {
             /// Sub-type of the buffer binding.
-            BufferBindingType::Type Type{};
+            BufferBindingType::Type type{};
             /// Indicates that the binding has a dynamic offset.
             /// One offset must be passed to RenderPass::set_bind_group
             /// for each dynamic binding in increasing order of binding number.
-            bool HasDynamicOffset{};
+            bool has_dynamic_offset{};
             /// The minimum size for a BufferBinding matching this entry, in bytes.
             /// If this is Some(size):
             ///     When calling create_bind_group, the resource at this bind
@@ -247,23 +245,23 @@ namespace Fussion::GPU {
             ///     global’s value, along with one element of a trailing runtime-sized array, if present.
             /// If this is None:
             ///     Each draw or dispatch command checks that the buffer range at this bind point satisfies the minimum buffer binding size.
-            Maybe<u64> MinBindingSize{};
+            Maybe<u64> min_binding_size{};
         };
 
         struct Sampler {
-            SamplerBindingType Type{};
+            SamplerBindingType type{};
         };
 
         struct Texture {
-            TextureSampleType::Type SampleType{};
-            TextureViewDimension ViewDimension{};
-            bool MultiSampled{};
+            TextureSampleType::Type sample_type{};
+            TextureViewDimension view_dimension{};
+            bool multi_sampled{};
         };
 
         struct StorageTexture {
-            StorageAccess Access{};
-            TextureFormat Format{};
-            TextureViewDimension ViewDimension{};
+            StorageAccess access{};
+            TextureFormat format{};
+            TextureViewDimension view_dimension{};
         };
 
         struct AccelerationStructure {};
@@ -272,25 +270,25 @@ namespace Fussion::GPU {
     };
 
     struct BindGroupLayoutEntry {
-        u32 Binding{};
-        ShaderStageFlags Visibility{};
-        BindingType::Type Type{};
-        Maybe<u32> Count{};
+        u32 binding{};
+        ShaderStageFlags visibility{};
+        BindingType::Type type{};
+        Maybe<u32> count{};
     };
 
     struct BindGroupLayoutSpec {
-        Maybe<std::string_view> Label{};
-        std::span<BindGroupLayoutEntry> Entries{};
+        Maybe<std::string_view> label{};
+        std::span<BindGroupLayoutEntry> entries{};
     };
 
     struct BindGroupLayout {
-        HandleT Handle{};
+        HandleT handle{};
     };
 
     /// Binding for uniform or storage buffers.
     struct BufferBinding {
         /// The buffer to bind.
-        Buffer Buffer{};
+        Buffer buffer{};
 
         /// Base offset of the buffer, in bytes.
         ///
@@ -303,22 +301,22 @@ namespace Fussion::GPU {
         ///
         /// If the buffer was created with BufferUsages::STORAGE,
         /// then this offset must be a multiple of Limits::min_storage_buffer_offset_alignment.
-        u64 Offset{};
+        u64 offset{};
         /// Size of the binding in bytes, or None for using the rest of the buffer.
-        u64 Size{};
+        u64 size{};
     };
 
     using BindingResource = std::variant<BufferBinding, TextureView, Sampler>;
 
     struct BindGroupEntry {
-        u32 Binding{};
-        BindingResource Resource;
+        u32 binding{};
+        BindingResource resource;
     };
 
     struct BindGroupSpec {
         /// Label for the bind group.
-        Maybe<std::string_view> Label{};
-        std::span<BindGroupEntry> Entries{};
+        Maybe<std::string_view> label{};
+        std::span<BindGroupEntry> entries{};
     };
 
     /// A BindGroup represents the set of resources bound to the bindings
@@ -328,76 +326,76 @@ namespace Fussion::GPU {
     struct BindGroup : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     struct PipelineLayoutSpec {
-        Maybe<std::string_view> Label{};
-        std::span<BindGroupLayout> BindGroupLayouts{};
+        Maybe<std::string_view> label{};
+        std::span<BindGroupLayout> bind_group_layouts{};
     };
 
     struct PipelineLayout final : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     struct WGSLShader {
-        std::string_view Source{};
+        std::string_view source{};
     };
 
     struct SPIRVShader {
-        std::span<u32> Binary{};
+        std::span<u32> binary{};
     };
 
     using ShaderType = std::variant<WGSLShader, SPIRVShader>;
 
     struct ShaderModuleSpec {
-        Maybe<std::string_view> Label{};
-        ShaderType Type{};
+        Maybe<std::string_view> label{};
+        ShaderType type{};
 
-        std::string_view VertexEntryPoint{};
-        std::string_view FragmentEntryPoint{};
+        std::string_view vertex_entry_point{};
+        std::string_view fragment_entry_point{};
     };
 
     struct ShaderModule final : GPUHandle<ShaderModuleSpec> {
         using GPUHandle::GPUHandle;
 
-        virtual void Release() override;
+        virtual void release() override;
     };
 
     /// Vertex inputs (attributes) to shaders.
     struct VertexAttribute {
         /// Format of the input
-        ElementType Type{};
+        ElementType type{};
         /// Byte offset of the start of the input
-        u32 Offset{};
+        u32 offset{};
         /// Location for this input. Must match the location in the shader.
-        u32 ShaderLocation{};
+        u32 shader_location{};
     };
 
     /// Describes how the vertex buffer is interpreted.
     /// For use in VertexState.
     struct VertexBufferLayout {
         /// The stride, in bytes, between elements of this buffer.
-        u64 ArrayStride{};
+        u64 array_stride{};
         /// How often this vertex buffer is “stepped” forward.
-        VertexStepMode StepMode{};
+        VertexStepMode step_mode{};
         /// The list of attributes which comprise a single vertex.
-        std::vector<VertexAttribute> Attributes{};
+        std::vector<VertexAttribute> attributes{};
 
         /// @param attributes The list of attributes which comprise a single vertex.
-        static VertexBufferLayout Create(std::span<VertexAttribute> attributes)
+        static VertexBufferLayout create(std::span<VertexAttribute> attributes)
         {
             VertexBufferLayout self;
             u32 offset = 0;
             for (auto& attr : attributes) {
-                attr.Offset = offset;
-                self.Attributes.push_back(attr);
+                attr.offset = offset;
+                self.attributes.push_back(attr);
 
-                offset += ElementTypeCount(attr.Type) * 4_u32;
+                offset += element_type_count(attr.type) * 4_u32;
             }
-            self.ArrayStride = offset;
+            self.array_stride = offset;
             return self;
         }
 
@@ -412,104 +410,104 @@ namespace Fussion::GPU {
         // /// The name of the entry point in the compiled shader. There must be a function with this name in the shader.
         // std::string_view EntryPoint{};
         /// The format of any vertex buffers used with this pipeline.
-        std::vector<VertexBufferLayout> AttributeLayouts{};
+        std::vector<VertexBufferLayout> attribute_layouts{};
     };
 
     struct PrimitiveState {
-        PrimitiveTopology Topology{};
-        Maybe<IndexFormat> StripIndexFormat{};
-        FrontFace FrontFace{};
-        Face Cull{};
+        PrimitiveTopology topology{};
+        Maybe<IndexFormat> strip_index_format{};
+        FrontFace front_face{};
+        Face cull{};
 
-        static auto Default() -> PrimitiveState;
+        static auto get_default() -> PrimitiveState;
     };
 
     struct StencilFaceState {
-        CompareFunction Compare{};
-        StencilOperation FailOp{};
-        StencilOperation DepthFailOp{};
-        StencilOperation PassOp{};
+        CompareFunction compare{};
+        StencilOperation fail_op{};
+        StencilOperation depth_fail_op{};
+        StencilOperation pass_op{};
     };
 
     struct StencilState {
-        StencilFaceState Front{};
-        StencilFaceState Back{};
-        u32 ReadMask{};
-        u32 WriteMask{};
+        StencilFaceState front{};
+        StencilFaceState back{};
+        u32 read_mask{};
+        u32 write_mask{};
     };
 
     struct DepthBiasState {
         /// Constant depth biasing factor, in basic units of the depth format.
-        s32 Constant{};
+        s32 constant{};
 
         /// Slope depth biasing factor.
-        f32 SlopeScale{};
+        f32 slope_scale{};
 
         /// Depth bias clamp value (absolute).
-        f32 Clamp{};
+        f32 clamp{};
     };
 
     struct DepthStencilState {
-        TextureFormat Format{};
-        bool DepthWriteEnabled{};
-        CompareFunction DepthCompare{};
-        StencilState Stencil{};
-        DepthBiasState Bias{};
+        TextureFormat format{};
+        bool depth_write_enabled{};
+        CompareFunction depth_compare{};
+        StencilState stencil{};
+        DepthBiasState bias{};
 
-        static auto Default() -> DepthStencilState;
+        static auto get_default() -> DepthStencilState;
     };
 
     struct BlendComponent {
-        BlendFactor SrcFactor{};
-        BlendFactor DstFactor{};
-        BlendOperation Operation{};
+        BlendFactor src_factor{};
+        BlendFactor dst_factor{};
+        BlendOperation operation{};
     };
 
     struct BlendState {
-        BlendComponent Color{}, Alpha{};
+        BlendComponent color{}, alpha{};
 
-        static auto Default() -> BlendState;
+        static auto get_default() -> BlendState;
     };
 
     struct ColorTargetState {
         /// The TextureFormat of the image that this pipeline will render to.
         /// Must match the format of the corresponding color attachment in CommandEncoder::BeginRendering
-        TextureFormat Format{};
+        TextureFormat format{};
         /// The blending that is used for this pipeline.
-        Maybe<BlendState> Blend{};
+        Maybe<BlendState> blend{};
         /// Mask which enables/disables writes to different color/alpha channel.
-        ColorWriteFlags WriteMask{};
+        ColorWriteFlags write_mask{};
     };
 
     struct FragmentStage {
-        std::vector<ColorTargetState> Targets{};
+        std::vector<ColorTargetState> targets{};
     };
 
     struct MultiSampleState {
         /// The number of samples calculated per pixel (for MSAA).
         /// For non-multi-sampled textures, this should be 1
-        u32 Count{};
+        u32 count{};
         /// Bitmask that restricts the samples of a pixel modified by this pipeline.
         /// All samples can be enabled using the value !0
-        u32 Mask{};
+        u32 mask{};
         /// When enabled, produces another sample mask per pixel based on the
         /// alpha output value, that is ANDed with the sample_mask and the
         /// primitive coverage to restrict the set of samples affected by a primitive.
         /// The implicit mask produced for alpha of zero is guaranteed to be zero,
         /// and for alpha of one is guaranteed to be all 1-s.
-        bool AlphaToCoverageEnabled{};
+        bool alpha_to_coverage_enabled{};
 
-        static auto Default() -> MultiSampleState;
+        static auto get_default() -> MultiSampleState;
     };
 
     struct RenderPipelineSpec {
-        Maybe<std::string_view> Label{};
-        Maybe<PipelineLayout> Layout{};
-        VertexState Vertex{};
-        PrimitiveState Primitive{};
-        Maybe<DepthStencilState> DepthStencil{};
-        MultiSampleState MultiSample{};
-        Maybe<FragmentStage> Fragment{};
+        Maybe<std::string_view> label{};
+        Maybe<PipelineLayout> layout{};
+        VertexState vertex{};
+        PrimitiveState primitive{};
+        Maybe<DepthStencilState> depth_stencil{};
+        MultiSampleState multi_sample{};
+        Maybe<FragmentStage> fragment{};
         // MutliView
         // Cache
     };
@@ -517,22 +515,22 @@ namespace Fussion::GPU {
     struct RenderPipeline : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
-        auto GetBindGroupLayout(u32 index) -> BindGroupLayout;
-        virtual void Release() override;
+        auto bind_group_layout(u32 index) -> BindGroupLayout;
+        virtual void release() override;
     };
 
     struct RenderPassColorAttachment {
-        TextureView View{};
-        LoadOp LoadOp{};
-        StoreOp StoreOp{};
-        Color ClearColor{};
-        f32 DepthClear{};
+        TextureView view{};
+        LoadOp load_op{};
+        StoreOp store_op{};
+        Color clear_color{};
+        f32 depth_clear{};
     };
 
     struct RenderPassSpec {
-        Maybe<std::string_view> Label{};
-        std::span<RenderPassColorAttachment> ColorAttachments{};
-        Maybe<RenderPassColorAttachment> DepthStencilAttachment{};
+        Maybe<std::string_view> label{};
+        std::span<RenderPassColorAttachment> color_attachments{};
+        Maybe<RenderPassColorAttachment> depth_stencil_attachment{};
     };
 
     struct RenderPassEncoder : GPUHandle<void> {
@@ -543,90 +541,90 @@ namespace Fussion::GPU {
         /// Subsequent draw calls will only draw within this region.
         /// If this method has not been called, the viewport defaults
         /// to the entire bounds of the render targets.
-        void SetViewport(Vector2 const& origin, Vector2 const& size, f32 min_depth = 0.0f, f32 max_depth = 1.0f) const;
+        void set_viewport(Vector2 const& origin, Vector2 const& size, f32 min_depth = 0.0f, f32 max_depth = 1.0f) const;
 
-        void SetBindGroup(BindGroup group, u32 index) const;
-        void SetVertexBuffer(u32 slot, BufferSlice const& slice) const;
-        void SetIndexBuffer(BufferSlice const& slice) const;
+        void set_bind_group(BindGroup group, u32 index) const;
+        void set_vertex_buffer(u32 slot, BufferSlice const& slice) const;
+        void set_index_buffer(BufferSlice const& slice) const;
         // void SetStorageBuffer(u32 slot, BufferSlice const& slice) const;
 
-        void SetPipeline(RenderPipeline const& pipeline) const;
-        void Draw(Range<u32> vertices, Range<u32> instances) const;
-        void DrawIndex(Range<u32> indices, Range<u32> instances) const;
+        void set_pipeline(RenderPipeline const& pipeline) const;
+        void draw(Range<u32> vertices, Range<u32> instances) const;
+        void draw_index(Range<u32> indices, Range<u32> instances) const;
 
-        void End() const;
-        virtual void Release() override;
+        void end() const;
+        virtual void release() override;
     };
 
     struct CommandBuffer {
-        HandleT Handle{};
+        HandleT handle{};
 
-        void Release() const;
+        void release() const;
     };
 
     struct CommandEncoder {
-        HandleT Handle{};
+        HandleT handle{};
 
-        auto BeginRendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
-        auto Finish() -> CommandBuffer;
+        auto begin_rendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
+        auto finish() -> CommandBuffer;
 
-        void CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
-        void CopyTextureToTexture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level = 0, u32 to_mip_level = 0) const;
+        void copy_buffer_to_buffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
+        void copy_texture_to_texture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level = 0, u32 to_mip_level = 0) const;
 
-        void Release() const;
+        void release() const;
     };
 
-    struct Device : GPUHandle<void> {
-        HandleT Queue{};
+    struct Device final : GPUHandle<void> {
+        HandleT queue{};
 
         Device() = default;
         explicit Device(HandleT handle);
 
         // void SetErrorCallback(ErrorFn const& function);
 
-        auto CreateBuffer(BufferSpec const& spec) const -> Buffer;
-        auto CreateTexture(TextureSpec const& spec) const -> Texture;
-        auto CreateSampler(SamplerSpec const& spec) const -> Sampler;
-        auto CreateCommandEncoder(const char* label = "") const -> CommandEncoder;
-        auto CreateBindGroup(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup;
-        auto CreateBindGroupLayout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout;
+        auto create_buffer(BufferSpec const& spec) const -> Buffer;
+        auto create_texture(TextureSpec const& spec) const -> Texture;
+        auto create_sampler(SamplerSpec const& spec) const -> Sampler;
+        auto create_command_encoder(const char* label = "") const -> CommandEncoder;
+        auto create_bind_group(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup;
+        auto create_bind_group_layout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout;
 
-        auto CreateShaderModule(ShaderModuleSpec const& spec) const -> ShaderModule;
-        auto CreatePipelineLayout(PipelineLayoutSpec const& spec) const -> PipelineLayout;
-        auto CreateRenderPipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline;
+        auto create_shader_module(ShaderModuleSpec const& spec) const -> ShaderModule;
+        auto create_pipeline_layout(PipelineLayoutSpec const& spec) const -> PipelineLayout;
+        auto create_render_pipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline;
 
-        void SubmitCommandBuffer(CommandBuffer cmd) const;
+        void submit_command_buffer(CommandBuffer cmd) const;
 
         /// Schedule a data write into buffer starting at offset.
         /// This method fails if data overruns the size of buffer starting at offset.
         /// This does not submit the transfer to the GPU immediately.
         /// Calls to write_buffer begin execution only on the next call to Queue::submit
-        void WriteBuffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const;
+        void write_buffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const;
 
         template<typename T>
-        void WriteBuffer(Buffer const& buffer, u64 offset, std::span<T> data) const
+        void write_buffer(Buffer const& buffer, u64 offset, std::span<T> data) const
         {
-            WriteBuffer(buffer, offset, data.data(), data.size_bytes());
+            write_buffer(buffer, offset, data.data(), data.size_bytes());
         }
 
-        void WriteTexture(Texture const& texture, void const* data, size_t data_size, Vector2 const& origin, Vector2 const& size, u32 mip_level = 0) const;
+        void write_texture(Texture const& texture, void const* data, size_t data_size, Vector2 const& origin, Vector2 const& size, u32 mip_level = 0) const;
 
-        virtual void Release() override;
+        virtual void release() override;
 
     private:
-        ErrorFn m_Function{};
+        ErrorFn m_function{};
     };
 
     struct AdapterOptions {
-        DevicePower PowerPreference{ DevicePower::HighPerformance };
+        DevicePower power_preference{ DevicePower::HighPerformance };
     };
 
     struct Adapter {
-        HandleT Handle{};
+        HandleT handle{};
 
-        auto GetDevice() -> Device;
+        auto device() -> Device;
 
-        void Release() const;
+        void release() const;
     };
 
     struct Surface {
@@ -638,35 +636,35 @@ namespace Fussion::GPU {
         };
 
         struct Config {
-            PresentMode PresentMode{ PresentMode::Immediate };
-            Vector2 Size{};
+            PresentMode present_mode{ PresentMode::Immediate };
+            Vector2 size{};
         };
 
-        HandleT Handle{};
-        TextureFormat Format{};
+        HandleT handle{};
+        TextureFormat format{};
 
-        void Release() const;
+        void release() const;
 
-        void Configure(Device const& device, Adapter adapter, Config const& config);
-        auto GetNextView() const -> Result<TextureView, Error>;
-        void Present() const;
+        void configure(Device const& device, Adapter adapter, Config const& config);
+        auto get_next_view() const -> Result<TextureView, Error>;
+        void present() const;
     };
 
     struct InstanceSpec {
-        BackendRenderer Backend{ BackendRenderer::Vulkan };
+        BackendRenderer backend{ BackendRenderer::Vulkan };
     };
 
     struct Instance {
-        HandleT Handle{};
+        HandleT handle{};
 
-        static Instance Create(InstanceSpec const& spec = {});
+        static Instance create(InstanceSpec const& spec = {});
 
-        void Release() const;
+        void release() const;
 
-        auto GetAdapter(Surface surface, AdapterOptions const& opt = {}) const -> Adapter;
+        auto adapter(Surface surface, AdapterOptions const& opt = {}) const -> Adapter;
 
         // TODO: Make this take a reference.
-        auto GetSurface(Window const* window) const -> Surface;
+        auto surface(Window const* window) const -> Surface;
     };
 
 

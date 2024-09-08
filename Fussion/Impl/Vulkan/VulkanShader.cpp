@@ -11,7 +11,7 @@ namespace Fussion::RHI {
         std::span<ShaderStage> stages,
         ShaderMetadata metadata)
     {
-        auto self = MakeRef<VulkanShader>();
+        auto self = make_ref<VulkanShader>();
         self->m_Metadata = metadata;
         self->m_RenderPass = render_pass->As<VulkanRenderPass>();
 

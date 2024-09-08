@@ -16,7 +16,7 @@ namespace Fussion::RHI {
         Specification = spec;
 
         if (spec.GenerateMipMaps) {
-            MipLevels = CAST(u32, Math::FloorLog2(Math::Max(spec.Width, spec.Height))) + 1;
+            MipLevels = CAST(u32, Math::floor_log2(Math::max(spec.Width, spec.Height))) + 1;
         }
         m_MipLevelsLayouts.resize(MipLevels);
 
@@ -251,8 +251,8 @@ namespace Fussion::RHI {
             cmd->BlitImage(
                 image,
                 image,
-                Rect::FromSize(CAST(f32, width), CAST(f32, height)),
-                Rect::FromSize(Math::Max(CAST(f32, width / 2), 1.0f), Math::Max(CAST(f32, height / 2), 1.0f)),
+                Rect::from_size(CAST(f32, width), CAST(f32, height)),
+                Rect::from_size(Math::max(CAST(f32, width / 2), 1.0f), Math::max(CAST(f32, height / 2), 1.0f)),
                 i - 1, i);
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -351,21 +351,21 @@ namespace Fussion::RHI {
     VkImageUsageFlags ImageUsageToVulkan(ImageUsageFlags flags)
     {
         VkImageUsageFlags ret{ 0 };
-        if (flags.Test(ImageUsage::ColorAttachment))
+        if (flags.test(ImageUsage::ColorAttachment))
             ret |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        if (flags.Test(ImageUsage::DepthStencilAttachment))
+        if (flags.test(ImageUsage::DepthStencilAttachment))
             ret |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        if (flags.Test(ImageUsage::Sampled))
+        if (flags.test(ImageUsage::Sampled))
             ret |= VK_IMAGE_USAGE_SAMPLED_BIT;
-        if (flags.Test(ImageUsage::Storage))
+        if (flags.test(ImageUsage::Storage))
             ret |= VK_IMAGE_USAGE_STORAGE_BIT;
-        if (flags.Test(ImageUsage::TransferSrc))
+        if (flags.test(ImageUsage::TransferSrc))
             ret |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-        if (flags.Test(ImageUsage::TransferDst))
+        if (flags.test(ImageUsage::TransferDst))
             ret |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        if (flags.Test(ImageUsage::Input))
+        if (flags.test(ImageUsage::Input))
             ret |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
-        if (flags.Test(ImageUsage::Transient))
+        if (flags.test(ImageUsage::Transient))
             ret |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
         return ret;
     }

@@ -12,83 +12,83 @@ namespace Fussion {
     using json = nlohmann::json;
     using ordered_json = nlohmann::ordered_json;
 
-    inline json ToJson(Vector3 const& vec)
+    inline json to_json(Vector3 const& vec)
     {
         return json{
-            { "X", vec.X },
-            { "Y", vec.Y },
-            { "Z", vec.Z },
+            { "x", vec.x },
+            { "y", vec.y },
+            { "z", vec.z },
         };
     }
 
-    inline Vector3 Vec3FromJson(const json& j)
+    inline Vector3 vec3_from_json(json const& j)
     {
-        if (!j.contains("X") || !j.contains("Y") || !j.contains("Z")) {
+        if (!j.contains("x") || !j.contains("y") || !j.contains("z")) {
             return {};
         }
         Vector3 vec;
-        j.at("X").get_to(vec.X);
-        j.at("Y").get_to(vec.Y);
-        j.at("Z").get_to(vec.Z);
+        j.at("x").get_to(vec.x);
+        j.at("y").get_to(vec.y);
+        j.at("z").get_to(vec.z);
         return vec;
     }
 
-    inline json ToJson(Vector4 const& vec)
+    inline json to_json(Vector4 const& vec)
     {
         return json{
-            { "X", vec.X },
-            { "Y", vec.Y },
-            { "Z", vec.Z },
-            { "W", vec.W },
+            { "x", vec.x },
+            { "y", vec.y },
+            { "z", vec.z },
+            { "w", vec.w },
         };
     }
 
-    inline Vector4 Vec4FromJson(json const& j)
+    inline Vector4 vec4_from_json(json const& j)
     {
-        if (!j.contains("X") || !j.contains("Y") || !j.contains("Z") || !j.contains("W")) {
+        if (!j.contains("x") || !j.contains("y") || !j.contains("z") || !j.contains("w")) {
             return {};
         }
         Vector4 vec;
-        j.at("X").get_to(vec.X);
-        j.at("Y").get_to(vec.Y);
-        j.at("Z").get_to(vec.Z);
-        j.at("W").get_to(vec.W);
+        j.at("x").get_to(vec.x);
+        j.at("y").get_to(vec.y);
+        j.at("z").get_to(vec.z);
+        j.at("w").get_to(vec.w);
         return vec;
     }
 
-    inline json ToJson(Vector2 const& vec)
+    inline json to_json(Vector2 const& vec)
     {
         return json{
-            { "X", vec.X },
-            { "Y", vec.Y },
+            { "x", vec.x },
+            { "y", vec.y },
         };
     }
 
-    inline Vector2 Vec2FromJson(json const& j)
+    inline Vector2 vec2_from_json(json const& j)
     {
         Vector2 vec;
-        j.at("X").get_to(vec.X);
-        j.at("Y").get_to(vec.Y);
+        j.at("x").get_to(vec.x);
+        j.at("y").get_to(vec.y);
         return vec;
     }
 
-    inline json ToJson(Color const& col)
+    inline json to_json(Color const& col)
     {
         return json{
-            { "R", col.R },
-            { "G", col.G },
-            { "B", col.B },
-            { "A", col.A },
+            { "r", col.r },
+            { "g", col.g },
+            { "b", col.b },
+            { "a", col.a },
         };
     }
 
-    inline Color ColorFromJson(json const& j)
+    inline Color color_from_json(json const& j)
     {
         Color col;
-        j.at("A").get_to(col.R);
-        j.at("G").get_to(col.G);
-        j.at("B").get_to(col.B);
-        j.at("A").get_to(col.A);
+        j.at("a").get_to(col.r);
+        j.at("g").get_to(col.g);
+        j.at("b").get_to(col.b);
+        j.at("a").get_to(col.a);
         return col;
     }
 
@@ -97,58 +97,58 @@ namespace Fussion {
         j = CAST(u64, id);
     }
 
-    inline void from_json(const json& j, Uuid& id)
+    inline void from_json(json const& j, Uuid& id)
     {
         id = Uuid(j.get<u64>());
     }
 
-    inline void to_json(Fussion::json& j, Fussion::Color const& v)
+    inline void to_json(json& j, Color const& v)
     {
-        j = Fussion::json{
-            { "R", v.R },
-            { "G", v.G },
-            { "B", v.B },
-            { "A", v.A },
+        j = json{
+            { "r", v.r },
+            { "g", v.g },
+            { "b", v.b },
+            { "a", v.a },
         };
     }
 
     inline void from_json(json const& j, Color& v)
     {
-        v = Color(j.value("R", 0.0f), j.value("G", 0.0f), j.value("B", 0.0f), j.value("A", 0.0f));
+        v = Color(j.value("r", 0.0f), j.value("g", 0.0f), j.value("b", 0.0f), j.value("a", 0.0f));
     }
 
     inline void from_json(json const& j, Vector2& v)
     {
-        if (!j.contains("X") || !j.contains("Y")) {
+        if (!j.contains("x") || !j.contains("y")) {
             v = Vector2{};
             return;
         }
-        v = Vector2(j.value("X", 0.0), j.value("Y", 0.0));
+        v = Vector2(j.value("x", 0.0), j.value("y", 0.0));
     }
 
     inline void from_json(json const& j, Vector3& v)
     {
-        if (!j.contains("X") || !j.contains("Y") || !j.contains("Z")) {
+        if (!j.contains("x") || !j.contains("y") || !j.contains("z")) {
             v = Vector3{};
             return;
         }
-        v = Vector3(j.value("X", 0.0), j.value("Y", 0.0), j.value("Z", 0.0));
+        v = Vector3(j.value("x", 0.0), j.value("y", 0.0), j.value("z", 0.0));
     }
 
     inline void from_json(json const& j, Vector4& v)
     {
-        if (!j.contains("X") || !j.contains("Y") || !j.contains("Z") || !j.contains("W")) {
+        if (!j.contains("x") || !j.contains("y") || !j.contains("z") || !j.contains("w")) {
             v = Vector4{};
             return;
         }
-        v = Vector4(j.value("X", 0.0), j.value("Y", 0.0), j.value("Z", 0.0), j.value("W", 0.0));
+        v = Vector4(j.value("x", 0.0), j.value("y", 0.0), j.value("z", 0.0), j.value("w", 0.0));
     }
 
     inline void to_json(json& j, Vector2 const& v)
     {
         j = json{
-            { "X", v.X },
-            { "Y", v.Y },
+            { "x", v.x },
+            { "y", v.y },
         };
     }
 
@@ -156,22 +156,22 @@ namespace Fussion {
     {
 
         j = json{
-            { "X", v.X },
-            { "Y", v.Y },
-            { "Z", v.Z },
+            { "x", v.x },
+            { "y", v.y },
+            { "z", v.z },
         };
     }
 
     inline void to_json(json& j, Vector4 const& v)
     {
         j = json{
-            { "X", v.X },
-            { "Y", v.Y },
-            { "Z", v.Z },
-            { "W", v.Z },
+            { "x", v.x },
+            { "y", v.y },
+            { "z", v.z },
+            { "w", v.z },
         };
     }
 
-    auto SerializeNativeClass(meta_hpp::class_type component_type, meta_hpp::uvalue ptr) -> ordered_json;
-    void DeserializeClassFromJson(json j, meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
+    auto serialize_native_class(meta_hpp::class_type component_type, meta_hpp::uvalue ptr) -> ordered_json;
+    void deserialize_class_from_json(json j, meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
 }

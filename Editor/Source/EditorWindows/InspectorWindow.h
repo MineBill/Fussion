@@ -11,17 +11,17 @@ class InspectorWindow final : public EditorWindow {
 public:
     EDITOR_WINDOW(InspectorWindow)
 
-    virtual void OnStart() override;
-    virtual void OnDraw() override;
+    virtual void on_start() override;
+    virtual void on_draw() override;
 
 private:
     /// Draws a component in the inspector panel.
     /// @return true if the component was modified, false otherwise.
-    bool DrawComponent(Fsn::Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
+    bool draw_component(Fsn::Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr);
 
-    bool DrawProperty(meta_hpp::uvalue prop_value, meta_hpp::member const& member, meta_hpp::uvalue& ptr);
+    bool draw_property(meta_hpp::uvalue prop_value, meta_hpp::member const& member, meta_hpp::uvalue& ptr);
 
     /// Draws an entity in the inspector panel.
     /// @return true if the entity was modified, false otherwise.
-    bool DrawEntity(Fussion::Entity& e);
+    bool draw_entity(Fussion::Entity& e);
 };

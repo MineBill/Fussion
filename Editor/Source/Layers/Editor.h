@@ -31,104 +31,104 @@ public:
         Detached,
     };
 
-    UndoRedo Undo;
-    Fussion::Delegate<> OnBeginPlay;
-    Fussion::Delegate<> OnStopPlay;
-    Fussion::Delegate<> OnResumePlay;
-    Fussion::Delegate<> OnPaused;
+    UndoRedo undo;
+    Fussion::Delegate<> on_begin_play;
+    Fussion::Delegate<> on_stop_play;
+    Fussion::Delegate<> on_resume_play;
+    Fussion::Delegate<> on_paused;
 
-    Fussion::DebugDrawContext DebugDrawContext{};
+    Fussion::DebugDrawContext debug_draw_context{};
 
-    static AssetPicker GenericAssetPicker;
+    static AssetPicker generic_asset_picker;
 
     Editor();
     virtual ~Editor() override;
 
-    virtual void OnStart() override;
-    virtual void OnEnable() override;
-    virtual void OnDisable() override;
+    virtual void on_start() override;
+    virtual void on_enable() override;
+    virtual void on_disable() override;
 
-    virtual void OnUpdate(f32) override;
-    virtual void OnEvent(Fsn::Event&) override;
+    virtual void on_update(f32) override;
+    virtual void on_event(Fsn::Event&) override;
 
-    virtual void OnDraw(Fussion::GPU::CommandEncoder& encoder) override;
-    virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
+    virtual void on_draw(Fussion::GPU::CommandEncoder& encoder) override;
+    virtual void on_log_received(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
-    void Save() const;
+    void save() const;
 
-    auto GetSceneRenderer() -> SceneRenderer& { return m_SceneRenderer; }
+    auto scene_renderer() -> SceneRenderer& { return m_scene_renderer; }
 
-    void OpenAsset(Fussion::AssetHandle handle);
+    void open_asset(Fussion::AssetHandle handle);
 
     template<std::derived_from<AssetWindow> T, typename... Args>
-    void CreateAssetWindow(Fussion::AssetHandle handle, Args&&... args)
+    void create_asset_window(Fussion::AssetHandle handle, Args&&... args)
     {
-        if (m_AssetWindows.contains(handle))
+        if (m_asset_windows.contains(handle))
             return;
-        m_AssetWindows[handle] = MakePtr<T>(handle, std::forward<Args>(args)...);
+        m_asset_windows[handle] = MakePtr<T>(handle, std::forward<Args>(args)...);
     }
 
-    void SetPlayState(PlayState new_state);
-    auto GetPlayState() const -> PlayState { return m_State; }
+    void set_play_state(PlayState new_state);
+    auto play_state() const -> PlayState { return m_state; }
 
-    auto GetLogEntries() -> std::vector<Fsn::LogEntry>
+    auto log_entries() -> std::vector<Fsn::LogEntry>
     {
-        auto entries = m_LogEntries;
-        m_LogEntries.clear();
+        auto entries = m_log_entries;
+        m_log_entries.clear();
         return entries;
     }
 
-    static void ChangeScene(Fsn::AssetRef<Fsn::Scene> scene);
+    static void change_scene(Fsn::AssetRef<Fsn::Scene> scene);
 
-    static void OnViewportResized(Vector2 const& new_size);
+    static void on_viewport_resized(Vector2 const& new_size);
 
-    static auto Inst() -> Editor& { return *s_EditorInstance; }
+    static auto inst() -> Editor& { return *s_editor_instance; }
 
-    static auto GetCamera() -> EditorCamera& { return s_EditorInstance->m_Camera; }
-    static auto GetProject() -> Project& { return s_EditorInstance->m_Project; }
+    static auto camera() -> EditorCamera& { return s_editor_instance->m_camera; }
+    static auto project() -> Project& { return s_editor_instance->m_project; }
 
-    static auto GetActiveScene() -> Ref<Fsn::Scene>&
+    static auto active_scene() -> Ref<Fsn::Scene>&
     {
-        if (s_EditorInstance->m_State == PlayState::Playing) {
-            return s_EditorInstance->m_PlayScene;
+        if (s_editor_instance->m_state == PlayState::Playing) {
+            return s_editor_instance->m_play_scene;
         }
-        return s_EditorInstance->m_ActiveScene;
+        return s_editor_instance->m_active_scene;
     }
 
     // Editor Windows
-    static auto GetViewport() -> ViewportWindow& { return *s_EditorInstance->m_ViewportWindow.get(); }
-    static auto GetInspector() -> InspectorWindow& { return *s_EditorInstance->m_InspectorWindow.get(); }
-    static auto GetSceneTree() -> SceneTreeWindow& { return *s_EditorInstance->m_SceneWindow.get(); }
-    static auto GetConsole() -> ConsoleWindow& { return *s_EditorInstance->m_ConsoleWindow.get(); }
-    static auto GetContentBrowser() -> ContentBrowser& { return *s_EditorInstance->m_ContentBrowser.get(); }
+    static auto viewport() -> ViewportWindow& { return *s_editor_instance->m_viewport_window.get(); }
+    static auto inspector() -> InspectorWindow& { return *s_editor_instance->m_inspector_window.get(); }
+    static auto scene_tree() -> SceneTreeWindow& { return *s_editor_instance->m_scene_window.get(); }
+    static auto console() -> ConsoleWindow& { return *s_editor_instance->m_console_window.get(); }
+    static auto content_browser() -> ContentBrowser& { return *s_editor_instance->m_content_browser.get(); }
 
 private:
-    static Editor* s_EditorInstance;
-    std::vector<Fsn::LogEntry> m_LogEntries{};
+    static Editor* s_editor_instance;
+    std::vector<Fsn::LogEntry> m_log_entries{};
 
-    Ref<Fsn::Scene> m_ActiveScene;
-    Ref<Fsn::Scene> m_PlayScene;
+    Ref<Fsn::Scene> m_active_scene;
+    Ref<Fsn::Scene> m_play_scene;
 
-    std::filesystem::path m_ActiveScenePath;
-    SceneRenderer m_SceneRenderer;
+    std::filesystem::path m_active_scene_path;
+    SceneRenderer m_scene_renderer;
 
-    Project m_Project;
-    EditorCamera m_Camera;
+    Project m_project;
+    EditorCamera m_camera;
 
-    Ptr<Fussion::FileWatcher> m_Watcher;
+    Ptr<Fussion::FileWatcher> m_watcher;
 
-    Ptr<ViewportWindow> m_ViewportWindow;
-    Ptr<InspectorWindow> m_InspectorWindow;
-    Ptr<SceneTreeWindow> m_SceneWindow;
-    Ptr<ConsoleWindow> m_ConsoleWindow;
-    Ptr<ContentBrowser> m_ContentBrowser;
+    Ptr<ViewportWindow> m_viewport_window;
+    Ptr<InspectorWindow> m_inspector_window;
+    Ptr<SceneTreeWindow> m_scene_window;
+    Ptr<ConsoleWindow> m_console_window;
+    Ptr<ContentBrowser> m_content_browser;
 
-    Ptr<AssetRegistryViewer> m_AssetRegistryViewer;
-    Ptr<ScriptsInspector> m_ScriptsInspector;
+    Ptr<AssetRegistryViewer> m_asset_registry_viewer;
+    Ptr<ScriptsInspector> m_scripts_inspector;
 
-    std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows{};
+    std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_asset_windows{};
 
-    PlayState m_State{ PlayState::Editing };
-    bool m_Detached{ false };
-    bool m_ShadowMapDisplayOpened{ false };
+    PlayState m_state{ PlayState::Editing };
+    bool m_detached{ false };
+    bool m_shadow_map_display_opened{ false };
 };

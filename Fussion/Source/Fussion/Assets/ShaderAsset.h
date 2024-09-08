@@ -16,8 +16,8 @@ namespace Fussion {
             std::span<RHI::ShaderStage> stages,
             RHI::ShaderMetadata const& metadata);
 
-        static AssetType GetStaticType() { return AssetType::Shader; }
-        virtual AssetType GetType() const override { return GetStaticType(); }
+        static AssetType static_type() { return AssetType::Shader; }
+        virtual AssetType type() const override { return static_type(); }
 
         Ref<RHI::Shader>& GetShader() { return m_Shader; }
         Ref<RHI::RenderPass>& AssociatedRenderPass() { return m_TheRenderPass; }

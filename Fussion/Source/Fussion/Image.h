@@ -4,18 +4,18 @@
 namespace Fussion {
     struct Image {
         /// Data owns pixels in an RGBA format.
-        std::vector<u8> Data{};
-        u32 Width{}, Height{};
+        std::vector<u8> data{};
+        u32 width{}, height{};
 
-        bool IsValid() const
+        bool is_valid() const
         {
-            return !Data.empty();
+            return !data.empty();
         }
 
-        u32 Size() const
+        u32 size() const
         {
             constexpr u32 channels = 4;
-            return Width * Height * channels;
+            return width * height * channels;
         }
     };
 }

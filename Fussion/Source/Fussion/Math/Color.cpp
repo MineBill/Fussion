@@ -2,15 +2,12 @@
 #include "Color.h"
 
 namespace Fussion {
-
-
-
-    u32 Color::ToABGR()
+    u32 Color::to_abgr() const
     {
-        auto r = CAST(u8, R * 255);
-        auto g = CAST(u8, G * 255);
-        auto b = CAST(u8, B * 255);
-        auto a = CAST(u8, A * 255);
-        return (CAST(u32, a) << 24) | (CAST(u32, b) << 16) | (CAST(u32, g) << 8) | CAST(u32, r);
+        auto r8 = CAST(u8, r * 255);
+        auto g8 = CAST(u8, g * 255);
+        auto b8 = CAST(u8, b * 255);
+        auto a8 = CAST(u8, a * 255);
+        return (CAST(u32, a8) << 24) | (CAST(u32, b8) << 16) | (CAST(u32, g8) << 8) | CAST(u32, r8);
     }
 }

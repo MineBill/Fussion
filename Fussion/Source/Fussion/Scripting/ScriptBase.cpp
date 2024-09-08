@@ -2,11 +2,11 @@
 #include "ScriptBase.h"
 
 namespace Fussion {
-    ScriptBase::ScriptBase(Entity* owner): m_Owner(owner) {}
+    ScriptBase::ScriptBase(Entity* owner): m_owner(owner) {}
 
-    ScriptBase::ScriptBase(Entity* owner, asIScriptObject* object): m_Owner(owner), m_ScriptObject(object) {}
+    ScriptBase::ScriptBase(Entity* owner, asIScriptObject* object): m_owner(owner), m_script_object(object) {}
 
-    ScriptBase* ScriptBase::Create(Entity* owner)
+    ScriptBase* ScriptBase::create(Entity* owner)
     {
         asIScriptContext* ctx = asGetActiveContext();
 
@@ -26,45 +26,44 @@ namespace Fussion {
 
     ScriptBase& ScriptBase::operator=(ScriptBase const& s)
     {
-        m_Owner = s.m_Owner;
-        m_ScriptObject = s.m_ScriptObject;
+        m_owner = s.m_owner;
+        m_script_object = s.m_script_object;
         return *this;
     }
 
-    void ScriptBase::OnStart()
+    void ScriptBase::on_start() const
     {
-        LOG_DEBUGF("ScriptBase::OnStart: Shit mista");
-        auto engine = m_ScriptObject->GetEngine();
+        auto engine = m_script_object->GetEngine();
         auto active = asGetActiveContext();
         if (active != nullptr) {
             auto func = active->GetFunction(0);
-            if (strcmp(func->GetName(), "OnStart") != 0 || active->GetThisPointer(0) != m_ScriptObject) {
+            if (strcmp(func->GetName(), "OnStart") != 0 || active->GetThisPointer(0) != m_script_object) {
                 auto ctx = engine->RequestContext();
 
-                ctx->Prepare(m_ScriptObject->GetObjectType()->GetMethodByDecl("void OnStart()"));
-                ctx->SetObject(m_ScriptObject);
+                ctx->Prepare(m_script_object->GetObjectType()->GetMethodByDecl("void OnStart()"));
+                ctx->SetObject(m_script_object);
                 ctx->Execute();
                 engine->ReturnContext(ctx);
             }
         }
     }
 
-    void ScriptBase::OnUpdate([[maybe_unused]] f32 delta) {}
+    void ScriptBase::on_update([[maybe_unused]] f32 delta) {}
 
-    Entity* ScriptBase::GetOwner() const
+    Entity* ScriptBase::get_owner() const
     {
-        return m_Owner;
+        return m_owner;
     }
 
-    void ScriptBase::AddRef()
+    void ScriptBase::add_ref()
     {
-        m_RefCount++;
+        m_ref_count++;
     }
 
-    void ScriptBase::Release()
+    void ScriptBase::release()
     {
-        m_RefCount--;
-        if (m_RefCount == 0) {
+        m_ref_count--;
+        if (m_ref_count == 0) {
             LOG_WARNF("RefCount is 0");
         }
     }

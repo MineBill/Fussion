@@ -2,13 +2,13 @@
 #include "JsonSerializer.h"
 
 namespace Fussion {
-    void JsonSerializer::Initialize()
+    void JsonSerializer::initialize()
     {
         m_ObjectStack.emplace();
     }
 
     template<typename T>
-    void JsonSerializer::GenericWrite(std::string_view name, T value)
+    void JsonSerializer::generic_write(std::string_view name, T value)
     {
         if (m_TypeStack.top() == Type::Array) {
             m_ObjectStack.top()[m_IndexStack.top()++] = value;
@@ -18,86 +18,87 @@ namespace Fussion {
     }
 
 
-    void JsonSerializer::Write(std::string_view name, s8 value)
+    void JsonSerializer::write(std::string_view name, s8 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, s16 value)
+    void JsonSerializer::write(std::string_view name, s16 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, s32 value)
+    void JsonSerializer::write(std::string_view name, s32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, s64 value)
+    void JsonSerializer::write(std::string_view name, s64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, u8 value)
+    void JsonSerializer::write(std::string_view name, u8 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, u16 value)
+    void JsonSerializer::write(std::string_view name, u16 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, u32 value)
+    void JsonSerializer::write(std::string_view name, u32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, u64 value)
+    void JsonSerializer::write(std::string_view name, u64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, f32 value)
+    void JsonSerializer::write(std::string_view name, f32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, f64 value)
+    void JsonSerializer::write(std::string_view name, f64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, bool value)
+    void JsonSerializer::write(std::string_view name, bool value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, std::string_view value)
+    void JsonSerializer::write(std::string_view name, std::string_view value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void JsonSerializer::Write(std::string_view name, char const* value)
+    void JsonSerializer::write(std::string_view name, char const* value)
     {
-        Write(name, std::string_view(value));
+        write(name, std::string_view(value));
     }
 
-    void JsonSerializer::Write(std::string_view name, ISerializable const& object)
+    void JsonSerializer::write(std::string_view name, ISerializable const& object)
     {
-        BeginObject(name, 0);
-        object.Serialize(*this);
-        EndObject();
+        begin_object(name, 0);
+        object.serialize(*this);
+        end_object();
     }
 
-    void JsonSerializer::BeginObject(std::string_view name, size_t size)
+    void JsonSerializer::begin_object(std::string_view name, size_t size)
     {
+        (void)size;
         m_ObjectStack.emplace();
         m_Names.emplace(name);
         m_TypeStack.emplace(Type::Object);
     }
 
-    void JsonSerializer::EndObject()
+    void JsonSerializer::end_object()
     {
         auto top = std::move(m_ObjectStack.top());
         m_ObjectStack.pop();
@@ -114,8 +115,9 @@ namespace Fussion {
         }
     }
 
-    void JsonSerializer::BeginArray(std::string_view name, size_t size)
+    void JsonSerializer::begin_array(std::string_view name, size_t size)
     {
+        (void)size;
         m_ObjectStack.emplace();
         m_Names.emplace(name);
 
@@ -123,7 +125,7 @@ namespace Fussion {
         m_TypeStack.emplace(Type::Array);
     }
 
-    void JsonSerializer::EndArray()
+    void JsonSerializer::end_array()
     {
         auto top = std::move(m_ObjectStack.top());
         m_ObjectStack.pop();
@@ -141,7 +143,7 @@ namespace Fussion {
         }
     }
 
-    std::string JsonSerializer::ToString()
+    std::string JsonSerializer::to_string()
     {
         return m_ObjectStack.top().dump(2);
     }
@@ -151,7 +153,7 @@ namespace Fussion {
     // ======================================================
 
     template<typename T>
-    void JsonDeserializer::GenericRead(std::string_view name, T& value)
+    void JsonDeserializer::generic_read(std::string_view name, T& value)
     {
         if (m_ObjectStack.empty())
             return;
@@ -171,84 +173,84 @@ namespace Fussion {
         }
     }
 
-    JsonDeserializer JsonDeserializer::FromJsonObject(nlohmann::json const& json)
+    JsonDeserializer JsonDeserializer::from_json_object(nlohmann::json const& json)
     {
         JsonDeserializer ds{};
         ds.m_ObjectStack.emplace(nlohmann::ordered_json(json));
         return ds;
     }
 
-    void JsonDeserializer::Initialize() {}
+    void JsonDeserializer::initialize() {}
 
-    void JsonDeserializer::Read(std::string_view name, s8& value)
+    void JsonDeserializer::read(std::string_view name, s8& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s16& value)
+    void JsonDeserializer::read(std::string_view name, s16& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s32& value)
+    void JsonDeserializer::read(std::string_view name, s32& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s64& value)
+    void JsonDeserializer::read(std::string_view name, s64& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u8& value)
+    void JsonDeserializer::read(std::string_view name, u8& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u16& value)
+    void JsonDeserializer::read(std::string_view name, u16& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u32& value)
+    void JsonDeserializer::read(std::string_view name, u32& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u64& value)
+    void JsonDeserializer::read(std::string_view name, u64& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, f32& value)
+    void JsonDeserializer::read(std::string_view name, f32& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, f64& value)
+    void JsonDeserializer::read(std::string_view name, f64& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, bool& value)
+    void JsonDeserializer::read(std::string_view name, bool& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, std::string& value)
+    void JsonDeserializer::read(std::string_view name, std::string& value)
     {
-        GenericRead(name, value);
+        generic_read(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, ISerializable& object)
+    void JsonDeserializer::read(std::string_view name, ISerializable& object)
     {
-        if (size_t size; BeginObject(name, size)) {
-            object.Deserialize(*this);
-            EndObject();
+        if (size_t size; begin_object(name, size)) {
+            object.deserialize(*this);
+            end_object();
         }
     }
 
-    bool JsonDeserializer::BeginObject(std::string_view name, size_t& size)
+    bool JsonDeserializer::begin_object(std::string_view name, size_t& size)
     {
         if (m_TypeStack.top() == Type::Object) {
             auto& top = m_ObjectStack.top();
@@ -271,13 +273,13 @@ namespace Fussion {
         return true;
     }
 
-    void JsonDeserializer::EndObject()
+    void JsonDeserializer::end_object()
     {
         m_ObjectStack.pop();
         m_TypeStack.pop();
     }
 
-    void JsonDeserializer::BeginArray(std::string_view name, size_t& size)
+    void JsonDeserializer::begin_array(std::string_view name, size_t& size)
     {
         if (m_TypeStack.top() == Type::Object) {
             m_ObjectStack.push(m_ObjectStack.top()[name]);
@@ -290,14 +292,14 @@ namespace Fussion {
         m_TypeStack.push(Type::Array);
     }
 
-    void JsonDeserializer::EndArray()
+    void JsonDeserializer::end_array()
     {
         m_ObjectStack.pop();
         m_IndexStack.pop();
         m_TypeStack.pop();
     }
 
-    auto JsonDeserializer::ReadKeys() -> std::vector<std::string>
+    auto JsonDeserializer::read_keys() -> std::vector<std::string>
     {
         if (m_ObjectStack.top().is_null())
             return {};

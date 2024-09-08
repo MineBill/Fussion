@@ -7,54 +7,51 @@
 namespace Fussion {
     class Renderer {
     public:
-        static void Initialize(Window const& window);
-        static void Shutdown();
+        static void initialize(Window const& window);
+        static void shutdown();
 
-        static Renderer& Inst() { return *s_Renderer; }
+        static Renderer& inst() { return *s_renderer; }
 
-        static auto Begin() -> Maybe<GPU::TextureView>;
-        static void End(GPU::CommandBuffer cmd);
-        static void Resize(Vector2 const& new_size);
+        static auto begin_rendering() -> Maybe<GPU::TextureView>;
+        static void end_rendering(GPU::CommandBuffer cmd);
+        static void resize(Vector2 const& new_size);
 
-        static auto Device() -> GPU::Device&
+        static auto device() -> GPU::Device&
         {
-            return s_Renderer->m_Device;
+            return s_renderer->m_device;
         }
 
-        static auto Surface() -> GPU::Surface&
+        static auto surface() -> GPU::Surface&
         {
-            return s_Renderer->m_Surface;
+            return s_renderer->m_surface;
         }
 
         [[nodiscard]]
-        static auto GetDefaultMaterial() -> AssetRef<PbrMaterial> { return s_Renderer->m_DefaultMaterial; }
+        static auto default_material() -> AssetRef<PbrMaterial> { return s_renderer->m_default_material; }
 
         [[nodiscard]]
-        static auto DefaultNormalMap() -> AssetRef<Texture2D>;
+        static auto default_normal_map() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto WhiteTexture() -> AssetRef<Texture2D>;
+        static auto white_texture() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto BlackTexture() -> AssetRef<Texture2D>;
+        static auto black_texture() -> AssetRef<Texture2D>;
 
-        static void RD_StartCapture();
-        static void RD_EndCapture();
-
-        void CreateDefaultResources();
+        void create_default_resources();
 
     private:
-        static Renderer* s_Renderer;
+        static Renderer* s_renderer;
 
-        AssetRef<PbrMaterial> m_DefaultMaterial;
-        AssetRef<Texture2D> m_WhiteTexture, m_BlackTexture, m_NormalMap;
+        AssetRef<PbrMaterial> m_default_material;
+        AssetRef<Texture2D> m_white_texture, m_black_texture, m_normal_map;
 
-        Vector2 m_WindowSize{};
-        bool m_SkipRender{};
+        Vector2 m_window_size{};
+        bool m_skip_render{};
 
-        GPU::Instance m_Instance{};
-        GPU::Device m_Device{};
-        GPU::Adapter m_Adapter{};
-        GPU::Surface m_Surface{};
+        GPU::Instance m_instance{};
+        GPU::Device m_device{};
+        GPU::Adapter m_adapter{};
+        GPU::Surface m_surface{};
     };
 }

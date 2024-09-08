@@ -9,101 +9,101 @@ using namespace Fussion;
 
 EditorStyle g_Style;
 
-void EditorStyle::Initialize()
+void EditorStyle::initialize()
 {
-    ButtonStyles[ButtonStyleGeneric] = ButtonStyle::Default();
-    ButtonStyles[ButtonStyleDisabled] = ButtonStyle::Default();
+    button_styles[ButtonStyleGeneric] = ButtonStyle::make_default();
+    button_styles[ButtonStyleDisabled] = ButtonStyle::make_default();
 
     {
-        auto style = ButtonStyle::Default();
-        style.Padding = Vector2::Zero;
-        style.Border = false;
-        style.NormalColor = Color::Transparent;
-        style.HoverColor = Color::Black;
-        style.HoverColor.A = 0.2f;
+        auto style = ButtonStyle::make_default();
+        style.padding = Vector2::Zero;
+        style.border = false;
+        style.normal_color = Color::Transparent;
+        style.hover_color = Color::Black;
+        style.hover_color.a = 0.2f;
 
-        style.PressedColor = Color::White;
-        style.PressedColor.A = 0.2f;
+        style.pressed_color = Color::White;
+        style.pressed_color.a = 0.2f;
 
-        ButtonStyles[ButtonStyleImageButton] = style;
+        button_styles[ButtonStyleImageButton] = style;
     }
 
     {
-        auto style = ButtonStyle::Default();
-        style.Border = false;
-        style.Rounding = 3.0f;
+        auto style = ButtonStyle::make_default();
+        style.border = false;
+        style.rounding = 3.0f;
 
-        style.SetButtonColor(Color::FromHex(AccentColor));
+        style.set_button_color(Color::from_hex(AccentColor));
 
-        ButtonStyles[ButtonStyleViewportButton] = style;
+        button_styles[ButtonStyleViewportButton] = style;
     }
 
     {
-        auto style = ButtonStyle::Default();
-        style.Border = false;
-        style.Rounding = 3.0f;
-        style.Font = EditorFont::RegularBig;
+        auto style = ButtonStyle::make_default();
+        style.border = false;
+        style.rounding = 3.0f;
+        style.font = EditorFont::RegularBig;
 
-        style.SetButtonColor(Color::FromHex(AccentColor));
+        style.set_button_color(Color::from_hex(AccentColor));
 
-        ButtonStyles[ButtonStyleProjectCreator] = style;
+        button_styles[ButtonStyleProjectCreator] = style;
     }
 
     {
-        auto style = ButtonStyle::Default();
-        style.Border = false;
-        style.Rounding = 3.0f;
-        style.Font = EditorFont::RegularNormal;
+        auto style = ButtonStyle::make_default();
+        style.border = false;
+        style.rounding = 3.0f;
+        style.font = EditorFont::RegularNormal;
 
-        style.SetButtonColor(Color::FromHex(AccentColor));
+        style.set_button_color(Color::from_hex(AccentColor));
 
-        ButtonStyles[ButtonStyleProjectCreatorSmall] = style;
-    }
-
-    {
-        auto style = WindowStyle();
-        style.Padding = { 3, 3 };
-        WindowStyles[WindowStyleGeneric] = style;
+        button_styles[ButtonStyleProjectCreatorSmall] = style;
     }
 
     {
         auto style = WindowStyle();
-        style.Border = false;
-        style.Padding = { 10, 10 };
-        style.Rounding = 0.0;
-        WindowStyles[WindowStyleCreator] = style;
+        style.padding = { 3, 3 };
+        window_styles[WindowStyleGeneric] = style;
     }
 
     {
         auto style = WindowStyle();
-        style.Border = true;
-        style.Padding = { 5, 5 };
-        WindowStyles[WindowStyleAssetPreview] = style;
+        style.border = false;
+        style.padding = { 10, 10 };
+        style.rounding = 0.0;
+        window_styles[WindowStyleCreator] = style;
+    }
+
+    {
+        auto style = WindowStyle();
+        style.border = true;
+        style.padding = { 5, 5 };
+        window_styles[WindowStyleAssetPreview] = style;
     }
 
     using enum EditorIcon;
-    EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png").Value();
-    EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png").Value();
-    EditorIcons[GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png").Value();
-    EditorIcons[Scene] = TextureImporter::LoadTextureFromFile("Assets/Icons/Scene.png").Value();
-    EditorIcons[Script] = TextureImporter::LoadTextureFromFile("Assets/Icons/Script.png").Value();
-    EditorIcons[PbrMaterial] = TextureImporter::LoadTextureFromFile("Assets/Icons/PbrMaterial.png").Value();
-    EditorIcons[Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png").Value();
-    EditorIcons[Search] = TextureImporter::LoadTextureFromFile("Assets/Icons/Search.png").Value();
+    editor_icons[Folder] = TextureImporter::load_texture_from_file("Assets/Icons/Folder.png").value();
+    editor_icons[FolderBack] = TextureImporter::load_texture_from_file("Assets/Icons/FolderBack.png").value();
+    editor_icons[GenericAsset] = TextureImporter::load_texture_from_file("Assets/Icons/GenericAsset.png").value();
+    editor_icons[Scene] = TextureImporter::load_texture_from_file("Assets/Icons/Scene.png").value();
+    editor_icons[Script] = TextureImporter::load_texture_from_file("Assets/Icons/Script.png").value();
+    editor_icons[PbrMaterial] = TextureImporter::load_texture_from_file("Assets/Icons/PbrMaterial.png").value();
+    editor_icons[Dots] = TextureImporter::load_texture_from_file("Assets/Icons/ThreeDots.png").value();
+    editor_icons[Search] = TextureImporter::load_texture_from_file("Assets/Icons/Search.png").value();
 
-    EditorIcons[Error] = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png").Value();
-    EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png").Value();
-    EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png").Value();
-    EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png").Value();
-    EditorIcons[Entity] = TextureImporter::LoadTextureFromFile("Assets/Icons/Entity.png").Value();
+    editor_icons[Error] = TextureImporter::load_texture_from_file("Assets/Icons/ErrorIcon.png").value();
+    editor_icons[Warning] = TextureImporter::load_texture_from_file("Assets/Icons/WarningIcon.png").value();
+    editor_icons[Info] = TextureImporter::load_texture_from_file("Assets/Icons/InfoIcon.png").value();
+    editor_icons[CogWheel] = TextureImporter::load_texture_from_file("Assets/Icons/CogWheel.png").value();
+    editor_icons[Entity] = TextureImporter::load_texture_from_file("Assets/Icons/Entity.png").value();
 
-    EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png").Value();
-    EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png").Value();
-    EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png").Value();
-    EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png").Value();
+    editor_icons[Play] = TextureImporter::load_texture_from_file("Assets/Icons/PlayButton.png").value();
+    editor_icons[Stop] = TextureImporter::load_texture_from_file("Assets/Icons/StopButton.png").value();
+    editor_icons[Pause] = TextureImporter::load_texture_from_file("Assets/Icons/PauseButton.png").value();
+    editor_icons[StepFrame] = TextureImporter::load_texture_from_file("Assets/Icons/StepFrame.png").value();
 }
 
-EditorStyle& EditorStyle::GetStyle()
+EditorStyle& EditorStyle::get_style()
 {
     return g_Style;
 }

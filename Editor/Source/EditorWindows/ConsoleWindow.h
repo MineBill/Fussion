@@ -2,15 +2,15 @@
 #include "EditorWindow.h"
 #include "Fussion/Assets/Texture2D.h"
 
-class ConsoleWindow final: public EditorWindow
-{
+class ConsoleWindow final : public EditorWindow {
 public:
     EDITOR_WINDOW(ConsoleWindow)
 
-    virtual void OnStart() override;
-    virtual void OnDraw() override;
+    virtual void on_start() override;
+    virtual void on_draw() override;
+
 private:
-    bool m_InfoEnable{true}, m_WarningEnabled{true}, m_ErrorEnabled{true};
-    bool m_AutoScroll{true};
-    std::vector<Fsn::LogEntry> m_LogEntries;
+    bool m_info_enable{ true }, m_warning_enabled{ true }, m_error_enabled{ true };
+    bool m_auto_scroll{ true };
+    std::vector<Fsn::LogEntry> m_log_entries;
 };

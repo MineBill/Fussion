@@ -12,13 +12,13 @@ namespace Fussion {
 
         /// @brief Implement to provide serialization for a type.
         /// @param ctx The serializer context. Do <b>NOT</b> rename. FSN_SERIALIZE depends on the name.
-        virtual void Serialize(Serializer& ctx) const;
+        virtual void serialize(Serializer& ctx) const;
 
         /// @brief Implement to provide deserialization for a type.
         /// @param ctx The deserializer context. Do <b>NOT</b> rename.  FSN_DESERIALIZE depends on the name.
-        virtual void Deserialize(Deserializer& ctx);
+        virtual void deserialize(Deserializer& ctx);
     };
 }
 
-#define FSN_SERIALIZE_MEMBER(field) ctx.Write(StringUtils::Remove(#field, "m_"), this->field)
-#define FSN_DESERIALIZE_MEMBER(field) ctx.Read(StringUtils::Remove(#field, "m_"), this->field)
+#define FSN_SERIALIZE_MEMBER(field) ctx.write(StringUtils::remove(#field, "m_"), this->field)
+#define FSN_DESERIALIZE_MEMBER(field) ctx.read(StringUtils::remove(#field, "m_"), this->field)

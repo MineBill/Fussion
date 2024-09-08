@@ -34,30 +34,30 @@ namespace Fussion {
         virtual ~Asset() override = default;
 
         [[nodiscard]]
-        virtual AssetType GetType() const = 0;
+        virtual AssetType type() const = 0;
 
         [[nodiscard]]
-        AssetHandle GetHandle() const { return m_Handle; }
+        AssetHandle handle() const { return m_handle; }
 
-        void SetHandle(AssetHandle handle)
+        void set_handle(AssetHandle handle)
         {
-            m_Handle = handle;
+            m_handle = handle;
         }
 
         template<typename T>
-        Ref<T> As()
+        Ref<T> as()
         {
             return std::dynamic_pointer_cast<T>(shared_from_this());
         }
 
         [[nodiscard]]
-        bool IsValid() const
+        bool is_valid() const
         {
-            return m_Handle != 0;
+            return m_handle != 0;
         }
 
     protected:
-        AssetHandle m_Handle{ 0 };
+        AssetHandle m_handle{ 0 };
 
         friend class AssetManagerBase;
     };

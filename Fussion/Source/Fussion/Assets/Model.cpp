@@ -4,47 +4,47 @@
 #include "Rendering/Renderer.h"
 
 namespace Fussion {
-    Mesh::Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset)
-        : Offset(offset),
-          MaterialIndex(material_index)
+    Mesh::Mesh(std::vector<Vertex> const& p_vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset)
+        : offset(offset),
+          material_index(material_index)
     {
         (void)shadow_indices;
-        Vertices = vertices;
+        vertices = p_vertices;
 
-        auto& device = Renderer::Device();
+        auto& device = Renderer::device();
 
         auto vertex_spec = GPU::BufferSpec{
-            .Label = "Mesh Vertex Buffer"sv,
-            .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
-            .Size = CAST(u32, vertices.size() * sizeof(Vertex)),
+            .label = "Mesh Vertex Buffer"sv,
+            .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
+            .size = CAST(u32, vertices.size() * sizeof(Vertex)),
         };
-        VertexBuffer = device.CreateBuffer(vertex_spec);
-        device.WriteBuffer(VertexBuffer, 0, std::span{ vertices });
+        vertex_buffer = device.create_buffer(vertex_spec);
+        device.write_buffer(vertex_buffer, 0, std::span{ vertices });
 
         auto index_spec = GPU::BufferSpec{
-            .Label = "Index Vertex Buffer"sv,
-            .Usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
-            .Size = CAST(u32, indices.size() * sizeof(u32)),
+            .label = "Index Vertex Buffer"sv,
+            .usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
+            .size = CAST(u32, indices.size() * sizeof(u32)),
         };
-        IndexBuffer = device.CreateBuffer(index_spec);
-        device.WriteBuffer(IndexBuffer, 0, std::span{ indices });
+        index_buffer = device.create_buffer(index_spec);
+        device.write_buffer(index_buffer, 0, std::span{ indices });
 
-        IndexCount = CAST(u32, indices.size());
+        index_count = CAST(u32, indices.size());
 
         auto instance_spec = GPU::BufferSpec{
-            .Label = "Instance Buffer"sv,
-            .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-            .Size = sizeof(Mat4) * 1'000,
+            .label = "Instance Buffer"sv,
+            .usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+            .size = sizeof(Mat4) * 1'000,
         };
 
-        InstanceBuffer = device.CreateBuffer(instance_spec);
+        instance_buffer = device.create_buffer(instance_spec);
     }
 
-    Ref<Model> Model::Create(std::vector<Mesh>& meshes)
+    Ref<Model> Model::create(std::vector<Mesh>& meshes)
     {
         LOG_DEBUGF("Creating model with {} meshes", meshes.size());
-        auto model = MakeRef<Model>();
-        model->Meshes = std::move(meshes);
+        auto model = make_ref<Model>();
+        model->meshes = std::move(meshes);
         return model;
     }
 }

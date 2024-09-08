@@ -17,16 +17,16 @@ public:
 
     EDITOR_WINDOW(ViewportWindow)
 
-    void RenderStats() const;
-    virtual void OnDraw() override;
-    virtual void OnEvent(Fussion::Event& event) override;
+    void render_stats() const;
+    virtual void on_draw() override;
+    virtual void on_event(Fussion::Event& event) override;
 
-    Vector2 GetSize() const { return m_Size; }
+    Vector2 size() const { return m_size; }
 
 private:
-    Vector2 m_Size;
-    Vector2 m_ContentOriginScreen;
+    Vector2 m_size;
+    Vector2 m_content_origin_screen;
 
-    GizmoMode m_GizmoMode{GizmoMode::Translation};
-    GizmoSpace m_GizmoSpace{GizmoSpace::Local};
+    GizmoMode m_gizmo_mode{ GizmoMode::Translation };
+    GizmoSpace m_gizmo_space{ GizmoSpace::Local };
 };

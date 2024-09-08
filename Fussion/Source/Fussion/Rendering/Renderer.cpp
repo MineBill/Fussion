@@ -13,39 +13,39 @@
 using namespace Fussion::RHI;
 
 namespace Fussion {
-    Renderer* Renderer::s_Renderer = nullptr;
+    Renderer* Renderer::s_renderer = nullptr;
 
-    void Renderer::Initialize(Window const& window)
+    void Renderer::initialize(Window const& window)
     {
         LOG_INFO("Initializing Renderer");
-        s_Renderer = new Renderer();
+        s_renderer = new Renderer();
 
         // auto instance = Instance::Create(window);
         // auto* device = Device::Create(instance);
         // Device::SetInstance(device);
 
-        auto instance = GPU::Instance::Create({
-            .Backend = GPU::BackendRenderer::Vulkan,
+        auto instance = GPU::Instance::create({
+            .backend = GPU::BackendRenderer::Vulkan,
         });
 
-        auto surface = instance.GetSurface(&window);
-        auto adapter = instance.GetAdapter(surface, {
-            .PowerPreference = GPU::DevicePower::HighPerformance
+        auto surface = instance.surface(&window);
+        auto adapter = instance.adapter(surface, {
+            .power_preference = GPU::DevicePower::HighPerformance
         });
 
-        auto device = adapter.GetDevice();
+        auto device = adapter.device();
 
-        s_Renderer->m_WindowSize = window.GetSize();
+        s_renderer->m_window_size = window.size();
 
-        surface.Configure(device, adapter, {
-            .PresentMode = GPU::PresentMode::Immediate,
-            .Size = s_Renderer->m_WindowSize
+        surface.configure(device, adapter, {
+            .present_mode = GPU::PresentMode::Immediate,
+            .size = s_renderer->m_window_size
         });
 
-        s_Renderer->m_Device = device;
-        s_Renderer->m_Adapter = adapter;
-        s_Renderer->m_Instance = instance;
-        s_Renderer->m_Surface = surface;
+        s_renderer->m_device = device;
+        s_renderer->m_adapter = adapter;
+        s_renderer->m_instance = instance;
+        s_renderer->m_surface = surface;
 
         // NOTE: Setting the callback on m_Device, rather than the device local variable, because
         //       the GPU::Device will set up WGPU user data with its pointer.
@@ -53,68 +53,68 @@ namespace Fussion {
         //     LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
         // });
 
-        GPU::Utils::RenderDoc::Initialize();
+        GPU::Utils::RenderDoc::initialize();
     }
 
-    void Renderer::Shutdown()
+    void Renderer::shutdown()
     {
         LOG_DEBUGF("Shutting down Renderer!");
 
-        s_Renderer->m_Device.Release();
-        s_Renderer->m_Adapter.Release();
-        s_Renderer->m_Surface.Release();
-        s_Renderer->m_Instance.Release();
+        s_renderer->m_device.release();
+        s_renderer->m_adapter.release();
+        s_renderer->m_surface.release();
+        s_renderer->m_instance.release();
     }
 
-    auto Renderer::Begin() -> Maybe<GPU::TextureView>
+    auto Renderer::begin_rendering() -> Maybe<GPU::TextureView>
     {
         ZoneScoped;
-        auto new_size = Application::Instance()->GetWindow().GetSize();
-        if (s_Renderer->m_WindowSize != new_size) {
-            Resize(new_size);
+        auto new_size = Application::inst()->window().size();
+        if (s_renderer->m_window_size != new_size) {
+            resize(new_size);
         }
 
-        if (s_Renderer->m_SkipRender)
+        if (s_renderer->m_skip_render)
             return None();
 
-        auto view = s_Renderer->m_Surface.GetNextView();
-        if (view.IsError()) {
+        auto view = s_renderer->m_surface.get_next_view();
+        if (view.is_error()) {
             // Handle resize or the reason the view is empty
             // ...
             return None();
         }
-        return view.Value();
+        return view.value();
     }
 
-    void Renderer::End(GPU::CommandBuffer cmd)
+    void Renderer::end_rendering(GPU::CommandBuffer cmd)
     {
         ZoneScoped;
-        s_Renderer->m_Device.SubmitCommandBuffer(cmd);
-        s_Renderer->m_Surface.Present();
-        cmd.Release();
+        s_renderer->m_device.submit_command_buffer(cmd);
+        s_renderer->m_surface.present();
+        cmd.release();
     }
 
-    void Renderer::Resize(Vector2 const& new_size)
+    void Renderer::resize(Vector2 const& new_size)
     {
         ZoneScoped;
-        if (new_size.IsZero()) {
-            s_Renderer->m_SkipRender = true;
+        if (new_size.is_zero()) {
+            s_renderer->m_skip_render = true;
             return;
         }
-        s_Renderer->m_SkipRender = false;
+        s_renderer->m_skip_render = false;
 
-        s_Renderer->m_WindowSize = new_size;
-        s_Renderer->m_Surface.Configure(s_Renderer->m_Device, s_Renderer->m_Adapter, {
-            .PresentMode = GPU::PresentMode::Immediate,
-            .Size = new_size
+        s_renderer->m_window_size = new_size;
+        s_renderer->m_surface.configure(s_renderer->m_device, s_renderer->m_adapter, {
+            .present_mode = GPU::PresentMode::Immediate,
+            .size = new_size
         });
     }
 
-    auto Renderer::DefaultNormalMap() -> AssetRef<Texture2D> { return s_Renderer->m_NormalMap; }
+    auto Renderer::default_normal_map() -> AssetRef<Texture2D> { return s_renderer->m_normal_map; }
 
-    auto Renderer::WhiteTexture() -> AssetRef<Texture2D> { return s_Renderer->m_WhiteTexture; }
+    auto Renderer::white_texture() -> AssetRef<Texture2D> { return s_renderer->m_white_texture; }
 
-    auto Renderer::BlackTexture() -> AssetRef<Texture2D> { return s_Renderer->m_BlackTexture; }
+    auto Renderer::black_texture() -> AssetRef<Texture2D> { return s_renderer->m_black_texture; }
 
     static unsigned char g_white_texture_png[] = {
 #include "white_texture.png.h"
@@ -128,15 +128,15 @@ namespace Fussion {
 #include "default_normal_map.png.h"
     };
 
-    void Renderer::CreateDefaultResources()
+    void Renderer::create_default_resources()
     {
-        auto material = MakeRef<PbrMaterial>();
-        material->ObjectColor = Color(1, 1, 1, 1);
-        s_Renderer->m_DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
+        auto material = make_ref<PbrMaterial>();
+        material->object_color = Color(1, 1, 1, 1);
+        s_renderer->m_default_material = AssetManager::create_virtual_asset_ref<PbrMaterial>(material);
 
-        s_Renderer->m_WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png).Value(), "Default White Texture");
-        s_Renderer->m_BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png).Value(), "Default Black Texture");
-        s_Renderer->m_NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Value(), "Default Normal Map");
+        s_renderer->m_white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_white_texture_png).value(), "Default White Texture");
+        s_renderer->m_black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_black_texture_png).value(), "Default Black Texture");
+        s_renderer->m_normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_normal_map_png, true).value(), "Default Normal Map");
 
     }
 }

@@ -7,17 +7,17 @@
 namespace Fussion {
     struct Color {
         struct HSL {
-            f32 H{}, S{}, L{}, A{};
+            f32 h{}, s{}, l{}, a{};
 
             [[nodiscard]]
-            static constexpr HSL FromRGB(Color color)
+            static constexpr HSL from_rgb(Color color)
             {
                 HSL hsl;
-                hsl.A = color.A;
-                auto max = Math::Max(color.R, color.G, color.B);
-                auto min = Math::Min(color.R, color.G, color.B);
+                hsl.a = color.a;
+                auto max = Math::max(color.r, color.g, color.b);
+                auto min = Math::min(color.r, color.g, color.b);
 
-                hsl.L = (min + max) / 2.0f;
+                hsl.l = (min + max) / 2.0f;
 
                 if (max == min) {
                     return hsl;
@@ -25,17 +25,17 @@ namespace Fussion {
 
                 auto d = max - min;
 
-                hsl.S = (hsl.L > 0.5f) ? d / (2.0f - max - min) : d / (max + min);
+                hsl.s = (hsl.l > 0.5f) ? d / (2.0f - max - min) : d / (max + min);
 
-                if (color.R > color.G && color.R > color.B) {
-                    hsl.H = (color.G - color.B) / d + (color.G < color.B ? 6.0f : 0.0f);
-                } else if (color.G > color.B) {
-                    hsl.H = (color.B - color.R) / +2.0f;
+                if (color.r > color.g && color.r > color.b) {
+                    hsl.h = (color.g - color.b) / d + (color.g < color.b ? 6.0f : 0.0f);
+                } else if (color.g > color.b) {
+                    hsl.h = (color.b - color.r) / +2.0f;
                 } else {
-                    hsl.H = (color.R - color.G) / d + 4.0f;
+                    hsl.h = (color.r - color.g) / d + 4.0f;
                 }
 
-                hsl.H /= 6.0f;
+                hsl.h /= 6.0f;
                 return hsl;
             }
         };
@@ -46,21 +46,21 @@ namespace Fussion {
 #endif
         union {
             struct {
-                f32 R, G, B, A;
+                f32 r, g, b, a;
             };
 
-            f32 Raw[4]{};
+            f32 raw[4]{};
         };
 #if OS_WINDOWS
 #pragma warning(pop)
 #endif
 
-        constexpr Color(): R(0), G(0), B(0), A(1) {}
-        constexpr Color(f32 r, f32 g, f32 b, f32 a): R(r), G(g), B(b), A(a) {}
-        Color(Vector4 v): R(v.X), G(v.Y), B(v.Z), A(v.W) {}
+        constexpr Color(): r(0), g(0), b(0), a(1) {}
+        constexpr Color(f32 r, f32 g, f32 b, f32 a): r(r), g(g), b(b), a(a) {}
+        Color(Vector4 v): r(v.x), g(v.y), b(v.z), a(v.w) {}
 
         [[nodiscard]]
-        static constexpr Color FromHex(u32 hex)
+        static constexpr Color from_hex(u32 hex)
         {
             return {
                 CAST(f32, hex >> 24) / 256.f,
@@ -71,7 +71,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color FromRGBA(u8 r, u8 g, u8 b, u8 a = 255)
+        static constexpr Color from_rgba(u8 r, u8 g, u8 b, u8 a = 255)
         {
             return {
                 CAST(f32, r) / 255.f,
@@ -82,11 +82,11 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color FromHSL(HSL hsl)
+        static constexpr Color from_hsl(HSL hsl)
         {
             Color color;
 
-            auto HueToRGB = [](f32 p, f32 q, f32 t) -> f32 {
+            auto hue_to_rgb = [](f32 p, f32 q, f32 t) -> f32 {
                 if (t < 0) {
                     t += 1;
                 }
@@ -106,68 +106,68 @@ namespace Fussion {
                 return p;
             };
 
-            if (hsl.S == 0) {
-                return { hsl.L, hsl.L, hsl.L, hsl.A };
+            if (hsl.s == 0) {
+                return { hsl.l, hsl.l, hsl.l, hsl.a };
             }
-            auto q = hsl.L < 0.5f ? hsl.L * (1.f + hsl.S) : hsl.L + hsl.S - hsl.L * hsl.S;
-            auto p = 2 * hsl.L - q;
-            color.R = HueToRGB(p, q, hsl.H + 1.f / 3.f);
-            color.G = HueToRGB(p, q, hsl.H);
-            color.B = HueToRGB(p, q, hsl.H - 1.f / 3.f);
-            color.A = hsl.A;
+            auto q = hsl.l < 0.5f ? hsl.l * (1.f + hsl.s) : hsl.l + hsl.s - hsl.l * hsl.s;
+            auto p = 2 * hsl.l - q;
+            color.r = hue_to_rgb(p, q, hsl.h + 1.f / 3.f);
+            color.g = hue_to_rgb(p, q, hsl.h);
+            color.b = hue_to_rgb(p, q, hsl.h - 1.f / 3.f);
+            color.a = hsl.a;
             return color;
         }
 
         [[nodiscard]]
-        constexpr Color Lighten(f32 percent) const
+        constexpr Color lighten(f32 percent) const
         {
-            auto hsl = ToHSL();
-            hsl.L += percent;
-            return FromHSL(hsl);
+            auto hsl = to_hsl();
+            hsl.l += percent;
+            return from_hsl(hsl);
         }
 
         [[nodiscard]]
-        constexpr Color Darken(f32 percent) const
+        constexpr Color darken(f32 percent) const
         {
-            auto hsl = ToHSL();
-            hsl.L -= percent;
-            return FromHSL(hsl);
+            auto hsl = to_hsl();
+            hsl.l -= percent;
+            return from_hsl(hsl);
         }
 
         [[nodiscard]]
-        constexpr HSL ToHSL() const
+        constexpr HSL to_hsl() const
         {
-            return HSL::FromRGB(*this);
+            return HSL::from_rgb(*this);
         }
 
-        u32 ToABGR();
+        u32 to_abgr() const;
 
-        static const Color White;
-        static const Color Red;
-        static const Color Green;
-        static const Color Blue;
-        static const Color Yellow;
-        static const Color Magenta;
-        static const Color Cyan;
-        static const Color Black;
-        static const Color Purple;
-        static const Color Orange;
-        static const Color Pink;
-        static const Color Turquoise;
-        static const Color Lime;
-        static const Color Gray;
-        static const Color Brown;
-        static const Color Maroon;
-        static const Color Teal;
-        static const Color Olive;
-        static const Color Navy;
-        static const Color Coral;
-        static const Color Rose;
-        static const Color SkyBlue;
-        static const Color ForestGreen;
-        static const Color DarkGoldenRod;
-        static const Color Indigo;
-        static const Color Transparent;
+        static Color const White;
+        static Color const Red;
+        static Color const Green;
+        static Color const Blue;
+        static Color const Yellow;
+        static Color const Magenta;
+        static Color const Cyan;
+        static Color const Black;
+        static Color const Purple;
+        static Color const Orange;
+        static Color const Pink;
+        static Color const Turquoise;
+        static Color const Lime;
+        static Color const Gray;
+        static Color const Brown;
+        static Color const Maroon;
+        static Color const Teal;
+        static Color const Olive;
+        static Color const Navy;
+        static Color const Coral;
+        static Color const Rose;
+        static Color const SkyBlue;
+        static Color const ForestGreen;
+        static Color const DarkGoldenRod;
+        static Color const Indigo;
+        static Color const Transparent;
 
     };
 
@@ -205,6 +205,6 @@ using Fussion::Color;
 using HSL = Fussion::Color::HSL;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Color, "Color(R: {}, G: {}, B: {}, A: {})", v.R, v.G, v.B, v.A)
+FSN_MAKE_FORMATTABLE(Fussion::Color, "Color(R: {}, G: {}, B: {}, A: {})", v.r, v.g, v.b, v.a)
 
-FSN_MAKE_FORMATTABLE(Fussion::Color::HSL, "HSL(H: {}, S: {}, L: {}, A: {})", v.H, v.S, v.L, v.A)
+FSN_MAKE_FORMATTABLE(Fussion::Color::HSL, "HSL(H: {}, S: {}, L: {}, A: {})", v.h, v.s, v.l, v.a)

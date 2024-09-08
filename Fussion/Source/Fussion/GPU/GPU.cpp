@@ -68,98 +68,98 @@ namespace Fussion::GPU {
         {
             TargetTexture = texture;
             {
-                Vector2 size = { texture.Spec.Size.X, texture.Spec.Size.Y };
-                RenderTexture = device.CreateTexture({
-                    .Usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
-                    .Dimension = TextureDimension::D2,
-                    .Size = { texture.Spec.Size.X, texture.Spec.Size.Y, 1 },
-                    .Format = texture.Spec.Format,
-                    .SampleCount = 1,
-                    .Aspect = TextureAspect::All,
-                    .GenerateMipMaps = true,
+                Vector2 size = { texture.spec.size.x, texture.spec.size.y };
+                RenderTexture = device.create_texture({
+                    .usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
+                    .dimension = TextureDimension::D2,
+                    .size = { texture.spec.size.x, texture.spec.size.y, 1 },
+                    .format = texture.spec.format,
+                    .sample_count = 1,
+                    .aspect = TextureAspect::All,
+                    .generate_mip_maps = true,
                 });
-                RenderTexture.InitializeView();
+                RenderTexture.initialize_view();
 
-                auto encoder = device.CreateCommandEncoder();
-                encoder.CopyTextureToTexture(texture, RenderTexture, size);
-                auto cmd = encoder.Finish();
-                device.SubmitCommandBuffer(cmd);
+                auto encoder = device.create_command_encoder();
+                encoder.copy_texture_to_texture(texture, RenderTexture, size);
+                auto cmd = encoder.finish();
+                device.submit_command_buffer(cmd);
             }
-            MipLevels = texture.MipLevelCount;
+            MipLevels = texture.mip_level_count;
             ShaderModuleSpec shader_spec{
-                .Label = "MipMap Generator"sv,
-                .Type = GPU::WGSLShader{
-                    .Source = MipMapGeneratorSource,
+                .label = "MipMap Generator"sv,
+                .type = GPU::WGSLShader{
+                    .source = MipMapGeneratorSource,
                 },
-                .VertexEntryPoint = "vs_main",
-                .FragmentEntryPoint = "fs_main",
+                .vertex_entry_point = "vs_main",
+                .fragment_entry_point = "fs_main",
             };
-            Shader = device.CreateShaderModule(shader_spec);
+            Shader = device.create_shader_module(shader_spec);
 
             RenderPipelineSpec spec{
-                .Label = "fuck"sv,
-                .Layout = None(),
-                .Primitive = {
-                    .Topology = PrimitiveTopology::TriangleList,
-                    .StripIndexFormat = None(),
-                    .FrontFace = FrontFace::Ccw,
-                    .Cull = Face::None,
+                .label = "fuck"sv,
+                .layout = None(),
+                .primitive = {
+                    .topology = PrimitiveTopology::TriangleList,
+                    .strip_index_format = None(),
+                    .front_face = FrontFace::Ccw,
+                    .cull = Face::None,
                 },
-                .DepthStencil = None(),
-                .MultiSample = MultiSampleState::Default(),
-                .Fragment = FragmentStage{
-                    .Targets = {
+                .depth_stencil = None(),
+                .multi_sample = MultiSampleState::get_default(),
+                .fragment = FragmentStage{
+                    .targets = {
                         ColorTargetState{
-                            .Format = texture.Spec.Format,
-                            .Blend = BlendState::Default(),
-                            .WriteMask = ColorWrite::All,
+                            .format = texture.spec.format,
+                            .blend = BlendState::get_default(),
+                            .write_mask = ColorWrite::All,
                         }
                     },
                 },
             };
-            spec.Primitive.Topology = PrimitiveTopology::TriangleStrip;
+            spec.primitive.topology = PrimitiveTopology::TriangleStrip;
 
-            Pipeline = device.CreateRenderPipeline(Shader, spec);
+            Pipeline = device.create_render_pipeline(Shader, spec);
 
-            Layout = Pipeline.GetBindGroupLayout(0);
+            Layout = Pipeline.bind_group_layout(0);
 
             SamplerSpec sampler_spec{
-                .LodMinClamp = 0.f,
-                .LodMaxClamp = 0.f,
-                .AnisotropyClamp = 2,
+                .lod_min_clamp = 0.f,
+                .lod_max_clamp = 0.f,
+                .anisotropy_clamp = 2,
             };
-            TheSampler = device.CreateSampler(sampler_spec);
+            TheSampler = device.create_sampler(sampler_spec);
 
             std::array entries = {
                 BindGroupEntry{
-                    .Binding = 0,
-                    .Resource = texture.View,
+                    .binding = 0,
+                    .resource = texture.view,
                 },
                 BindGroupEntry{
-                    .Binding = 1,
-                    .Resource = TheSampler
+                    .binding = 1,
+                    .resource = TheSampler
                 },
             };
             BindGroupSpec bg_spec{
-                .Label = "fuck2"sv,
-                .Entries = entries,
+                .label = "fuck2"sv,
+                .entries = entries,
             };
 
-            BindGroup = device.CreateBindGroup(Layout, bg_spec);
+            BindGroup = device.create_bind_group(Layout, bg_spec);
 
             //LOG_DEBUGF("Creating {} views", MipLevels);
             for (u32 i = 1; i < MipLevels; ++i) {
                 //LOG_DEBUGF("View {}", i);
-                Views.emplace_back(RenderTexture.CreateView({
-                    .Label = "View"sv,
-                    .Usage = RenderTexture.Spec.Usage,
-                    .Dimension = TextureViewDimension::D2,
-                    .Format = RenderTexture.Spec.Format,
-                    .BaseMipLevel = i,
-                    .MipLevelCount = 1,
-                    .BaseArrayLayer = 0,
-                    .ArrayLayerCount = 1,
-                    .Aspect = RenderTexture.Spec.Aspect
+                Views.emplace_back(RenderTexture.create_view({
+                    .label = "View"sv,
+                    .usage = RenderTexture.spec.usage,
+                    .dimension = TextureViewDimension::D2,
+                    .format = RenderTexture.spec.format,
+                    .base_mip_level = i,
+                    .mip_level_count = 1,
+                    .base_array_layer = 0,
+                    .array_layer_count = 1,
+                    .aspect = RenderTexture.spec.aspect
                 }));
             }
         }
@@ -167,35 +167,35 @@ namespace Fussion::GPU {
         void Process(Device const& device)
         {
             //LOG_DEBUGF("Generating mipmaps");
-            auto encoder = device.CreateCommandEncoder("MipMap Generation");
+            auto encoder = device.create_command_encoder("MipMap Generation");
             u32 i = 1;
-            Vector2 size = RenderTexture.Spec.Size;
+            Vector2 size = RenderTexture.spec.size;
             for (auto& view : Views) {
-                if (size.X > 1)
-                    size.X = CAST(f32, CAST(u32, size.X) / 2);
-                if (size.Y > 1)
-                    size.Y = CAST(f32, CAST(u32, size.Y) / 2);
+                if (size.x > 1)
+                    size.x = CAST(f32, CAST(u32, size.x) / 2);
+                if (size.y > 1)
+                    size.y = CAST(f32, CAST(u32, size.y) / 2);
 
                 std::array colors = {
                     RenderPassColorAttachment{
-                        .View = view,
-                        .LoadOp = LoadOp::Clear,
-                        .StoreOp = StoreOp::Store,
-                        .ClearColor = Color::Magenta,
+                        .view = view,
+                        .load_op = LoadOp::Clear,
+                        .store_op = StoreOp::Store,
+                        .clear_color = Color::Magenta,
                     },
                 };
                 RenderPassSpec spec{
-                    .ColorAttachments = colors
+                    .color_attachments = colors
                 };
-                auto rp = encoder.BeginRendering(spec);
+                auto rp = encoder.begin_rendering(spec);
 
-                rp.SetPipeline(Pipeline);
-                rp.SetBindGroup(BindGroup, 0);
-                rp.Draw({ 0, 6 }, { 0, 1 });
-                rp.End();
-                rp.Release();
+                rp.set_pipeline(Pipeline);
+                rp.set_bind_group(BindGroup, 0);
+                rp.draw({ 0, 6 }, { 0, 1 });
+                rp.end();
+                rp.release();
 
-                encoder.CopyTextureToTexture(RenderTexture, TargetTexture, size, i, i);
+                encoder.copy_texture_to_texture(RenderTexture, TargetTexture, size, i, i);
 
                 // std::vector<uint8_t> pixels(4 * size.X * size.Y);
                 // for (uint32_t k = 0; k < size.X; ++k) {
@@ -219,17 +219,17 @@ namespace Fussion::GPU {
                 ++i;
             }
 
-            auto cmd = encoder.Finish();
-            device.SubmitCommandBuffer(cmd);
+            auto cmd = encoder.finish();
+            device.submit_command_buffer(cmd);
 
-            encoder.Release();
+            encoder.release();
             for (auto& view : Views) {
-                view.Release();
+                view.release();
             }
-            Pipeline.Release();
-            TheSampler.Release();
-            BindGroup.Release();
-            Shader.Release();
+            Pipeline.release();
+            TheSampler.release();
+            BindGroup.release();
+            Shader.release();
         }
     };
 
@@ -284,57 +284,57 @@ namespace Fussion::GPU {
         return user_data.Device;
     }
 
-    void Sampler::Release()
+    void Sampler::release()
     {
-        wgpuSamplerRelease(As<WGPUSampler>());
+        wgpuSamplerRelease(as<WGPUSampler>());
     }
 
-    auto Buffer::GetSize() const -> u64
+    auto Buffer::size() const -> u64
     {
-        return wgpuBufferGetSize(CAST(WGPUBuffer, Handle));
+        return wgpuBufferGetSize(CAST(WGPUBuffer, handle));
     }
 
-    auto Buffer::GetSlice(u32 start, u32 size) const -> BufferSlice
+    auto Buffer::slice(u32 start, u32 size) const -> BufferSlice
     {
         return BufferSlice(*this, start, size);
     }
 
-    auto Buffer::GetSlice() const -> BufferSlice
+    auto Buffer::slice() const -> BufferSlice
     {
-        return BufferSlice(*this, 0, GetSize());
+        return BufferSlice(*this, 0, size());
     }
 
-    void Buffer::UnMap() const
+    void Buffer::unmap() const
     {
-        wgpuBufferUnmap(As<WGPUBuffer>());
+        wgpuBufferUnmap(as<WGPUBuffer>());
     }
 
-    void Buffer::Release()
+    void Buffer::release()
     {
-        wgpuBufferRelease(CAST(WGPUBuffer, Handle));
+        wgpuBufferRelease(CAST(WGPUBuffer, handle));
     }
 
     BufferSlice::BufferSlice(Buffer const& buffer, u32 start, u32 size)
-        : BackingBuffer(buffer)
-          , Start(start)
-          , Size(size) {}
+        : backing_buffer(buffer)
+          , start(start)
+          , size(size) {}
 
     BufferSlice::BufferSlice(Buffer const& buffer)
-        : BackingBuffer(buffer)
-          , Start(0)
-          , Size(buffer.GetSize()) {}
+        : backing_buffer(buffer)
+          , start(0)
+          , size(buffer.size()) {}
 
-    auto BufferSlice::GetMappedRange() -> void*
+    auto BufferSlice::mapped_range() -> void*
     {
-        return wgpuBufferGetMappedRange(BackingBuffer.As<WGPUBuffer>(), Start, Size);
+        return wgpuBufferGetMappedRange(backing_buffer.as<WGPUBuffer>(), start, size);
     }
 
-    void BufferSlice::MapAsync(AsyncMapCallback const& callback)
+    void BufferSlice::map_async(AsyncMapCallback const& callback)
     {
         struct UserData {
             AsyncMapCallback Callback;
         };
-        wgpuBufferMapAsync(BackingBuffer.As<WGPUBuffer>(), WGPUMapMode_Write, Start, Size, [](WGPUBufferMapAsyncStatus status, void* userdata) {
+        wgpuBufferMapAsync(backing_buffer.as<WGPUBuffer>(), WGPUMapMode_Write, start, size, [](WGPUBufferMapAsyncStatus status, void* userdata) {
             auto user_data = CAST(UserData*, userdata);
             if (status == WGPUBufferMapAsyncStatus_Success) {
                 user_data->Callback();
@@ -346,29 +346,29 @@ namespace Fussion::GPU {
         }, new UserData(callback));
     }
 
-    void TextureView::Release()
+    void TextureView::release()
     {
-        wgpuTextureViewRelease(CAST(WGPUTextureView, Handle));
+        wgpuTextureViewRelease(CAST(WGPUTextureView, handle));
     }
 
-    void Texture::InitializeView(u32 array_count)
+    void Texture::initialize_view(u32 array_count)
     {
-        View = CreateView({
-            .Label = "View"sv,
-            .Usage = Spec.Usage,
-            .Dimension = array_count == 1 ? TextureViewDimension::D2 : TextureViewDimension::D2_Array, // TODO: Make configurable
-            .Format = Spec.Format,
-            .BaseMipLevel = 0, // TODO: Make configurable
-            .MipLevelCount = MipLevelCount,
-            .BaseArrayLayer = 0, // TODO: Make configurable
-            .ArrayLayerCount = array_count, // TODO: Make configurable
-            .Aspect = Spec.Aspect // TODO: Make configurable
+        view = create_view({
+            .label = "View"sv,
+            .usage = spec.usage,
+            .dimension = array_count == 1 ? TextureViewDimension::D2 : TextureViewDimension::D2_Array, // TODO: Make configurable
+            .format = spec.format,
+            .base_mip_level = 0, // TODO: Make configurable
+            .mip_level_count = mip_level_count,
+            .base_array_layer = 0, // TODO: Make configurable
+            .array_layer_count = array_count, // TODO: Make configurable
+            .aspect = spec.aspect // TODO: Make configurable
         });
     }
 
-    void Texture::GenerateMipmaps(Device const& device)
+    void Texture::generate_mipmaps(Device const& device)
     {
-        if (Spec.GenerateMipMaps && MipLevelCount > 1) {
+        if (spec.generate_mip_maps && mip_level_count > 1) {
             MipMapPipeline mmp;
             mmp.Initalize(device, *this);
 
@@ -378,349 +378,349 @@ namespace Fussion::GPU {
         }
     }
 
-    TextureView Texture::CreateView(TextureViewSpec const& spec) const
+    TextureView Texture::create_view(TextureViewSpec const& spec) const
     {
         WGPUTextureViewDescriptor texture_view_descriptor{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("View"sv).data(),
-            .format = ToWgpu(spec.Format),
-            .dimension = ToWgpu(spec.Dimension),
-            .baseMipLevel = spec.BaseMipLevel,
-            .mipLevelCount = spec.MipLevelCount,
-            .baseArrayLayer = spec.BaseArrayLayer,
-            .arrayLayerCount = spec.ArrayLayerCount,
-            .aspect = ToWgpu(spec.Aspect),
+            .label = spec.label.value_or("View"sv).data(),
+            .format = to_wgpu(spec.format),
+            .dimension = to_wgpu(spec.dimension),
+            .baseMipLevel = spec.base_mip_level,
+            .mipLevelCount = spec.mip_level_count,
+            .baseArrayLayer = spec.base_array_layer,
+            .arrayLayerCount = spec.array_layer_count,
+            .aspect = to_wgpu(spec.aspect),
         };
 
-        auto view = wgpuTextureCreateView(CAST(WGPUTexture, Handle), &texture_view_descriptor);
+        auto view = wgpuTextureCreateView(CAST(WGPUTexture, handle), &texture_view_descriptor);
         return TextureView{ view };
     }
 
-    void Texture::Release()
+    void Texture::release()
     {
-        wgpuTextureRelease(CAST(WGPUTexture, Handle));
+        wgpuTextureRelease(CAST(WGPUTexture, handle));
     }
 
-    void BindGroup::Release()
+    void BindGroup::release()
     {
-        wgpuBindGroupRelease(As<WGPUBindGroup>());
+        wgpuBindGroupRelease(as<WGPUBindGroup>());
     }
 
-    void PipelineLayout::Release()
+    void PipelineLayout::release()
     {
-        wgpuPipelineLayoutRelease(As<WGPUPipelineLayout>());
+        wgpuPipelineLayoutRelease(as<WGPUPipelineLayout>());
     }
 
-    void ShaderModule::Release()
+    void ShaderModule::release()
     {
-        wgpuShaderModuleRelease(As<WGPUShaderModule>());
+        wgpuShaderModuleRelease(as<WGPUShaderModule>());
     }
 
-    auto PrimitiveState::Default() -> PrimitiveState
+    auto PrimitiveState::get_default() -> PrimitiveState
     {
         return PrimitiveState{
-            .Topology = PrimitiveTopology::TriangleList,
-            .StripIndexFormat = None(),
-            .FrontFace = FrontFace::Ccw,
-            .Cull = Face::None,
+            .topology = PrimitiveTopology::TriangleList,
+            .strip_index_format = None(),
+            .front_face = FrontFace::Ccw,
+            .cull = Face::None,
         };
     }
 
-    auto DepthStencilState::Default() -> DepthStencilState
+    auto DepthStencilState::get_default() -> DepthStencilState
     {
         return {
-            .Format = TextureFormat::Depth24Plus,
-            .DepthWriteEnabled = true,
-            .DepthCompare = CompareFunction::Less,
-            .Stencil = {
-                .Front = {
-                    .Compare = CompareFunction::Always,
-                    .FailOp = StencilOperation::Keep,
-                    .DepthFailOp = StencilOperation::Keep,
-                    .PassOp = StencilOperation::Keep },
-                .Back = { .Compare = CompareFunction::Always, .FailOp = StencilOperation::Keep, .DepthFailOp = StencilOperation::Keep, .PassOp = StencilOperation::Keep },
-                .ReadMask = 0xFFFFFFFF,
-                .WriteMask = 0xFFFFFFFF,
+            .format = TextureFormat::Depth24Plus,
+            .depth_write_enabled = true,
+            .depth_compare = CompareFunction::Less,
+            .stencil = {
+                .front = {
+                    .compare = CompareFunction::Always,
+                    .fail_op = StencilOperation::Keep,
+                    .depth_fail_op = StencilOperation::Keep,
+                    .pass_op = StencilOperation::Keep },
+                .back = { .compare = CompareFunction::Always, .fail_op = StencilOperation::Keep, .depth_fail_op = StencilOperation::Keep, .pass_op = StencilOperation::Keep },
+                .read_mask = 0xFFFFFFFF,
+                .write_mask = 0xFFFFFFFF,
             },
-            .Bias = {
-                .Constant = 0,
-                .SlopeScale = 0,
-                .Clamp = 0,
+            .bias = {
+                .constant = 0,
+                .slope_scale = 0,
+                .clamp = 0,
             }
         };
     }
 
-    auto BlendState::Default() -> BlendState
+    auto BlendState::get_default() -> BlendState
     {
         return {
-            .Color = {
-                .SrcFactor = BlendFactor::SrcAlpha,
-                .DstFactor = BlendFactor::OneMinusSrcAlpha,
-                .Operation = BlendOperation::Add },
-            .Alpha = { .SrcFactor = BlendFactor::Zero, .DstFactor = BlendFactor::One, .Operation = BlendOperation::Add }
+            .color = {
+                .src_factor = BlendFactor::SrcAlpha,
+                .dst_factor = BlendFactor::OneMinusSrcAlpha,
+                .operation = BlendOperation::Add },
+            .alpha = { .src_factor = BlendFactor::Zero, .dst_factor = BlendFactor::One, .operation = BlendOperation::Add }
         };
     }
 
-    auto MultiSampleState::Default() -> MultiSampleState
+    auto MultiSampleState::get_default() -> MultiSampleState
     {
         return {
-            .Count = 1,
-            .Mask = ~0u,
-            .AlphaToCoverageEnabled = false,
+            .count = 1,
+            .mask = ~0u,
+            .alpha_to_coverage_enabled = false,
         };
     }
 
-    auto RenderPipeline::GetBindGroupLayout(u32 index) -> BindGroupLayout
+    auto RenderPipeline::bind_group_layout(u32 index) -> BindGroupLayout
     {
-        auto layout = wgpuRenderPipelineGetBindGroupLayout(As<WGPURenderPipeline>(), index);
+        auto layout = wgpuRenderPipelineGetBindGroupLayout(as<WGPURenderPipeline>(), index);
         return BindGroupLayout{ layout };
     }
 
-    void RenderPipeline::Release()
+    void RenderPipeline::release()
     {
-        wgpuRenderPipelineRelease(As<WGPURenderPipeline>());
+        wgpuRenderPipelineRelease(as<WGPURenderPipeline>());
     }
 
-    void RenderPassEncoder::SetViewport(Vector2 const& origin, Vector2 const& size, f32 min_depth, f32 max_depth) const
+    void RenderPassEncoder::set_viewport(Vector2 const& origin, Vector2 const& size, f32 min_depth, f32 max_depth) const
     {
-        wgpuRenderPassEncoderSetViewport(As<WGPURenderPassEncoder>(), origin.X, origin.Y, size.X, size.Y, min_depth, max_depth);
+        wgpuRenderPassEncoderSetViewport(as<WGPURenderPassEncoder>(), origin.x, origin.y, size.x, size.y, min_depth, max_depth);
     }
 
-    void RenderPassEncoder::SetBindGroup(BindGroup group, u32 index) const
+    void RenderPassEncoder::set_bind_group(BindGroup group, u32 index) const
     {
         wgpuRenderPassEncoderSetBindGroup(
-            As<WGPURenderPassEncoder>(),
+            as<WGPURenderPassEncoder>(),
             index,
-            CAST(WGPUBindGroup, group.Handle),
+            CAST(WGPUBindGroup, group.handle),
             0, // TODO: Make configurable
             nullptr); // TODO: Make configurable
     }
 
-    void RenderPassEncoder::SetVertexBuffer(u32 slot, BufferSlice const& slice) const
+    void RenderPassEncoder::set_vertex_buffer(u32 slot, BufferSlice const& slice) const
     {
-        wgpuRenderPassEncoderSetVertexBuffer(As<WGPURenderPassEncoder>(), slot, slice.BackingBuffer.As<WGPUBuffer>(), slice.Start, slice.Size);
+        wgpuRenderPassEncoderSetVertexBuffer(as<WGPURenderPassEncoder>(), slot, slice.backing_buffer.as<WGPUBuffer>(), slice.start, slice.size);
     }
 
-    void RenderPassEncoder::SetIndexBuffer(BufferSlice const& slice) const
+    void RenderPassEncoder::set_index_buffer(BufferSlice const& slice) const
     {
-        wgpuRenderPassEncoderSetIndexBuffer(As<WGPURenderPassEncoder>(), slice.BackingBuffer.As<WGPUBuffer>(), WGPUIndexFormat_Uint32, slice.Start, slice.Size);
+        wgpuRenderPassEncoderSetIndexBuffer(as<WGPURenderPassEncoder>(), slice.backing_buffer.as<WGPUBuffer>(), WGPUIndexFormat_Uint32, slice.start, slice.size);
     }
 
-    void RenderPassEncoder::SetPipeline(RenderPipeline const& pipeline) const
+    void RenderPassEncoder::set_pipeline(RenderPipeline const& pipeline) const
     {
-        wgpuRenderPassEncoderSetPipeline(As<WGPURenderPassEncoder>(), pipeline.As<WGPURenderPipeline>());
+        wgpuRenderPassEncoderSetPipeline(as<WGPURenderPassEncoder>(), pipeline.as<WGPURenderPipeline>());
     }
 
-    void RenderPassEncoder::Draw(Range<u32> vertices, Range<u32> instances) const
+    void RenderPassEncoder::draw(Range<u32> vertices, Range<u32> instances) const
     {
-        wgpuRenderPassEncoderDraw(As<WGPURenderPassEncoder>(), vertices.Count(), instances.Count(), vertices.Start, instances.Start);
+        wgpuRenderPassEncoderDraw(as<WGPURenderPassEncoder>(), vertices.count(), instances.count(), vertices.start, instances.start);
     }
 
-    void RenderPassEncoder::DrawIndex(Range<u32> indices, Range<u32> instances) const
+    void RenderPassEncoder::draw_index(Range<u32> indices, Range<u32> instances) const
     {
         wgpuRenderPassEncoderDrawIndexed(
-            As<WGPURenderPassEncoder>(),
-            indices.Count(),
-            instances.End,
-            indices.Start,
+            as<WGPURenderPassEncoder>(),
+            indices.count(),
+            instances.stop,
+            indices.start,
             0,
-            instances.Start);
+            instances.start);
     }
 
-    void RenderPassEncoder::End() const
+    void RenderPassEncoder::end() const
     {
-        wgpuRenderPassEncoderEnd(As<WGPURenderPassEncoder>());
+        wgpuRenderPassEncoderEnd(as<WGPURenderPassEncoder>());
     }
 
-    void RenderPassEncoder::Release()
+    void RenderPassEncoder::release()
     {
-        wgpuRenderPassEncoderRelease(As<WGPURenderPassEncoder>());
+        wgpuRenderPassEncoderRelease(as<WGPURenderPassEncoder>());
     }
 
-    auto CommandEncoder::BeginRendering(RenderPassSpec const& spec) const -> RenderPassEncoder
+    auto CommandEncoder::begin_rendering(RenderPassSpec const& spec) const -> RenderPassEncoder
     {
         std::array<WGPURenderPassColorAttachment, 10> stack_attachments{};
 
         int i = 0;
-        for (auto const& attachment : spec.ColorAttachments) {
+        for (auto const& attachment : spec.color_attachments) {
             stack_attachments[i++] = {
                 .nextInChain = nullptr,
-                .view = CAST(WGPUTextureView, attachment.View.Handle),
+                .view = CAST(WGPUTextureView, attachment.view.handle),
                 .resolveTarget = nullptr,
-                .loadOp = ToWgpu(attachment.LoadOp),
-                .storeOp = ToWgpu(attachment.StoreOp),
+                .loadOp = to_wgpu(attachment.load_op),
+                .storeOp = to_wgpu(attachment.store_op),
                 .clearValue = WGPUColor{
-                    attachment.ClearColor.R,
-                    attachment.ClearColor.G,
-                    attachment.ClearColor.B,
-                    attachment.ClearColor.A,
+                    attachment.clear_color.r,
+                    attachment.clear_color.g,
+                    attachment.clear_color.b,
+                    attachment.clear_color.a,
                 },
             };
         }
         WGPURenderPassDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pass"sv).data(),
-            .colorAttachmentCount = spec.ColorAttachments.size(),
+            .label = spec.label.value_or("Render Pass"sv).data(),
+            .colorAttachmentCount = spec.color_attachments.size(),
             .colorAttachments = stack_attachments.data(),
             .depthStencilAttachment = nullptr,
             .occlusionQuerySet = nullptr,
             .timestampWrites = nullptr,
         };
 
-        if (auto depth = spec.DepthStencilAttachment) {
+        if (auto depth = spec.depth_stencil_attachment) {
             WGPURenderPassDepthStencilAttachment d{
-                .view = CAST(WGPUTextureView, depth->View.Handle),
-                .depthLoadOp = ToWgpu(depth->LoadOp),
-                .depthStoreOp = ToWgpu(depth->StoreOp),
-                .depthClearValue = depth->DepthClear,
+                .view = CAST(WGPUTextureView, depth->view.handle),
+                .depthLoadOp = to_wgpu(depth->load_op),
+                .depthStoreOp = to_wgpu(depth->store_op),
+                .depthClearValue = depth->depth_clear,
                 // .depthReadOnly = ,
-                .stencilLoadOp = ToWgpu(LoadOp::Undefined),
-                .stencilStoreOp = ToWgpu(StoreOp::Undefined),
+                .stencilLoadOp = to_wgpu(LoadOp::Undefined),
+                .stencilStoreOp = to_wgpu(StoreOp::Undefined),
                 .stencilClearValue = 0,
                 // .stencilReadOnly =
             };
             desc.depthStencilAttachment = &d;
-            auto rp = wgpuCommandEncoderBeginRenderPass(CAST(WGPUCommandEncoder, Handle), &desc);
+            auto rp = wgpuCommandEncoderBeginRenderPass(CAST(WGPUCommandEncoder, handle), &desc);
             return RenderPassEncoder{ rp };
         }
-        auto rp = wgpuCommandEncoderBeginRenderPass(CAST(WGPUCommandEncoder, Handle), &desc);
+        auto rp = wgpuCommandEncoderBeginRenderPass(CAST(WGPUCommandEncoder, handle), &desc);
         return RenderPassEncoder{ rp };
     }
 
-    auto CommandEncoder::Finish() -> CommandBuffer
+    auto CommandEncoder::finish() -> CommandBuffer
     {
         WGPUCommandBufferDescriptor cmd_buffer_descriptor{
             .nextInChain = nullptr,
             .label = "Pepe Command Buffer"
         };
-        auto cmd = wgpuCommandEncoderFinish(CAST(WGPUCommandEncoder, Handle), &cmd_buffer_descriptor);
+        auto cmd = wgpuCommandEncoderFinish(CAST(WGPUCommandEncoder, handle), &cmd_buffer_descriptor);
         return CommandBuffer{ cmd };
     }
 
-    void CommandEncoder::CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const
+    void CommandEncoder::copy_buffer_to_buffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const
     {
-        wgpuCommandEncoderCopyBufferToBuffer(CAST(WGPUCommandEncoder, Handle), from.As<WGPUBuffer>(), from_offset, to.As<WGPUBuffer>(), to_offset, size);
+        wgpuCommandEncoderCopyBufferToBuffer(CAST(WGPUCommandEncoder, handle), from.as<WGPUBuffer>(), from_offset, to.as<WGPUBuffer>(), to_offset, size);
     }
 
-    void CommandEncoder::CopyTextureToTexture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level, u32 to_mip_level) const
+    void CommandEncoder::copy_texture_to_texture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level, u32 to_mip_level) const
     {
         WGPUImageCopyTexture source{
             .nextInChain = nullptr,
-            .texture = from.As<WGPUTexture>(),
+            .texture = from.as<WGPUTexture>(),
             .mipLevel = from_mip_level,
             .origin = { 0, 0, 0 },
             .aspect = WGPUTextureAspect_All,
         };
         WGPUImageCopyTexture dest{
             .nextInChain = nullptr,
-            .texture = to.As<WGPUTexture>(),
+            .texture = to.as<WGPUTexture>(),
             .mipLevel = to_mip_level,
             .origin = { 0, 0, 0 },
             .aspect = WGPUTextureAspect_All,
         };
         WGPUExtent3D copy_size{
-            .width = CAST(u32, size.X),
-            .height = CAST(u32, size.Y),
+            .width = CAST(u32, size.x),
+            .height = CAST(u32, size.y),
             .depthOrArrayLayers = 1,
         };
 
-        wgpuCommandEncoderCopyTextureToTexture(CAST(WGPUCommandEncoder, Handle), &source, &dest, &copy_size);
+        wgpuCommandEncoderCopyTextureToTexture(CAST(WGPUCommandEncoder, handle), &source, &dest, &copy_size);
     }
 
-    void CommandEncoder::Release() const
+    void CommandEncoder::release() const
     {
-        wgpuCommandEncoderRelease(CAST(WGPUCommandEncoder, Handle));
+        wgpuCommandEncoderRelease(CAST(WGPUCommandEncoder, handle));
     }
 
     Device::Device(HandleT handle)
         : GPUHandle(handle)
     {
-        Queue = wgpuDeviceGetQueue(CAST(WGPUDevice, Handle));
+        queue = wgpuDeviceGetQueue(CAST(WGPUDevice, handle));
     }
 
-    auto Device::CreateBuffer(BufferSpec const& spec) const -> Buffer
+    auto Device::create_buffer(BufferSpec const& spec) const -> Buffer
     {
         WGPUBufferDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Buffer"sv).data(),
-            .usage = ToWgpu(spec.Usage),
-            .size = spec.Size,
-            .mappedAtCreation = spec.Mapped
+            .label = spec.label.value_or("Buffer"sv).data(),
+            .usage = to_wgpu(spec.usage),
+            .size = spec.size,
+            .mappedAtCreation = spec.mapped
         };
 
-        auto buffer = wgpuDeviceCreateBuffer(CAST(WGPUDevice, Handle), &desc);
+        auto buffer = wgpuDeviceCreateBuffer(CAST(WGPUDevice, handle), &desc);
         return Buffer{ buffer, spec };
     }
 
-    auto Device::CreateTexture(TextureSpec const& spec) const -> Texture
+    auto Device::create_texture(TextureSpec const& spec) const -> Texture
     {
         WGPUTextureDescriptor texture_descriptor{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Texture"sv).data(),
-            .usage = ToWgpu(spec.Usage),
-            .dimension = ToWgpu(spec.Dimension),
+            .label = spec.label.value_or("Texture"sv).data(),
+            .usage = to_wgpu(spec.usage),
+            .dimension = to_wgpu(spec.dimension),
             .size = {
-                .width = CAST(u32, spec.Size.X),
-                .height = CAST(u32, spec.Size.Y),
-                .depthOrArrayLayers = CAST(u32, spec.Size.Z),
+                .width = CAST(u32, spec.size.x),
+                .height = CAST(u32, spec.size.y),
+                .depthOrArrayLayers = CAST(u32, spec.size.z),
             },
-            .format = ToWgpu(spec.Format),
+            .format = to_wgpu(spec.format),
             .mipLevelCount = 1,
-            .sampleCount = spec.SampleCount,
+            .sampleCount = spec.sample_count,
             .viewFormatCount = 0,
             .viewFormats = nullptr,
         };
 
-        if (spec.GenerateMipMaps) {
-            texture_descriptor.mipLevelCount = CAST(u32, Math::FloorLog2(Math::Max(CAST(s32, spec.Size.X), CAST(s32, spec.Size.Y)))) + 1;
+        if (spec.generate_mip_maps) {
+            texture_descriptor.mipLevelCount = CAST(u32, Math::floor_log2(Math::max(CAST(s32, spec.size.x), CAST(s32, spec.size.y)))) + 1;
         }
 
-        auto texture_handle = wgpuDeviceCreateTexture(CAST(WGPUDevice, Handle), &texture_descriptor);
+        auto texture_handle = wgpuDeviceCreateTexture(CAST(WGPUDevice, handle), &texture_descriptor);
 
         Texture texture{ texture_handle, spec };
-        texture.MipLevelCount = texture_descriptor.mipLevelCount;
-        texture.InitializeView();
+        texture.mip_level_count = texture_descriptor.mipLevelCount;
+        texture.initialize_view();
         return texture;
     }
 
-    auto Device::CreateSampler(SamplerSpec const& spec) const -> Sampler
+    auto Device::create_sampler(SamplerSpec const& spec) const -> Sampler
     {
         WGPUSamplerDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Sampler"sv).data(),
-            .addressModeU = ToWgpu(spec.AddressModeU),
-            .addressModeV = ToWgpu(spec.AddressModeV),
-            .addressModeW = ToWgpu(spec.AddressModeW),
-            .magFilter = ToWgpu(spec.MagFilter),
-            .minFilter = ToWgpu(spec.MinFilter),
-            .mipmapFilter = CAST(WGPUMipmapFilterMode, ToWgpu(spec.MipMapFilter)),
-            .lodMinClamp = spec.LodMinClamp,
-            .lodMaxClamp = spec.LodMaxClamp,
-            .compare = ToWgpu(spec.Compare.ValueOr(CompareFunction::Undefined)),
-            .maxAnisotropy = spec.AnisotropyClamp,
+            .label = spec.label.value_or("Sampler"sv).data(),
+            .addressModeU = to_wgpu(spec.address_mode_u),
+            .addressModeV = to_wgpu(spec.address_mode_v),
+            .addressModeW = to_wgpu(spec.address_mode_w),
+            .magFilter = to_wgpu(spec.mag_filter),
+            .minFilter = to_wgpu(spec.min_filter),
+            .mipmapFilter = CAST(WGPUMipmapFilterMode, to_wgpu(spec.mip_map_filter)),
+            .lodMinClamp = spec.lod_min_clamp,
+            .lodMaxClamp = spec.lod_max_clamp,
+            .compare = to_wgpu(spec.compare.value_or(CompareFunction::Undefined)),
+            .maxAnisotropy = spec.anisotropy_clamp,
         };
 
-        auto sampler = wgpuDeviceCreateSampler(As<WGPUDevice>(), &desc);
+        auto sampler = wgpuDeviceCreateSampler(as<WGPUDevice>(), &desc);
         return Sampler{ sampler };
     }
 
-    auto Device::CreateCommandEncoder(char const* label) const -> CommandEncoder
+    auto Device::create_command_encoder(char const* label) const -> CommandEncoder
     {
         WGPUCommandEncoderDescriptor encoder_desc = {
             .nextInChain = nullptr,
             .label = label,
         };
-        auto encoder = wgpuDeviceCreateCommandEncoder(CAST(WGPUDevice, Handle), &encoder_desc);
+        auto encoder = wgpuDeviceCreateCommandEncoder(CAST(WGPUDevice, handle), &encoder_desc);
         return CommandEncoder{ encoder };
     }
 
-    auto Device::CreateBindGroup(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup
+    auto Device::create_bind_group(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup
     {
         std::vector<WGPUBindGroupEntry> entries{};
-        std::ranges::transform(spec.Entries, std::back_inserter(entries), [](BindGroupEntry const& entry) {
+        std::ranges::transform(spec.entries, std::back_inserter(entries), [](BindGroupEntry const& entry) {
             WGPUBindGroupEntry wgpu_entry{
                 .nextInChain = nullptr,
-                .binding = entry.Binding,
+                .binding = entry.binding,
                 .buffer = nullptr,
                 .offset = 0,
                 .size = 0,
@@ -730,48 +730,48 @@ namespace Fussion::GPU {
 
             std::visit(overloaded{
                     [&](BufferBinding const& buffer_binding) {
-                        wgpu_entry.buffer = CAST(WGPUBuffer, buffer_binding.Buffer.Handle);
-                        wgpu_entry.offset = buffer_binding.Offset;
-                        wgpu_entry.size = buffer_binding.Size;
+                        wgpu_entry.buffer = CAST(WGPUBuffer, buffer_binding.buffer.handle);
+                        wgpu_entry.offset = buffer_binding.offset;
+                        wgpu_entry.size = buffer_binding.size;
                     },
                     [&](Sampler const& sampler) {
-                        wgpu_entry.sampler = CAST(WGPUSampler, sampler.Handle);
+                        wgpu_entry.sampler = CAST(WGPUSampler, sampler.handle);
                     },
                     [&](TextureView const& view) {
-                        wgpu_entry.textureView = CAST(WGPUTextureView, view.Handle);
+                        wgpu_entry.textureView = CAST(WGPUTextureView, view.handle);
                     },
                     [](auto&&) {} },
-                entry.Resource);
+                entry.resource);
 
             return wgpu_entry;
         });
 
         WGPUBindGroupDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"sv).data(),
-            .layout = CAST(WGPUBindGroupLayout, layout.Handle),
+            .label = spec.label.value_or("Bind Group"sv).data(),
+            .layout = CAST(WGPUBindGroupLayout, layout.handle),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
         };
-        auto bind_group = wgpuDeviceCreateBindGroup(CAST(WGPUDevice, Handle), &desc);
+        auto bind_group = wgpuDeviceCreateBindGroup(CAST(WGPUDevice, handle), &desc);
         return BindGroup{ bind_group };
     }
 
-    auto Device::CreateBindGroupLayout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout
+    auto Device::create_bind_group_layout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout
     {
         std::vector<WGPUBindGroupLayoutEntry> entries{};
-        std::ranges::transform(spec.Entries, std::back_inserter(entries), [](BindGroupLayoutEntry const& entry) {
+        std::ranges::transform(spec.entries, std::back_inserter(entries), [](BindGroupLayoutEntry const& entry) {
             WGPUBindGroupLayoutEntry wgpu_entry{
                 .nextInChain = nullptr,
-                .binding = entry.Binding,
-                .visibility = ToWgpu(entry.Visibility),
+                .binding = entry.binding,
+                .visibility = to_wgpu(entry.visibility),
             };
 
             std::visit(overloaded{
                     [&](BindingType::Buffer const& buffer) {
                         wgpu_entry.buffer = {
                             .nextInChain = nullptr,
-                            .hasDynamicOffset = buffer.HasDynamicOffset,
+                            .hasDynamicOffset = buffer.has_dynamic_offset,
                         };
 
                         wgpu_entry.buffer.type = std::visit(overloaded{
@@ -779,30 +779,30 @@ namespace Fussion::GPU {
                                     return WGPUBufferBindingType_Uniform;
                                 },
                                 [&](BufferBindingType::Storage const& storage) {
-                                    if (storage.ReadOnly) {
+                                    if (storage.read_only) {
                                         return WGPUBufferBindingType_ReadOnlyStorage;
                                     }
                                     return WGPUBufferBindingType_Storage;
                                 },
                                 [](auto&&) { return WGPUBufferBindingType_Undefined; } },
-                            buffer.Type);
+                            buffer.type);
 
-                        if (buffer.MinBindingSize) {
-                            wgpu_entry.buffer.minBindingSize = *buffer.MinBindingSize;
+                        if (buffer.min_binding_size) {
+                            wgpu_entry.buffer.minBindingSize = *buffer.min_binding_size;
                         }
                     },
                     [&](BindingType::Sampler const& sampler) {
-                        wgpu_entry.sampler.type = ToWgpu(sampler.Type);
+                        wgpu_entry.sampler.type = to_wgpu(sampler.type);
                     },
                     [&](BindingType::Texture const& texture) {
                         wgpu_entry.texture = {
                             .nextInChain = nullptr,
-                            .viewDimension = ToWgpu(texture.ViewDimension),
-                            .multisampled = texture.MultiSampled,
+                            .viewDimension = to_wgpu(texture.view_dimension),
+                            .multisampled = texture.multi_sampled,
                         };
                         wgpu_entry.texture.sampleType = std::visit(overloaded{
                                 [](TextureSampleType::Float const& flt) {
-                                    if (flt.Filterable) {
+                                    if (flt.filterable) {
                                         return WGPUTextureSampleType_Float;
                                     }
                                     return WGPUTextureSampleType_UnfilterableFloat;
@@ -817,14 +817,14 @@ namespace Fussion::GPU {
                                     return WGPUTextureSampleType_Uint;
                                 },
                                 [](auto&&) { return WGPUTextureSampleType_Undefined; } },
-                            texture.SampleType);
+                            texture.sample_type);
                     },
                     [&](BindingType::StorageTexture const& storage_texture) {
                         wgpu_entry.storageTexture = {
                             .nextInChain = nullptr,
-                            .access = ToWgpu(storage_texture.Access),
-                            .format = ToWgpu(storage_texture.Format),
-                            .viewDimension = ToWgpu(storage_texture.ViewDimension),
+                            .access = to_wgpu(storage_texture.access),
+                            .format = to_wgpu(storage_texture.format),
+                            .viewDimension = to_wgpu(storage_texture.view_dimension),
                         };
                     },
                     [](BindingType::AccelerationStructure&&) {
@@ -832,22 +832,22 @@ namespace Fussion::GPU {
                     },
                     [](auto&&) {},
                 },
-                entry.Type);
+                entry.type);
 
             return wgpu_entry;
         });
 
         WGPUBindGroupLayoutDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"sv).data(),
+            .label = spec.label.value_or("Bind Group"sv).data(),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
         };
-        auto bg_layout = wgpuDeviceCreateBindGroupLayout(CAST(WGPUDevice, Handle), &desc);
+        auto bg_layout = wgpuDeviceCreateBindGroupLayout(CAST(WGPUDevice, handle), &desc);
         return BindGroupLayout{ bg_layout };
     }
 
-    auto Device::CreateShaderModule(ShaderModuleSpec const& spec) const -> ShaderModule
+    auto Device::create_shader_module(ShaderModuleSpec const& spec) const -> ShaderModule
     {
         auto desc = std::visit(overloaded{
                 [](WGSLShader const& wgsl) {
@@ -856,7 +856,7 @@ namespace Fussion::GPU {
                             .next = nullptr,
                             .sType = WGPUSType_ShaderModuleWGSLDescriptor,
                         },
-                        .code = wgsl.Source.data(),
+                        .code = wgsl.source.data(),
                     };
                     WGPUShaderModuleDescriptor desc{
                         .nextInChain = &wgsl_descriptor.chain,
@@ -872,8 +872,8 @@ namespace Fussion::GPU {
                             .next = nullptr,
                             .sType = WGPUSType_ShaderModuleSPIRVDescriptor,
                         },
-                        .codeSize = CAST(u32, spirv.Binary.size_bytes()),
-                        .code = spirv.Binary.data(),
+                        .codeSize = CAST(u32, spirv.binary.size_bytes()),
+                        .code = spirv.binary.data(),
                     };
                     WGPUShaderModuleDescriptor desc{
                         .nextInChain = &spirv_descriptor.chain,
@@ -886,50 +886,50 @@ namespace Fussion::GPU {
                 },
                 [](auto&&) {},
             },
-            spec.Type);
+            spec.type);
 
-        auto module = wgpuDeviceCreateShaderModule(CAST(WGPUDevice, Handle), &desc);
+        auto module = wgpuDeviceCreateShaderModule(CAST(WGPUDevice, handle), &desc);
 
         return ShaderModule{ module, spec };
     }
 
-    auto Device::CreatePipelineLayout(PipelineLayoutSpec const& spec) const -> PipelineLayout
+    auto Device::create_pipeline_layout(PipelineLayoutSpec const& spec) const -> PipelineLayout
     {
         std::vector<WGPUBindGroupLayout> layouts{};
-        std::ranges::transform(spec.BindGroupLayouts, std::back_inserter(layouts), [](BindGroupLayout const& bind_group_layout) {
-            return CAST(WGPUBindGroupLayout, bind_group_layout.Handle);
+        std::ranges::transform(spec.bind_group_layouts, std::back_inserter(layouts), [](BindGroupLayout const& bind_group_layout) {
+            return CAST(WGPUBindGroupLayout, bind_group_layout.handle);
         });
 
         WGPUPipelineLayoutDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Pipeline Layout"sv).data(),
+            .label = spec.label.value_or("Pipeline Layout"sv).data(),
             .bindGroupLayoutCount = CAST(u32, layouts.size()),
             .bindGroupLayouts = layouts.data(),
         };
 
-        auto layout = wgpuDeviceCreatePipelineLayout(CAST(WGPUDevice, Handle), &desc);
+        auto layout = wgpuDeviceCreatePipelineLayout(CAST(WGPUDevice, handle), &desc);
         return PipelineLayout{ layout };
     }
 
-    auto Device::CreateRenderPipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline
+    auto Device::create_render_pipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline
     {
         std::vector<WGPUVertexBufferLayout> vertex_buffer_layouts{};
         std::vector<std::vector<WGPUVertexAttribute>> attributes{};
-        attributes.resize(spec.Vertex.AttributeLayouts.size());
+        attributes.resize(spec.vertex.attribute_layouts.size());
 
         size_t attribute_index = 0;
-        std::ranges::transform(spec.Vertex.AttributeLayouts, std::back_inserter(vertex_buffer_layouts), [&](VertexBufferLayout const& layout) {
-            std::ranges::transform(layout.Attributes, std::back_inserter(attributes[attribute_index]), [](VertexAttribute const& attribute) {
+        std::ranges::transform(spec.vertex.attribute_layouts, std::back_inserter(vertex_buffer_layouts), [&](VertexBufferLayout const& layout) {
+            std::ranges::transform(layout.attributes, std::back_inserter(attributes[attribute_index]), [](VertexAttribute const& attribute) {
                 return WGPUVertexAttribute{
-                    .format = ToWgpu(attribute.Type),
-                    .offset = attribute.Offset,
-                    .shaderLocation = attribute.ShaderLocation,
+                    .format = to_wgpu(attribute.type),
+                    .offset = attribute.offset,
+                    .shaderLocation = attribute.shader_location,
                 };
             });
 
             WGPUVertexBufferLayout wgpu_layout{
-                .arrayStride = layout.ArrayStride,
-                .stepMode = ToWgpu(layout.StepMode),
+                .arrayStride = layout.array_stride,
+                .stepMode = to_wgpu(layout.step_mode),
                 .attributeCount = CAST(u32, attributes[attribute_index].size()),
                 .attributes = attributes[attribute_index].data(),
             };
@@ -940,8 +940,8 @@ namespace Fussion::GPU {
 
         WGPUVertexState vertex{
             .nextInChain = nullptr,
-            .module = module.As<WGPUShaderModule>(),
-            .entryPoint = module.Spec.VertexEntryPoint.data(),
+            .module = module.as<WGPUShaderModule>(),
+            .entryPoint = module.spec.vertex_entry_point.data(),
             .constantCount = 0,
             .constants = nullptr,
             .bufferCount = CAST(u32, vertex_buffer_layouts.size()),
@@ -950,21 +950,21 @@ namespace Fussion::GPU {
 
         WGPUPrimitiveState primitive{
             .nextInChain = nullptr,
-            .topology = ToWgpu(spec.Primitive.Topology),
-            .stripIndexFormat = ToWgpu(spec.Primitive.StripIndexFormat.ValueOr(IndexFormat::Undefined)),
-            .frontFace = ToWgpu(spec.Primitive.FrontFace),
-            .cullMode = ToWgpu(spec.Primitive.Cull),
+            .topology = to_wgpu(spec.primitive.topology),
+            .stripIndexFormat = to_wgpu(spec.primitive.strip_index_format.value_or(IndexFormat::Undefined)),
+            .frontFace = to_wgpu(spec.primitive.front_face),
+            .cullMode = to_wgpu(spec.primitive.cull),
         };
 
-        if (spec.Primitive.StripIndexFormat) {
-            primitive.stripIndexFormat = ToWgpu(*spec.Primitive.StripIndexFormat);
+        if (spec.primitive.strip_index_format) {
+            primitive.stripIndexFormat = to_wgpu(*spec.primitive.strip_index_format);
         }
 
         WGPUMultisampleState multisample{
             .nextInChain = nullptr,
-            .count = spec.MultiSample.Count,
-            .mask = spec.MultiSample.Mask,
-            .alphaToCoverageEnabled = spec.MultiSample.AlphaToCoverageEnabled,
+            .count = spec.multi_sample.count,
+            .mask = spec.multi_sample.mask,
+            .alphaToCoverageEnabled = spec.multi_sample.alpha_to_coverage_enabled,
         };
 
         std::vector<WGPUColorTargetState> color_targets{};
@@ -973,34 +973,34 @@ namespace Fussion::GPU {
         std::vector<WGPUBlendState> blends{};
         WGPUFragmentState fragment{};
 
-        if (spec.Fragment.HasValue()) {
-            fragment.module = module.As<WGPUShaderModule>();
-            fragment.entryPoint = module.Spec.FragmentEntryPoint.data();
+        if (spec.fragment.has_value()) {
+            fragment.module = module.as<WGPUShaderModule>();
+            fragment.entryPoint = module.spec.fragment_entry_point.data();
             fragment.constantCount = 0;
             fragment.constants = nullptr;
             // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
             // and dangling pointers.
-            blends.reserve(spec.Fragment->Targets.size());
+            blends.reserve(spec.fragment->targets.size());
 
-            std::ranges::transform(spec.Fragment->Targets, std::back_inserter(color_targets), [&blends](ColorTargetState const& state) {
+            std::ranges::transform(spec.fragment->targets, std::back_inserter(color_targets), [&blends](ColorTargetState const& state) {
                 WGPUColorTargetState wgpu_state{
                     .nextInChain = nullptr,
-                    .format = ToWgpu(state.Format),
-                    .writeMask = ToWgpu(state.WriteMask),
+                    .format = to_wgpu(state.format),
+                    .writeMask = to_wgpu(state.write_mask),
                 };
 
-                if (auto b = state.Blend) {
+                if (auto b = state.blend) {
                     auto& blend = blends.emplace_back();
                     blend = {
                         .color = {
-                            .operation = ToWgpu(b->Color.Operation),
-                            .srcFactor = ToWgpu(b->Color.SrcFactor),
-                            .dstFactor = ToWgpu(b->Color.DstFactor)
+                            .operation = to_wgpu(b->color.operation),
+                            .srcFactor = to_wgpu(b->color.src_factor),
+                            .dstFactor = to_wgpu(b->color.dst_factor)
                         },
                         .alpha = {
-                            .operation = ToWgpu(b->Alpha.Operation),
-                            .srcFactor = ToWgpu(b->Alpha.SrcFactor),
-                            .dstFactor = ToWgpu(b->Alpha.DstFactor)
+                            .operation = to_wgpu(b->alpha.operation),
+                            .srcFactor = to_wgpu(b->alpha.src_factor),
+                            .dstFactor = to_wgpu(b->alpha.dst_factor)
                         }
                     };
 
@@ -1016,62 +1016,62 @@ namespace Fussion::GPU {
 
         WGPURenderPipelineDescriptor desc{
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pipeline"sv).data(),
+            .label = spec.label.value_or("Render Pipeline"sv).data(),
             .vertex = vertex,
             .primitive = primitive,
             .depthStencil = nullptr,
             .multisample = multisample,
-            .fragment = spec.Fragment ? &fragment : nullptr,
+            .fragment = spec.fragment ? &fragment : nullptr,
         };
-        if (spec.Layout.HasValue()) {
-            desc.layout = spec.Layout->As<WGPUPipelineLayout>();
+        if (spec.layout.has_value()) {
+            desc.layout = spec.layout->as<WGPUPipelineLayout>();
         }
 
         WGPUDepthStencilState depth_stencil;
-        if (spec.DepthStencil) {
+        if (spec.depth_stencil) {
             depth_stencil = {
                 .nextInChain = nullptr,
-                .format = ToWgpu(spec.DepthStencil->Format),
-                .depthWriteEnabled = spec.DepthStencil->DepthWriteEnabled,
-                .depthCompare = ToWgpu(spec.DepthStencil->DepthCompare),
+                .format = to_wgpu(spec.depth_stencil->format),
+                .depthWriteEnabled = spec.depth_stencil->depth_write_enabled,
+                .depthCompare = to_wgpu(spec.depth_stencil->depth_compare),
                 .stencilFront = {
-                    .compare = ToWgpu(spec.DepthStencil->Stencil.Front.Compare),
-                    .failOp = ToWgpu(spec.DepthStencil->Stencil.Front.FailOp),
-                    .depthFailOp = ToWgpu(spec.DepthStencil->Stencil.Front.DepthFailOp),
-                    .passOp = ToWgpu(spec.DepthStencil->Stencil.Front.PassOp),
+                    .compare = to_wgpu(spec.depth_stencil->stencil.front.compare),
+                    .failOp = to_wgpu(spec.depth_stencil->stencil.front.fail_op),
+                    .depthFailOp = to_wgpu(spec.depth_stencil->stencil.front.depth_fail_op),
+                    .passOp = to_wgpu(spec.depth_stencil->stencil.front.pass_op),
                 },
                 .stencilBack = {
-                    .compare = ToWgpu(spec.DepthStencil->Stencil.Back.Compare),
-                    .failOp = ToWgpu(spec.DepthStencil->Stencil.Back.FailOp),
-                    .depthFailOp = ToWgpu(spec.DepthStencil->Stencil.Back.DepthFailOp),
-                    .passOp = ToWgpu(spec.DepthStencil->Stencil.Back.PassOp),
+                    .compare = to_wgpu(spec.depth_stencil->stencil.back.compare),
+                    .failOp = to_wgpu(spec.depth_stencil->stencil.back.fail_op),
+                    .depthFailOp = to_wgpu(spec.depth_stencil->stencil.back.depth_fail_op),
+                    .passOp = to_wgpu(spec.depth_stencil->stencil.back.pass_op),
                 },
-                .stencilReadMask = spec.DepthStencil->Stencil.ReadMask,
-                .stencilWriteMask = spec.DepthStencil->Stencil.WriteMask,
-                .depthBias = spec.DepthStencil->Bias.Constant,
-                .depthBiasSlopeScale = spec.DepthStencil->Bias.SlopeScale,
-                .depthBiasClamp = spec.DepthStencil->Bias.Clamp
+                .stencilReadMask = spec.depth_stencil->stencil.read_mask,
+                .stencilWriteMask = spec.depth_stencil->stencil.write_mask,
+                .depthBias = spec.depth_stencil->bias.constant,
+                .depthBiasSlopeScale = spec.depth_stencil->bias.slope_scale,
+                .depthBiasClamp = spec.depth_stencil->bias.clamp
             };
             desc.depthStencil = &depth_stencil;
         }
 
-        auto pipeline = wgpuDeviceCreateRenderPipeline(CAST(WGPUDevice, Handle), &desc);
+        auto pipeline = wgpuDeviceCreateRenderPipeline(CAST(WGPUDevice, handle), &desc);
         return RenderPipeline{ pipeline };
     }
 
     std::mutex QueueMutex{};
 
-    void Device::SubmitCommandBuffer(CommandBuffer cmd) const
+    void Device::submit_command_buffer(CommandBuffer cmd) const
     {
         std::lock_guard lock(QueueMutex);
 
         WGPUCommandBuffer cmds[] = {
-            CAST(WGPUCommandBuffer, cmd.Handle),
+            CAST(WGPUCommandBuffer, cmd.handle),
         };
-        wgpuQueueSubmit(CAST(WGPUQueue, Queue), 1, cmds);
+        wgpuQueueSubmit(CAST(WGPUQueue, queue), 1, cmds);
     }
 
-    void Device::WriteTexture(
+    void Device::write_texture(
         Texture const& texture,
         void const* data,
         size_t data_size,
@@ -1081,11 +1081,11 @@ namespace Fussion::GPU {
     {
         WGPUImageCopyTexture copy_texture{
             .nextInChain = nullptr,
-            .texture = CAST(WGPUTexture, texture.Handle),
+            .texture = CAST(WGPUTexture, texture.handle),
             .mipLevel = mip_level,
             .origin = {
-                .x = CAST(u32, origin.X),
-                .y = CAST(u32, origin.Y),
+                .x = CAST(u32, origin.x),
+                .y = CAST(u32, origin.y),
                 .z = 0,
             },
             .aspect = WGPUTextureAspect_All,
@@ -1094,27 +1094,27 @@ namespace Fussion::GPU {
         WGPUTextureDataLayout layout{
             .nextInChain = nullptr,
             .offset = 0,
-            .bytesPerRow = CAST(u32, size.X * 4),
-            .rowsPerImage = CAST(u32, size.Y),
+            .bytesPerRow = CAST(u32, size.x * 4),
+            .rowsPerImage = CAST(u32, size.y),
         };
 
         WGPUExtent3D texture_size{
-            .width = CAST(u32, texture.Spec.Size.X),
-            .height = CAST(u32, texture.Spec.Size.Y),
+            .width = CAST(u32, texture.spec.size.x),
+            .height = CAST(u32, texture.spec.size.y),
             .depthOrArrayLayers = 1,
         };
-        wgpuQueueWriteTexture(CAST(WGPUQueue, Queue), &copy_texture, data, data_size, &layout, &texture_size);
-        wgpuDevicePoll(As<WGPUDevice>(), true, nullptr);
+        wgpuQueueWriteTexture(CAST(WGPUQueue, queue), &copy_texture, data, data_size, &layout, &texture_size);
+        wgpuDevicePoll(as<WGPUDevice>(), true, nullptr);
     }
 
-    void Device::Release()
+    void Device::release()
     {
-        wgpuDeviceRelease(As<WGPUDevice>());
+        wgpuDeviceRelease(as<WGPUDevice>());
     }
 
-    void Device::WriteBuffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const
+    void Device::write_buffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const
     {
-        wgpuQueueWriteBuffer(CAST(WGPUQueue, Queue), CAST(WGPUBuffer, buffer.Handle), offset, data, size);
+        wgpuQueueWriteBuffer(CAST(WGPUQueue, queue), CAST(WGPUBuffer, buffer.handle), offset, data, size);
     }
 
     // void Device::SetErrorCallback(ErrorFn const& function)
@@ -1131,7 +1131,7 @@ namespace Fussion::GPU {
     //         this);
     // }
 
-    auto Adapter::GetDevice() -> Device
+    auto Adapter::device() -> Device
     {
         WGPUDeviceDescriptor desc{
             .nextInChain = nullptr,
@@ -1154,48 +1154,48 @@ namespace Fussion::GPU {
             },
         };
 
-        auto device = RequestDeviceSync(CAST(WGPUAdapter, Handle), &desc);
+        auto device = RequestDeviceSync(CAST(WGPUAdapter, handle), &desc);
 
         return Device{ device };
     }
 
-    void Adapter::Release() const
+    void Adapter::release() const
     {
-        wgpuAdapterRelease(CAST(WGPUAdapter, Handle));
+        wgpuAdapterRelease(CAST(WGPUAdapter, handle));
     }
 
-    void Surface::Release() const
+    void Surface::release() const
     {
-        wgpuSurfaceRelease(CAST(WGPUSurface, Handle));
+        wgpuSurfaceRelease(CAST(WGPUSurface, handle));
     }
 
-    void Surface::Configure(Device const& device, Adapter adapter, Config const& config)
+    void Surface::configure(Device const& device, Adapter adapter, Config const& config)
     {
         WGPUSurfaceCapabilities caps {};
-        wgpuSurfaceGetCapabilities(CAST(WGPUSurface, Handle), CAST(WGPUAdapter, adapter.Handle), &caps);
+        wgpuSurfaceGetCapabilities(CAST(WGPUSurface, handle), CAST(WGPUAdapter, adapter.handle), &caps);
         VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
 
         WGPUSurfaceConfiguration conf{
             .nextInChain = nullptr,
-            .device = CAST(WGPUDevice, device.Handle),
+            .device = CAST(WGPUDevice, device.handle),
             .format = caps.formats[0], // TODO: Check this properly
             .usage = WGPUTextureUsage_RenderAttachment,
             .viewFormatCount = 0,
             .viewFormats = nullptr,
             .alphaMode = WGPUCompositeAlphaMode_Auto,
-            .width = CAST(u32, config.Size.X),
-            .height = CAST(u32, config.Size.Y),
-            .presentMode = ToWgpu(config.PresentMode),
+            .width = CAST(u32, config.size.x),
+            .height = CAST(u32, config.size.y),
+            .presentMode = to_wgpu(config.present_mode),
         };
-        wgpuSurfaceConfigure(CAST(WGPUSurface, Handle), &conf);
+        wgpuSurfaceConfigure(CAST(WGPUSurface, handle), &conf);
 
-        Format = FromWgpu(caps.formats[0]);
+        format = from_wgpu(caps.formats[0]);
     }
 
-    auto Surface::GetNextView() const -> Result<TextureView, Error>
+    auto Surface::get_next_view() const -> Result<TextureView, Error>
     {
         WGPUSurfaceTexture texture;
-        wgpuSurfaceGetCurrentTexture(CAST(WGPUSurface, Handle), &texture);
+        wgpuSurfaceGetCurrentTexture(CAST(WGPUSurface, handle), &texture);
 
         if (texture.status != WGPUSurfaceGetCurrentTextureStatus_Success) {
             switch (texture.status) {
@@ -1226,12 +1226,12 @@ namespace Fussion::GPU {
         return TextureView{ target_view };
     }
 
-    void Surface::Present() const
+    void Surface::present() const
     {
-        wgpuSurfacePresent(CAST(WGPUSurface, Handle));
+        wgpuSurfacePresent(CAST(WGPUSurface, handle));
     }
 
-    Instance Instance::Create(InstanceSpec const& spec)
+    Instance Instance::create(InstanceSpec const& spec)
     {
         Instance instance;
         WGPUInstanceExtras instance_extras{
@@ -1239,41 +1239,41 @@ namespace Fussion::GPU {
                 .next = nullptr,
                 .sType = CAST(WGPUSType, WGPUSType_InstanceExtras),
             },
-            .backends = ToWgpu(spec.Backend),
+            .backends = to_wgpu(spec.backend),
         };
 
         WGPUInstanceDescriptor desc{
             .nextInChain = &instance_extras.chain,
         };
-        instance.Handle = wgpuCreateInstance(&desc);
+        instance.handle = wgpuCreateInstance(&desc);
         return instance;
     }
 
-    void Instance::Release() const
+    void Instance::release() const
     {
-        wgpuInstanceRelease(CAST(WGPUInstance, Handle));
+        wgpuInstanceRelease(CAST(WGPUInstance, handle));
     }
 
-    auto Instance::GetSurface(Window const* window) const -> Surface
+    auto Instance::surface(Window const* window) const -> Surface
     {
-        auto glfw_window = CAST(GLFWwindow*, window->NativeHandle());
-        auto surface = glfwGetWGPUSurface(CAST(WGPUInstance, Handle), glfw_window);
+        auto glfw_window = CAST(GLFWwindow*, window->native_handle());
+        auto surface = glfwGetWGPUSurface(CAST(WGPUInstance, handle), glfw_window);
         return Surface{ surface };
     }
 
-    auto Instance::GetAdapter(Surface surface, AdapterOptions const& opt) const -> Adapter
+    auto Instance::adapter(Surface surface, AdapterOptions const& opt) const -> Adapter
     {
         WGPURequestAdapterOptions options{
             .nextInChain = nullptr,
-            .compatibleSurface = CAST(WGPUSurface, surface.Handle),
-            .powerPreference = ToWgpu(opt.PowerPreference),
+            .compatibleSurface = CAST(WGPUSurface, surface.handle),
+            .powerPreference = to_wgpu(opt.power_preference),
         };
-        auto adapter = RequestAdapterSync(CAST(WGPUInstance, Handle), &options);
+        auto adapter = RequestAdapterSync(CAST(WGPUInstance, handle), &options);
         return Adapter{ adapter };
     }
 
-    void CommandBuffer::Release() const
+    void CommandBuffer::release() const
     {
-        wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, Handle));
+        wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, handle));
     }
 }

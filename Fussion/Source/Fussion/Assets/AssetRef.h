@@ -17,39 +17,39 @@ namespace Fussion {
         virtual ~AssetRefBase() = default;
 
         explicit AssetRefBase(AssetHandle handle)
-            : m_Handle(handle) {}
+            : m_handle(handle) {}
 
-        operator bool() const { return IsValid(); }
-
-        [[nodiscard]]
-        bool IsValid() const { return m_Handle != 0; }
+        operator bool() const { return is_valid(); }
 
         [[nodiscard]]
-        bool IsLoaded() const;
+        bool is_valid() const { return m_handle != 0; }
 
         [[nodiscard]]
-        AssetHandle Handle() const { return m_Handle; }
+        bool is_loaded() const;
 
         [[nodiscard]]
-        bool IsVirtual() const;
+        AssetHandle handle() const { return m_handle; }
 
-        void SetHandle(AssetHandle handle) { m_Handle = handle; }
+        [[nodiscard]]
+        bool is_virtual() const;
 
-        virtual AssetType GetType() const = 0;
+        void set_handle(AssetHandle handle) { m_handle = handle; }
+
+        virtual AssetType type() const = 0;
 
         /// Blocks the current thread until the asset has completed loading.
         /// This is useful in situations during one-shot actions where you get
         /// an asset and want it before continuing with your code.
-        void WaitUntilLoaded() const;
+        void wait_until_loaded() const;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     protected:
-        [[nodiscard]] Asset* GetRaw(AssetType type) const;
+        [[nodiscard]] Asset* get_raw(AssetType type) const;
 
-        AssetHandle m_Handle{ 0 };
-        bool m_Loaded{ false };
+        AssetHandle m_handle{ 0 };
+        bool m_loaded{ false };
     };
 
     template<class T, typename M = Detail::AssetRefMarker>
@@ -60,21 +60,21 @@ namespace Fussion {
 
         explicit AssetRef(AssetHandle handle): AssetRefBase(handle) {}
 
-        T* Get()
+        T* get()
         {
-            if (!IsValid())
+            if (!is_valid())
                 return nullptr;
-            return CAST(T*, GetRaw(T::GetStaticType()));
+            return CAST(T*, get_raw(T::static_type()));
         }
 
-        T* Get() const
+        T* get() const
         {
-            if (!IsValid())
+            if (!is_valid())
                 return nullptr;
-            return CAST(T*, GetRaw(T::GetStaticType()));
+            return CAST(T*, get_raw(T::static_type()));
         }
 
-        virtual AssetType GetType() const override { return T::GetStaticType(); }
+        virtual AssetType type() const override { return T::static_type(); }
     };
 }
 

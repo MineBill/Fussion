@@ -3,8 +3,8 @@
 
 namespace Fussion::GPU::Utils {
     struct RenderDoc {
-        static void Initialize();
-        static void StartCapture();
-        static void EndCapture();
+        static void initialize();
+        static void start_capture();
+        static void end_capture();
     };
 }

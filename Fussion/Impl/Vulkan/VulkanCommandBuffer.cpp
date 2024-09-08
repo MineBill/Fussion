@@ -57,14 +57,14 @@ namespace Fussion::RHI {
         SmallVector<VkClearValue, 5> clear_values;
         for (auto const& attachment : render_pass->GetSpec().Attachments) {
             if (Image::IsDepthFormat(attachment.Format)) {
-                (void)clear_values.PushBack(VkClearValue{
+                (void)clear_values.push_back(VkClearValue{
                     .depthStencil = VkClearDepthStencilValue{
                         .depth = attachment.ClearDepth,
                         .stencil = attachment.ClearStencil,
                     },
                 });
             } else {
-                (void)clear_values.PushBack(VkClearValue{
+                (void)clear_values.push_back(VkClearValue{
                     .color = VkClearColorValue{
                         .float32 = { attachment.ClearColor[0], attachment.ClearColor[1], attachment.ClearColor[2], attachment.ClearColor[3] },
                     },
@@ -85,8 +85,8 @@ namespace Fussion::RHI {
                     .height = CAST(u32, fb_spec.Height),
                 },
             },
-            .clearValueCount = CAST(u32, clear_values.Size()),
-            .pClearValues = clear_values.Data(),
+            .clearValueCount = CAST(u32, clear_values.size()),
+            .pClearValues = clear_values.data(),
         };
 
         vkCmdBeginRenderPass(Handle, &info, VK_SUBPASS_CONTENTS_INLINE);
@@ -112,12 +112,12 @@ namespace Fussion::RHI {
     {
         auto scissor = VkRect2D{
             .offset = VkOffset2D{
-                .x = CAST(s32, size.X),
-                .y = CAST(s32, size.Y),
+                .x = CAST(s32, size.x),
+                .y = CAST(s32, size.y),
             },
             .extent = VkExtent2D{
-                .width = CAST(u32, size.Z),
-                .height = CAST(u32, size.W),
+                .width = CAST(u32, size.z),
+                .height = CAST(u32, size.w),
             },
         };
 
@@ -128,9 +128,9 @@ namespace Fussion::RHI {
     {
         auto viewport = VkViewport{
             .x = 0,
-            .y = size.Y > 0 ? 0 : -size.Y,
-            .width = size.X,
-            .height = size.Y,
+            .y = size.y > 0 ? 0 : -size.y,
+            .width = size.x,
+            .height = size.y,
             .minDepth = 0,
             .maxDepth = 1,
         };
@@ -153,9 +153,9 @@ namespace Fussion::RHI {
     void VulkanCommandBuffer::BindBuffer(Ref<Buffer> const& buffer, u32 first_binding)
     {
         auto const& spec = buffer->GetSpec();
-        if (spec.Usage.Test(BufferUsage::Index)) {
+        if (spec.Usage.test(BufferUsage::Index)) {
             vkCmdBindIndexBuffer(Handle, buffer->GetRenderHandle<VkBuffer>(), 0, VK_INDEX_TYPE_UINT32);
-        } else if (spec.Usage.Test(BufferUsage::Vertex)) {
+        } else if (spec.Usage.test(BufferUsage::Vertex)) {
             const auto handle = buffer->GetRenderHandle<VkBuffer>();
             constexpr auto offsets = VkDeviceSize{};
             vkCmdBindVertexBuffers(Handle, first_binding, 1, &handle, &offsets);
@@ -250,8 +250,8 @@ namespace Fussion::RHI {
                 .layerCount = 1,
             },
             .imageExtent = VkExtent3D{
-                .width = CAST(u32, region.X),
-                .height = CAST(u32, region.Y),
+                .width = CAST(u32, region.x),
+                .height = CAST(u32, region.y),
                 .depth = 1,
             }
         };
@@ -400,13 +400,13 @@ namespace Fussion::RHI {
             },
             .srcOffsets = {
                 {
-                    .x = CAST(s32, source_rect.Position.X),
-                    .y = CAST(s32, source_rect.Position.Y),
+                    .x = CAST(s32, source_rect.position.x),
+                    .y = CAST(s32, source_rect.position.y),
                     .z = 0
                 },
                 {
-                    .x = CAST(s32, source_rect.Position.X + source_rect.Size.X),
-                    .y = CAST(s32, source_rect.Position.Y + source_rect.Size.Y),
+                    .x = CAST(s32, source_rect.position.x + source_rect.size.x),
+                    .y = CAST(s32, source_rect.position.y + source_rect.size.y),
                     .z = 1
                 }
             },
@@ -418,13 +418,13 @@ namespace Fussion::RHI {
             },
             .dstOffsets = {
                 {
-                    .x = CAST(s32, dest_rect.Position.X),
-                    .y = CAST(s32, dest_rect.Position.Y),
+                    .x = CAST(s32, dest_rect.position.x),
+                    .y = CAST(s32, dest_rect.position.y),
                     .z = 0
                 },
                 {
-                    .x = CAST(s32, dest_rect.Position.X + dest_rect.Size.X),
-                    .y = CAST(s32, dest_rect.Position.Y + dest_rect.Size.Y),
+                    .x = CAST(s32, dest_rect.position.x + dest_rect.size.x),
+                    .y = CAST(s32, dest_rect.position.y + dest_rect.size.y),
                     .z = 1
                 }
             },

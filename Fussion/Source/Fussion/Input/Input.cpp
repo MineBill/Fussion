@@ -13,63 +13,63 @@ namespace Fussion {
         Vector2 MousePosition{};
     } g_State;
 
-    bool Input::IsKeyDown(Keys key)
+    bool Input::is_key_down(Keys key)
     {
         return g_Keys[key] == KeyState::Pressed || g_Keys[key] == KeyState::HeldDown;
     }
 
-    bool Input::IsKeyUp(Keys key)
+    bool Input::is_key_up(Keys key)
     {
         return g_Keys[key] == KeyState::Released || g_Keys[key] == KeyState::None;
     }
 
-    bool Input::IsKeyPressed(Keys key)
+    bool Input::is_key_pressed(Keys key)
     {
         return g_Keys[key] == KeyState::Pressed;
     }
 
-    bool Input::IsKeyReleased(Keys key)
+    bool Input::is_key_released(Keys key)
     {
         return g_Keys[key] == KeyState::Released;
     }
 
-    auto Input::GetMousePosition() -> Vector2
+    auto Input::mouse_position() -> Vector2
     {
         return g_State.MousePosition;
     }
 
-    void Input::OnEvent(Event& event)
+    void Input::on_event(Event& event)
     {
         ZoneScoped;
         EventDispatcher dispatcher(event);
 
-        dispatcher.Dispatch<OnKeyPressed>([](OnKeyPressed const& on_key_pressed) -> bool {
-            g_Keys[on_key_pressed.Key] = KeyState::Pressed;
+        dispatcher.dispatch<OnKeyPressed>([](OnKeyPressed const& on_key_pressed) -> bool {
+            g_Keys[on_key_pressed.key] = KeyState::Pressed;
             return false;
         });
 
-        dispatcher.Dispatch<OnKeyReleased>([](OnKeyReleased const& on_key_released) -> bool {
-            g_Keys[on_key_released.Key] = KeyState::Released;
+        dispatcher.dispatch<OnKeyReleased>([](OnKeyReleased const& on_key_released) -> bool {
+            g_Keys[on_key_released.key] = KeyState::Released;
             return false;
         });
 
-        dispatcher.Dispatch<MouseButtonPressed>([](MouseButtonPressed const& button_pressed) -> bool {
-            g_MouseButtons[button_pressed.Button] = KeyState::Pressed;
+        dispatcher.dispatch<MouseButtonPressed>([](MouseButtonPressed const& button_pressed) -> bool {
+            g_MouseButtons[button_pressed.button] = KeyState::Pressed;
             return false;
         });
 
-        dispatcher.Dispatch<MouseButtonReleased>([](MouseButtonReleased const& button_released) -> bool {
-            g_MouseButtons[button_released.Button] = KeyState::Released;
+        dispatcher.dispatch<MouseButtonReleased>([](MouseButtonReleased const& button_released) -> bool {
+            g_MouseButtons[button_released.button] = KeyState::Released;
             return false;
         });
 
-        dispatcher.Dispatch<MouseMoved>([](MouseMoved const& mouse_moved) {
-            g_State.MousePosition = { mouse_moved.X, mouse_moved.Y };
+        dispatcher.dispatch<MouseMoved>([](MouseMoved const& mouse_moved) {
+            g_State.MousePosition = { mouse_moved.x, mouse_moved.y };
             return false;
         });
     }
 
-    void Input::Flush()
+    void Input::flush()
     {
         for (auto& [key, state] : g_Keys) {
             switch (state) {
@@ -100,27 +100,27 @@ namespace Fussion {
         }
     }
 
-    f32 Input::GetAxis(Keys positive, Keys negative)
+    f32 Input::get_axis(Keys positive, Keys negative)
     {
-        return CAST(f32, IsKeyDown(positive)) - CAST(f32, IsKeyDown(negative));
+        return CAST(f32, is_key_down(positive)) - CAST(f32, is_key_down(negative));
     }
 
-    bool Input::IsMouseButtonDown(MouseButton button)
+    bool Input::is_mouse_button_down(MouseButton button)
     {
         return g_MouseButtons[button] == KeyState::Pressed || g_MouseButtons[button] == KeyState::HeldDown;
     }
 
-    bool Input::IsMouseButtonUp(MouseButton button)
+    bool Input::is_mouse_button_up(MouseButton button)
     {
         return g_MouseButtons[button] == KeyState::Released || g_MouseButtons[button] == KeyState::None;
     }
 
-    bool Input::IsMouseButtonPressed(MouseButton button)
+    bool Input::is_mouse_button_pressed(MouseButton button)
     {
         return g_MouseButtons[button] == KeyState::Pressed;
     }
 
-    bool Input::IsMouseButtonReleased(MouseButton button)
+    bool Input::is_mouse_button_released(MouseButton button)
     {
         return g_MouseButtons[button] == KeyState::Released;
     }

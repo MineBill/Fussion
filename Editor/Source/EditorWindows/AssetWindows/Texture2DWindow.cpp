@@ -6,23 +6,23 @@
 
 using namespace Fussion;
 
-void Texture2DWindow::OnDraw(f32 delta)
+void Texture2DWindow::on_draw(f32 delta)
 {
     (void)delta;
     auto size = ImGui::GetContentRegionAvail();
 
-    auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);
+    auto settings = AssetManager::get_asset_metadata<Texture2DMetadata>(m_asset_handle);
     VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
 
     ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
     {
-        auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
+        auto modified = EUI::property("Is Normal Map", &settings->is_normal_map);
         // modified |= EUI::Property("Wrapping", &settings->Wrap);
         // modified |= EUI::Property("Filter", &settings->Filter);
-        modified |= EUI::Property("Format", &settings->Format);
-        modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
+        modified |= EUI::property("Format", &settings->format);
+        modified |= EUI::property("Generate Mipmaps", &settings->generate_mipmaps);
         if (modified) {
-            Project::GetAssetManager()->RefreshAsset(m_AssetHandle);
+            Project::asset_manager()->refresh_asset(m_asset_handle);
         }
     }
     ImGui::EndChild();
@@ -31,19 +31,19 @@ void Texture2DWindow::OnDraw(f32 delta)
 
     ImGui::BeginChild("texture_preview", {}, ImGuiChildFlags_Border);
     {
-        auto asset = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
-        if (!asset.IsLoaded()) {
+        auto asset = AssetManager::get_asset<Texture2D>(m_asset_handle);
+        if (!asset.is_loaded()) {
             ImGui::TextUnformatted("Texture is null");
             ImGui::EndChild();
             return;
         }
-        auto texture = asset.Get();
+        auto texture = asset.get();
 
-        size.x = texture->Metadata().Aspect() * size.y;
+        size.x = texture->metadata().aspect() * size.y;
 
-        ImGui::Image(texture->GetImage().View, size, m_UvO, m_Uv1);
+        ImGui::Image(texture->image().view, size, m_uv0, m_uv1);
     }
     ImGui::EndChild();
 }
 
-void Texture2DWindow::OnSave() {}
+void Texture2DWindow::on_save() {}

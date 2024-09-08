@@ -2,61 +2,61 @@
 
 #include "Undo.h"
 
-void UndoRedo::Undo()
+void UndoRedo::undo()
 {
-    if (!m_UndoItems.empty()) {
-        auto item = m_UndoItems.back();
-        m_UndoItems.pop_back();
-        if (item.Ptr == nullptr) {
+    if (!m_undo_items.empty()) {
+        auto item = m_undo_items.back();
+        m_undo_items.pop_back();
+        if (item.ptr == nullptr) {
             return;
         }
 
         // @Note This might use new data for the redo. It might be
         // preferable to use to old data in the undo.
         auto redo_item = item;
-        std::memcpy(redo_item.Data, redo_item.Ptr, redo_item.Size);
-        m_RedoItems.push_back(redo_item);
+        std::memcpy(redo_item.data, redo_item.ptr, redo_item.size);
+        m_redo_items.push_back(redo_item);
 
-        std::memcpy(item.Ptr, item.Data, item.Size);
+        std::memcpy(item.ptr, item.data, item.size);
     }
 }
 
-void UndoRedo::Redo()
+void UndoRedo::redo()
 {
-    if (!m_RedoItems.empty()) {
-        auto item = m_RedoItems.back();
-        m_RedoItems.pop_back();
-        if (item.Ptr == nullptr) {
+    if (!m_redo_items.empty()) {
+        auto item = m_redo_items.back();
+        m_redo_items.pop_back();
+        if (item.ptr == nullptr) {
             return;
         }
 
         // @Note This might use new data for the redo. It might be
         // preferable to use to old data in the undo.
         auto redo_item = item;
-        std::memcpy(redo_item.Data, redo_item.Ptr, redo_item.Size);
-        m_UndoItems.push_back(redo_item);
+        std::memcpy(redo_item.data, redo_item.ptr, redo_item.size);
+        m_undo_items.push_back(redo_item);
 
-        std::memcpy(item.Ptr, item.Data, item.Size);
+        std::memcpy(item.ptr, item.data, item.size);
     }
 }
 
-void UndoRedo::CommitTag(std::string const& tag)
+void UndoRedo::commit_tag(std::string const& tag)
 {
-    if (m_SingleItems.contains(tag)) {
-        auto& item = m_SingleItems.at(tag);
-        if (std::memcmp(item.Ptr, item.Data, item.Size) != 0) {
-            m_UndoItems.push_back(item);
+    if (m_single_items.contains(tag)) {
+        auto& item = m_single_items.at(tag);
+        if (std::memcmp(item.ptr, item.data, item.size) != 0) {
+            m_undo_items.push_back(item);
         }
-        m_SingleItems.erase(tag);
+        m_single_items.erase(tag);
     }
 }
 
-void UndoRedo::Commit()
+void UndoRedo::commit()
 {
-    for (auto const& item : m_TempItems) {
-        if (std::memcmp(item.Ptr, item.Data, item.Size) != 0) {
-            m_UndoItems.push_back(item);
+    for (auto const& item : m_temp_items) {
+        if (std::memcmp(item.ptr, item.data, item.size) != 0) {
+            m_undo_items.push_back(item);
         }
     }
-    m_TempItems.clear();
+    m_temp_items.clear();
 }

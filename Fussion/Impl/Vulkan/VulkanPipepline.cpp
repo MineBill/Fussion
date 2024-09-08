@@ -79,7 +79,7 @@ Ref<VulkanPipelineLayout> VulkanPipelineLayout::Create(
     const std::vector<Ref<ResourceLayout>>& layouts,
     PipelineLayoutSpecification spec)
 {
-    auto self = MakeRef<VulkanPipelineLayout>();
+    auto self = make_ref<VulkanPipelineLayout>();
     self->m_Specification = std::move(spec);
 
     std::vector<VkDescriptorSetLayout> vk_layouts;
@@ -190,7 +190,7 @@ Ref<VulkanPipeline> VulkanPipeline::Create(
     Ref<RenderPass> render_pass,
     PipelineSpecification spec)
 {
-    auto self = MakeRef<VulkanPipeline>();
+    auto self = make_ref<VulkanPipeline>();
     self->m_Specification = spec;
     self->m_Layout = layout->As<VulkanPipelineLayout>();
     auto vk_shader = shader->As<VulkanShader>();

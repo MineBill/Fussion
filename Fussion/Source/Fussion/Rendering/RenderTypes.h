@@ -16,21 +16,21 @@ namespace Fussion {
     static_assert(sizeof(GPUSpotLight) == 1, "GPUSpotLight needs to be kept in sync with the shader equivalent");
 
     struct GPUPointLight {
-        Vector3 Position;
-        Color Color;
-        f32 Radius;
+        Vector3 position;
+        Color color;
+        f32 radius;
     };
 
     static_assert(sizeof(GPUPointLight) == 32, "GPUPointLight needs to be kept in sync with the shader equivalent");
 
     struct GPUDirectionalLight {
         struct ShaderStruct {
-            std::array<Mat4, 4> LightSpaceMatrix{};
-            Vector4 Direction{};
-            Color Color{};
-        } ShaderData;
+            std::array<Mat4, 4> light_space_matrix{};
+            Vector4 direction{};
+            Color color{};
+        } shader_data;
 
-        f32 Split{};
+        f32 split{};
     };
 
     static_assert(sizeof(GPUDirectionalLight) == 292, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
@@ -66,32 +66,30 @@ namespace Fussion {
     //       a shader to use. For now, we assume that all render objects
     //       are for the PBR pass.
     struct RenderObject {
-        Vector3 Position{};
-        Mat4 WorldMatrix{};
+        Vector3 position{};
+        Mat4 world_matrix{};
 
-        DrawPassFlags Pass;
-        PbrMaterial* Material{};
-        GPU::Buffer VertexBuffer{};
-        GPU::Buffer IndexBuffer{};
-        GPU::Buffer InstanceBuffer{};
-        u32 IndexCount{};
+        DrawPassFlags pass;
+        PbrMaterial* material{};
+        GPU::Buffer vertex_buffer{};
+        GPU::Buffer index_buffer{};
+        GPU::Buffer instance_buffer{};
+        u32 index_count{};
     };
 
     struct RenderContext {
-        // Ref<RHI::CommandBuffer> Cmd;
+        RenderStateFlags render_flags;
 
-        RenderStateFlags RenderFlags;
+        std::vector<GPUPointLight> point_lights{};
+        std::vector<GPUDirectionalLight> directional_lights{};
+        Mat4 current_light_space;
 
-        std::vector<GPUPointLight> PointLights{};
-        std::vector<GPUDirectionalLight> DirectionalLights{};
-        Mat4 CurrentLightSpace;
-
-        std::vector<RenderObject> RenderObjects{};
+        std::vector<RenderObject> render_objects{};
 
         /// This maps unique mesh buffers to an index of the @ref RenderContext::RenderObjects vector.
-        std::unordered_map<GPU::HandleT, std::vector<size_t>> MeshRenderLists{};
+        std::unordered_map<GPU::HandleT, std::vector<size_t>> mesh_render_lists{};
 
-        void AddRenderObject(RenderObject& obj);
-        void Reset();
+        void add_render_object(RenderObject& obj);
+        void reset();
     };
 }

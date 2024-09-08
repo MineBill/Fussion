@@ -115,7 +115,7 @@ namespace Fussion::GPU {
         Mat4,
     };
 
-    inline u32 ElementTypeCount(ElementType type)
+    inline u32 element_type_count(ElementType type)
     {
         switch (type) {
             using enum ElementType;

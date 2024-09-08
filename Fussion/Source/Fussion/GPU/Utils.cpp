@@ -6,13 +6,13 @@
 #include "Windows.h"
 
 namespace Fussion::GPU::Utils {
-    RENDERDOC_API_1_1_2* rdoc_api = NULL;
+    RENDERDOC_API_1_1_2* g_Rdoc_Api = nullptr;
 
-    void RenderDoc::Initialize()
+    void RenderDoc::initialize()
     {
         if (HMODULE mod = GetModuleHandleA("renderdoc.dll")) {
-            pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
-            int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void**)&rdoc_api);
+            auto renderdoc_get_api = reinterpret_cast<pRENDERDOC_GetAPI>(GetProcAddress(mod, "RENDERDOC_GetAPI"));
+            int ret = renderdoc_get_api(eRENDERDOC_API_Version_1_1_2, reinterpret_cast<void**>(&g_Rdoc_Api));
             assert(ret == 1);
 
             LOG_INFO("RenderDoc connection active");
@@ -21,17 +21,17 @@ namespace Fussion::GPU::Utils {
         }
     }
 
-    void RenderDoc::StartCapture()
+    void RenderDoc::start_capture()
     {
-        if (rdoc_api) {
-            rdoc_api->StartFrameCapture(nullptr, nullptr);
+        if (g_Rdoc_Api) {
+            g_Rdoc_Api->StartFrameCapture(nullptr, nullptr);
         }
     }
 
-    void RenderDoc::EndCapture()
+    void RenderDoc::end_capture()
     {
-        if (rdoc_api) {
-            rdoc_api->EndFrameCapture(nullptr, nullptr);
+        if (g_Rdoc_Api) {
+            g_Rdoc_Api->EndFrameCapture(nullptr, nullptr);
         }
     }
 }

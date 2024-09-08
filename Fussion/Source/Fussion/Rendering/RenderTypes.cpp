@@ -3,22 +3,22 @@
 
 namespace Fussion {
 
-    void RenderContext::AddRenderObject(RenderObject& obj)
+    void RenderContext::add_render_object(RenderObject& obj)
     {
-        size_t index = RenderObjects.size();
-        RenderObjects.push_back(obj);
+        size_t index = render_objects.size();
+        render_objects.push_back(obj);
 
-        MeshRenderLists[obj.VertexBuffer.Handle].push_back(index);
+        mesh_render_lists[obj.vertex_buffer.handle].push_back(index);
     }
 
-    void RenderContext::Reset()
+    void RenderContext::reset()
     {
-        RenderObjects.clear();
-        DirectionalLights.clear();
+        render_objects.clear();
+        directional_lights.clear();
 
-        for (auto& list : MeshRenderLists) {
+        for (auto& list : mesh_render_lists) {
             list.second.clear();
         }
-        MeshRenderLists.clear();
+        mesh_render_lists.clear();
     }
 }

@@ -3,31 +3,31 @@
 
 namespace Fussion {
     Rect::Rect(f32 x, f32 y, f32 width, f32 height)
-        : Position(x, y), Size(width, height) {}
+        : position(x, y), size(width, height) {}
 
     Rect::Rect(Vector2 const& position, Vector2 const& size)
-        : Position(position), Size(size) {}
+        : position(position), size(size) {}
 
-    Rect Rect::FromSize(Vector2 const& size)
+    Rect Rect::from_size(Vector2 const& size)
     {
         return { Vector2::Zero, size };
     }
 
-    auto Rect::FromSize(f32 width, f32 height) -> Rect
+    auto Rect::from_size(f32 width, f32 height) -> Rect
     {
-        return FromSize(Vector2(width, height));
+        return from_size(Vector2(width, height));
     }
 
-    Rect Rect::FromStartEnd(Vector2 const& start, Vector2 const& end)
+    Rect Rect::from_start_end(Vector2 const& start, Vector2 const& end)
     {
         return { start, end - start };
     }
 
-    auto Rect::Contains(Vector2 const& point) const -> bool
+    auto Rect::contains(Vector2 const& point) const -> bool
     {
-        auto end = Position + Size;
-        auto top_left = point.X >= Position.X && point.Y >= Position.Y;
-        auto bot_right = point.X < end.X && point.Y < end.Y;
+        auto end = position + size;
+        auto top_left = point.x >= position.x && point.y >= position.y;
+        auto bot_right = point.x < end.x && point.y < end.y;
         return top_left && bot_right;
     }
 }

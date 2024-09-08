@@ -17,10 +17,10 @@ namespace Fussion {
     DECLARE_OPERATORS_FOR_FLAGS(WindowFlags)
 
     struct WindowOptions {
-        std::string InitialTitle{ "Window" };
-        s32 InitialWidth{ 400 };
-        s32 InitialHeight{ 400 };
-        WindowFlags Flags{};
+        std::string initial_title{ "Window" };
+        s32 initial_width{ 400 };
+        s32 initial_height{ 400 };
+        WindowFlags flags{};
     };
 
     enum class MouseMode {
@@ -33,32 +33,31 @@ namespace Fussion {
     public:
         virtual ~Window() = default;
 
-        Vector2 GetSize() const
+        Vector2 size() const
         {
-            return { CAST(f32, GetWidth()), CAST(f32, GetHeight()) };
+            return { CAST(f32, width()), CAST(f32, height()) };
         }
 
-        virtual void SetMouseMode(MouseMode mode) const = 0;
+        virtual void set_mouse_mode(MouseMode mode) const = 0;
 
-        static Window* Create(WindowOptions const& options);
+        static Window* create(WindowOptions const& options);
 
-        virtual void Update() = 0;
+        virtual void update() = 0;
 
-        virtual bool ShouldClose() = 0;
+        virtual bool should_close() = 0;
 
-        virtual void SetTitle(std::string const& title) = 0;
+        virtual void set_title(std::string const& title) = 0;
 
-        virtual void OnEvent(EventFnType callback) = 0;
+        virtual void on_event(EventFnType callback) = 0;
 
-        virtual void* NativeHandle() const = 0;
+        virtual void* native_handle() const = 0;
 
-        virtual void SetPosition(Vector2 position) const = 0;
-        virtual auto GetPosition() const -> Vector2 = 0;
+        virtual void set_position(Vector2 position) const = 0;
+        virtual auto position() const -> Vector2 = 0;
 
-        virtual void SetIcon(Image const& image) = 0;
+        virtual void set_icon(Image const& image) = 0;
 
-        virtual u32 GetWidth() const = 0;
-        virtual u32 GetHeight() const = 0;
-
+        virtual u32 width() const = 0;
+        virtual u32 height() const = 0;
     };
 }

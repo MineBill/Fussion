@@ -8,7 +8,7 @@
 #include <Fussion/Util/stb_image.h>
 
 namespace Fussion {
-    auto TextureImporter::LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>
+    auto TextureImporter::load_image_from_memory(std::span<u8> data) -> Maybe<Image>
     {
         Image image{};
         int actual_channels_on_image, w, h;
@@ -19,55 +19,55 @@ namespace Fussion {
             return None();
         }
 
-        image.Data.resize(w * h * 4);
-        std::copy_n(d, w * h * 4, image.Data.data());
+        image.data.resize(w * h * 4);
+        std::copy_n(d, w * h * 4, image.data.data());
 
-        image.Width = CAST(u32, w);
-        image.Height = CAST(u32, h);
+        image.width = CAST(u32, w);
+        image.height = CAST(u32, h);
 
         return image;
     }
 
-    auto TextureImporter::LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>
+    auto TextureImporter::load_image_from_file(std::filesystem::path const& path) -> Maybe<Image>
     {
-        auto data = FileSystem::ReadEntireFileBinary(path);
+        auto data = FileSystem::read_entire_file_binary(path);
         if (!data)
             return None();
-        return LoadImageFromMemory(*data);
+        return load_image_from_memory(*data);
     }
 
-    auto TextureImporter::LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
+    auto TextureImporter::load_texture_from_file(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
     {
-        auto image = LoadImageFromFile(path);
+        auto image = load_image_from_file(path);
         if (!image) {
             return None();
         }
         Texture2DMetadata metadata{};
-        metadata.Width = image->Width;
-        metadata.Height = image->Height;
-        return Texture2D::Create(image->Data, metadata);
+        metadata.width = image->width;
+        metadata.height = image->height;
+        return Texture2D::create(image->data, metadata);
     }
 
-    auto TextureImporter::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureImporter::load_texture_from_memory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
-        auto image = LoadImageFromMemory(data);
+        auto image = load_image_from_memory(data);
         if (!image) {
             return None();
         }
         Texture2DMetadata metadata{};
-        metadata.Width = image->Width;
-        metadata.Height = image->Height;
-        metadata.IsNormalMap = is_normal_map;
-        return Texture2D::Create(image->Data, metadata);
+        metadata.width = image->width;
+        metadata.height = image->height;
+        metadata.is_normal_map = is_normal_map;
+        return Texture2D::create(image->data, metadata);
     }
 
-    void TextureImporter::SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path)
+    void TextureImporter::save_image_to_file(GPU::Texture const& texture, std::filesystem::path const& path)
     {
         (void)texture;
         (void)path;
-        auto encoder = Renderer::Device().CreateCommandEncoder("Image Download Encoder");
+        auto encoder = Renderer::device().create_command_encoder("Image Download Encoder");
         // ...
-        Renderer::Device().SubmitCommandBuffer(encoder.Finish());
+        Renderer::device().submit_command_buffer(encoder.finish());
         // auto& image_spec = image->GetSpec();
         //
         // auto buffer_spec = RHI::BufferSpecification{

@@ -6,7 +6,7 @@
 #include "Scene/Components/MeshRenderer.h"
 
 namespace Fussion {
-    auto SerializeNativeClass(meta_hpp::class_type component_type, meta_hpp::uvalue ptr) -> ordered_json
+    auto serialize_native_class(meta_hpp::class_type component_type, meta_hpp::uvalue ptr) -> ordered_json
     {
         ordered_json j;
         auto name = component_type.get_metadata().at("Name").as<std::string>();
@@ -39,13 +39,13 @@ namespace Fussion {
             } else if (value.is<std::string*>()) {
                 m = *value.as<std::string*>();
             } else if (value.is<Vector2*>()) {
-                m = ToJson(*value.as<Vector2*>());
+                m = to_json(*value.as<Vector2*>());
             } else if (value.is<Vector3*>()) {
-                m = ToJson(*value.as<Vector3*>());
+                m = to_json(*value.as<Vector3*>());
             } else if (value.is<Vector4*>()) {
-                m = ToJson(*value.as<Vector4*>());
+                m = to_json(*value.as<Vector4*>());
             } else if (value.is<Color*>()) {
-                m = ToJson(*value.as<Color*>());
+                m = to_json(*value.as<Color*>());
             } else if (data_type.is_class()) {
                 auto class_type = data_type.as_class();
                 if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
@@ -63,7 +63,7 @@ namespace Fussion {
         return j;
     }
 
-    void DeserializeClassFromJson(json j, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
+    void deserialize_class_from_json(json j, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
     {
         auto name = component_type.get_metadata().at("Name").as<std::string>();
         for (auto const& xx : j.items()) {

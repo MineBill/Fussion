@@ -12,7 +12,7 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-ScriptingEngine* ScriptingEngine::s_Instance = nullptr;
+ScriptingEngine* ScriptingEngine::s_instance = nullptr;
 
 void MessageCallback(asSMessageInfo const* msg, [[maybe_unused]] void* param)
 {
@@ -34,30 +34,30 @@ ScriptingEngine::ScriptingEngine()
             TracyFreeN(ptr, "AngelScript");
             free(ptr);
         });
-    m_ScriptEngine = asCreateScriptEngine();
-    m_ScriptEngine->SetUserData(this);
+    m_script_engine = asCreateScriptEngine();
+    m_script_engine->SetUserData(this);
 
-    auto r = m_ScriptEngine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
+    auto r = m_script_engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
     VERIFY(r >= 0, "Failed to set message callback");
 
-    RegisterTypes();
+    register_types();
 }
 
-void ScriptingEngine::Initialize()
+void ScriptingEngine::initialize()
 {
-    s_Instance = new ScriptingEngine;
+    s_instance = new ScriptingEngine;
 }
 
-void ScriptingEngine::Shutdown()
+void ScriptingEngine::shutdown()
 {
-    delete s_Instance;
-    s_Instance = nullptr;
+    delete s_instance;
+    s_instance = nullptr;
 }
 
-auto ScriptingEngine::DumpCurrentTypes() const -> std::stringstream
+auto ScriptingEngine::dump_current_types() const -> std::stringstream
 {
-    AngelDumper dumper(m_ScriptEngine);
-    return dumper.Dump();
+    AngelDumper dumper(m_script_engine);
+    return dumper.dump();
 }
 
 auto StringSplit(std::string const& str, std::string_view seperator) -> std::vector<std::string_view>
@@ -96,7 +96,7 @@ std::string_view StringTrimSpace(std::string_view& str)
     return str.substr(start, end - start);
 }
 
-void ScriptingEngine::ParseAttributes(CScriptBuilder& builder, ScriptAssembly& assembly)
+void ScriptingEngine::parse_attributes(CScriptBuilder& builder, ScriptAssembly& assembly)
 {
     auto module = builder.GetModule();
     for (u32 i = 0; i < module->GetObjectTypeCount(); i++) {
@@ -109,23 +109,23 @@ void ScriptingEngine::ParseAttributes(CScriptBuilder& builder, ScriptAssembly& a
     (void)"Range(1, Awd(1, 1)), Editable(), Editable";
     (void)"Range(1, 2), Editable(), Editable";
 
-    for (auto& [name, klass] : assembly.GetAllClasses()) {
-        for (auto& [prop_name, prop] : klass.m_Properties) {
-            auto attribute_sections = builder.GetMetadataForTypeProperty(klass.m_Type->GetTypeId(), prop.Index);
+    for (auto& [name, klass] : assembly.get_all_classes()) {
+        for (auto& [prop_name, prop] : klass.m_properties) {
+            auto attribute_sections = builder.GetMetadataForTypeProperty(klass.m_type->GetTypeId(), prop.index);
             for (auto text : attribute_sections) {
                 SimpleLexer lexer(text);
-                AttributeParser parser(lexer.Scan());
+                AttributeParser parser(lexer.scan());
 
-                m_Attributes[prop.Uuid] = std::move(parser.Parse());
+                m_attributes[prop.uuid] = std::move(parser.parse());
             }
         }
     }
 }
 
-auto ScriptingEngine::CompileAssembly(std::filesystem::path const& path, std::string const& module_name) -> Ref<ScriptAssembly>
+auto ScriptingEngine::compile_assembly(std::filesystem::path const& path, std::string const& module_name) -> Ref<ScriptAssembly>
 {
     CScriptBuilder builder;
-    auto r = builder.StartNewModule(m_ScriptEngine, module_name.c_str());
+    auto r = builder.StartNewModule(m_script_engine, module_name.c_str());
     VERIFY(r >= 0, "Error while starting new module");
 
     for (auto& entry : std::filesystem::recursive_directory_iterator(path)) {
@@ -144,27 +144,27 @@ auto ScriptingEngine::CompileAssembly(std::filesystem::path const& path, std::st
         return nullptr;
     }
 
-    auto const module = m_ScriptEngine->GetModule(module_name.c_str());
+    auto const module = m_script_engine->GetModule(module_name.c_str());
 
-    if (m_LoadedAssemblies.contains(module_name)) {
-        m_LoadedAssemblies[module_name]->Reload(module);
+    if (m_loaded_assemblies.contains(module_name)) {
+        m_loaded_assemblies[module_name]->reload(module);
     } else {
-        m_LoadedAssemblies[module_name] = MakeRef<ScriptAssembly>(module);
+        m_loaded_assemblies[module_name] = make_ref<ScriptAssembly>(module);
     }
 
-    ParseAttributes(builder, *m_LoadedAssemblies[module_name].get());
+    parse_attributes(builder, *m_loaded_assemblies[module_name].get());
 
-    return m_LoadedAssemblies[module_name];
+    return m_loaded_assemblies[module_name];
 }
 
-auto ScriptingEngine::CompileGameAssembly(std::filesystem::path const& path) -> Ref<ScriptAssembly>
+auto ScriptingEngine::compile_game_assembly(std::filesystem::path const& path) -> Ref<ScriptAssembly>
 {
-    return CompileAssembly(path, "Game");
+    return compile_assembly(path, "Game");
 }
 
-auto ScriptingEngine::GetGameAssembly() -> Ref<ScriptAssembly>
+auto ScriptingEngine::get_game_assembly() -> Ref<ScriptAssembly>
 {
-    return m_LoadedAssemblies["Game"];
+    return m_loaded_assemblies["Game"];
 }
 
 // auto ScriptingEngine::GetAttribute(Uuid uuid) -> Scripting::Attribute*

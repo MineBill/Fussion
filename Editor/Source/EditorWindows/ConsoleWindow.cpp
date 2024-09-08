@@ -11,9 +11,9 @@
 #include "Fussion/Log/Log.h"
 #include "Layers/Editor.h"
 
-void ConsoleWindow::OnStart() {}
+void ConsoleWindow::on_start() {}
 
-void ConsoleWindow::OnDraw()
+void ConsoleWindow::on_draw()
 {
     ZoneScoped;
  /*   auto const& entries = Editor::Inst().GetLogEntries();

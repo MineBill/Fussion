@@ -72,7 +72,7 @@ namespace Fussion::RHI {
 
     Ref<Instance> Instance::Create(Window const& window)
     {
-        return MakeRef<VulkanInstance>(window);
+        return make_ref<VulkanInstance>(window);
     }
 
     VulkanInstance::VulkanInstance(Window const& window)
@@ -121,7 +121,7 @@ namespace Fussion::RHI {
 
         vkCreateDebugUtilsMessengerEXT(Instance, &debug_utils_messenger_create_info_ext, nullptr, &DebugMessenger);
 
-        VK_CHECK(glfwCreateWindowSurface(Instance, CAST(GLFWwindow*, window.NativeHandle()), nullptr, &Surface));
+        VK_CHECK(glfwCreateWindowSurface(Instance, CAST(GLFWwindow*, window.native_handle()), nullptr, &Surface));
     }
 
     VulkanInstance::~VulkanInstance()

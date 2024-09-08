@@ -3,9 +3,9 @@
 #include "Fussion/OS/FileSystem.h"
 
 namespace Fussion::GPU {
-    auto ShaderProcessor::ProcessFile(std::filesystem::path const& path) -> Maybe<std::string>
+    auto ShaderProcessor::process_file(std::filesystem::path const& path) -> Maybe<std::string>
     {
-        auto file = FileSystem::ReadEntireFile(path);
+        auto file = FileSystem::read_entire_file(path);
         if (!file) {
             return None();
         }

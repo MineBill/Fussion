@@ -5,72 +5,72 @@
 namespace Fussion {
 class AssetManager {
 public:
-    static void SetActive(AssetManagerBase*);
+    static void set_active(AssetManagerBase*);
 
-    static AssetHandle CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
+    static AssetHandle create_virtual_asset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return s_Active->CreateVirtualAsset(asset, name);
+        return s_active->create_virtual_asset(asset, name);
     }
 
     template<std::derived_from<Asset> T>
-    static AssetRef<T> CreateVirtualAssetRef(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
+    static AssetRef<T> create_virtual_asset_ref(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return AssetRef<T>(s_Active->CreateVirtualAsset(asset, name));
+        return AssetRef<T>(s_active->create_virtual_asset(asset, name));
     }
 
-    static AssetHandle CreateVirtualAssetWithPath(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+    static AssetHandle create_virtual_asset_with_path(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return s_Active->CreateVirtualAsset(asset, name, path);
+        return s_active->create_virtual_asset(asset, name, path);
     }
 
     template<std::derived_from<Asset> T>
-    static AssetRef<T> CreateVirtualAssetRefWithPath(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+    static AssetRef<T> create_virtual_asset_ref_with_path(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
     {
-        return AssetRef<T>(s_Active->CreateVirtualAsset(asset, name, path));
+        return AssetRef<T>(s_active->create_virtual_asset(asset, name, path));
     }
 
-    static bool IsAssetHandleValid(AssetHandle const handle)
+    static bool is_asset_handle_valid(AssetHandle const handle)
     {
-        return s_Active->IsAssetHandleValid(handle);
+        return s_active->is_asset_handle_valid(handle);
     }
 
-    static bool IsAssetLoaded(AssetHandle handle)
+    static bool is_asset_loaded(AssetHandle handle)
     {
-        return s_Active->IsAssetLoaded(handle);
+        return s_active->is_asset_loaded(handle);
     }
 
-    static bool IsAssetVirtual(AssetHandle handle)
+    static bool is_asset_virtual(AssetHandle handle)
     {
-        return s_Active->IsAssetVirtual(handle);
+        return s_active->is_asset_virtual(handle);
     }
 
-    static Asset* GetAsset(AssetHandle handle, AssetType type)
+    static Asset* get_asset(AssetHandle handle, AssetType type)
     {
-        return s_Active->GetAsset(handle, type);
+        return s_active->get_asset(handle, type);
     }
 
     template<typename T>
-    static AssetRef<T> GetAsset(AssetHandle handle)
+    static AssetRef<T> get_asset(AssetHandle handle)
     {
         // Trigger an asset load.
-        GetAsset(handle, T::GetStaticType());
+        get_asset(handle, T::static_type());
         return AssetRef<T>(handle);
     }
 
     template<typename T>
-    static T* GetAsset(std::string const& path)
+    static T* get_asset(std::string const& path)
     {
-        return CAST(T*, s_Active->GetAsset(path, T::GetStaticType()));
+        return CAST(T*, s_active->get_asset(path, T::static_type()));
     }
 
     template<typename T>
-    static auto GetAssetMetadata(AssetHandle handle) -> T*
+    static auto get_asset_metadata(AssetHandle handle) -> T*
     {
-        auto ptr = s_Active->GetAssetMetadata(handle);
+        auto ptr = s_active->get_asset_metadata(handle);
         return dynamic_cast<T*>(ptr);
     }
 
 private:
-    static AssetManagerBase* s_Active;
+    static AssetManagerBase* s_active;
 };
 }

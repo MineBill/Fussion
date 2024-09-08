@@ -6,7 +6,7 @@
 #include <iterator>
 
 namespace Fussion {
-    auto FileSystem::ReadEntireFile(fs::path const& path) -> Maybe<std::string>
+    auto FileSystem::read_entire_file(fs::path const& path) -> Maybe<std::string>
     {
         if (!exists(path)) {
             return None();
@@ -16,7 +16,7 @@ namespace Fussion {
         return std::string(std::istreambuf_iterator(file), std::istreambuf_iterator<char>());
     }
 
-    auto FileSystem::ReadEntireFileBinary(fs::path const& path) -> Maybe<std::vector<u8>>
+    auto FileSystem::read_entire_file_binary(fs::path const& path) -> Maybe<std::vector<u8>>
     {
         if (!exists(path)) {
             return None();
@@ -32,7 +32,7 @@ namespace Fussion {
         return buffer;
     }
 
-    void FileSystem::WriteEntireFile(fs::path const& path, std::string const& string)
+    void FileSystem::write_entire_file(fs::path const& path, std::string const& string)
     {
         if (!exists(path.parent_path())) {
             fs::create_directories(path.parent_path());

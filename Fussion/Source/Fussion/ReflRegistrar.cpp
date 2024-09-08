@@ -45,12 +45,12 @@ namespace Fussion {
         {
             meta::class_<Color>(metadata_()
                     ("Name"s, "Color"s))
-                .member_("R", &Color::R, as_pointer)
-                .member_("G", &Color::G, as_pointer)
-                .member_("B", &Color::B, as_pointer)
-                .member_("A", &Color::A, as_pointer)
-                .method_("Darken", &Color::Darken)
-                .method_("Lighten", &Color::Lighten);
+                .member_("R", &Color::r, as_pointer)
+                .member_("G", &Color::g, as_pointer)
+                .member_("B", &Color::b, as_pointer)
+                .member_("A", &Color::a, as_pointer)
+                .method_("Darken", &Color::darken)
+                .method_("Lighten", &Color::lighten);
 
             meta::class_<Vector2>(
                     metadata_()
@@ -58,12 +58,12 @@ namespace Fussion {
                     ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
                 .constructor_<f32, f32>()
                 .constructor_<f64, f64>()
-                .member_("X", &Vector2::X, as_pointer)
-                .member_("Y", &Vector2::Y, as_pointer)
-                .method_("Length", &Vector2::Length)
-                .method_("DistanceTo", &Vector2::DistanceTo)
-                .method_("LengthSquared", &Vector2::LengthSquared)
-                .method_("DistanceToSquared", &Vector2::DistanceToSquared);
+                .member_("X", &Vector2::x, as_pointer)
+                .member_("Y", &Vector2::y, as_pointer)
+                .method_("Length", &Vector2::length)
+                .method_("DistanceTo", &Vector2::distance_to)
+                .method_("LengthSquared", &Vector2::length_squared)
+                .method_("DistanceToSquared", &Vector2::distance_to_squared);
 
             meta::class_<Vector3>(
                     metadata_()
@@ -71,29 +71,29 @@ namespace Fussion {
                     ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
                 .constructor_<f32, f32, f32>()
                 .constructor_<f64, f64, f64>()
-                .member_("X"s, &Vector3::X, as_pointer)
-                .member_("Y"s, &Vector3::Y, as_pointer)
-                .member_("Z"s, &Vector3::Z, as_pointer)
-                .method_("Length"s, &Vector3::Length)
-                .method_("Normalize"s, &Vector3::Normalize)
-                .method_("Normalized"s, &Vector3::Normalized)
-                .method_("LengthSquared"s, &Vector3::LengthSquared);
+                .member_("X"s, &Vector3::x, as_pointer)
+                .member_("Y"s, &Vector3::y, as_pointer)
+                .member_("Z"s, &Vector3::z, as_pointer)
+                .method_("Length"s, &Vector3::length)
+                .method_("Normalize"s, &Vector3::normalize)
+                .method_("Normalized"s, &Vector3::normalized)
+                .method_("LengthSquared"s, &Vector3::length_squared);
         }
 
         REGISTER_ENUM(AssetType);
 
         meta::class_<Asset>(metadata_()
                 ("Name"s, "Asset"s))
-            .method_("GetType"s, &Asset::GetType)
-            .method_("GetHandle"s, &Asset::GetHandle)
-            .member_("m_Handle"s, &Asset::m_Handle);
+            .method_("GetType"s, &Asset::type)
+            .method_("GetHandle"s, &Asset::handle)
+            .member_("m_Handle"s, &Asset::m_handle);
 
         meta::class_<Entity>(metadata_()
                 ("Name"s, "Entity"s)
                 ("ScriptFlags"s, asOBJ_APP_CLASS_CAK))
-            .member_("m_Parent", &Entity::m_Parent)
-            .member_("m_Handle", &Entity::m_Handle)
-            .member_("m_Enabled", &Entity::m_Enabled);
+            .member_("m_Parent", &Entity::m_parent)
+            .member_("m_Handle", &Entity::m_handle)
+            .member_("m_Enabled", &Entity::m_enabled);
 
         // region Components
         {
@@ -103,14 +103,14 @@ namespace Fussion {
                     ("Name"s, "PointLight"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("Offset", &PointLight::Offset, as_pointer)
-                .member_("Radius", &PointLight::Radius, as_pointer);
+                .member_("Offset", &PointLight::offset, as_pointer)
+                .member_("Radius", &PointLight::radius, as_pointer);
 
             meta::class_<DirectionalLight>(metadata_()
                     ("Name"s, "DirectionalLight"s))
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("LightColor", &DirectionalLight::LightColor, as_pointer)
-                .member_("SplitLambda", &DirectionalLight::SplitLambda, as_pointer);
+                .member_("LightColor", &DirectionalLight::light_color, as_pointer)
+                .member_("SplitLambda", &DirectionalLight::split_lambda, as_pointer);
 
             meta::class_<Camera>(metadata_()
                     ("Name"s, "Camera"s))
@@ -124,27 +124,27 @@ namespace Fussion {
                     ("Name"s, "MeshRenderer"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("Mesh"s, &MeshRenderer::Model, as_pointer)
-                .member_("Materials"s, &MeshRenderer::Materials, as_pointer, metadata_()("vector"s, true));
+                .member_("Mesh"s, &MeshRenderer::model, as_pointer)
+                .member_("Materials"s, &MeshRenderer::materials, as_pointer, metadata_()("vector"s, true));
 
             meta::class_<ScriptComponent>(metadata_()
                     ("Name"s, "ScriptComponent"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("ClassName"s, &ScriptComponent::ClassName, as_pointer);
+                .member_("ClassName"s, &ScriptComponent::class_name, as_pointer);
 
             meta::class_<MoverComponent>(metadata_()
                     ("Name"s, "MoverComponent"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("Speed"s, &MoverComponent::Speed, as_pointer);
+                .member_("Speed"s, &MoverComponent::speed, as_pointer);
 
             meta::class_<DebugDrawer>(metadata_()
                     ("Name"s, "DebugDrawer"s))
                 .constructor_<>(as_raw_pointer)
                 .constructor_<Entity*>(as_raw_pointer)
-                .member_("DrawType"s, &DebugDrawer::DrawType, as_pointer)
-                .member_("Size"s, &DebugDrawer::Size, as_pointer);
+                .member_("DrawType"s, &DebugDrawer::draw_type, as_pointer)
+                .member_("Size"s, &DebugDrawer::size, as_pointer);
 
             meta::static_scope_("Components")
                 .typedef_<MeshRenderer>("MeshRenderer"s)
@@ -159,26 +159,26 @@ namespace Fussion {
 
         meta::class_<Scene>(metadata_()
                 ("Name"s, "Scene"s))
-            .method_("CreateEntity"s, &Scene::CreateEntity);
+            .method_("CreateEntity"s, &Scene::create_entity);
 
         meta::class_<AssetRefBase>(metadata_()
                 ("Name"s, "AssetRefBase"s))
-            .method_("Handle"s, &AssetRefBase::Handle)
-            .method_("SetHandle"s, &AssetRefBase::SetHandle)
-            .member_("m_Handle"s, &AssetRefBase::m_Handle)
-            .method_("GetType", &AssetRefBase::GetType);
+            .method_("Handle"s, &AssetRefBase::handle)
+            .method_("SetHandle"s, &AssetRefBase::set_handle)
+            .member_("m_Handle"s, &AssetRefBase::m_handle)
+            .method_("GetType", &AssetRefBase::type);
 
         meta::class_<PbrMaterial>(metadata_()
                 ("Name"s, "PbrMaterial"s))
             .constructor_<>()
-            .function_("GetStaticType", &PbrMaterial::GetStaticType)
-            .member_("ObjectColor", &PbrMaterial::ObjectColor, as_pointer)
-            .member_("Metallic", &PbrMaterial::Metallic, as_pointer)
-            .member_("Roughness", &PbrMaterial::Roughness, as_pointer);
+            .function_("GetStaticType", &PbrMaterial::static_type)
+            .member_("ObjectColor", &PbrMaterial::object_color, as_pointer)
+            .member_("Metallic", &PbrMaterial::metallic, as_pointer)
+            .member_("Roughness", &PbrMaterial::roughness, as_pointer);
 
         meta::class_<Debug>(metadata_()("Name"s, "Debug"s))
-            .function_("DrawLine"s, Debug::DrawLine)
-            .function_("DrawCube"s, static_cast<void(*)(Vector3, Vector3, f32, Color)>(Debug::DrawCube));
+            .function_("DrawLine"s, Debug::draw_line)
+            .function_("DrawCube"s, static_cast<void(*)(Vector3, Vector3, f32, Color)>(Debug::draw_cube));
 
         meta::static_scope_("Scripting")
             .typedef_<Vector2>("Vector2"s)
@@ -195,15 +195,15 @@ namespace Fussion {
             .typedef_<DirectionalLight>("DirectionalLight"s);
 
         meta::class_<Input>(metadata_()("Name"s, "Input"s))
-            .function_("IsKeyPressed"s, Input::IsKeyPressed)
-            .function_("IsKeyReleased"s, Input::IsKeyReleased)
-            .function_("IsKeyDown"s, Input::IsKeyDown)
-            .function_("IsKeyUp"s, Input::IsKeyUp)
-            .function_("IsMouseButtonPressed"s, Input::IsMouseButtonPressed)
-            .function_("IsMouseButtonReleased"s, Input::IsMouseButtonReleased)
-            .function_("IsMouseButtonDown"s, Input::IsMouseButtonDown)
-            .function_("IsMouseButtonUp"s, Input::IsMouseButtonUp)
-            .function_("GetAxis"s, Input::GetAxis);
+            .function_("IsKeyPressed"s, Input::is_key_pressed)
+            .function_("IsKeyReleased"s, Input::is_key_released)
+            .function_("IsKeyDown"s, Input::is_key_down)
+            .function_("IsKeyUp"s, Input::is_key_up)
+            .function_("IsMouseButtonPressed"s, Input::is_mouse_button_pressed)
+            .function_("IsMouseButtonReleased"s, Input::is_mouse_button_released)
+            .function_("IsMouseButtonDown"s, Input::is_mouse_button_down)
+            .function_("IsMouseButtonUp"s, Input::is_mouse_button_up)
+            .function_("GetAxis"s, Input::get_axis);
 
         REGISTER_ENUM(DebugDrawer::Type);
         REGISTER_ENUM(MouseButton)
@@ -215,10 +215,10 @@ namespace Fussion {
 
         meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DMetadata"s))
             .constructor_<>(as_raw_pointer)
-            .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap, as_pointer)
+            .member_("IsNormalMap", &Texture2DMetadata::is_normal_map, as_pointer)
             // .member_("Filter", &Texture2DMetadata::Filter, as_pointer)
             // .member_("Wrap", &Texture2DMetadata::Wrap, as_pointer)
-            .member_("Format", &Texture2DMetadata::Format, as_pointer);
+            .member_("Format", &Texture2DMetadata::format, as_pointer);
     }
 }
 

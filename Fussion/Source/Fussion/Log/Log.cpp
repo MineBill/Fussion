@@ -8,7 +8,7 @@
 namespace Fussion {
     class ConsoleSink final : public LogSink {
     public:
-        virtual void Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc) override
+        virtual void write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc) override
         {
             static std::map<LogLevel, int> const ColorCodes{
                 { LogLevel::Fatal, 196 },
@@ -20,7 +20,7 @@ namespace Fussion {
 
             static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
-            if (level >= m_Logger->GetPriority()) {
+            if (level >= m_logger->get_priority()) {
                 std::cout << fmt::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
                 if (level == LogLevel::Fatal) {
                     // Do something special?
@@ -32,38 +32,38 @@ namespace Fussion {
     // We specifically make this a raw ptr to ensure it will never be freed.
     Log* g_DefaultLogger;
 
-    Log* Log::DefaultLogger()
+    Log* Log::default_logger()
     {
         if (g_DefaultLogger) {
             return g_DefaultLogger;
         }
         g_DefaultLogger = new Log();
 
-        const auto console_sink = MakeRef<ConsoleSink>();
-        g_DefaultLogger->RegisterSink(console_sink);
+        const auto console_sink = make_ref<ConsoleSink>();
+        g_DefaultLogger->register_sink(console_sink);
         return g_DefaultLogger;
     }
 
-    Log::Log(LogLevel default_level): m_Priority(default_level) {}
+    Log::Log(LogLevel default_level): m_priority(default_level) {}
 
     Log::~Log() = default;
 
-    void Log::SetLogLevel(LogLevel level)
+    void Log::set_log_level(LogLevel level)
     {
-        m_Priority = level;
+        m_priority = level;
     }
 
-    void Log::Write(LogLevel level, std::string_view message, std::source_location const& loc)
+    void Log::write(LogLevel level, std::string_view message, std::source_location const& loc)
     {
-        std::scoped_lock lock(m_Mutex);
-        for (auto const& sink : m_Sinks) {
-            sink->Write(level, message, loc);
+        std::scoped_lock lock(m_mutex);
+        for (auto const& sink : m_sinks) {
+            sink->write(level, message, loc);
         }
     }
 
-    void Log::RegisterSink(Ref<LogSink> const& sink)
+    void Log::register_sink(Ref<LogSink> const& sink)
     {
-        sink->m_Logger = this;
-        m_Sinks.push_back(sink);
+        sink->m_logger = this;
+        m_sinks.push_back(sink);
     }
 }

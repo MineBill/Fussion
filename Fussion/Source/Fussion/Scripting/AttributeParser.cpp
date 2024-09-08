@@ -5,55 +5,55 @@
 
 namespace Fussion {
 
-auto AttributeParser::Parse() -> std::vector<Ptr<Scripting::Attribute>>
+auto AttributeParser::parse() -> std::vector<Ptr<Scripting::Attribute>>
 {
-    return ParseAttributes();
+    return parse_attributes();
 }
 
-void AttributeParser::OnError(Token token, std::string const& reason)
+void AttributeParser::on_error(Token token, std::string const& reason)
 {
-    LOG_ERRORF("{} at {}:{}", reason, token.GetCursor().Line, token.GetCursor().LineOffset);
+    LOG_ERRORF("{} at {}:{}", reason, token.cursor().Line, token.cursor().LineOffset);
 }
 
-auto AttributeParser::ParseAttributes() -> std::vector<Ptr<Scripting::Attribute>>
+auto AttributeParser::parse_attributes() -> std::vector<Ptr<Scripting::Attribute>>
 {
     std::vector<Ptr<Scripting::Attribute>> ret{};
     do {
-        ret.push_back(ParseAttribute());
-    } while (Match({ TokenType::Comma }));
+        ret.push_back(parse_attribute());
+    } while (match({ TokenType::Comma }));
     return ret;
 }
 
-auto AttributeParser::ParseAttribute() -> Ptr<Scripting::Attribute>
+auto AttributeParser::parse_attribute() -> Ptr<Scripting::Attribute>
 {
-    Consume(TokenType::Identifier, "Expected identifier");
-    auto name = std::get<std::string>(Previous().GetValue());
+    consume(TokenType::Identifier, "Expected identifier");
+    auto name = std::get<std::string>(previous().value());
     std::vector<Value> values{};
-    if (Match({ TokenType::LParen })) {
+    if (match({ TokenType::LParen })) {
         // Arguments
-        if (!CheckCurrentToken(TokenType::RParen)) {
+        if (!check_current_token(TokenType::RParen)) {
             do {
-                if (auto value = ParseValue()) {
+                if (auto value = parse_value()) {
                     values.push_back(*value);
                 }
-            } while (Match({ TokenType::Comma }));
+            } while (match({ TokenType::Comma }));
         }
 
-        Consume(TokenType::RParen, "Expected ')'.");
+        consume(TokenType::RParen, "Expected ')'.");
     }
 
     using namespace std::string_literals;
     if (name == "Range"s) {
         auto min = std::get<f32>(values[0]);
         auto max = std::get<f32>(values[1]);
-        return MakePtr<Scripting::RangeAttribute>(min, max);
+        return make_ptr<Scripting::RangeAttribute>(min, max);
     } else if (name == "Editable") {
-        return MakePtr<Scripting::EditableAttribute>();
+        return make_ptr<Scripting::EditableAttribute>();
     }
     return nullptr;
 }
 
-auto AttributeParser::ParseBoolean(std::string_view str) -> std::optional<bool>
+auto AttributeParser::parse_boolean(std::string_view str) -> std::optional<bool>
 {
     using namespace std::string_view_literals;
     if (str == "true"sv || str == "True"sv) {
@@ -65,23 +65,23 @@ auto AttributeParser::ParseBoolean(std::string_view str) -> std::optional<bool>
     return std::nullopt;
 }
 
-auto AttributeParser::ParseValue() -> std::optional<Value>
+auto AttributeParser::parse_value() -> std::optional<Value>
 {
-    if (Match({ TokenType::Number, TokenType::String })) {
-        return Previous().GetValue();
+    if (match({ TokenType::Number, TokenType::String })) {
+        return previous().value();
     }
-    if (Match({ TokenType::Identifier })) {
-        auto value = Previous().GetValue();
+    if (match({ TokenType::Identifier })) {
+        auto value = previous().value();
         if (std::holds_alternative<std::string>(value)) {
             auto name = std::get<std::string>(value);
-            if (auto bvalue = ParseBoolean(name)) {
+            if (auto bvalue = parse_boolean(name)) {
                 return *bvalue;
             }
             return name;
         }
     }
 
-    OnError(Peek(), "Expected some kind of value");
+    on_error(peek(), "Expected some kind of value");
     return {};
 }
 

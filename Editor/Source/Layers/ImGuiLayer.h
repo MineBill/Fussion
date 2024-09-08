@@ -10,8 +10,8 @@ public:
      * image to be loaded and later displayed through ImGui MUST happen after this function.
      */
     void Init();
-    virtual void OnStart() override;
-    virtual void OnUpdate(f32) override;
+    virtual void on_start() override;
+    virtual void on_update(f32) override;
 
     void Begin();
 

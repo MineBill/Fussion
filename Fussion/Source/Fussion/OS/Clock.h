@@ -13,9 +13,9 @@ public:
      *
      * @return Elapsed time in milliseconds.
      */
-    f64 Reset();
+    f64 reset();
 
 private:
-    u64 m_ClockFrequency{};
-    u64 m_TickCount{};
+    u64 m_clock_frequency{};
+    u64 m_tick_count{};
 };

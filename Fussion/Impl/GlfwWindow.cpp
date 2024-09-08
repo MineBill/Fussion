@@ -21,7 +21,7 @@ namespace Fussion {
     Keys GlfwKeyToFussion(int key);
     MouseButton GlfwMouseButtonToFussion(int glfw_mouse_button);
 
-    Window* Window::Create(WindowOptions const& options)
+    Window* Window::create(WindowOptions const& options)
     {
         return new GlfwWindow(options);
     }
@@ -33,11 +33,11 @@ namespace Fussion {
             exit(1);
         }
 
-        if (options.Flags.Test(WindowFlag::Resizable)) {
+        if (options.flags.test(WindowFlag::Resizable)) {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         }
 
-        if (options.Flags.Test(WindowFlag::Decorated)) {
+        if (options.flags.test(WindowFlag::Decorated)) {
             glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
         } else {
             glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -45,19 +45,19 @@ namespace Fussion {
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_Window = glfwCreateWindow(options.InitialWidth, options.InitialHeight, options.InitialTitle.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(options.initial_width, options.initial_height, options.initial_title.c_str(), nullptr, nullptr);
 
-        if (options.Flags.Test(WindowFlag::Centered)) {
+        if (options.flags.test(WindowFlag::Centered)) {
             auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            SetPosition({
-                CAST(f32, mode->width) / 2.0 - CAST(f32, options.InitialWidth) / 2.0,
-                CAST(f32, mode->height) / 2.0 - CAST(f32, options.InitialHeight) / 2.0
+            set_position({
+                CAST(f32, mode->width) / 2.0 - CAST(f32, options.initial_width) / 2.0,
+                CAST(f32, mode->height) / 2.0 - CAST(f32, options.initial_height) / 2.0
             });
         }
 
 #if OS_WINDOWS
-        if (System::PrefersDark()) {
+        if (System::prefers_dark()) {
             constexpr auto dwmwa_use_immersive_dark_mode = 20;
             BOOL value = TRUE;
             (void)DwmSetWindowAttribute(glfwGetWin32Window(m_Window), dwmwa_use_immersive_dark_mode, &value, sizeof(value));
@@ -203,30 +203,30 @@ namespace Fussion {
         glfwTerminate();
     }
 
-    void GlfwWindow::Update()
+    void GlfwWindow::update()
     {
         ZoneScopedN("Window Update");
         glfwPollEvents();
     }
 
-    bool GlfwWindow::ShouldClose()
+    bool GlfwWindow::should_close()
     {
         return glfwWindowShouldClose(m_Window);
     }
 
-    void GlfwWindow::SetTitle(std::string const& title)
+    void GlfwWindow::set_title(std::string const& title)
     {
         if (m_IsMinimized)
             return;
         glfwSetWindowTitle(m_Window, title.c_str());
     }
 
-    void GlfwWindow::OnEvent(EventFnType const callback)
+    void GlfwWindow::on_event(EventFnType const callback)
     {
         m_EventCallback = callback;
     }
 
-    void GlfwWindow::SetMouseMode(MouseMode mode) const
+    void GlfwWindow::set_mouse_mode(MouseMode mode) const
     {
         switch (mode) {
         case MouseMode::Unlocked: {
@@ -244,43 +244,43 @@ namespace Fussion {
         }
     }
 
-    u32 GlfwWindow::GetHeight() const
+    u32 GlfwWindow::height() const
     {
         s32 height;
         glfwGetFramebufferSize(m_Window, nullptr, &height);
         return CAST(u32, height);
     }
 
-    u32 GlfwWindow::GetWidth() const
+    u32 GlfwWindow::width() const
     {
         s32 width;
         glfwGetFramebufferSize(m_Window, &width, nullptr);
         return CAST(u32, width);
     }
 
-    void* GlfwWindow::NativeHandle() const
+    void* GlfwWindow::native_handle() const
     {
         return m_Window;
     }
 
-    void GlfwWindow::SetPosition(Vector2 position) const
+    void GlfwWindow::set_position(Vector2 position) const
     {
-        glfwSetWindowPos(m_Window, CAST(s32, position.X), CAST(s32, position.Y));
+        glfwSetWindowPos(m_Window, CAST(s32, position.x), CAST(s32, position.y));
     }
 
-    auto GlfwWindow::GetPosition() const -> Vector2
+    auto GlfwWindow::position() const -> Vector2
     {
         s32 x, y;
         glfwGetWindowPos(m_Window, &x, &y);
         return { x, y };
     }
 
-    void GlfwWindow::SetIcon(Image const& image)
+    void GlfwWindow::set_icon(Image const& image)
     {
         GLFWimage glfw_image;
-        glfw_image.pixels = const_cast<Image&>(image).Data.data();
-        glfw_image.height = image.Height;
-        glfw_image.width = image.Width;
+        glfw_image.pixels = const_cast<Image&>(image).data.data();
+        glfw_image.height = image.height;
+        glfw_image.width = image.width;
 
         glfwSetWindowIcon(m_Window, 1, &glfw_image);
     }

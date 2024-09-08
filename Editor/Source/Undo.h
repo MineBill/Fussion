@@ -6,58 +6,58 @@
 
 class UndoRedo {
     struct Item {
-        void* Ptr{};
-        size_t Size{};
-        char Data[512]{};
-        std::string Tag{};
+        void* ptr{};
+        size_t size{};
+        char data[512]{};
+        std::string tag{};
     };
 
-    std::vector<Item> m_UndoItems;
-    std::vector<Item> m_RedoItems;
-    std::vector<Item> m_TempItems;
+    std::vector<Item> m_undo_items;
+    std::vector<Item> m_redo_items;
+    std::vector<Item> m_temp_items;
 
-    std::unordered_map<std::string, Item> m_SingleItems;
+    std::unordered_map<std::string, Item> m_single_items;
 
 public:
     template<typename T>
-    void Push(T* data, std::string const& tag = "", size_t size = sizeof(T))
+    void push(T* data, std::string const& tag = "", size_t size = sizeof(T))
     {
-        for (auto const& item : m_TempItems) {
-            if (item.Ptr == data) {
+        for (auto const& item : m_temp_items) {
+            if (item.ptr == data) {
                 return;
             }
         }
 
         Item item = {
-            .Ptr = data,
-            .Size = size,
-            .Tag = tag,
+            .ptr = data,
+            .size = size,
+            .tag = tag,
         };
-        std::memcpy(item.Data, data, size);
-        m_TempItems.push_back(item);
+        std::memcpy(item.data, data, size);
+        m_temp_items.push_back(item);
     }
 
     template<typename T>
-    void PushSingle(T* data, std::string const& tag, size_t size = sizeof(T))
+    void push_single(T* data, std::string const& tag, size_t size = sizeof(T))
     {
-        for (auto const& item : m_TempItems) {
-            if (item.Ptr == data) {
+        for (auto const& item : m_temp_items) {
+            if (item.ptr == data) {
                 return;
             }
         }
 
         Item item = {
-            .Ptr = data,
-            .Size = size,
-            .Tag = tag,
+            .ptr = data,
+            .size = size,
+            .tag = tag,
         };
-        std::memcpy(item.Data, data, size);
-        m_SingleItems[tag] = std::move(item);
+        std::memcpy(item.data, data, size);
+        m_single_items[tag] = std::move(item);
     }
 
-    void Undo();
-    void Redo();
+    void undo();
+    void redo();
 
-    void CommitTag(std::string const& tag);
-    void Commit();
+    void commit_tag(std::string const& tag);
+    void commit();
 };

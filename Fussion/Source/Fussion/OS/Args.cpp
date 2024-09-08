@@ -7,7 +7,7 @@ int g_Argc{};
 char** g_Argv{};
 std::string g_SingleLine{};
 
-void Args::Collect(int argc, char** argv)
+void Args::collect(int argc, char** argv)
 {
     g_Argc = argc;
     g_Argv = argv;
@@ -19,17 +19,17 @@ void Args::Collect(int argc, char** argv)
     g_SingleLine = arguments.str();
 }
 
-int Args::Argc()
+int Args::argc()
 {
     return g_Argc;
 }
 
-char** Args::Argv()
+char** Args::argv()
 {
     return g_Argv;
 }
 
-std::string const& Args::AsSingleLine()
+std::string const& Args::as_single_line()
 {
     return g_SingleLine;
 }

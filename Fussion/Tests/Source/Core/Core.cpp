@@ -15,31 +15,31 @@ TEST_CASE("SmallVector")
     SmallVector<int, 10> vec{};
 
     SECTION("Push Back") {
-        REQUIRE(vec.Size() == 0);
+        REQUIRE(vec.size() == 0);
 
-        CHECK(vec.PushBack(1).IsValue());
-        CHECK(vec.PushBack(2).IsValue());
+        CHECK(vec.push_back(1).is_value());
+        CHECK(vec.push_back(2).is_value());
 
-        CHECK(vec.Size() == 2);
+        CHECK(vec.size() == 2);
     }
 
     SECTION("Pop Back") {
-        REQUIRE(vec.Size() == 0);
+        REQUIRE(vec.size() == 0);
 
-        CHECK(vec.PushBack(1).IsValue());
-        CHECK(vec.PopBack() == 1);
+        CHECK(vec.push_back(1).is_value());
+        CHECK(vec.pop_back() == 1);
 
-        CHECK(vec.Size() == 0);
+        CHECK(vec.size() == 0);
     }
 
     SECTION("Push Error") {
         SmallVector<int, 1> smaller{};
 
-        CHECK(smaller.PushBack(1).IsValue());
+        CHECK(smaller.push_back(1).is_value());
 
-        auto result = smaller.PushBack(1);
-        CHECK(result.IsError());
-        CHECK(result.Error() == Fussion::SmallVectorError::CapacityExceeded);
+        auto result = smaller.push_back(1);
+        CHECK(result.is_error());
+        CHECK(result.error() == Fussion::SmallVectorError::CapacityExceeded);
     }
 }
 
@@ -122,24 +122,24 @@ TEST_CASE("RefCounted")
     };
 
     SECTION("Release") {
-        auto ptr = MakeRefPtr<Person>();
+        auto ptr = make_ref_ptr<Person>();
 
-        CHECK(ptr->GetRefCount() == 1);
-        ptr->Release();
+        CHECK(ptr->ref_count() == 1);
+        ptr->release();
     }
 
     SECTION("AddRef") {
-        auto ptr = MakeRefPtr<Person>();
-        ptr->AddRef();
-        CHECK(ptr->GetRefCount() == 2);
+        auto ptr = make_ref_ptr<Person>();
+        ptr->add_ref();
+        CHECK(ptr->ref_count() == 2);
     }
 
     SECTION("Multiple References") {
-        auto ptr = MakeRefPtr<Person>();
+        auto ptr = make_ref_ptr<Person>();
         auto ptr2 = ptr;
 
-        CHECK(ptr->GetRefCount() == 2);
-        CHECK(ptr2->GetRefCount() == 2);
+        CHECK(ptr->ref_count() == 2);
+        CHECK(ptr2->ref_count() == 2);
 
         CHECK(ptr->Age == ptr2->Age);
         CHECK(ptr->Name == ptr2->Name);
@@ -147,11 +147,11 @@ TEST_CASE("RefCounted")
 
     SECTION("Return Reference") {
         auto ReturnsAReference = []() -> RefPtr<Person> {
-            return MakeRefPtr<Person>("Bob", 42);
+            return make_ref_ptr<Person>("Bob", 42);
         };
 
         auto ptr = ReturnsAReference();
-        CHECK(ptr->GetRefCount() == 1);
+        CHECK(ptr->ref_count() == 1);
         CHECK(ptr->Age == 42);
     }
 }
@@ -205,30 +205,30 @@ TEST_CASE("Optional")
         SECTION("Assignment") {
             Maybe<int> num;
 
-            CHECK(num.IsEmpty());
+            CHECK(num.is_empty());
 
             num = 2;
-            CHECK(num.HasValue());
+            CHECK(num.has_value());
             CHECK(num == 2);
         }
 
         SECTION("Copy") {
             Maybe<int> first;
 
-            CHECK(first.IsEmpty());
+            CHECK(first.is_empty());
 
             Maybe<int> second;
             first = second;
 
-            CHECK(first.IsEmpty());
-            CHECK(second.IsEmpty());
+            CHECK(first.is_empty());
+            CHECK(second.is_empty());
 
             Maybe<int> third = 33;
 
             first = third;
             second = first;
 
-            CHECK(first.HasValue());
+            CHECK(first.has_value());
             CHECK(first == 33);
 
             CHECK(first == second);
@@ -239,10 +239,10 @@ TEST_CASE("Optional")
         SECTION("Assignment") {
             Maybe<DebugObject> num;
 
-            CHECK(num.IsEmpty());
+            CHECK(num.is_empty());
 
             num = DebugObject();
-            CHECK(num.HasValue());
+            CHECK(num.has_value());
         }
     }
 }
@@ -251,7 +251,7 @@ TEST_CASE("StringUtils")
 {
     using namespace std::string_view_literals;
     SECTION("::Remove") {
-        CHECK(StringUtils::Remove("m_Enabled", "m_") == "Enabled"sv);
-        CHECK(StringUtils::Remove("Enabled", "m_") == "Enabled"sv);
+        CHECK(StringUtils::remove("m_Enabled", "m_") == "Enabled"sv);
+        CHECK(StringUtils::remove("Enabled", "m_") == "Enabled"sv);
     }
 }

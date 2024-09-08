@@ -19,52 +19,52 @@ namespace Fussion {
 //     return std::nullopt;
 // }
 
-ScriptInstance::ScriptInstance(ScriptClass* script_class, asIScriptObject* instance): m_ScriptClass(script_class),
-                                                                                      m_Instance(instance)
+ScriptInstance::ScriptInstance(ScriptClass* script_class, asIScriptObject* instance): m_script_class(script_class),
+                                                                                      m_instance(instance)
 {
-    (void)m_Instance->AddRef();
-    m_Context = m_Instance->GetEngine()->CreateContext();
+    (void)m_instance->AddRef();
+    m_context = m_instance->GetEngine()->CreateContext();
 }
 
 ScriptInstance::~ScriptInstance()
 {
-    if (m_Context)
-        (void)m_Context->Release();
-    if (m_Instance)
-        (void)m_Instance->Release();
+    if (m_context)
+        (void)m_context->Release();
+    if (m_instance)
+        (void)m_instance->Release();
 }
 
 ScriptInstance::ScriptInstance(ScriptInstance const& other)
 {
-    m_Instance = other.m_Instance;
-    m_Context = other.m_Context;
-    m_ScriptClass = other.m_ScriptClass;
+    m_instance = other.m_instance;
+    m_context = other.m_context;
+    m_script_class = other.m_script_class;
 
-    (void)m_Instance->AddRef();
-    (void)m_Context->AddRef();
+    (void)m_instance->AddRef();
+    (void)m_context->AddRef();
 }
 
 ScriptInstance& ScriptInstance::operator=(ScriptInstance const& other)
 {
-    m_Instance = other.m_Instance;
-    m_Context = other.m_Context;
-    m_ScriptClass = other.m_ScriptClass;
+    m_instance = other.m_instance;
+    m_context = other.m_context;
+    m_script_class = other.m_script_class;
 
-    (void)m_Instance->AddRef();
-    (void)m_Context->AddRef();
+    (void)m_instance->AddRef();
+    (void)m_context->AddRef();
     return *this;
 }
 
 ScriptClass::ScriptClass(asITypeInfo* type)
 {
-    Reload(type);
+    reload(type);
 }
 
-auto ScriptClass::CreateInstance() -> ScriptInstance
+auto ScriptClass::create_instance() -> ScriptInstance
 {
-    auto ctx = m_Type->GetEngine()->CreateContext();
+    auto ctx = m_type->GetEngine()->CreateContext();
     defer(ctx->Release());
-    ctx->Prepare(m_Factory);
+    ctx->Prepare(m_factory);
 
     auto status = ctx->Execute();
     if (status == asEXECUTION_FINISHED) {
@@ -75,86 +75,86 @@ auto ScriptClass::CreateInstance() -> ScriptInstance
     return {};
 }
 
-auto ScriptClass::GetMethod(std::string const& name) -> asIScriptFunction*
+auto ScriptClass::get_method(std::string const& name) -> asIScriptFunction*
 {
-    if (m_Methods.contains(name)) {
-        return m_Methods[name];
+    if (m_methods.contains(name)) {
+        return m_methods[name];
     }
     return nullptr;
 }
 
 
-auto ScriptClass::GetMethods() -> std::unordered_map<std::string, asIScriptFunction*>& {
-    return m_Methods;
+auto ScriptClass::get_methods() -> std::unordered_map<std::string, asIScriptFunction*>& {
+    return m_methods;
 }
 
-bool ScriptClass::DerivesFrom(std::string const& name) const {
-    auto type = m_Type->GetModule()->GetTypeInfoByName(name.c_str());
-    return m_Type->DerivesFrom(type);
+bool ScriptClass::derives_from(std::string const& name) const {
+    auto type = m_type->GetModule()->GetTypeInfoByName(name.c_str());
+    return m_type->DerivesFrom(type);
 }
 
-void ScriptClass::Reload(asITypeInfo* type_info)
+void ScriptClass::reload(asITypeInfo* type_info)
 {
-    m_Type = type_info;
-    m_Name = m_Type->GetName();
-    auto decl = std::format("{} @{}()", m_Name, m_Name);
-    m_Factory = m_Type->GetFactoryByDecl(decl.c_str());
-    if (m_Factory == nullptr) {
-        LOG_ERRORF("Failed to find factory '{}' for class: {}", decl, m_Name);
+    m_type = type_info;
+    m_name = m_type->GetName();
+    auto decl = std::format("{} @{}()", m_name, m_name);
+    m_factory = m_type->GetFactoryByDecl(decl.c_str());
+    if (m_factory == nullptr) {
+        LOG_ERRORF("Failed to find factory '{}' for class: {}", decl, m_name);
     }
 
-    for (u32 i = 0; i < m_Type->GetMethodCount(); i++) {
-        auto const method = m_Type->GetMethodByIndex(i);
+    for (u32 i = 0; i < m_type->GetMethodCount(); i++) {
+        auto const method = m_type->GetMethodByIndex(i);
 
-        m_Methods[method->GetName()] = method;
+        m_methods[method->GetName()] = method;
     }
 
-    for (u32 i = 0; i < m_Type->GetPropertyCount(); i++) {
+    for (u32 i = 0; i < m_type->GetPropertyCount(); i++) {
         ScriptProperty prop;
-        prop.Index = i;
+        prop.index = i;
 
         const char* name;
-        m_Type->GetProperty(i, &name, TRANSMUTE(int*, &prop.TypeId), &prop.IsPrivate, &prop.IsProtected, &prop.Offset, &prop.IsReference);
+        m_type->GetProperty(i, &name, TRANSMUTE(int*, &prop.type_id), &prop.is_private, &prop.is_protected, &prop.offset, &prop.is_reference);
 
-        m_Properties[name] = prop;
+        m_properties[name] = prop;
     }
 }
 
-auto ScriptClass::GetProperty(std::string const& name) -> ScriptProperty
+auto ScriptClass::get_property(std::string const& name) -> ScriptProperty
 {
-    return m_Properties[name];
+    return m_properties[name];
 }
 
 ScriptAssembly::ScriptAssembly(asIScriptModule* module)
 {
-    Reload(module);
+    reload(module);
 }
 
-auto ScriptAssembly::GetClass(std::string const& name) -> Maybe<ScriptClass*>
+auto ScriptAssembly::get_class(std::string const& name) -> Maybe<ScriptClass*>
 {
-    if (m_Classes.contains(name))
-        return &m_Classes[name];
+    if (m_classes.contains(name))
+        return &m_classes[name];
     return None();
 }
 
-auto ScriptAssembly::GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>
+auto ScriptAssembly::get_classes_of_type(std::string const& type) -> std::vector<ScriptClass*>
 {
     std::vector<ScriptClass*> ret;
-    for (auto& klass : m_Classes | std::views::values) {
-        if (klass.GetTypeInfo()->GetBaseType()->GetName() == type) {
+    for (auto& klass : m_classes | std::views::values) {
+        if (klass.get_type_info()->GetBaseType()->GetName() == type) {
             ret.push_back(&klass);
         }
     }
     return ret;
 }
 
-void ScriptAssembly::Reload(asIScriptModule* module)
+void ScriptAssembly::reload(asIScriptModule* module)
 {
-    m_Module = module;
-    m_Name = module->GetName();
+    m_module = module;
+    m_name = module->GetName();
     for (u32 i = 0; i < module->GetObjectTypeCount(); i++) {
         auto const klass = module->GetObjectTypeByIndex(i);
-        m_Classes[klass->GetName()] = ScriptClass(klass);
+        m_classes[klass->GetName()] = ScriptClass(klass);
     }
 }
 }

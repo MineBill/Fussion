@@ -3,49 +3,49 @@
 #include "Math/Math.h"
 
 namespace Fussion {
-    Vector2::Real Vector2::Length() const
+    Vector2::Real Vector2::length() const
     {
-        return Math::Abs(Math::Sqrt(X * X + Y * Y));
+        return Math::abs(Math::sqrt(x * x + y * y));
     }
 
-    Vector2::Real Vector2::LengthSquared() const
+    Vector2::Real Vector2::length_squared() const
     {
-        return X * X + Y * Y;
+        return x * x + y * y;
     }
 
-    Vector2::Real Vector2::DistanceTo(Vector2 const& other) const
+    Vector2::Real Vector2::distance_to(Vector2 const& other) const
     {
-        return (*this - other).Length();
+        return (*this - other).length();
     }
 
-    Vector2::Real Vector2::DistanceToSquared(Vector2 const& other) const
+    Vector2::Real Vector2::distance_to_squared(Vector2 const& other) const
     {
-        return (*this - other).LengthSquared();
+        return (*this - other).length_squared();
     }
 
     Vector2 Vector2::operator+(Vector2 const& right) const
     {
-        return { X + right.X, Y + right.Y };
+        return { x + right.x, y + right.y };
     }
 
     Vector2 Vector2::operator-(Vector2 const& right) const
     {
-        return { X - right.X, Y - right.Y };
+        return { x - right.x, y - right.y };
     }
 
     Vector2 Vector2::operator*(Vector2 const& right) const
     {
-        return { X * right.X, Y * right.Y };
+        return { x * right.x, y * right.y };
     }
 
     Vector2 Vector2::operator/(Vector2 const& right) const
     {
-        return { X / right.X, Y / right.Y };
+        return { x / right.x, y / right.y };
     }
 
     bool operator==(Vector2 const& lhs, Vector2 const& rhs)
     {
-        return Math::IsZero(Math::Abs(lhs.X - rhs.X)) && Math::IsZero(Math::Abs(lhs.Y - rhs.Y));
+        return Math::is_zero(Math::abs(lhs.x - rhs.x)) && Math::is_zero(Math::abs(lhs.y - rhs.y));
     }
 
     bool operator!=(Vector2 const& lhs, Vector2 const& rhs)
@@ -53,14 +53,14 @@ namespace Fussion {
         return !(lhs == rhs);
     }
 
-    bool Vector2::IsZero() const
+    bool Vector2::is_zero() const
     {
-        return Math::IsZero(X) && Math::IsZero(Y);
+        return Math::is_zero(x) && Math::is_zero(y);
     }
 
-    f32 Vector2::Aspect() const
+    f32 Vector2::aspect() const
     {
-        return X / Y;
+        return x / y;
     }
 
 }

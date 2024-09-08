@@ -7,12 +7,12 @@
 
 namespace Fussion::Math {
 
-    constexpr f64 Pi = 3.14159265358979323846264338327950288;
-    constexpr f32 F32Epsilon = 1.192092896e-07F;
-    constexpr f64 F64Epsilon = 2.2204460492503131e-016;
+    constexpr f64 PI = 3.14159265358979323846264338327950288;
+    constexpr f32 F32_EPSILON = 1.192092896e-07F;
+    constexpr f64 F64_EPSILON = 2.2204460492503131e-016;
 
     template<ScalarType T>
-    constexpr auto Min(T first, T second)
+    constexpr auto min(T first, T second)
     {
         if (first < second)
             return first;
@@ -20,16 +20,16 @@ namespace Fussion::Math {
     }
 
     template<ScalarType First, ScalarType Second, ScalarType... T>
-    constexpr auto Min(First first, Second second, T... rest) -> First
+    constexpr auto min(First first, Second second, T... rest) -> First
     {
-        auto min_rest = Min(second, rest...);
+        auto min_rest = min(second, rest...);
         if (first < min_rest)
             return first;
         return min_rest;
     }
 
     template<ScalarType T>
-    constexpr auto Max(T first, T second)
+    constexpr auto max(T first, T second)
     {
         if (first > second)
             return first;
@@ -37,16 +37,16 @@ namespace Fussion::Math {
     }
 
     template<ScalarType First, ScalarType Second, ScalarType... T>
-    constexpr auto Max(First first, Second second, T... rest) -> First
+    constexpr auto max(First first, Second second, T... rest) -> First
     {
-        auto max_rest = Max(second, rest...);
+        auto max_rest = max(second, rest...);
         if (first > max_rest)
             return first;
         return max_rest;
     }
 
     template<ScalarType T>
-    constexpr auto Clamp(T value, T min, T max)
+    constexpr auto clamp(T value, T min, T max)
     {
         if (value < min)
             value = min;
@@ -56,53 +56,53 @@ namespace Fussion::Math {
     }
 
     template<std::floating_point Real>
-    constexpr bool IsZero(Real value)
+    constexpr bool is_zero(Real value)
     {
         if constexpr (std::is_same_v<Real, f32>) {
-            return value <= F32Epsilon;
+            return value <= F32_EPSILON;
         } else {
-            return value <= F64Epsilon;
+            return value <= F64_EPSILON;
         }
     }
 
-    constexpr auto Abs(ScalarType auto value)
+    constexpr auto abs(ScalarType auto value)
     {
         if (value < 0)
             return -value;
         return value;
     }
 
-    auto Sin(ScalarType auto value) -> decltype(value)
+    auto sin(ScalarType auto value) -> decltype(value)
     {
         return std::sin(value);
     }
 
-    auto Cos(ScalarType auto value) -> decltype(value)
+    auto cos(ScalarType auto value) -> decltype(value)
     {
         return std::cos(value);
     }
 
     template<ScalarType T>
-    auto Pow(T value, T power) -> decltype(value)
+    auto pow(T value, T power) -> decltype(value)
     {
         return std::pow(value, power);
     }
 
-    constexpr auto Sqrt(ScalarType auto value)
+    constexpr auto sqrt(ScalarType auto value)
     {
         return std::sqrt(value);
     }
 
-    constexpr auto Floor(ScalarType auto value)
+    constexpr auto floor(ScalarType auto value)
     {
         return CAST(decltype(value), CAST(s32, value));
     }
 
-    auto FloorLog2(s32 value) -> s32;
-    auto FloorLog2(s64 value) -> s64;
+    auto floor_log2(s32 value) -> s32;
+    auto floor_log2(s64 value) -> s64;
 
-    auto CountLeadingZeros(u32 value) -> u32;
-    auto CountLeadingZeros(u64 value) -> u64;
+    auto count_leading_zeros(u32 value) -> u32;
+    auto count_leading_zeros(u64 value) -> u64;
 
-    auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
+    auto get_frustum_corners_world_space(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
 }

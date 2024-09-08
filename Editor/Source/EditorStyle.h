@@ -25,22 +25,22 @@ enum class EditorFont {
 };
 
 struct CommonStyle {
-    Vector2 Padding{ 2, 2 };
-    f32 Rounding{ 1.0f };
-    bool Border{ false };
+    Vector2 padding{ 2, 2 };
+    f32 rounding{ 1.0f };
+    bool border{ false };
 };
 
 struct InteractiveStyle {
-    Color NormalColor;
-    Color HoverColor;
-    Color PressedColor;
+    Color normal_color;
+    Color hover_color;
+    Color pressed_color;
 
     constexpr InteractiveStyle()
     {
-        auto accent = Color::FromHex(AccentColor);
-        NormalColor = accent;
-        HoverColor = accent.Lighten(0.1f);
-        PressedColor = accent.Darken(0.1f);
+        auto accent = Color::from_hex(AccentColor);
+        normal_color = accent;
+        hover_color = accent.lighten(0.1f);
+        pressed_color = accent.darken(0.1f);
     }
 };
 
@@ -57,31 +57,31 @@ enum ButtonStyles {
 };
 
 struct ButtonStyle : CommonStyle, InteractiveStyle {
-    Color TextColor{};
-    Color BorderColor{};
-    Color BorderShadowColor{};
-    EditorFont Font{};
+    Color text_color{};
+    Color border_color{};
+    Color border_shadow_color{};
+    EditorFont font{};
 
-    static constexpr ButtonStyle Default()
+    static constexpr ButtonStyle make_default()
     {
         ButtonStyle style;
-        style.Padding = Vector2(3, 3);
-        style.NormalColor = Color::FromHex(AccentColor);
-        style.TextColor = Color::White;
-        style.BorderColor = style.NormalColor.Darken(0.1f);
-        style.BorderShadowColor = Color::Transparent;
-        style.Border = true;
-        style.Rounding = 2.0f;
+        style.padding = Vector2(3, 3);
+        style.normal_color = Color::from_hex(AccentColor);
+        style.text_color = Color::White;
+        style.border_color = style.normal_color.darken(0.1f);
+        style.border_shadow_color = Color::Transparent;
+        style.border = true;
+        style.rounding = 2.0f;
         return style;
     }
 
-    constexpr void SetButtonColor(Color color)
+    constexpr void set_button_color(Color color)
     {
-        NormalColor = color;
-        HoverColor = NormalColor.Lighten(0.1f);
-        PressedColor = NormalColor.Darken(0.1f);
-        BorderColor = PressedColor;
-        BorderShadowColor = HoverColor;
+        normal_color = color;
+        hover_color = normal_color.lighten(0.1f);
+        pressed_color = normal_color.darken(0.1f);
+        border_color = pressed_color;
+        border_shadow_color = hover_color;
     }
 };
 
@@ -96,9 +96,9 @@ enum WindowStyles {
 struct WindowStyle : CommonStyle {
     constexpr WindowStyle(): CommonStyle()
     {
-        Border = true;
-        Rounding = 3.0f;
-        Padding = { 4, 4 };
+        border = true;
+        rounding = 3.0f;
+        padding = { 4, 4 };
     }
 };
 
@@ -129,14 +129,14 @@ enum class EditorIcon {
 };
 
 struct EditorStyle {
-    std::unordered_map<EditorFont, ImFont*> Fonts;
+    std::unordered_map<EditorFont, ImFont*> fonts;
 
-    std::array<ButtonStyle, ButtonStyleCount> ButtonStyles;
-    std::array<WindowStyle, WindowStyleCount> WindowStyles;
+    std::array<ButtonStyle, ButtonStyleCount> button_styles;
+    std::array<WindowStyle, WindowStyleCount> window_styles;
 
-    std::unordered_map<EditorIcon, Ref<Fussion::Texture2D>> EditorIcons;
+    std::unordered_map<EditorIcon, Ref<Fussion::Texture2D>> editor_icons;
 
-    void Initialize();
+    void initialize();
 
-    static EditorStyle& GetStyle();
+    static EditorStyle& get_style();
 };

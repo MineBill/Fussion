@@ -9,22 +9,22 @@
 
 #include "Layers/Editor.h"
 
-void ScriptsInspector::OnDraw()
+void ScriptsInspector::on_draw()
 {
-    if (!IsVisible())
+    if (!is_visible())
         return;
 
-    if (ImGui::Begin("Scripts Inspector", &m_IsVisible)) {
-        m_IsFocused = ImGui::IsWindowFocused();
+    if (ImGui::Begin("Scripts Inspector", &m_is_visible)) {
+        m_is_focused = ImGui::IsWindowFocused();
 
-        auto assembly = Fussion::ScriptingEngine::Get().GetAssembly("Game");
+        auto assembly = Fussion::ScriptingEngine::inst().get_assembly("Game");
 
         ImGui::TextUnformatted("Inspecting Game assembly");
         ImGui::BeginChild("Types", Vector2(200, 0), ImGuiChildFlags_Border | ImGuiChildFlags_ResizeX);
         if (assembly) {
-            for (auto& [name, klass] : assembly->GetAllClasses()) {
+            for (auto& [name, klass] : assembly->get_all_classes()) {
                 if (ImGui::Selectable(name.c_str())) {
-                    m_SelectedClass = &klass;
+                    m_selected_class = &klass;
                 }
             }
         }
@@ -33,28 +33,28 @@ void ScriptsInspector::OnDraw()
         ImGui::SameLine();
 
         ImGui::BeginChild("Information", Vector2{}, ImGuiChildFlags_Border);
-        if (m_SelectedClass) {
-            ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::BoldSmall]);
-            ImGui::TextUnformatted(m_SelectedClass->GetName().c_str());
+        if (m_selected_class) {
+            ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::BoldSmall]);
+            ImGui::TextUnformatted(m_selected_class->name().c_str());
             ImGui::PopFont();
 
             ImGui::Separator();
 
-            for (auto& [name, prop] : m_SelectedClass->GetProperties()) {
-                auto range = Fussion::ScriptingEngine::GetAttribute<Fussion::Scripting::RangeAttribute>(prop.Uuid);
+            for (auto& [name, prop] : m_selected_class->get_properties()) {
+                auto range = Fussion::ScriptingEngine::get_attribute<Fussion::Scripting::RangeAttribute>(prop.uuid);
                 if (range != nullptr) {
-                    ImGui::Text("[%s]", range->ToString().c_str());
+                    ImGui::Text("[%s]", range->to_string().c_str());
                 }
                 ImGui::TextUnformatted(name.c_str());
-                ImGui::TextUnformatted(magic_enum::enum_name(prop.TypeId).data());
+                ImGui::TextUnformatted(magic_enum::enum_name(prop.type_id).data());
 
             }
 
-            for (auto const& name : m_SelectedClass->GetMethods() | std::views::keys) {
+            for (auto const& name : m_selected_class->get_methods() | std::views::keys) {
                 if (ImGui::Button(name.c_str())) {
-                    auto instance = m_SelectedClass->CreateInstance();
+                    auto instance = m_selected_class->create_instance();
                     LOG_DEBUGF("Calling {}", name);
-                    instance.CallMethod(name);
+                    instance.call_method(name);
                 }
             }
         }

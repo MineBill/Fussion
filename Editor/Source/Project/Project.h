@@ -8,18 +8,18 @@ namespace fs = std::filesystem;
 
 class Project {
 public:
-    static void Initialize();
-    static void Save();
-    static bool Load(fs::path const& path);
+    static void initialize();
+    static void save();
+    static bool load(fs::path const& path);
 
-    static auto GetName() -> std::string_view { return s_ActiveProject->m_Name; }
-    static auto GetAssetManager() -> EditorAssetManager* { return s_ActiveProject->m_AssetManager.get(); }
-    static auto GetRoot() -> fs::path const& { return s_ActiveProject->m_ProjectPath; }
-    static auto GetAssetRegistry() -> fs::path const& { return s_ActiveProject->m_AssetRegistryPath; }
-    static auto GetAssetsFolder() -> fs::path const& { return s_ActiveProject->m_AssetsFolderPath; }
-    static auto GetCacheFolder() -> fs::path const& { return s_ActiveProject->m_CacheFolderPath; }
-    static auto GetScriptsFolder() -> fs::path const& { return s_ActiveProject->m_ScriptsFolderPath; }
-    static auto GetLogsFolder() -> fs::path const& { return s_ActiveProject->m_LogsFolderPath; }
+    static auto name() -> std::string_view { return s_active_project->m_name; }
+    static auto asset_manager() -> EditorAssetManager* { return s_active_project->m_asset_manager.get(); }
+    static auto root() -> fs::path const& { return s_active_project->m_project_path; }
+    static auto asset_registry() -> fs::path const& { return s_active_project->m_asset_registry_path; }
+    static auto assets_folder() -> fs::path const& { return s_active_project->m_assets_folder_path; }
+    static auto cache_folder() -> fs::path const& { return s_active_project->m_cache_folder_path; }
+    static auto scripts_folder() -> fs::path const& { return s_active_project->m_scripts_folder_path; }
+    static auto logs_folder() -> fs::path const& { return s_active_project->m_logs_folder_path; }
 
     /// Creates a new project at the specified location by creating all the necessary
     /// files and folders.
@@ -27,20 +27,20 @@ public:
     /// @param name The name of the project. It <b>MUST</b> be path "friendly" because it will
     /// be used as the name of the project file.
     /// @returns A path the project file, which can used by Project::Load().
-    static auto GenerateProject(fs::path const& path, std::string_view name) -> fs::path;
+    static auto generate_project(fs::path const& path, std::string_view name) -> fs::path;
 
 private:
-    static Ptr<Project> s_ActiveProject;
+    static Ptr<Project> s_active_project;
 
-    Ptr<EditorAssetManager> m_AssetManager{};
+    Ptr<EditorAssetManager> m_asset_manager{};
 
-    std::string m_Name{ "Unnamed Project" };
+    std::string m_name{ "Unnamed Project" };
 
-    fs::path m_ProjectPath;
+    fs::path m_project_path;
 
-    fs::path m_LogsFolderPath;
-    fs::path m_AssetRegistryPath;
-    fs::path m_AssetsFolderPath;
-    fs::path m_ScriptsFolderPath;
-    fs::path m_CacheFolderPath;
+    fs::path m_logs_folder_path;
+    fs::path m_asset_registry_path;
+    fs::path m_assets_folder_path;
+    fs::path m_scripts_folder_path;
+    fs::path m_cache_folder_path;
 };

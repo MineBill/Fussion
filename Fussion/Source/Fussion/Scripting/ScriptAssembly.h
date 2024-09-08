@@ -10,175 +10,176 @@
 #include <cstring>
 
 namespace Fussion {
-class ScriptClass;
-class ScriptingEngine;
+    class ScriptClass;
+    class ScriptingEngine;
 
-class HasAttribute {
-//     auto GetAttribute(std::string_view name) -> std::optional<Ptr<Scripting::Attribute>&>;
-//
-// protected:
-//     std::vector<Ptr<Scripting::Attribute>> m_Attributes{};
-//
-//     friend ScriptingEngine;
-};
+    class HasAttribute {
+        //     auto GetAttribute(std::string_view name) -> std::optional<Ptr<Scripting::Attribute>&>;
+        //
+        // protected:
+        //     std::vector<Ptr<Scripting::Attribute>> m_Attributes{};
+        //
+        //     friend ScriptingEngine;
+    };
 
-class ScriptInstance final {
-public:
-    ScriptInstance() = default;
-    explicit ScriptInstance(ScriptClass* script_class, asIScriptObject* instance);
-    ~ScriptInstance();
+    class ScriptInstance final {
+    public:
+        ScriptInstance() = default;
+        explicit ScriptInstance(ScriptClass* script_class, asIScriptObject* instance);
+        ~ScriptInstance();
 
-    ScriptInstance(ScriptInstance const& other);
-    ScriptInstance& operator=(ScriptInstance const& other);
+        ScriptInstance(ScriptInstance const& other);
+        ScriptInstance& operator=(ScriptInstance const& other);
 
-    bool IsValid() const { return m_Instance != nullptr; }
+        bool is_valid() const { return m_instance != nullptr; }
 
-    asIScriptObject* GetInstance() const { return m_Instance; }
-    ScriptClass* GetScriptClass() const { return m_ScriptClass; }
+        asIScriptObject* instance() const { return m_instance; }
+        ScriptClass* script_class() const { return m_script_class; }
 
-    template<typename ...Args>
-    void CallMethod(std::string_view name, Args&& ...args);
+        template<typename... Args>
+        void call_method(std::string_view name, Args&&... args);
 
-    template<typename T>
-    void SetProperty(std::string const& name, T& value);
+        template<typename T>
+        void set_property(std::string const& name, T& value);
 
-    template<typename T>
-    T* As()
-    {
-        return TRANSMUTE(T*, m_Instance->GetAddressOfProperty(0));
-    }
-
-private:
-    ScriptClass* m_ScriptClass{ nullptr };
-    asIScriptObject* m_Instance{ nullptr };
-
-    asIScriptContext* m_Context{ nullptr };
-};
-
-struct ScriptProperty : HasAttribute {
-    u32 Index{};
-    std::string Name{};
-    bool IsPrivate{};
-    bool IsProtected{};
-    asETypeIdFlags TypeId{};
-
-    int Offset{};
-    bool IsReference{};
-
-    Uuid Uuid{};
-};
-
-class ScriptClass : public HasAttribute {
-public:
-    ScriptClass() = default;
-    explicit ScriptClass(asITypeInfo* type);
-
-    auto GetName() -> std::string const& { return m_Name; }
-
-    auto CreateInstance() -> ScriptInstance;
-
-    auto CreateInstanceWith(auto&& func) -> ScriptInstance
-    {
-        auto ctx = m_Type->GetEngine()->CreateContext();
-        defer(ctx->Release());
-        ctx->Prepare(m_Factory);
-
-        func(ctx);
-
-        auto status = ctx->Execute();
-        if (status == asEXECUTION_FINISHED) {
-            asIScriptObject* obj = *static_cast<asIScriptObject**>(ctx->GetAddressOfReturnValue());
-            return ScriptInstance(this, obj);
+        template<typename T>
+        T* as()
+        {
+            return TRANSMUTE(T*, m_instance->GetAddressOfProperty(0));
         }
 
-        return {};
-    }
+    private:
+        ScriptClass* m_script_class{ nullptr };
+        asIScriptObject* m_instance{ nullptr };
 
-    auto GetMethod(std::string const& name) -> asIScriptFunction*;
+        asIScriptContext* m_context{ nullptr };
+    };
 
-    [[nodiscard]]
-    auto GetTypeInfo() const -> asITypeInfo* { return m_Type; }
+    struct ScriptProperty : HasAttribute {
+        u32 index{};
+        std::string name{};
+        bool is_private{};
+        bool is_protected{};
+        asETypeIdFlags type_id{};
 
-    [[nodiscard]]
-    auto GetProperties() const -> std::unordered_map<std::string, ScriptProperty> { return m_Properties; }
+        int offset{};
+        bool is_reference{};
 
-    [[nodiscard]]
-    auto GetMethods() -> std::unordered_map<std::string, asIScriptFunction*>&;
+        Uuid uuid{};
+    };
 
-    bool DerivesFrom(std::string const& name) const;
+    class ScriptClass : public HasAttribute {
+    public:
+        ScriptClass() = default;
+        explicit ScriptClass(asITypeInfo* type);
 
-    void Reload(asITypeInfo* type_info);
-    auto GetProperty(std::string const& name) -> ScriptProperty;
+        auto name() -> std::string const& { return m_name; }
 
-private:
-    std::unordered_map<std::string, asIScriptFunction*> m_Methods{};
-    std::unordered_map<std::string, ScriptProperty> m_Properties{};
+        auto create_instance() -> ScriptInstance;
 
-    std::string m_Name{ "Invalid" };
-    asIScriptFunction* m_Factory{ nullptr };
-    asITypeInfo* m_Type{ nullptr };
-    Uuid m_Uuid{};
+        auto create_instance_with(auto&& func) -> ScriptInstance
+        {
+            auto ctx = m_type->GetEngine()->CreateContext();
+            defer(ctx->Release());
+            ctx->Prepare(m_factory);
 
-    friend ScriptingEngine;
-};
+            func(ctx);
 
-template<typename ... Args>
-void ScriptInstance::CallMethod(std::string_view name, Args&&... args) {
-    if (auto m = m_ScriptClass->GetMethod(std::string(name))) {
-        m_Context->Prepare(m);
-        m_Context->SetObject(m_Instance);
-        u32 i = 0;
-        ([&]<typename Arg>() {
-            using BaseType = std::remove_cvref_t<Arg>;
-
-            if constexpr(std::is_same_v<BaseType, f32>) {
-                m_Context->SetArgFloat(i, args);
-            } else if constexpr (std::is_same_v<BaseType, f64>) {
-                m_Context->SetArgDouble(i, args);
-            } else if constexpr (std::is_same_v<BaseType, u32>) {
-                m_Context->SetArgDWord(i, args);
-            } else if constexpr (std::is_same_v<BaseType, u64>) {
-                m_Context->SetArgQWord(i, args);
-            } else if constexpr (std::is_same_v<BaseType, std::string>) {
-                m_Context->SetArgObject(i, &args);
-            } else {
-                static_assert(false, "Unsupported arg type");
+            auto status = ctx->Execute();
+            if (status == asEXECUTION_FINISHED) {
+                asIScriptObject* obj = *static_cast<asIScriptObject**>(ctx->GetAddressOfReturnValue());
+                return ScriptInstance(this, obj);
             }
 
-            i++;
-        }.template operator()<Args>(), ...);
-        m_Context->Execute();
+            return {};
+        }
+
+        auto get_method(std::string const& name) -> asIScriptFunction*;
+
+        [[nodiscard]]
+        auto get_type_info() const -> asITypeInfo* { return m_type; }
+
+        [[nodiscard]]
+        auto get_properties() const -> std::unordered_map<std::string, ScriptProperty> { return m_properties; }
+
+        [[nodiscard]]
+        auto get_methods() -> std::unordered_map<std::string, asIScriptFunction*>&;
+
+        bool derives_from(std::string const& name) const;
+
+        void reload(asITypeInfo* type_info);
+        auto get_property(std::string const& name) -> ScriptProperty;
+
+    private:
+        std::unordered_map<std::string, asIScriptFunction*> m_methods{};
+        std::unordered_map<std::string, ScriptProperty> m_properties{};
+
+        std::string m_name{ "Invalid" };
+        asIScriptFunction* m_factory{ nullptr };
+        asITypeInfo* m_type{ nullptr };
+        Uuid m_uuid{};
+
+        friend ScriptingEngine;
+    };
+
+    template<typename... Args>
+    void ScriptInstance::call_method(std::string_view name, Args&&... args)
+    {
+        if (auto m = m_script_class->get_method(std::string(name))) {
+            m_context->Prepare(m);
+            m_context->SetObject(m_instance);
+            u32 i = 0;
+            ([&]<typename Arg>() {
+                using BaseType = std::remove_cvref_t<Arg>;
+
+                if constexpr (std::is_same_v<BaseType, f32>) {
+                    m_context->SetArgFloat(i, args);
+                } else if constexpr (std::is_same_v<BaseType, f64>) {
+                    m_context->SetArgDouble(i, args);
+                } else if constexpr (std::is_same_v<BaseType, u32>) {
+                    m_context->SetArgDWord(i, args);
+                } else if constexpr (std::is_same_v<BaseType, u64>) {
+                    m_context->SetArgQWord(i, args);
+                } else if constexpr (std::is_same_v<BaseType, std::string>) {
+                    m_context->SetArgObject(i, &args);
+                } else {
+                    static_assert(false, "Unsupported arg type");
+                }
+
+                i++;
+            }.template operator()<Args>(), ...);
+            m_context->Execute();
+        }
     }
-}
 
-template<typename T>
-void ScriptInstance::SetProperty(std::string const& name, T& value)
-{
-    auto prop = m_ScriptClass->GetProperty(name);
-    auto type_name = m_Instance->GetObjectType()->GetName();
-    LOG_DEBUGF("NAME: {}", type_name);
-    auto ptr = m_Instance->GetAddressOfProperty(prop.Index);
+    template<typename T>
+    void ScriptInstance::set_property(std::string const& name, T& value)
+    {
+        auto prop = m_script_class->get_property(name);
+        auto type_name = m_instance->GetObjectType()->GetName();
+        LOG_DEBUGF("NAME: {}", type_name);
+        auto ptr = m_instance->GetAddressOfProperty(prop.index);
 
-    std::memcpy(ptr, &value, sizeof(T));
-}
+        std::memcpy(ptr, &value, sizeof(T));
+    }
 
-class ScriptAssembly {
-    ScriptAssembly() = default;
+    class ScriptAssembly {
+        ScriptAssembly() = default;
 
-public:
-    explicit ScriptAssembly(asIScriptModule* module);
+    public:
+        explicit ScriptAssembly(asIScriptModule* module);
 
-    auto GetClass(std::string const& name) -> Maybe<ScriptClass*>;
+        auto get_class(std::string const& name) -> Maybe<ScriptClass*>;
 
-    auto GetAllClasses() -> std::unordered_map<std::string, ScriptClass>& { return m_Classes; }
-    auto GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>;
-    void Reload(asIScriptModule* module);
+        auto get_all_classes() -> std::unordered_map<std::string, ScriptClass>& { return m_classes; }
+        auto get_classes_of_type(std::string const& type) -> std::vector<ScriptClass*>;
+        void reload(asIScriptModule* module);
 
-private:
-    std::unordered_map<std::string, ScriptClass> m_Classes{};
-    asIScriptModule* m_Module{ nullptr };
-    std::string m_Name{};
+    private:
+        std::unordered_map<std::string, ScriptClass> m_classes{};
+        asIScriptModule* m_module{ nullptr };
+        std::string m_name{};
 
-    friend ScriptingEngine;
-};
+        friend ScriptingEngine;
+    };
 }

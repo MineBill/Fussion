@@ -15,7 +15,7 @@ namespace Fussion {
         std::span<RHI::ShaderStage> stages,
         RHI::ShaderMetadata const& metadata)
     {
-        auto shader = MakeRef<ShaderAsset>(render_pass, stages, metadata);
+        auto shader = make_ref<ShaderAsset>(render_pass, stages, metadata);
         return shader;
     }
 }

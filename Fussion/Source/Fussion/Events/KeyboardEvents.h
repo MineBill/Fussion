@@ -11,31 +11,31 @@ namespace Fussion {
     public:
         EVENT(OnKeyDown)
 
-        explicit OnKeyDown(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
+        explicit OnKeyDown(Keys key, KeyMods mods) : key(key), mods(mods) {}
 
-        Keys Key{};
-        KeyMods Mods{};
+        Keys key{};
+        KeyMods mods{};
     };
 
     class OnKeyPressed final : public Event {
     public:
         EVENT(OnKeyPressed)
 
-        explicit OnKeyPressed(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
+        explicit OnKeyPressed(Keys key, KeyMods mods) : key(key), mods(mods) {}
 
-        Keys Key{};
-        KeyMods Mods{};
+        Keys key{};
+        KeyMods mods{};
     };
 
     class OnKeyReleased final : public Event {
     public:
         EVENT(OnKeyReleased)
 
-        explicit OnKeyReleased(Keys key, KeyMods mods) : Key(key), Mods(mods) {}
+        explicit OnKeyReleased(Keys key, KeyMods mods) : key(key), mods(mods) {}
 
-        Keys Key{};
-        KeyMods Mods{};
+        Keys key{};
+        KeyMods mods{};
     };
 }
 
-FSN_MAKE_FORMATTABLE(Fussion::OnKeyPressed, "OnKeyPressed({})", magic_enum::enum_name(v.Key))
+FSN_MAKE_FORMATTABLE(Fussion::OnKeyPressed, "OnKeyPressed({})", magic_enum::enum_name(v.key))

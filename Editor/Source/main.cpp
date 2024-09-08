@@ -15,9 +15,9 @@ int main(int argc, char** argv)
     lpp_agent.EnableModule(lpp::LppGetCurrentModulePath(), lpp::LPP_MODULES_OPTION_ALL_IMPORT_MODULES, nullptr, nullptr);
 #endif
 
-    Fussion::Args::Collect(argc, argv);
+    Fussion::Args::collect(argc, argv);
     EditorApplication editor{};
-    editor.Run();
+    editor.run();
 
 #if defined(FSN_LIVEPP_ENABLED)
     lpp::LppDestroyDefaultAgent(&lpp_agent);

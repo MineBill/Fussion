@@ -93,17 +93,17 @@ namespace Fussion::RHI {
         using enum BufferUsage;
         VkBufferUsageFlags ret{};
 
-        if (usage.Test(Index))
+        if (usage.test(Index))
             ret |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        if (usage.Test(Vertex))
+        if (usage.test(Vertex))
             ret |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        if (usage.Test(Uniform))
+        if (usage.test(Uniform))
             ret |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-        if (usage.Test(TransferSource))
+        if (usage.test(TransferSource))
             ret |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        if (usage.Test(TransferDestination))
+        if (usage.test(TransferDestination))
             ret |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-        if (usage.Test(Storage))
+        if (usage.test(Storage))
             ret |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
         return ret;
     }

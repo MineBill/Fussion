@@ -21,34 +21,34 @@ namespace Fussion {
 
     public:
         Component() = default;
-        explicit Component(Entity* owner): m_Owner(owner) {}
+        explicit Component(Entity* owner): m_owner(owner) {}
         virtual ~Component() override = default;
 
-        virtual void OnCreate()
+        virtual void on_create()
         {
-            OnStart();
+            on_start();
         }
 
-        virtual void OnDestroy() {}
+        virtual void on_destroy() {}
 
-        virtual void OnStart() {}
-        virtual void OnUpdate([[maybe_unused]] f32 delta) {}
+        virtual void on_start() {}
+        virtual void on_update([[maybe_unused]] f32 delta) {}
 
 #if FSN_DEBUG_DRAW
-        virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) {}
+        virtual void on_debug_draw([[maybe_unused]] DebugDrawContext& ctx) {}
 #endif
 
-        virtual void OnEnabled() {}
-        virtual void OnDisabled() {}
+        virtual void on_enabled() {}
+        virtual void on_disabled() {}
 
-        virtual void OnDraw([[maybe_unused]] RenderContext& context) {}
+        virtual void on_draw([[maybe_unused]] RenderContext& context) {}
 
-        virtual Ref<Component> Clone() { return nullptr; }
+        virtual Ref<Component> clone() { return nullptr; }
 
-        Entity* GetOwner() const { return m_Owner; }
+        Entity* owner() const { return m_owner; }
 
     protected:
-        Entity* m_Owner;
+        Entity* m_owner;
     };
 }
 
@@ -62,4 +62,4 @@ namespace Fussion {
     COMPONENT(name)
 
 #define COMPONENT_DEFAULT_COPY(name) \
-    virtual Ref<Component> Clone() override { return MakeRef<name>(); }
+    virtual Ref<Component> clone() override { return make_ref<name>(); }

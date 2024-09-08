@@ -10,36 +10,36 @@ namespace Fussion {
         using ErrorType = ErrorT;
 
         Result() = default;
-        Result(ValueType const& value): m_Value(value) {}
-        Result(ValueType&& value): m_Value(std::move(value)) {}
+        Result(ValueType const& value): m_value(value) {}
+        Result(ValueType&& value): m_value(std::move(value)) {}
 
-        Result(ErrorT const& error): m_Error(error) {}
-        Result(ErrorT&& error): m_Error(std::move(error)) {}
+        Result(ErrorT const& error): m_error(error) {}
+        Result(ErrorT&& error): m_error(std::move(error)) {}
 
-        ValueType& Value()
+        ValueType& value()
         {
-            return m_Value.Value();
+            return m_value.value();
         }
 
-        ErrorType& Error()
+        ErrorType& error()
         {
-            return m_Error.Value();
+            return m_error.value();
         }
 
         [[nodiscard]]
-        bool IsValue() const { return m_Value.HasValue(); }
+        bool is_value() const { return m_value.has_value(); }
 
         [[nodiscard]]
-        bool IsError() const { return m_Error.HasValue(); }
+        bool is_error() const { return m_error.has_value(); }
 
         ValueType& operator*()
         {
-            return m_Value.Value();
+            return m_value.value();
         }
 
     private:
-        Maybe<ValueType> m_Value{};
-        Maybe<ErrorType> m_Error{};
+        Maybe<ValueType> m_value{};
+        Maybe<ErrorType> m_error{};
     };
 
     template<typename ErrorT>
@@ -49,21 +49,21 @@ namespace Fussion {
         using ErrorType = ErrorT;
 
         constexpr Result() = default;
-        constexpr Result(ErrorT const& error): m_Error(error) {}
-        constexpr Result(ErrorT&& error): m_Error(std::move(error)) {}
+        constexpr Result(ErrorT const& error): m_error(error) {}
+        constexpr Result(ErrorT&& error): m_error(std::move(error)) {}
 
-        constexpr ErrorType& Error()
+        constexpr ErrorType& error()
         {
-            return m_Error.Value();
+            return m_error.value();
         }
 
         [[nodiscard]]
-        constexpr bool IsError() const { return m_Error.HasValue(); }
+        constexpr bool is_error() const { return m_error.has_value(); }
 
         [[nodiscard]]
-        constexpr bool IsValue() const { return !m_Error.HasValue(); }
+        constexpr bool is_value() const { return !m_error.has_value(); }
 
     private:
-        Maybe<ErrorType> m_Error{};
+        Maybe<ErrorType> m_error{};
     };
 }

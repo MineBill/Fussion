@@ -19,60 +19,60 @@ namespace Fussion {
 #endif
         union {
             struct {
-                Real X, Y;
+                Real x, y;
             };
 
-            Real Raw[2];
+            Real raw[2];
         };
 #if OS_WINDOWS
 #pragma warning(pop)
 #endif
 
         Vector2() = default;
-        constexpr Vector2(f32 x, f32 y): X(x), Y(y) {}
-        constexpr Vector2(f64 x, f64 y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
-        constexpr Vector2(ScalarType auto x, ScalarType auto y): X(CAST(Real, x)), Y(CAST(Real, y)) {}
-        constexpr Vector2(Vector2 const& other): X(other.X), Y(other.Y) {}
+        constexpr Vector2(f32 x, f32 y): x(x), y(y) {}
+        constexpr Vector2(f64 x, f64 y): x(CAST(Real, x)), y(CAST(Real, y)) {}
+        constexpr Vector2(ScalarType auto x, ScalarType auto y): x(CAST(Real, x)), y(CAST(Real, y)) {}
+        constexpr Vector2(Vector2 const& other): x(other.x), y(other.y) {}
 
         [[nodiscard]]
-        Real Length() const;
+        Real length() const;
 
         [[nodiscard]]
-        Real LengthSquared() const;
+        Real length_squared() const;
 
         [[nodiscard]]
-        Real DistanceTo(Vector2 const& other) const;
+        Real distance_to(Vector2 const& other) const;
 
         [[nodiscard]]
-        Real DistanceToSquared(Vector2 const& other) const;
+        Real distance_to_squared(Vector2 const& other) const;
 
         [[nodiscard]]
-        bool IsZero() const;
+        bool is_zero() const;
 
         [[nodiscard]]
-        f32 Aspect() const;
+        f32 aspect() const;
 
         constexpr Real& operator[](std::size_t i)
         {
-            return Raw[i];
+            return raw[i];
         }
 
         constexpr Real operator[](std::size_t i) const
         {
-            return Raw[i];
+            return raw[i];
         }
 
         constexpr Vector2& operator=(Vector2 const& other)
         {
-            X = other.X;
-            Y = other.Y;
+            x = other.x;
+            y = other.y;
             return *this;
         }
 
         constexpr Vector2& operator+=(Vector2 const& other)
         {
-            X += other.X;
-            Y += other.Y;
+            x += other.x;
+            y += other.y;
             return *this;
         }
 
@@ -83,22 +83,22 @@ namespace Fussion {
 
         constexpr Vector2 operator+(ScalarType auto scalar) const
         {
-            return { X + CAST(Real, scalar), Y + CAST(Real, scalar) };
+            return { x + CAST(Real, scalar), y + CAST(Real, scalar) };
         }
 
         constexpr Vector2 operator-(ScalarType auto scalar) const
         {
-            return { X - CAST(Real, scalar), Y - CAST(Real, scalar) };
+            return { x - CAST(Real, scalar), y - CAST(Real, scalar) };
         }
 
         constexpr Vector2 operator*(ScalarType auto scalar) const
         {
-            return { X * CAST(Real, scalar), Y * CAST(Real, scalar) };
+            return { x * CAST(Real, scalar), y * CAST(Real, scalar) };
         }
 
         constexpr Vector2 operator/(ScalarType auto scalar) const
         {
-            return { X / CAST(Real, scalar), Y / CAST(Real, scalar) };
+            return { x / CAST(Real, scalar), y / CAST(Real, scalar) };
         }
 
         constexpr Vector2& operator+=(ScalarType auto scalar)
@@ -125,19 +125,19 @@ namespace Fussion {
             return *this;
         }
 
-        Vector2(glm::vec2 v): X(v.x), Y(v.y) {}
+        Vector2(glm::vec2 v): x(v.x), y(v.y) {}
 
         operator glm::vec2() const
         {
-            return { X, Y };
+            return { x, y };
         }
 
-        static const Vector2 Zero;
-        static const Vector2 One;
-        static const Vector2 Up;
-        static const Vector2 Down;
-        static const Vector2 Left;
-        static const Vector2 Right;
+        static Vector2 const Zero;
+        static Vector2 const One;
+        static Vector2 const Up;
+        static Vector2 const Down;
+        static Vector2 const Left;
+        static Vector2 const Right;
     };
 
     bool operator==(Vector2 const& lhs, Vector2 const& rhs);
@@ -155,4 +155,4 @@ namespace Fussion {
 using Fussion::Vector2;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2({:.2f}, {:.2f})", v.X, v.Y)
+FSN_MAKE_FORMATTABLE(Fussion::Vector2, "Vector2({:.2f}, {:.2f})", v.x, v.y)

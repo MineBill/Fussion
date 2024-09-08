@@ -8,25 +8,25 @@ class Delegate {
 public:
     using Function = std::function<Signature>;
 
-    void Subscribe(Function const& function)
+    void subscribe(Function const& function)
     {
-        m_Subscribers.push_back(function);
+        m_subscribers.push_back(function);
     }
 
     template<typename... Args>
-    void Fire(Args&&... args)
+    void fire(Args&&... args)
     {
-        for (auto const& sub : m_Subscribers) {
+        for (auto const& sub : m_subscribers) {
             sub(std::forward<Args>(args)...);
         }
     }
 
     friend void operator+=(Delegate& lhs, Function const& func)
     {
-        lhs.m_Subscribers.push_back(func);
+        lhs.m_subscribers.push_back(func);
     }
 
 private:
-    std::vector<Function> m_Subscribers{};
+    std::vector<Function> m_subscribers{};
 };
 }

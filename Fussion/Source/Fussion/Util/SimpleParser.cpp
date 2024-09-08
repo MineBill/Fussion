@@ -2,40 +2,40 @@
 #include "SimpleParser.h"
 
 namespace Fussion {
-Token SimpleParser::Peek() const {
-    return m_Tokens.at(m_Index);
+Token SimpleParser::peek() const {
+    return m_tokens.at(m_index);
 }
 
-bool SimpleParser::IsAtEnd() const {
-    return Peek().GetType() == TokenType::Eof;
+bool SimpleParser::is_at_end() const {
+    return peek().type() == TokenType::Eof;
 }
 
-Token SimpleParser::Previous() const {
-    return m_Tokens.at(m_Index - 1);
+Token SimpleParser::previous() const {
+    return m_tokens.at(m_index - 1);
 }
 
-Token SimpleParser::Next() const {
-    if (IsAtEnd())
-        return Peek();
-    return m_Tokens.at(m_Index + 1);
+Token SimpleParser::next() const {
+    if (is_at_end())
+        return peek();
+    return m_tokens.at(m_index + 1);
 }
 
-bool SimpleParser::CheckCurrentToken(TokenType type) const {
-    if (IsAtEnd())
+bool SimpleParser::check_current_token(TokenType type) const {
+    if (is_at_end())
         return false;
-    return Peek().GetType() == type;
+    return peek().type() == type;
 }
 
-Token SimpleParser::Advance() {
-    if (!IsAtEnd())
-        m_Index++;
-    return Previous();
+Token SimpleParser::advance() {
+    if (!is_at_end())
+        m_index++;
+    return previous();
 }
 
-bool SimpleParser::Match(std::vector<TokenType> const& tokens) {
+bool SimpleParser::match(std::vector<TokenType> const& tokens) {
     for (auto const& type : tokens) {
-        if (CheckCurrentToken(type)) {
-            Advance();
+        if (check_current_token(type)) {
+            advance();
             return true;
         }
     }
@@ -43,10 +43,10 @@ bool SimpleParser::Match(std::vector<TokenType> const& tokens) {
     return false;
 }
 
-bool SimpleParser::MatchNoAdvance(std::vector<TokenType> const& tokens) const
+bool SimpleParser::match_no_advance(std::vector<TokenType> const& tokens) const
 {
     for (auto const& type : tokens) {
-        if (CheckCurrentToken(type)) {
+        if (check_current_token(type)) {
             return true;
         }
     }
@@ -54,11 +54,11 @@ bool SimpleParser::MatchNoAdvance(std::vector<TokenType> const& tokens) const
     return false;
 }
 
-Token SimpleParser::Consume(TokenType type, std::string const& reason) {
-    if (CheckCurrentToken(type))
-        return Advance();
-    auto token = Peek();
-    OnError(token, reason);
+Token SimpleParser::consume(TokenType type, std::string const& reason) {
+    if (check_current_token(type))
+        return advance();
+    auto token = peek();
+    on_error(token, reason);
     return token;
 }
 }

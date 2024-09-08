@@ -5,7 +5,7 @@
 #include <webgpu/wgpu.h>
 
 namespace Fussion::GPU {
-    auto ToWgpu(BackendRenderer backend) -> WGPUInstanceBackendFlags
+    auto to_wgpu(BackendRenderer backend) -> WGPUInstanceBackendFlags
     {
         switch (backend) {
         case BackendRenderer::Vulkan:
@@ -20,7 +20,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(DevicePower power) -> WGPUPowerPreference
+    auto to_wgpu(DevicePower power) -> WGPUPowerPreference
     {
         switch (power) {
         case DevicePower::Undefined:
@@ -35,7 +35,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(PresentMode mode) -> WGPUPresentMode
+    auto to_wgpu(PresentMode mode) -> WGPUPresentMode
     {
         switch (mode) {
         case PresentMode::Fifo:
@@ -52,37 +52,37 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(BufferUsageFlags usage) -> WGPUBufferUsageFlags
+    auto to_wgpu(BufferUsageFlags usage) -> WGPUBufferUsageFlags
     {
         using enum BufferUsage;
         WGPUBufferUsageFlags result{};
-        if (usage.Test(None))
+        if (usage.test(None))
             result |= WGPUBufferUsage_None;
-        if (usage.Test(MapRead))
+        if (usage.test(MapRead))
             result |= WGPUBufferUsage_MapRead;
-        if (usage.Test(MapWrite))
+        if (usage.test(MapWrite))
             result |= WGPUBufferUsage_MapWrite;
-        if (usage.Test(CopySrc))
+        if (usage.test(CopySrc))
             result |= WGPUBufferUsage_CopySrc;
-        if (usage.Test(CopyDst))
+        if (usage.test(CopyDst))
             result |= WGPUBufferUsage_CopyDst;
-        if (usage.Test(Index))
+        if (usage.test(Index))
             result |= WGPUBufferUsage_Index;
-        if (usage.Test(Vertex))
+        if (usage.test(Vertex))
             result |= WGPUBufferUsage_Vertex;
-        if (usage.Test(Uniform))
+        if (usage.test(Uniform))
             result |= WGPUBufferUsage_Uniform;
-        if (usage.Test(Storage))
+        if (usage.test(Storage))
             result |= WGPUBufferUsage_Storage;
-        if (usage.Test(Indirect))
+        if (usage.test(Indirect))
             result |= WGPUBufferUsage_Indirect;
-        if (usage.Test(QueryResolve))
+        if (usage.test(QueryResolve))
             result |= WGPUBufferUsage_QueryResolve;
 
         return result;
     }
 
-    auto ToWgpu(TextureDimension dim) -> WGPUTextureDimension
+    auto to_wgpu(TextureDimension dim) -> WGPUTextureDimension
     {
         switch (dim) {
         case TextureDimension::D1:
@@ -95,7 +95,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(TextureViewDimension dim) -> WGPUTextureViewDimension
+    auto to_wgpu(TextureViewDimension dim) -> WGPUTextureViewDimension
     {
         switch (dim) {
         case TextureViewDimension::Undefined:
@@ -118,7 +118,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(TextureAspect aspect) -> WGPUTextureAspect
+    auto to_wgpu(TextureAspect aspect) -> WGPUTextureAspect
     {
         switch (aspect) {
         case TextureAspect::All:
@@ -133,7 +133,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(LoadOp load) -> WGPULoadOp
+    auto to_wgpu(LoadOp load) -> WGPULoadOp
     {
         switch (load) {
         case LoadOp::Undefined:
@@ -148,7 +148,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(SamplerBindingType type) -> WGPUSamplerBindingType
+    auto to_wgpu(SamplerBindingType type) -> WGPUSamplerBindingType
     {
         switch (type) {
         case SamplerBindingType::Filtering:
@@ -161,7 +161,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(StorageAccess access) -> WGPUStorageTextureAccess
+    auto to_wgpu(StorageAccess access) -> WGPUStorageTextureAccess
     {
         switch (access) {
         case StorageAccess::WriteOnly:
@@ -174,19 +174,19 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(ShaderStageFlags flags) -> WGPUShaderStageFlags
+    auto to_wgpu(ShaderStageFlags flags) -> WGPUShaderStageFlags
     {
         WGPUShaderStageFlags result = 0;
-        if (flags.Test(ShaderStage::Vertex))
+        if (flags.test(ShaderStage::Vertex))
             result |= WGPUShaderStage_Vertex;
-        if (flags.Test(ShaderStage::Fragment))
+        if (flags.test(ShaderStage::Fragment))
             result |= WGPUShaderStage_Fragment;
-        if (flags.Test(ShaderStage::Compute))
+        if (flags.test(ShaderStage::Compute))
             result |= WGPUShaderStage_Compute;
         return result;
     }
 
-    auto ToWgpu(StoreOp store) -> WGPUStoreOp
+    auto to_wgpu(StoreOp store) -> WGPUStoreOp
     {
         switch (store) {
         case StoreOp::Undefined:
@@ -198,7 +198,7 @@ namespace Fussion::GPU {
         }
     }
 
-    auto ToWgpu(VertexStepMode mode) -> WGPUVertexStepMode
+    auto to_wgpu(VertexStepMode mode) -> WGPUVertexStepMode
     {
         switch (mode) {
         case VertexStepMode::Vertex:
@@ -209,7 +209,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(PrimitiveTopology topology) -> WGPUPrimitiveTopology
+    auto to_wgpu(PrimitiveTopology topology) -> WGPUPrimitiveTopology
     {
         switch (topology) {
         case PrimitiveTopology::PointList:
@@ -226,7 +226,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(IndexFormat format) -> WGPUIndexFormat
+    auto to_wgpu(IndexFormat format) -> WGPUIndexFormat
     {
         switch (format) {
         case IndexFormat::Undefined:
@@ -239,7 +239,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(AddressMode mode) -> WGPUAddressMode
+    auto to_wgpu(AddressMode mode) -> WGPUAddressMode
     {
         switch (mode) {
         case AddressMode::ClampToEdge:
@@ -254,7 +254,7 @@ namespace Fussion::GPU {
         PANIC("AddressMode");
     }
 
-    auto ToWgpu(FilterMode mode) -> WGPUFilterMode
+    auto to_wgpu(FilterMode mode) -> WGPUFilterMode
     {
         switch (mode) {
         case FilterMode::Linear:
@@ -265,21 +265,21 @@ namespace Fussion::GPU {
         PANIC("FilterMode");
     }
 
-    auto ToWgpu(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags
+    auto to_wgpu(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags
     {
         WGPUColorWriteMaskFlags result = 0;
-        if (flags.Test(ColorWrite::Green))
+        if (flags.test(ColorWrite::Green))
             result |= WGPUColorWriteMask_Green;
-        if (flags.Test(ColorWrite::Red))
+        if (flags.test(ColorWrite::Red))
             result |= WGPUColorWriteMask_Red;
-        if (flags.Test(ColorWrite::Blue))
+        if (flags.test(ColorWrite::Blue))
             result |= WGPUColorWriteMask_Blue;
-        if (flags.Test(ColorWrite::Green))
+        if (flags.test(ColorWrite::Green))
             result |= WGPUColorWriteMask_Green;
         return result;
     }
 
-    auto ToWgpu(ElementType type) -> WGPUVertexFormat
+    auto to_wgpu(ElementType type) -> WGPUVertexFormat
     {
         switch (type) {
         case ElementType::Int:
@@ -306,7 +306,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(FrontFace face) -> WGPUFrontFace
+    auto to_wgpu(FrontFace face) -> WGPUFrontFace
     {
         switch (face) {
         case FrontFace::Ccw:
@@ -317,7 +317,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(Face face) -> WGPUCullMode
+    auto to_wgpu(Face face) -> WGPUCullMode
     {
         switch (face) {
         case Face::None:
@@ -330,12 +330,12 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(PolygonMode mode) -> void
+    auto to_wgpu(PolygonMode mode) -> void
     {
         UNREACHABLE;
     }
 
-    auto ToWgpu(CompareFunction compare) -> WGPUCompareFunction
+    auto to_wgpu(CompareFunction compare) -> WGPUCompareFunction
     {
         switch (compare) {
         case CompareFunction::Undefined:
@@ -360,7 +360,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(BlendOperation op) -> WGPUBlendOperation
+    auto to_wgpu(BlendOperation op) -> WGPUBlendOperation
     {
         switch (op) {
         case BlendOperation::Add:
@@ -379,7 +379,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(BlendFactor factor) -> WGPUBlendFactor
+    auto to_wgpu(BlendFactor factor) -> WGPUBlendFactor
     {
         switch (factor) {
         case BlendFactor::Zero:
@@ -414,23 +414,23 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(TextureUsageFlags usage) -> WGPUTextureUsageFlags
+    auto to_wgpu(TextureUsageFlags usage) -> WGPUTextureUsageFlags
     {
         WGPUTextureUsageFlags result = 0;
-        if (usage.Test(TextureUsage::CopyDst))
+        if (usage.test(TextureUsage::CopyDst))
             result |= WGPUTextureUsage_CopyDst;
-        if (usage.Test(TextureUsage::CopySrc))
+        if (usage.test(TextureUsage::CopySrc))
             result |= WGPUTextureUsage_CopySrc;
-        if (usage.Test(TextureUsage::RenderAttachment))
+        if (usage.test(TextureUsage::RenderAttachment))
             result |= WGPUTextureUsage_RenderAttachment;
-        if (usage.Test(TextureUsage::StorageBinding))
+        if (usage.test(TextureUsage::StorageBinding))
             result |= WGPUTextureUsage_StorageBinding;
-        if (usage.Test(TextureUsage::TextureBinding))
+        if (usage.test(TextureUsage::TextureBinding))
             result |= WGPUTextureUsage_TextureBinding;
         return result;
     }
 
-    auto ToWgpu(StencilOperation op) -> WGPUStencilOperation
+    auto to_wgpu(StencilOperation op) -> WGPUStencilOperation
     {
         switch (op) {
         case StencilOperation::Keep:
@@ -455,7 +455,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto FromWgpu(WGPUErrorType type) -> ErrorType
+    auto from_wgpu(WGPUErrorType type) -> ErrorType
     {
         switch (type) {
             using enum ErrorType;
@@ -477,7 +477,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto ToWgpu(TextureFormat format) -> WGPUTextureFormat
+    auto to_wgpu(TextureFormat format) -> WGPUTextureFormat
     {
         switch (format) {
         case TextureFormat::Undefined:
@@ -678,7 +678,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto FromWgpu(WGPUTextureFormat format) -> TextureFormat
+    auto from_wgpu(WGPUTextureFormat format) -> TextureFormat
     {
         switch (format) {
             using enum TextureFormat;

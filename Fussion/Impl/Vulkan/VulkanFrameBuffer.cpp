@@ -84,7 +84,7 @@ namespace Fussion::RHI {
         VERIFY(attachment < m_ColorAttachments.size(), "Attachment index is bigger than the amount of attachments in the framebuffer");
 
         auto& attachment_spec = m_ColorAttachments[attachment]->GetSpec();
-        if (!Rect::FromSize(CAST(f32, attachment_spec.Width), CAST(f32, attachment_spec.Height)).Contains(position)) {
+        if (!Rect::from_size(CAST(f32, attachment_spec.Width), CAST(f32, attachment_spec.Height)).contains(position)) {
             return Error::PositionOutOfBounds;
         }
 
@@ -110,7 +110,7 @@ namespace Fussion::RHI {
 
         auto* data = TRANSMUTE(u8*, buffer->GetMappedData());
 
-        auto byte_pos = CAST(u32, position.Y) * attachment_spec.Width + CAST(u32, position.X);
+        auto byte_pos = CAST(u32, position.y) * attachment_spec.Width + CAST(u32, position.x);
         return std::array{ data[byte_pos], data[byte_pos + 1], data[byte_pos + 2], data[byte_pos + 3] };
     }
 
@@ -196,8 +196,8 @@ namespace Fussion::RHI {
 
     void VulkanFrameBuffer::Resize(Vector2 new_size)
     {
-        m_Specification.Width = CAST(s32, new_size.X);
-        m_Specification.Height = CAST(s32, new_size.Y);
+        m_Specification.Width = CAST(s32, new_size.x);
+        m_Specification.Height = CAST(s32, new_size.y);
 
         Destroy();
         Invalidate();

@@ -21,63 +21,63 @@ namespace Fussion {
     public:
         virtual ~Serializer() = default;
 
-        virtual void Initialize() = 0;
+        virtual void initialize() = 0;
 
-        virtual void Write(std::string_view name, s8 value) = 0;
-        virtual void Write(std::string_view name, s16 value) = 0;
-        virtual void Write(std::string_view name, s32 value) = 0;
-        virtual void Write(std::string_view name, s64 value) = 0;
+        virtual void write(std::string_view name, s8 value) = 0;
+        virtual void write(std::string_view name, s16 value) = 0;
+        virtual void write(std::string_view name, s32 value) = 0;
+        virtual void write(std::string_view name, s64 value) = 0;
 
-        virtual void Write(std::string_view name, u8 value) = 0;
-        virtual void Write(std::string_view name, u16 value) = 0;
-        virtual void Write(std::string_view name, u32 value) = 0;
-        virtual void Write(std::string_view name, u64 value) = 0;
+        virtual void write(std::string_view name, u8 value) = 0;
+        virtual void write(std::string_view name, u16 value) = 0;
+        virtual void write(std::string_view name, u32 value) = 0;
+        virtual void write(std::string_view name, u64 value) = 0;
 
-        virtual void Write(std::string_view name, f32 value) = 0;
-        virtual void Write(std::string_view name, f64 value) = 0;
+        virtual void write(std::string_view name, f32 value) = 0;
+        virtual void write(std::string_view name, f64 value) = 0;
 
-        virtual void Write(std::string_view name, bool value) = 0;
-        virtual void Write(std::string_view name, std::string_view value) = 0;
-        virtual void Write(std::string_view name, char const* value) = 0;
+        virtual void write(std::string_view name, bool value) = 0;
+        virtual void write(std::string_view name, std::string_view value) = 0;
+        virtual void write(std::string_view name, char const* value) = 0;
 
 
-        virtual void Write(std::string_view name, ISerializable const& object) = 0;
+        virtual void write(std::string_view name, ISerializable const& object) = 0;
 
-        virtual void BeginObject(std::string_view name, size_t size) = 0;
-        virtual void EndObject() = 0;
+        virtual void begin_object(std::string_view name, size_t size) = 0;
+        virtual void end_object() = 0;
 
-        virtual void BeginArray(std::string_view name, size_t size) = 0;
-        virtual void EndArray() = 0;
+        virtual void begin_array(std::string_view name, size_t size) = 0;
+        virtual void end_array() = 0;
 
-        void Write(std::string_view name, Vector2 const& value);
-        void Write(std::string_view name, Vector3 const& value);
-        void Write(std::string_view name, Vector4 const& value);
-        void Write(std::string_view name, Color const& value);
-        void Write(std::string_view name, Uuid const& value);
-        void Write(std::string_view name, std::string const& value);
-        void Write(std::string_view name, std::filesystem::path const& path);
+        void write(std::string_view name, Vector2 const& value);
+        void write(std::string_view name, Vector3 const& value);
+        void write(std::string_view name, Vector4 const& value);
+        void write(std::string_view name, Color const& value);
+        void write(std::string_view name, Uuid const& value);
+        void write(std::string_view name, std::string const& value);
+        void write(std::string_view name, std::filesystem::path const& path);
 
         template<typename E>
             requires std::is_enum_v<E>
-        void Write(std::string_view name, E value)
+        void write(std::string_view name, E value)
         {
-            Write(name, magic_enum::enum_name(value));
+            write(name, magic_enum::enum_name(value));
         }
 
         template<typename T>
-        void WriteCollection(std::string_view name, std::vector<T> const& vector)
+        void write_collection(std::string_view name, std::vector<T> const& vector)
         {
-            BeginArray(name, vector.size());
+            begin_array(name, vector.size());
             if constexpr (IsInstanceOf<T, std::vector>) {
                 for (auto const& element : vector) {
-                    WriteCollection("", element);
+                    write_collection("", element);
                 }
             } else {
                 for (auto const& element : vector) {
-                    Write("", element);
+                    write("", element);
                 }
             }
-            EndArray();
+            end_array();
         }
 
         // template<typename K, typename V>
@@ -98,68 +98,68 @@ namespace Fussion {
     public:
         virtual ~Deserializer() = default;
 
-        virtual void Initialize() = 0;
+        virtual void initialize() = 0;
 
-        virtual void Read(std::string_view name, s8& value) = 0;
-        virtual void Read(std::string_view name, s16& value) = 0;
-        virtual void Read(std::string_view name, s32& value) = 0;
-        virtual void Read(std::string_view name, s64& value) = 0;
+        virtual void read(std::string_view name, s8& value) = 0;
+        virtual void read(std::string_view name, s16& value) = 0;
+        virtual void read(std::string_view name, s32& value) = 0;
+        virtual void read(std::string_view name, s64& value) = 0;
 
-        virtual void Read(std::string_view name, u8& value) = 0;
-        virtual void Read(std::string_view name, u16& value) = 0;
-        virtual void Read(std::string_view name, u32& value) = 0;
-        virtual void Read(std::string_view name, u64& value) = 0;
+        virtual void read(std::string_view name, u8& value) = 0;
+        virtual void read(std::string_view name, u16& value) = 0;
+        virtual void read(std::string_view name, u32& value) = 0;
+        virtual void read(std::string_view name, u64& value) = 0;
 
-        virtual void Read(std::string_view name, f32& value) = 0;
-        virtual void Read(std::string_view name, f64& value) = 0;
+        virtual void read(std::string_view name, f32& value) = 0;
+        virtual void read(std::string_view name, f64& value) = 0;
 
-        virtual void Read(std::string_view name, bool& value) = 0;
-        virtual void Read(std::string_view name, std::string& value) = 0;
+        virtual void read(std::string_view name, bool& value) = 0;
+        virtual void read(std::string_view name, std::string& value) = 0;
 
-        virtual void Read(std::string_view name, ISerializable& object) = 0;
+        virtual void read(std::string_view name, ISerializable& object) = 0;
 
-        virtual bool BeginObject(std::string_view name, size_t& size) = 0;
-        virtual void EndObject() = 0;
+        virtual bool begin_object(std::string_view name, size_t& size) = 0;
+        virtual void end_object() = 0;
 
-        virtual void BeginArray(std::string_view name, size_t& size) = 0;
-        virtual void EndArray() = 0;
+        virtual void begin_array(std::string_view name, size_t& size) = 0;
+        virtual void end_array() = 0;
 
-        void Read(std::string_view name, Vector2& value);
-        void Read(std::string_view name, Vector3& value);
-        void Read(std::string_view name, Vector4& value);
-        void Read(std::string_view name, Color& value);
-        void Read(std::string_view name, Uuid& value);
-        void Read(std::string_view name, std::filesystem::path& p);
+        void read(std::string_view name, Vector2& value);
+        void read(std::string_view name, Vector3& value);
+        void read(std::string_view name, Vector4& value);
+        void read(std::string_view name, Color& value);
+        void read(std::string_view name, Uuid& value);
+        void read(std::string_view name, std::filesystem::path& p);
 
         template<typename E>
             requires std::is_enum_v<E>
-        void Read(std::string_view name, E value)
+        void read(std::string_view name, E value)
         {
             std::string v;
-            Read(name, v);
+            read(name, v);
             if (auto val = magic_enum::enum_cast<E>(v)) {
                 value = *val;
             }
         }
 
         template<typename T>
-        void ReadCollection(std::string_view name, std::vector<T>& vector)
+        void read_collection(std::string_view name, std::vector<T>& vector)
         {
             size_t size;
-            BeginArray(name, size);
+            begin_array(name, size);
             vector.resize(size);
             if constexpr (IsInstanceOf<T, std::vector>) {
                 for (auto& element : vector) {
-                    ReadCollection("", element);
+                    read_collection("", element);
                 }
             } else {
                 for (auto& element : vector) {
-                    Read("", element);
+                    read("", element);
                 }
             }
-            EndArray();
+            end_array();
         }
 
-        virtual auto ReadKeys() -> std::vector<std::string> = 0;
+        virtual auto read_keys() -> std::vector<std::string> = 0;
     };
 }

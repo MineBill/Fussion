@@ -5,73 +5,73 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void PointLight::OnUpdate(f32) {}
+    void PointLight::on_update(f32) {}
 
-    void PointLight::OnDraw(RenderContext& context)
+    void PointLight::on_draw(RenderContext& context)
     {
-        if (!context.RenderFlags.Test(RenderState::LightCollection))
+        if (!context.render_flags.test(RenderState::LightCollection))
             return;
         auto light = GPUPointLight{
-            .Position = m_Owner->Transform.Position,
-            .Color = Color::White,
-            .Radius = Radius,
+            .position = m_owner->transform.position,
+            .color = Color::White,
+            .radius = radius,
         };
-        context.PointLights.push_back(light);
+        context.point_lights.push_back(light);
     }
 
-    void PointLight::Serialize(Serializer& ctx) const
+    void PointLight::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(Offset);
-        FSN_SERIALIZE_MEMBER(Radius);
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(offset);
+        FSN_SERIALIZE_MEMBER(radius);
     }
 
-    void PointLight::Deserialize(Deserializer& ctx)
+    void PointLight::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(Offset);
-        FSN_DESERIALIZE_MEMBER(Radius);
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(offset);
+        FSN_DESERIALIZE_MEMBER(radius);
     }
 
-    void DebugDrawer::OnDebugDraw(DebugDrawContext& ctx)
+    void DebugDrawer::on_debug_draw(DebugDrawContext& ctx)
     {
         (void)ctx;
 
-        if (DrawType == Type::Box) {
-            Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3::One * Size);
-        } else if (DrawType == Type::Sphere) {
-            Debug::DrawSphere(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Size);
+        if (draw_type == Type::Box) {
+            Debug::draw_cube(m_owner->transform.position, m_owner->transform.euler_angles, Vector3::One * size);
+        } else if (draw_type == Type::Sphere) {
+            Debug::draw_sphere(m_owner->transform.position, m_owner->transform.euler_angles, size);
         }
     }
 
-    void DebugDrawer::Serialize(Serializer& ctx) const
+    void DebugDrawer::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(Size);
-        FSN_SERIALIZE_MEMBER(DrawType);
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(size);
+        FSN_SERIALIZE_MEMBER(draw_type);
     }
 
-    void DebugDrawer::Deserialize(Deserializer& ctx)
+    void DebugDrawer::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(Size);
-        FSN_DESERIALIZE_MEMBER(DrawType);
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(size);
+        FSN_DESERIALIZE_MEMBER(draw_type);
     }
 
-    void MoverComponent::OnUpdate(f32 delta)
+    void MoverComponent::on_update(f32 delta)
     {
-        m_Owner->Transform.Position.X += delta * Speed;
+        m_owner->transform.position.x += delta * speed;
     }
 
-    void MoverComponent::Serialize(Serializer& ctx) const
+    void MoverComponent::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(Speed);
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(speed);
     }
 
-    void MoverComponent::Deserialize(Deserializer& ctx)
+    void MoverComponent::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(Speed);
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(speed);
     }
 }

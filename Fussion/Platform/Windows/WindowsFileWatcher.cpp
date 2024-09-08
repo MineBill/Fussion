@@ -46,12 +46,12 @@ namespace Fussion {
             FindCloseChangeNotification(m_WatchHandle);
         }
 
-        virtual void RegisterListener(std::function<CallbackType> cb) override
+        virtual void register_listener(std::function<CallbackType> cb) override
         {
             m_Listeners += cb;
         }
 
-        virtual void Start() override
+        virtual void start() override
         {
             m_Thread = std::thread(&WindowsFileWatcher::Work, this);
         }
@@ -81,7 +81,7 @@ namespace Fussion {
                     {
                         std::scoped_lock lock(m_Mutex);
 
-                        m_Listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
+                        m_Listeners.fire(path, WindowsFileActionToEventType(file_info->Action));
                     }
 
                     FindNextChangeNotification(m_WatchHandle);
@@ -105,9 +105,9 @@ namespace Fussion {
         std::mutex m_Mutex{};
     };
 
-    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root)
+    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root)
     {
-        return MakePtr<WindowsFileWatcher>(root);
+        return make_ptr<WindowsFileWatcher>(root);
     }
 
 }

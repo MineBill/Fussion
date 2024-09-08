@@ -14,7 +14,7 @@ public:
     virtual ~FileSink() override;
     static Ref<FileSink> Create(std::filesystem::path const& file_name);
 
-    virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override;
+    virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override;
 
 private:
     FILE* m_OutputFile{};

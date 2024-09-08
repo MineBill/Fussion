@@ -47,11 +47,11 @@ FileSink::FileSink(std::string const& file_name)
     VERIFY(m_OutFile.is_open());
 }
 
-void FileSink::Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
+void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
 {
     static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
-    if (level >= m_Logger->GetPriority()) {
+    if (level >= m_logger->get_priority()) {
         // (void)fprintf_s(m_OutputFile, "%s [FileSink]: %s\n", prefixes[static_cast<int>(level)], message.data());
         // fflush(m_OutputFile);
         m_OutFile << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;

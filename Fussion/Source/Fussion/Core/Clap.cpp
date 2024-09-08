@@ -21,7 +21,7 @@ public:
     {
     }
 
-    virtual void OnError(Token token, std::string const& reason) override
+    virtual void on_error(Token token, std::string const& reason) override
     {
         (void)token;
         (void)reason;
@@ -31,7 +31,7 @@ public:
     auto ParseOptions() -> std::vector<Option>
     {
         std::vector<Option> options{};
-        while (!IsAtEnd()) {
+        while (!is_at_end()) {
             options.push_back(ParseOption());
         }
         return options;
@@ -40,10 +40,10 @@ public:
     auto ParseOption() -> Option
     {
         Option opt;
-        if (Match({ TokenType::Minus })) {
-            Consume(TokenType::Identifier, "Expected name for the argument");
-            opt.Name = std::get<std::string>(Previous().GetValue());
-            if (Match({ TokenType::Equal })) {
+        if (match({ TokenType::Minus })) {
+            consume(TokenType::Identifier, "Expected name for the argument");
+            opt.Name = std::get<std::string>(previous().value());
+            if (match({ TokenType::Equal })) {
                 opt.Value = ParseValue();
             } else {
                 // No value is assumed to be bool.
@@ -66,16 +66,16 @@ public:
             return std::nullopt;
         };
 
-        if (Match({ TokenType::Number })) {
-            return std::get<f32>(Previous().GetValue());
+        if (match({ TokenType::Number })) {
+            return std::get<f32>(previous().value());
         }
 
-        if (Match({ TokenType::String })) {
-            return std::get<std::string>(Previous().GetValue());
+        if (match({ TokenType::String })) {
+            return std::get<std::string>(previous().value());
         }
 
-        if (Match({ TokenType::Identifier })) {
-            auto value = Previous().GetValue();
+        if (match({ TokenType::Identifier })) {
+            auto value = previous().value();
             if (std::holds_alternative<std::string>(value)) {
                 auto name = std::get<std::string>(value);
                 if (auto bvalue = ParseBoolean(name)) {
@@ -83,9 +83,9 @@ public:
                 }
 
                 std::string path = name;
-                while (!MatchNoAdvance({ TokenType::Minus, TokenType::Eof }) && !IsAtEnd()) {
-                    Advance();
-                    switch (Previous().GetType()) {
+                while (!match_no_advance({ TokenType::Minus, TokenType::Eof }) && !is_at_end()) {
+                    advance();
+                    switch (previous().type()) {
                     case TokenType::Colon:
                         path += ':';
                         break;
@@ -96,7 +96,7 @@ public:
                         path += '.';
                         break;
                     case TokenType::Identifier:
-                        path += std::get<std::string>(Previous().GetValue());
+                        path += std::get<std::string>(previous().value());
                         break;
                     default:
                         break;
@@ -105,9 +105,9 @@ public:
 
                 return path;
             }
-        } else if (Match({ TokenType::Dot, TokenType::Slash })) {
+        } else if (match({ TokenType::Dot, TokenType::Slash })) {
             std::string path;
-            switch (Previous().GetType()) {
+            switch (previous().type()) {
             case TokenType::Dot:
                 path = ".";
                 break;
@@ -118,9 +118,9 @@ public:
                 break;
             }
 
-            while (!MatchNoAdvance({ TokenType::Minus, TokenType::Eof }) && !IsAtEnd()) {
-                Advance();
-                switch (Previous().GetType()) {
+            while (!match_no_advance({ TokenType::Minus, TokenType::Eof }) && !is_at_end()) {
+                advance();
+                switch (previous().type()) {
                 case TokenType::Colon:
                     path += ':';
                     break;
@@ -131,7 +131,7 @@ public:
                     path += '.';
                     break;
                 case TokenType::Identifier:
-                    path += std::get<std::string>(Previous().GetValue());
+                    path += std::get<std::string>(previous().value());
                     break;
                 default:
                     break;
@@ -152,7 +152,7 @@ Clap::Clap(std::string const& input)
 auto Clap::Parse() -> void
 {
     SimpleLexer lexer(m_Cli);
-    ArgParser parser(lexer.Scan());
+    ArgParser parser(lexer.scan());
 
     for (auto const& option : parser.ParseOptions()) {
         if (!m_Options.contains(option.Name))

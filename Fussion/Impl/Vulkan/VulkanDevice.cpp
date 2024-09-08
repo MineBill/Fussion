@@ -40,7 +40,7 @@ namespace Fussion::RHI {
         if (*GraphicsFamily == *PresentFamily) {
             families.emplace_back(*GraphicsFamily);
         }
-        if (TransferFamily.HasValue()) {
+        if (TransferFamily.has_value()) {
             families.emplace_back(*TransferFamily);
         }
         LOG_ERROR("Present and Graphics indices differ, do something");
@@ -117,7 +117,7 @@ namespace Fussion::RHI {
 
     auto VulkanDevice::CreateCommandPool() -> Ref<RHI::CommandPool>
     {
-        return MakeRef<VulkanCommandPool>(this);
+        return make_ref<VulkanCommandPool>(this);
     }
 
     auto VulkanDevice::CreateSampler(SamplerSpecification spec) -> Ref<Sampler>
@@ -127,7 +127,7 @@ namespace Fussion::RHI {
 
     auto VulkanDevice::CreateImage(ImageSpecification spec) -> Ref<Image>
     {
-        auto image = MakeRef<VulkanImage>(this, spec);
+        auto image = make_ref<VulkanImage>(this, spec);
 
         for (auto const& cb : m_ImageCallbacks) {
             cb(image, true);
@@ -138,7 +138,7 @@ namespace Fussion::RHI {
 
     auto VulkanDevice::CreateImageView(Ref<Image> image, ImageViewSpecification spec) -> Ref<ImageView>
     {
-        auto view = MakeRef<VulkanImageView>(this, dynamic_cast<VulkanImage*>(image.get()), spec);
+        auto view = make_ref<VulkanImageView>(this, dynamic_cast<VulkanImage*>(image.get()), spec);
 
         for (auto const& cb : m_ImageViewCallbacks) {
             cb(view, image, true);
@@ -170,7 +170,7 @@ namespace Fussion::RHI {
         std::vector<Ref<ImageView>> images,
         FrameBufferSpecification spec) -> Ref<FrameBuffer>
     {
-        return MakeRef<VulkanFrameBuffer>(this, render_pass, images, spec);
+        return make_ref<VulkanFrameBuffer>(this, render_pass, images, spec);
     }
 
     auto VulkanDevice::CreateResourceLayout(std::span<ResourceUsage> resources) -> Ref<ResourceLayout>
@@ -180,7 +180,7 @@ namespace Fussion::RHI {
 
     auto VulkanDevice::CreateBuffer(BufferSpecification spec) -> Ref<Buffer>
     {
-        return MakeRef<VulkanBuffer>(this, spec);
+        return make_ref<VulkanBuffer>(this, spec);
     }
 
     auto VulkanDevice::CreatePipelineLayout(std::vector<Ref<ResourceLayout>> const& layouts, PipelineLayoutSpecification const& spec) -> Ref<PipelineLayout>
@@ -204,12 +204,12 @@ namespace Fussion::RHI {
 
     auto VulkanDevice::CreateResourcePool(ResourcePoolSpecification spec) -> Ref<ResourcePool>
     {
-        return MakeRef<VulkanResourcePool>(this, spec);
+        return make_ref<VulkanResourcePool>(this, spec);
     }
 
     void VulkanDevice::WaitIdle()
     {
-        GraphicsQueue.Access([&](VkQueue queue) {
+        GraphicsQueue.access([&](VkQueue queue) {
             (void)queue;
             VK_CHECK(vkDeviceWaitIdle(Handle))
         });
@@ -234,7 +234,7 @@ namespace Fussion::RHI {
             .pCommandBuffers = &vk_cmd->Handle,
         };
 
-        GraphicsQueue.Access([&](VkQueue queue) {
+        GraphicsQueue.access([&](VkQueue queue) {
             vk_cmd->End(CommandBufferType::None);
             vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
             vkQueueWaitIdle(queue);
@@ -373,10 +373,10 @@ namespace Fussion::RHI {
 
         VK_CHECK(vkCreateDevice(PhysicalDevice, &device_create_info, nullptr, &Handle))
 
-        vkGetDeviceQueue(Handle, *FamilyIndices.GraphicsFamily, 0, GraphicsQueue.UnsafePtr());
+        vkGetDeviceQueue(Handle, *FamilyIndices.GraphicsFamily, 0, GraphicsQueue.unsafe_ptr());
         vkGetDeviceQueue(Handle, *FamilyIndices.PresentFamily, 0, &PresentQueue);
 
-        if (FamilyIndices.TransferFamily.HasValue()) {
+        if (FamilyIndices.TransferFamily.has_value()) {
             LOG_INFOF("Found dedicated transfer family");
             VkQueue handle;
             vkGetDeviceQueue(Handle, *FamilyIndices.TransferFamily, 0, &handle);
@@ -387,7 +387,7 @@ namespace Fussion::RHI {
         }
 
         SetHandleName(TRANSMUTE(u64, PresentQueue), VK_OBJECT_TYPE_QUEUE, "Present Queue");
-        SetHandleName(TRANSMUTE(u64, *GraphicsQueue.UnsafePtr()), VK_OBJECT_TYPE_QUEUE, "Graphics Queue");
+        SetHandleName(TRANSMUTE(u64, *GraphicsQueue.unsafe_ptr()), VK_OBJECT_TYPE_QUEUE, "Graphics Queue");
     }
 
     // void VulkanDevice::CreateCommandPool()
@@ -461,7 +461,7 @@ namespace Fussion::RHI {
 
             VkBool32 present_support = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(device, index, Instance->Surface, &present_support);
-            if (present_support && !indices.PresentFamily.HasValue()) {
+            if (present_support && !indices.PresentFamily.has_value()) {
                 indices.PresentFamily = index;
             }
             if (indices.IsComplete()) {

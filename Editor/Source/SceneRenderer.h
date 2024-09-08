@@ -12,119 +12,119 @@ namespace Fsn = Fussion;
 // == Global Set == //
 
 struct ViewData {
-    Mat4 Perspective{};
-    Mat4 View{};
-    Vector4 Position{};
+    Mat4 perspective{};
+    Mat4 view{};
+    Vector4 position{};
 
     // Mat4 RotationView{};
     // Vector2 ScreenSize{};
 };
 
 struct DebugOptions {
-    b32 ShowCascadeBoxes;
-    b32 ShowCascadeColors;
+    b32 show_cascade_boxes;
+    b32 show_cascade_colors;
 };
 
 struct GlobalData {
-    f32 Time{};
+    f32 time{};
 };
 
 // == Scene Set == //
 
 struct SceneData {
-    Vector4 ViewPosition{};
-    Vector4 ViewDirection{};
-    Color AmbientColor{};
+    Vector4 view_position{};
+    Vector4 view_direction{};
+    Color ambient_color{};
 };
 
 struct LightData {
-    Fsn::GPUDirectionalLight::ShaderStruct DirectionalLight{};
+    Fsn::GPUDirectionalLight::ShaderStruct directional_light{};
 
-    Vector4 ShadowSplitDistances{};
+    Vector4 shadow_split_distances{};
 };
 
 // == == //
 
 struct RenderCamera {
-    Mat4 Perspective, View;
-    Vector3 Position;
-    f32 Near, Far;
-    Vector3 Direction;
+    Mat4 perspective, view;
+    Vector3 position;
+    f32 near, far;
+    Vector3 direction;
 };
 
 struct RenderPacket {
-    RenderCamera Camera;
-    Fsn::Scene* Scene = nullptr;
-    Vector2 Size{};
+    RenderCamera camera;
+    Fsn::Scene* scene = nullptr;
+    Vector2 size{};
 };
 
-constexpr s32 ShadowCascades = 4;
-constexpr s32 ShadowMapResolution = 4096;
+constexpr s32 MAX_SHADOW_CASCADES = 4;
+constexpr s32 SHADOWMAP_RESOLUTION = 4096;
 
 
 class SceneRenderer {
 public:
     struct RenderDebugOptions {
-        s32 CascadeIndex{ 0 };
-    } RenderDebugOptions;
+        s32 cascade_index{ 0 };
+    } render_debug_options;
 
-    Fussion::UniformBuffer<ViewData> SceneViewData;
-    Fussion::UniformBuffer<LightData> SceneLightData;
+    Fussion::UniformBuffer<ViewData> scene_view_data;
+    Fussion::UniformBuffer<LightData> scene_light_data;
 
-    Fussion::UniformBuffer<DebugOptions> SceneDebugOptions;
-    Fussion::UniformBuffer<GlobalData> SceneGlobalData;
+    Fussion::UniformBuffer<DebugOptions> scene_debug_options;
+    Fussion::UniformBuffer<GlobalData> scene_global_data;
 
-    Fussion::UniformBuffer<SceneData> SceneSceneData;
+    Fussion::UniformBuffer<SceneData> scene_scene_data;
 
-    void Init();
-    void Resize(Vector2 const& new_size);
+    void init();
+    void resize(Vector2 const& new_size);
 
-    void Render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
+    void render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
 
-    auto GetRenderTarget() const -> Fussion::GPU::Texture const& { return m_SceneRenderTarget; }
+    auto render_target() const -> Fussion::GPU::Texture const& { return m_scene_render_target; }
 
 private:
     struct InstanceData {
-        Mat4 Model;
+        Mat4 model;
     };
 
     struct DepthInstanceData {
-        Mat4 Model;
-        Mat4 LightSpace;
+        Mat4 model;
+        Mat4 light_space;
     };
 
-    void SetupShadowPassRenderTarget();
-    void SetupShadowPass();
-    void DepthPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
-    void PbrPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view);
+    void setup_shadow_pass_render_target();
+    void setup_shadow_pass();
+    void depth_pass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
+    void pbr_pass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
 
-    void CreateSceneRenderTarget(Vector2 const& size);
+    void create_scene_render_target(Vector2 const& size);
 
-    Fussion::HDRPipeline m_HDRPipeline{};
+    Fussion::HDRPipeline m_hdr_pipeline{};
 
-    Fussion::GPU::Texture m_SceneRenderTarget{};
-    Fussion::GPU::Texture m_SceneRenderDepthTarget{};
+    Fussion::GPU::Texture m_scene_render_target{};
+    Fussion::GPU::Texture m_scene_render_depth_target{};
 
-    Fussion::GPU::Texture m_ShadowPassRenderTarget{};
-    std::array<Fussion::GPU::TextureView, ShadowCascades> m_ShadowPassRenderTargetViews{};
+    Fussion::GPU::Texture m_shadow_pass_render_target{};
+    std::array<Fussion::GPU::TextureView, MAX_SHADOW_CASCADES> m_shadow_pass_render_target_views{};
 
-    Fussion::GPU::RenderPipeline m_SimplePipeline{}, m_GridPipeline{}, m_PbrPipeline{}, m_DepthPipeline{}, m_SkyPipeline{}, m_DebugPipeline{};
+    Fussion::GPU::RenderPipeline m_simple_pipeline{}, m_grid_pipeline{}, m_pbr_pipeline{}, m_depth_pipeline{}, m_sky_pipeline{}, m_debug_pipeline{};
 
-    Fussion::GPU::BindGroup m_GlobalBindGroup{}, m_SceneBindGroup{};
-    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout{}, m_SceneBindGroupLayout{}, m_ObjectBindGroupLayout{}, m_ObjectDepthBGL{};
+    Fussion::GPU::BindGroup m_global_bind_group{}, m_scene_bind_group{};
+    Fussion::GPU::BindGroupLayout m_global_bind_group_layout{}, m_scene_bind_group_layout{}, m_object_bind_group_layout{}, m_object_depth_bgl{};
 
-    std::vector<Fussion::GPU::Buffer> m_InstanceBufferPool{};
+    std::vector<Fussion::GPU::Buffer> m_instance_buffer_pool{};
 
-    Fussion::GPU::Buffer m_PbrInstanceBuffer{}, m_DepthInstanceBuffer{};
-    std::vector<u8> m_PbrInstanceStagingBuffer{};
-    std::vector<u8> m_DepthInstanceStagingBuffer{};
+    Fussion::GPU::Buffer m_pbr_instance_buffer{}, m_depth_instance_buffer{};
+    std::vector<u8> m_pbr_instance_staging_buffer{};
+    std::vector<u8> m_depth_instance_staging_buffer{};
 
-    Fussion::GPU::Sampler m_LinearSampler{};
-    Fussion::GPU::Sampler m_ShadowSampler{};
+    Fussion::GPU::Sampler m_linear_sampler{};
+    Fussion::GPU::Sampler m_shadow_sampler{};
 
-    Vector2 m_RenderArea{};
+    Vector2 m_render_area{};
 
-    Fsn::RenderContext m_RenderContext{};
+    Fsn::RenderContext m_render_context{};
 
-    std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease{};
+    std::vector<Fussion::GPU::BindGroup> m_object_groups_to_release{};
 };

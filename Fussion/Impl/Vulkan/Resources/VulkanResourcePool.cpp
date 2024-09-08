@@ -52,7 +52,7 @@ namespace Fussion::RHI {
 
     auto VulkanResourcePool::Allocate(Ref<ResourceLayout> layout, const std::string& name) -> Result<Ref<Resource>, AllocationError>
     {
-        auto resource = MakeRef<VulkanResource>();
+        auto resource = make_ref<VulkanResource>();
         VERIFY(resource != nullptr);
 
         auto handle = layout->GetRenderHandle<VkDescriptorSetLayout>();

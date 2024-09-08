@@ -10,12 +10,12 @@
 #pragma comment(lib, "Advapi32.lib")
 
 namespace Fussion::System {
-    bool PrefersDark()
+    bool prefers_dark()
     {
-        return !PrefersLight();
+        return !prefers_light();
     }
 
-    bool PrefersLight()
+    bool prefers_light()
     {
         // based on https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 
@@ -45,7 +45,7 @@ namespace Fussion::System {
         return i == 1;
     }
 
-    auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path
+    auto get_known_folder(KnownFolders folder) -> std::filesystem::path
     {
         GUID folder_id;
         switch (folder) {

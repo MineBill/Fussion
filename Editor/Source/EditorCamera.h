@@ -7,31 +7,31 @@
 
 class EditorCamera {
 public:
-    Vector3 Position{};
-    Vector3 EulerAngles{};
-    f32 Speed{ 1.0f };
-    f32 Near{ 0.1f }, Far{ 1000.0f };
-    f32 Fov{ 60.0f };
+    Vector3 position{};
+    Vector3 euler_angles{};
+    f32 speed{ 1.0f };
+    f32 near{ 0.1f }, far{ 1000.0f };
+    f32 fov{ 60.0f };
 
-    void OnUpdate(f32);
-    void HandleEvent(Fussion::Event& event);
+    void on_update(f32);
+    void handle_event(Fussion::Event& event);
 
-    void Resize(Vector2 const& new_size);
+    void resize(Vector2 const& new_size);
 
-    void SetFocus(bool focused);
+    void set_focus(bool focused);
 
-    auto GetPerspective() const -> Mat4 const& { return m_Perspective; }
-    auto GetView() const -> Mat4 const& { return m_View; }
-    auto GetDirection() const -> Vector3 { return m_Direction; }
+    auto perspective() const -> Mat4 const& { return m_perspective; }
+    auto view() const -> Mat4 const& { return m_view; }
+    auto direction() const -> Vector3 { return m_direction; }
 
-    auto ToRenderCamera() const -> RenderCamera;
+    auto to_render_camera() const -> RenderCamera;
 
 private:
-    Mat4 m_Perspective{ 1.0f }, m_View{ 1.0f };
+    Mat4 m_perspective{ 1.0f }, m_view{ 1.0f };
 
-    Vector2 m_ScreenSize{};
-    Vector3 m_Direction{};
-    bool m_HasFocus{ false };
-    bool m_HadFocus{ false };
-    bool m_CapturedMouse{ false };
+    Vector2 m_screen_size{};
+    Vector3 m_direction{};
+    bool m_has_focus{ false };
+    bool m_had_focus{ false };
+    bool m_captured_mouse{ false };
 };

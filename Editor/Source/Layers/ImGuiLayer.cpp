@@ -1,10 +1,7 @@
 ﻿#include "EditorPCH.h"
-#define VK_NO_PROTOTYPES
 #include "ImGuiLayer.h"
 
-#include "Fussion/RHI/Device.h"
 #include "Fussion/Core/Application.h"
-#include "Vulkan/VulkanDevice.h"
 
 #include <imgui.h>
 #include "ImGuizmo.h"
@@ -15,30 +12,25 @@
 #include "Editor.h"
 #include "EditorStyle.h"
 
-#define VK_NO_PROTOTYPES
 #include "Fussion/GPU/EnumConversions.h"
 #include "Fussion/Rendering/Renderer.h"
 
 // #include <webgpu/webgpu.h>
-// #include <vulkan/vulkan.h>
-// #include "Vulkan/VulkanImage.h"
-// #include "Vulkan/VulkanImageView.h"
-// #include "Vulkan/Common.h"
 
 
 void ImGuiLayer::LoadFonts()
 {
     auto& io = ImGui::GetIO();
-    auto& style = EditorStyle::GetStyle();
+    auto& style = EditorStyle::get_style();
     using enum EditorFont;
-    style.Fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
-    style.Fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
-    style.Fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
-    style.Fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
-    style.Fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
-    style.Fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
+    style.fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
+    style.fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
+    style.fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
+    style.fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
+    style.fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
+    style.fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
 
-    io.FontDefault = style.Fonts[RegularNormal];
+    io.FontDefault = style.fonts[RegularNormal];
 }
 
 void ImGuiLayer::Init()
@@ -58,22 +50,22 @@ void ImGuiLayer::Init()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-    auto window = CAST(GLFWwindow*, Application::Instance()->GetWindow().NativeHandle());
+    auto window = CAST(GLFWwindow*, Application::inst()->window().native_handle());
 
     ImGui_ImplGlfw_InitForOther(window, true);
 
     ImGui_ImplWGPU_InitInfo info{};
-    info.Device = Renderer::Device().As<WGPUDevice>();
-    info.RenderTargetFormat = ToWgpu(Renderer::Surface().Format);
+    info.Device = Renderer::device().as<WGPUDevice>();
+    info.RenderTargetFormat = to_wgpu(Renderer::surface().format);
     ImGui_ImplWGPU_Init(&info);
 
     SetupImGuiStyle();
     LoadFonts();
 }
 
-void ImGuiLayer::OnStart() {}
+void ImGuiLayer::on_start() {}
 
-void ImGuiLayer::OnUpdate(f32 delta)
+void ImGuiLayer::on_update(f32 delta)
 {
     (void)delta;
 }
@@ -99,8 +91,8 @@ void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
         // ImGui::SetCurrentContext(ctx);
     }
 
-    if (encoder.HasValue()) {
-        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->As<WGPURenderPassEncoder>());
+    if (encoder.has_value()) {
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->as<WGPURenderPassEncoder>());
     }
 }
 

@@ -13,11 +13,11 @@ Clock::Clock()
 #if defined(OS_WINDOWS)
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
-    m_ClockFrequency = frequency.QuadPart;
+    m_clock_frequency = frequency.QuadPart;
 
     LARGE_INTEGER integer;
     QueryPerformanceCounter(&integer);
-    m_TickCount = integer.QuadPart;
+    m_tick_count = integer.QuadPart;
     // m_TickCount = GetTickCount64();
 #elif defined(OS_LINUX)
     timespec now{};
@@ -27,16 +27,16 @@ Clock::Clock()
 #endif
 }
 
-f64 Clock::Reset()
+f64 Clock::reset()
 {
 #if defined(OS_WINDOWS)
     LARGE_INTEGER integer;
     QueryPerformanceCounter(&integer);
 
-    auto diff = integer.QuadPart - m_TickCount;
-    m_TickCount = integer.QuadPart;
+    auto diff = integer.QuadPart - m_tick_count;
+    m_tick_count = integer.QuadPart;
 
-    return CAST(f64, diff) / CAST(f64, m_ClockFrequency);
+    return CAST(f64, diff) / CAST(f64, m_clock_frequency);
 #elif defined(OS_LINUX)
     timespec ts{};
     clock_gettime(CLOCK_BOOTTIME, &ts);

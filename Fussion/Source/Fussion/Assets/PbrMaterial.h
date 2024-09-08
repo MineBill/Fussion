@@ -10,30 +10,30 @@ namespace Fussion {
     public:
         PbrMaterial();
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
-        static AssetType GetStaticType() { return AssetType::PbrMaterial; }
-        virtual AssetType GetType() const override { return GetStaticType(); }
+        static AssetType static_type() { return AssetType::PbrMaterial; }
+        virtual AssetType type() const override { return static_type(); }
 
-        Color ObjectColor{};
-        f32 Metallic{};
-        f32 Roughness{};
+        Color object_color{};
+        f32 metallic{};
+        f32 roughness{};
 
-        AssetRef<Texture2D> AlbedoMap{};
-        AssetRef<Texture2D> NormalMap{};
-        AssetRef<Texture2D> AmbientOcclusionMap{};
-        AssetRef<Texture2D> MetallicRoughnessMap{};
-        AssetRef<Texture2D> EmissiveMap{};
+        AssetRef<Texture2D> albedo_map{};
+        AssetRef<Texture2D> normal_map{};
+        AssetRef<Texture2D> ambient_occlusion_map{};
+        AssetRef<Texture2D> metallic_roughness_map{};
+        AssetRef<Texture2D> emissive_map{};
 
         struct MaterialBlock {
-            Color ObjectColor;
-            f32 Metallic;
-            f32 Roughness;
+            Color object_color;
+            f32 metallic;
+            f32 roughness;
             f32 __padding1;
             f32 __padding2;
         };
 
-        UniformBuffer<MaterialBlock> MaterialUniformBuffer;
+        UniformBuffer<MaterialBlock> material_uniform_buffer;
     };
 }

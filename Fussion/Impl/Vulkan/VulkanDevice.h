@@ -25,7 +25,7 @@ namespace Fussion::RHI {
         [[nodiscard]]
         bool IsComplete() const
         {
-            return GraphicsFamily.HasValue() && PresentFamily.HasValue() && TransferFamily.HasValue();
+            return GraphicsFamily.has_value() && PresentFamily.has_value() && TransferFamily.has_value();
         }
 
         [[nodiscard]]

@@ -33,15 +33,15 @@
 namespace Fussion {
     template<typename F>
     struct Defer {
-        explicit Defer(F f) : m_F(f) {}
-        ~Defer() { m_F(); }
+        explicit Defer(F f) : m_f(f) {}
+        ~Defer() { m_f(); }
 
     private:
-        F m_F;
+        F m_f;
     };
 
     template<typename F>
-    Defer<F> MakeDefer(F f)
+    Defer<F> make_defer(F f)
     {
         return Defer<F>(f);
     }
@@ -73,11 +73,11 @@ namespace Fussion {
      */
 
     [[noreturn]]
-    inline void Panic()
+    inline void panic()
     {
         auto trace = cpptrace::generate_trace(1, 1);
         auto frame = trace.frames[0];
-        LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
+        LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(0));
         LOG_ERRORF("   No additional information provided");
         BUILTIN_TRAP_FUNCTION();
 
@@ -86,12 +86,12 @@ namespace Fussion {
 
     template<typename... Args>
     [[noreturn]]
-    void Panic(fmt::format_string<Args...> message, Args&&... args)
+    void panic(fmt::format_string<Args...> message, Args&&... args)
     {
         auto trace = cpptrace::generate_trace(1, 1);
         if (!trace.frames.empty()) {
             auto frame = trace.frames[0];
-            LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(-1));
+            LOG_ERRORF("PANIC hit at: {}:{}", frame.filename, frame.line.value_or(0));
         } else {
             LOG_ERRORF("PANIC hit. Unable to generate trace");
 
@@ -103,14 +103,14 @@ namespace Fussion {
     }
 }
 
-#define PANIC(...) Fussion::Panic(__VA_ARGS__)
+#define PANIC(...) Fussion::panic(__VA_ARGS__)
 #define UNIMPLEMENTED PANIC("This code path is unimplemented!")
 #define UNREACHABLE PANIC("Reached unreachable code!")
 
 #define DEFER_1(x, y) x##y
 #define DEFER_2(x, y) DEFER_1(x, y)
 #define DEFER_3(x)    DEFER_2(x, __COUNTER__)
-#define defer(code)   auto DEFER_3(_defer_) = Fussion::MakeDefer([&](){code;})
+#define defer(code)   auto DEFER_3(_defer_) = Fussion::make_defer([&](){code;})
 
 #include <string_view>
 using namespace std::string_view_literals;

@@ -8,22 +8,22 @@ namespace Fussion {
     public:
         COMPONENT_DEFAULT(ScriptComponent)
 
-        virtual void OnStart() override;
-        virtual void OnUpdate(f32) override;
+        virtual void on_start() override;
+        virtual void on_update(f32) override;
 
-        virtual void OnDestroy() override;
+        virtual void on_destroy() override;
 
-        void Test() const;
+        void test() const;
 
-        std::string ClassName{};
+        std::string class_name{};
 
-        virtual auto Clone() -> Ref<Component> override;
+        virtual auto clone() -> Ref<Component> override;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     private:
-        ScriptClass* m_ScriptClass{ nullptr };
-        ScriptInstance m_Instance{};
+        ScriptClass* m_script_class{ nullptr };
+        ScriptInstance m_instance{};
     };
 }

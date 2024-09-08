@@ -8,114 +8,114 @@
 #include "Math/Color.h"
 
 namespace Fussion {
-    void Serializer::Write(std::string_view name, Vector2 const& value)
+    void Serializer::write(std::string_view name, Vector2 const& value)
     {
-        BeginObject(name, 2);
-        Write("X", value.X);
-        Write("Y", value.Y);
-        EndObject();
+        begin_object(name, 2);
+        write("x", value.x);
+        write("y", value.y);
+        end_object();
     }
 
-    void Serializer::Write(std::string_view name, Vector3 const& value)
+    void Serializer::write(std::string_view name, Vector3 const& value)
     {
-        BeginObject(name, 3);
-        Write("X", value.X);
-        Write("Y", value.Y);
-        Write("Z", value.Z);
-        EndObject();
+        begin_object(name, 3);
+        write("x", value.x);
+        write("y", value.y);
+        write("z", value.z);
+        end_object();
     }
 
-    void Serializer::Write(std::string_view name, Vector4 const& value)
+    void Serializer::write(std::string_view name, Vector4 const& value)
     {
-        BeginObject(name, 4);
-        Write("X", value.X);
-        Write("Y", value.Y);
-        Write("Z", value.Z);
-        Write("W", value.W);
-        EndObject();
+        begin_object(name, 4);
+        write("x", value.x);
+        write("y", value.y);
+        write("z", value.z);
+        write("w", value.w);
+        end_object();
     }
 
-    void Serializer::Write(std::string_view name, Color const& value)
+    void Serializer::write(std::string_view name, Color const& value)
     {
-        BeginObject(name, 4);
-        Write("R", value.R);
-        Write("G", value.G);
-        Write("B", value.B);
-        Write("A", value.A);
-        EndObject();
+        begin_object(name, 4);
+        write("r", value.r);
+        write("g", value.g);
+        write("b", value.b);
+        write("a", value.a);
+        end_object();
     }
 
-    void Serializer::Write(std::string_view name, Uuid const& value)
+    void Serializer::write(std::string_view name, Uuid const& value)
     {
-        Write(name, CAST(u64, value));
+        write(name, CAST(u64, value));
     }
 
-    void Serializer::Write(std::string_view name, std::string const& value)
+    void Serializer::write(std::string_view name, std::string const& value)
     {
-        Write(name, std::string_view(value));
+        write(name, std::string_view(value));
     }
 
-    void Serializer::Write(std::string_view name, std::filesystem::path const& path)
+    void Serializer::write(std::string_view name, std::filesystem::path const& path)
     {
-        Write(name, path.string());
+        write(name, path.string());
     }
 
-    void Deserializer::Read(std::string_view name, Vector2& value)
+    void Deserializer::read(std::string_view name, Vector2& value)
     {
         size_t size;
-        if (BeginObject(name, size)) {
-            Read("X", value.X);
-            Read("Y", value.Y);
-            EndObject();
+        if (begin_object(name, size)) {
+            read("x", value.x);
+            read("y", value.y);
+            end_object();
         }
     }
 
-    void Deserializer::Read(std::string_view name, Vector3& value)
+    void Deserializer::read(std::string_view name, Vector3& value)
     {
         size_t size;
-        if (BeginObject(name, size)) {
-            Read("X", value.X);
-            Read("Y", value.Y);
-            Read("Z", value.Z);
-            EndObject();
+        if (begin_object(name, size)) {
+            read("x", value.x);
+            read("y", value.y);
+            read("z", value.z);
+            end_object();
         }
     }
 
-    void Deserializer::Read(std::string_view name, Vector4& value)
+    void Deserializer::read(std::string_view name, Vector4& value)
     {
         size_t size;
-        if (BeginObject(name, size)) {
-            Read("X", value.X);
-            Read("Y", value.Y);
-            Read("Z", value.Z);
-            Read("W", value.W);
-            EndObject();
+        if (begin_object(name, size)) {
+            read("x", value.x);
+            read("y", value.y);
+            read("z", value.z);
+            read("w", value.w);
+            end_object();
         }
     }
 
-    void Deserializer::Read(std::string_view name, Color& value)
+    void Deserializer::read(std::string_view name, Color& value)
     {
         size_t size;
-        if (BeginObject(name, size)) {
-            Read("R", value.R);
-            Read("G", value.G);
-            Read("B", value.B);
-            Read("A", value.A);
-            EndObject();
+        if (begin_object(name, size)) {
+            read("r", value.r);
+            read("g", value.g);
+            read("b", value.b);
+            read("a", value.a);
+            end_object();
         }
     }
 
-    void Deserializer::Read(std::string_view name, Uuid& value)
+    void Deserializer::read(std::string_view name, Uuid& value)
     {
         u64 id;
-        Read(name, id);
+        read(name, id);
         value = Uuid(id);
     }
 
-    void Deserializer::Read(std::string_view name, std::filesystem::path& p)
+    void Deserializer::read(std::string_view name, std::filesystem::path& p)
     {
         std::string s;
-        Read(name, s);
+        read(name, s);
         p = s;
     }
 }

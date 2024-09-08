@@ -4,37 +4,37 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void ScriptComponent::OnStart()
+    void ScriptComponent::on_start()
     {
-        if (auto klass = ScriptingEngine::Get().GetGameAssembly()->GetClass(ClassName); klass) {
-            if (klass.Value()->DerivesFrom("Script")) {
-                m_Instance = klass.Value()->CreateInstance();
+        if (auto klass = ScriptingEngine::inst().get_game_assembly()->get_class(class_name); klass) {
+            if (klass.value()->derives_from("Script")) {
+                m_instance = klass.value()->create_instance();
 
-                if (m_Instance.IsValid()) {
-                    m_Instance.SetProperty("m_Owner", m_Owner);
+                if (m_instance.is_valid()) {
+                    m_instance.set_property("m_Owner", m_owner);
 
-                    m_Instance.CallMethod("OnStart");
+                    m_instance.call_method("OnStart");
                 }
             }
         }
     }
 
-    void ScriptComponent::OnUpdate(f32 delta)
+    void ScriptComponent::on_update(f32 delta)
     {
-        if (m_Instance.IsValid()) {
-            m_Instance.CallMethod("OnUpdate", delta);
+        if (m_instance.is_valid()) {
+            m_instance.call_method("OnUpdate", delta);
         }
     }
 
-    void ScriptComponent::OnDestroy() {}
+    void ScriptComponent::on_destroy() {}
 
-    void ScriptComponent::Test() const
+    void ScriptComponent::test() const
     {
-        if (auto klass = ScriptingEngine::Get().GetGameAssembly()->GetClass(ClassName); klass) {
-            if (klass.Value()->DerivesFrom("Script")) {
-                if (auto inst = klass.Value()->CreateInstance(); inst.IsValid()) {
-                    inst.SetProperty("m_Owner", m_Owner);
-                    inst.CallMethod("OnStart");
+        if (auto klass = ScriptingEngine::inst().get_game_assembly()->get_class(class_name); klass) {
+            if (klass.value()->derives_from("Script")) {
+                if (auto inst = klass.value()->create_instance(); inst.is_valid()) {
+                    inst.set_property("m_Owner", m_owner);
+                    inst.call_method("OnStart");
                 } else {
                     LOG_WARNF("Instance not valid");
                 }
@@ -42,26 +42,26 @@ namespace Fussion {
                 LOG_DEBUGF("Script does not derive from ScriptBase");
             }
         } else {
-            LOG_WARNF("Class '{}' not found", ClassName);
+            LOG_WARNF("Class '{}' not found", class_name);
         }
     }
 
-    Ref<Component> ScriptComponent::Clone()
+    Ref<Component> ScriptComponent::clone()
     {
-        auto script = MakeRef<ScriptComponent>();
-        script->ClassName = ClassName;
+        auto script = make_ref<ScriptComponent>();
+        script->class_name = class_name;
         return script;
     }
 
-    void ScriptComponent::Serialize(Serializer& ctx) const
+    void ScriptComponent::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(ClassName);
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(class_name);
     }
 
-    void ScriptComponent::Deserialize(Deserializer& ctx)
+    void ScriptComponent::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(ClassName);
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(class_name);
     }
 }

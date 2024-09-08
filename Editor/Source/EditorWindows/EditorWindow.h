@@ -7,47 +7,47 @@ class Editor;
 class EditorWindow {
 public:
     EditorWindow() = default;
-    explicit EditorWindow(Editor* editor): m_Editor{ editor } {}
+    explicit EditorWindow(Editor* editor): m_editor{ editor } {}
     virtual ~EditorWindow() = default;
 
-    virtual void OnStart() {}
-    virtual void OnDraw() = 0;
-    virtual void OnEvent([[maybe_unused]] Fussion::Event& event) {}
+    virtual void on_start() {}
+    virtual void on_draw() = 0;
+    virtual void on_event([[maybe_unused]] Fussion::Event& event) {}
 
     /// Returns if the current window is focused or not, whatever that means for the
     /// current window.
     [[nodiscard]]
-    bool IsFocused() const { return m_IsFocused; }
+    bool is_focused() const { return m_is_focused; }
 
     /// Hide this editor window.
-    void Hide()
+    void hide()
     {
-        m_IsVisible = false;
+        m_is_visible = false;
     }
 
     /// Show this editor window.
-    void Show()
+    void show()
     {
-        m_IsVisible = true;
+        m_is_visible = true;
     }
 
-    void Toggle()
+    void toggle()
     {
-        if (m_IsVisible) {
-            Hide();
+        if (m_is_visible) {
+            hide();
         } else {
-            Show();
+            show();
         }
     }
 
     /// Returns if this editor window is visible or not.
     [[nodiscard]]
-    bool IsVisible() const { return m_IsVisible; }
+    bool is_visible() const { return m_is_visible; }
 
 protected:
-    Editor* m_Editor{};
-    bool m_IsFocused{ false };
-    bool m_IsVisible{ true };
+    Editor* m_editor{};
+    bool m_is_focused{ false };
+    bool m_is_visible{ true };
 };
 
 #define EDITOR_WINDOW(TheName) \

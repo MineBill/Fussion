@@ -7,36 +7,24 @@
 
 namespace Fussion {
     class MeshRenderer final : public Component {
-        struct DepthPushConstantData {
-            Mat4 Model;
-            Mat4 LightSpace;
-        } m_DepthPushData;
-
-        struct ObjectPickingConstantData {
-            Mat4 Model;
-            s32 LocalID;
-        } m_ObjectPickingPushData;
-
     public:
         COMPONENT_DEFAULT(MeshRenderer)
 
-        virtual void OnStart() override;
-        virtual void OnUpdate(f32 delta) override;
-        virtual void OnDraw(RenderContext& ctx) override;
+        virtual void on_start() override;
+        virtual void on_update(f32 delta) override;
+        virtual void on_draw(RenderContext& ctx) override;
 
 #if FSN_DEBUG_DRAW
-        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
 
-        AssetRef<Model> Model;
+        AssetRef<Model> model;
 
-        std::vector<AssetRef<PbrMaterial>> Materials{};
+        std::vector<AssetRef<PbrMaterial>> materials{};
 
-        virtual auto Clone() -> Ref<Component> override;
+        virtual auto clone() -> Ref<Component> override;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
-
-    private:
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 }

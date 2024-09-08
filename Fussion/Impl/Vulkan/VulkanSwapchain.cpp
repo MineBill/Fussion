@@ -72,7 +72,7 @@ namespace Fussion::RHI {
             .pImageIndices = &image,
         };
 
-        device->GraphicsQueue.Access([&](VkQueue queue) {
+        device->GraphicsQueue.access([&](VkQueue queue) {
             (void)queue;
             VK_CHECK(vkQueuePresentKHR(device->PresentQueue, &present_info))
             m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -104,7 +104,7 @@ namespace Fussion::RHI {
             .pSignalSemaphores = signal_semaphores,
         };
 
-        device->GraphicsQueue.Access([&](VkQueue queue) {
+        device->GraphicsQueue.access([&](VkQueue queue) {
             VK_CHECK(vkQueueSubmit(queue, 1, &submit_info, m_InFlightFences[m_CurrentFrame]))
         });
     }
@@ -170,8 +170,8 @@ namespace Fussion::RHI {
             .imageFormat = ImageFormatToVulkan(m_Specification.Format),
             .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
             .imageExtent = VkExtent2D{
-                .width = CAST(u32, m_Specification.Size.X),
-                .height = CAST(u32, m_Specification.Size.Y),
+                .width = CAST(u32, m_Specification.Size.x),
+                .height = CAST(u32, m_Specification.Size.y),
             },
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
@@ -189,8 +189,8 @@ namespace Fussion::RHI {
 
         auto depth_spec = ImageSpecification{
             .Label = "Swapchain Depth Image",
-            .Width = CAST(s32, m_Specification.Size.X),
-            .Height = CAST(s32, m_Specification.Size.Y),
+            .Width = CAST(s32, m_Specification.Size.x),
+            .Height = CAST(s32, m_Specification.Size.y),
             .Samples = 1,
             .Format = ImageFormat::D32_SFLOAT,
             .Usage = ImageUsage::DepthStencilAttachment,
@@ -223,8 +223,8 @@ namespace Fussion::RHI {
         for (u32 i = 0; i < image_count; i++) {
             auto spec = ImageSpecification{
                 .Label = "Swapchain Image",
-                .Width = CAST(s32, m_Specification.Size.X),
-                .Height = CAST(s32, m_Specification.Size.Y),
+                .Width = CAST(s32, m_Specification.Size.x),
+                .Height = CAST(s32, m_Specification.Size.y),
                 .Samples = 1,
                 .Format = m_Specification.Format,
                 .Usage = ImageUsage::ColorAttachment | ImageUsage::TransferDst,
@@ -241,8 +241,8 @@ namespace Fussion::RHI {
 
         for (const auto& image : m_Images) {
             const auto spec = FrameBufferSpecification{
-                .Width = CAST(s32, m_Specification.Size.X),
-                .Height = CAST(s32, m_Specification.Size.Y),
+                .Width = CAST(s32, m_Specification.Size.x),
+                .Height = CAST(s32, m_Specification.Size.y),
             };
 
             const std::vector<Ref<Image>> images = {

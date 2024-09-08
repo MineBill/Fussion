@@ -9,65 +9,65 @@ namespace Fussion {
     public:
         virtual ~Application();
 
-        virtual void OnStart()
+        virtual void on_start()
         {
-            for (auto const& layer : m_Layers) {
-                layer->OnStart();
+            for (auto const& layer : m_layers) {
+                layer->on_start();
             }
         }
 
-        virtual void OnUpdate(f32 delta)
+        virtual void on_update(f32 delta)
         {
-            for (auto const& layer : m_Layers) {
-                layer->OnUpdate(delta);
+            for (auto const& layer : m_layers) {
+                layer->on_update(delta);
             }
         }
 
-        virtual void OnEvent(Event& event)
+        virtual void on_event(Event& event)
         {
-            for (auto const& layer : m_Layers) {
-                if (event.Handled) {
+            for (auto const& layer : m_layers) {
+                if (event.handled) {
                     break;
                 }
-                layer->OnEvent(event);
+                layer->on_event(event);
             }
         }
 
-        virtual void OnLogReceived(
+        virtual void on_log_received(
             LogLevel level,
             std::string_view message,
             std::source_location const& loc)
         {
-            for (auto const& layer : m_Layers) {
-                layer->OnLogReceived(level, message, loc);
+            for (auto const& layer : m_layers) {
+                layer->on_log_received(level, message, loc);
             }
         }
 
-        Window& GetWindow() const { return *m_Window.get(); }
-        static Application* Instance() { return s_Instance; }
+        Window& window() const { return *m_window.get(); }
+        static Application* inst() { return s_instance; }
 
-        void Run();
+        void run();
 
-        Layer* PushLayer(Ptr<Layer> layer);
+        Layer* push_layer(Ptr<Layer> layer);
 
         template<std::derived_from<Layer> T>
-        T* PushLayer()
+        T* push_layer()
         {
-            auto layer = MakePtr<T>();
-            return dynamic_cast<T*>(PushLayer(std::move(layer)));
+            auto layer = make_ptr<T>();
+            return dynamic_cast<T*>(push_layer(std::move(layer)));
         }
 
-        void PopLayer();
+        void pop_layer();
 
-        void Quit();
+        void quit();
 
     protected:
-        std::vector<Ptr<Layer>> m_Layers{};
-        Ptr<Window> m_Window{};
-        bool m_Quit{ false };
+        std::vector<Ptr<Layer>> m_layers{};
+        Ptr<Window> m_window{};
+        bool m_quit{ false };
 
     private:
-        static Application* s_Instance;
+        static Application* s_instance;
     };
 }
 

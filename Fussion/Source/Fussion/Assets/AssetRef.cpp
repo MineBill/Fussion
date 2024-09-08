@@ -3,36 +3,36 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    bool AssetRefBase::IsLoaded() const
+    bool AssetRefBase::is_loaded() const
     {
-        return AssetManager::IsAssetLoaded(m_Handle);
+        return AssetManager::is_asset_loaded(m_handle);
     }
 
-    bool AssetRefBase::IsVirtual() const
+    bool AssetRefBase::is_virtual() const
     {
-        return AssetManager::IsAssetVirtual(m_Handle);
+        return AssetManager::is_asset_virtual(m_handle);
     }
 
-    void AssetRefBase::WaitUntilLoaded() const
+    void AssetRefBase::wait_until_loaded() const
     {
         // Call once to trigger a load.
-        (void)GetRaw(GetType());
+        (void)get_raw(type());
         // TODO: Fishy
-        while (!IsLoaded()) {}
+        while (!is_loaded()) {}
     }
 
-    void AssetRefBase::Serialize(Serializer& ctx) const
+    void AssetRefBase::serialize(Serializer& ctx) const
     {
-        FSN_SERIALIZE_MEMBER(m_Handle);
+        FSN_SERIALIZE_MEMBER(m_handle);
     }
 
-    void AssetRefBase::Deserialize(Deserializer& ctx)
+    void AssetRefBase::deserialize(Deserializer& ctx)
     {
-        FSN_DESERIALIZE_MEMBER(m_Handle);
+        FSN_DESERIALIZE_MEMBER(m_handle);
     }
 
-    Asset* AssetRefBase::GetRaw(AssetType type) const
+    Asset* AssetRefBase::get_raw(AssetType type) const
     {
-        return AssetManager::GetAsset(m_Handle, type);
+        return AssetManager::get_asset(m_handle, type);
     }
 }

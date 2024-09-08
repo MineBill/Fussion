@@ -13,23 +13,23 @@ class SceneSerializer;
 
 namespace Fussion {
 
-    struct Transform : ISerializable {
+    struct Transform final : ISerializable {
 
-        Vector3 Position{};
-        Vector3 EulerAngles{};
-        Vector3 Scale = Vector3(1, 1, 1);
-
-        [[nodiscard]]
-        Mat4 GetMatrix() const;
+        Vector3 position{};
+        Vector3 euler_angles{};
+        Vector3 scale = Vector3(1, 1, 1);
 
         [[nodiscard]]
-        Mat4 GetCameraMatrix() const;
+        Mat4 matrix() const;
 
         [[nodiscard]]
-        Vector3 GetForward() const;
+        Mat4 camera_matrix() const;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        [[nodiscard]]
+        Vector3 forward() const;
+
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 
     class ReflRegistrar;
@@ -41,11 +41,11 @@ namespace Fussion {
         friend ReflRegistrar;
 
     public:
-        Transform Transform;
-        std::string Name{ "Entity" };
+        Transform transform;
+        std::string name{ "Entity" };
 
         Entity() = default;
-        Entity(EntityHandle handle, Scene* scene): m_Handle(CAST(u64, handle)), m_Scene(scene) {}
+        Entity(EntityHandle handle, Scene* scene): m_handle(CAST(u64, handle)), m_scene(scene) {}
         virtual ~Entity() override = default;
 
         Entity(Entity const& other);
@@ -53,95 +53,95 @@ namespace Fussion {
         Entity& operator=(Entity const& other);
         Entity& operator=(Entity&& other) noexcept;
 
-        void SetParent(Entity const& new_parent);
-        auto GetParent() const -> Entity*;
-        void AddChild(Entity& other);
+        void set_parent(Entity const& new_parent);
+        auto parent() const -> Entity*;
+        void add_child(Entity& other);
 
-        auto GetWorldMatrix() const -> Mat4;
-        auto GetLocalMatrix() const -> Mat4;
+        auto world_matrix() const -> Mat4;
+        auto local_matrix() const -> Mat4;
 
-        void SetEnabled(bool enabled);
-        bool IsEnabled() const;
-        bool* GetEnabled() { return &m_Enabled; }
+        void set_enabled(bool enabled);
+        bool is_enabled() const;
+        bool* set_enabled() { return &m_enabled; }
 
-        auto AddComponent(Ref<Component> const& component) -> Ref<Component>;
-        auto AddComponent(meta_hpp::class_type type) -> Ref<Component>;
+        auto add_component(Ref<Component> const& component) -> Ref<Component>;
+        auto add_component(meta_hpp::class_type type) -> Ref<Component>;
         [[nodiscard]]
-        auto HasComponent(meta_hpp::class_type type) const -> bool;
+        auto has_component(meta_hpp::class_type type) const -> bool;
         [[nodiscard]]
-        auto GetComponent(meta_hpp::class_type type) -> Ref<Component>;
-        void RemoveComponent(meta_hpp::class_type type);
+        auto get_component(meta_hpp::class_type type) -> Ref<Component>;
+        void remove_component(meta_hpp::class_type type);
 
         template<std::derived_from<Component> C>
-        auto AddComponent() -> Ref<C>
+        auto add_component() -> Ref<C>
         {
-            return std::dynamic_pointer_cast<C>(AddComponent(meta_hpp::resolve_type<C>()));
+            return std::dynamic_pointer_cast<C>(add_component(meta_hpp::resolve_type<C>()));
         }
 
         template<std::derived_from<Component> C>
         [[nodiscard]]
-        auto HasComponent() const -> bool
+        auto has_component() const -> bool
         {
-            return m_Components.contains(EntityHandle(meta_hpp::resolve_type<C>().get_hash()));
+            return m_components.contains(EntityHandle(meta_hpp::resolve_type<C>().get_hash()));
         }
 
         template<std::derived_from<Component> C>
         [[nodiscard]]
-        auto GetComponent() -> Ref<C>
+        auto get_component() -> Ref<C>
         {
-            return std::dynamic_pointer_cast<C>(GetComponent(meta_hpp::resolve_type<C>()));
+            return std::dynamic_pointer_cast<C>(get_component(meta_hpp::resolve_type<C>()));
         }
 
         template<std::derived_from<Component> C>
-        void RemoveComponent()
+        void remove_component()
         {
-            RemoveComponent(meta_hpp::resolve_type<C>());
+            remove_component(meta_hpp::resolve_type<C>());
         }
 
         [[nodiscard]]
-        auto GetHandle() const -> EntityHandle { return m_Handle; }
+        auto handle() const -> EntityHandle { return m_handle; }
 
         /// Returns the local id of the entity for the scene it is currently in.
         [[nodiscard]]
-        auto GetSceneLocalID() const -> s32 { return m_LocalID; }
+        auto scene_local_id() const -> s32 { return m_local_id; }
 
         [[nodiscard]]
-        auto GetComponents() const -> std::map<EntityHandle, Ref<Component>> const& { return m_Components; }
+        auto get_components() const -> std::map<EntityHandle, Ref<Component>> const& { return m_components; }
 
         [[nodiscard]]
-        auto GetChildren() const -> std::vector<EntityHandle> const& { return m_Children; }
+        auto children() const -> std::vector<EntityHandle> const& { return m_children; }
 
-        void OnDraw(RenderContext& context);
+        void on_draw(RenderContext& context);
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     private:
-        void OnStart();
-        void OnUpdate(f32 delta);
+        void on_start();
+        void on_update(f32 delta);
 
-        void Tick();
+        void tick();
 
 #if FSN_DEBUG_DRAW
-        void OnDebugDraw(DebugDrawContext& ctx);
+        void on_debug_draw(DebugDrawContext& ctx);
 #endif
 
-        void OnDestroy();
+        void on_destroy();
 
-        bool IsGrandchild(EntityHandle handle) const;
-        void AddChildInternal(Entity const& child);
-        void RemoveChildInternal(Entity const& child);
+        bool is_grandchild(EntityHandle handle) const;
+        void add_child_internal(Entity const& child);
+        void remove_child_internal(Entity const& child);
 
-        EntityHandle m_Parent;
-        std::vector<EntityHandle> m_Children{};
+        EntityHandle m_parent;
+        std::vector<EntityHandle> m_children{};
 
-        std::map<EntityHandle, Ref<Component>> m_Components;
-        std::vector<EntityHandle> m_RemovedComponents{};
+        std::map<EntityHandle, Ref<Component>> m_components;
+        std::vector<EntityHandle> m_removed_components{};
 
-        EntityHandle m_Handle;
-        Scene* m_Scene{};
-        s32 m_LocalID{};
+        EntityHandle m_handle;
+        Scene* m_scene{};
+        s32 m_local_id{};
 
-        bool m_Enabled{ true };
+        bool m_enabled{ true };
     };
 }

@@ -13,39 +13,39 @@
 #include <imgui.h>
 #include <tracy/Tracy.hpp>
 
-void SceneTreeWindow::OnDraw()
+void SceneTreeWindow::on_draw()
 {
     ZoneScoped;
     ImGuiWindowFlags flags{};
 
-    if (auto& scene = Editor::GetActiveScene()) {
-        if (scene->IsDirty()) {
+    if (auto& scene = Editor::active_scene()) {
+        if (scene->is_dirty()) {
             flags |= ImGuiWindowFlags_UnsavedDocument;
         }
     }
 
-    EUI::Window("Scene Entities", [this] {
-        m_IsFocused = ImGui::IsWindowFocused();
+    EUI::window("Scene Entities", [this] {
+        m_is_focused = ImGui::IsWindowFocused();
 
-        if (auto& scene = Editor::GetActiveScene()) {
+        if (auto& scene = Editor::active_scene()) {
             if (ImGui::BeginPopupContextWindow()) {
                 if (ImGui::BeginMenu("New")) {
                     if (ImGui::MenuItem("Empty Entity")) {
-                        auto entity = scene->CreateEntity();
-                        entity->Name = "New Entity";
+                        auto entity = scene->create_entity();
+                        entity->name = "New Entity";
                     }
                     ImGui::Separator();
                     if (ImGui::MenuItem("Directional Light")) {
-                        auto entity = scene->CreateEntity();
-                        entity->Name = "Directional Light";
-                        entity->AddComponent<Fussion::DirectionalLight>();
-                        entity->Transform.EulerAngles.X = 45.0f;
+                        auto entity = scene->create_entity();
+                        entity->name = "Directional Light";
+                        entity->add_component<Fussion::DirectionalLight>();
+                        entity->transform.euler_angles.x = 45.0f;
                     }
                     if (ImGui::MenuItem("Camera")) {
-                        auto entity = scene->CreateEntity();
-                        entity->Name = "Camera";
-                        entity->AddComponent<Fussion::Camera>();
-                        entity->Transform.EulerAngles.X = 45.0f;
+                        auto entity = scene->create_entity();
+                        entity->name = "Camera";
+                        entity->add_component<Fussion::Camera>();
+                        entity->transform.euler_angles.x = 45.0f;
                     }
                     ImGui::EndMenu();
                 }
@@ -56,20 +56,20 @@ void SceneTreeWindow::OnDraw()
             // TODO: Is there a way to prevent the copy here?
             // NOTE: We copy here because the children vector might get
             //       modified if we duplicate an entity.
-            auto children = scene->GetRoot().GetChildren();
+            auto children = scene->root().children();
             for (auto child : children) {
-                DrawEntityHierarchy(child);
+                draw_entity_hierarchy(child);
             }
         } else {
             ImGui::TextUnformatted("No scene loaded");
         }
-    }, { .Flags = flags });
+    }, { .flags = flags });
 }
 
-void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
+void SceneTreeWindow::draw_entity_hierarchy(Fsn::Uuid handle)
 {
-    auto& scene = Editor::GetActiveScene();
-    auto entity = scene->GetEntity(handle);
+    auto& scene = Editor::active_scene();
+    auto entity = scene->get_entity(handle);
 
     ImGuiTreeNodeFlags flags =
         ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -77,27 +77,27 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         ImGuiTreeNodeFlags_OpenOnDoubleClick |
         ImGuiTreeNodeFlags_OpenOnArrow;
 
-    if (entity->GetChildren().empty()) {
+    if (entity->children().empty()) {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
-    if (m_Selection.contains(handle)) {
+    if (m_selection.contains(handle)) {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
 
     ImGui::PushID(CAST(s32, CAST(u64, handle)));
     defer(ImGui::PopID());
 
-    auto opened = ImGuiH::TreeNode(entity->Name, EditorStyle::GetStyle().EditorIcons[EditorIcon::Entity]->GetImage().View, flags);
+    auto opened = ImGuiH::TreeNode(entity->name, EditorStyle::get_style().editor_icons[EditorIcon::Entity]->image().view, flags);
 
     if (ImGui::IsItemClicked()) {
-        SelectEntity(entity->GetHandle(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        select_entity(entity->handle(), Fussion::Input::is_key_up(Fussion::Keys::LeftControl));
     }
 
     if (ImGui::BeginPopupContextItem()) {
-        SelectEntity(entity->GetHandle(), Fussion::Input::IsKeyUp(Fussion::Keys::LeftControl));
+        select_entity(entity->handle(), Fussion::Input::is_key_up(Fussion::Keys::LeftControl));
         if (ImGui::BeginMenu("New")) {
             if (ImGui::MenuItem("Entity")) {
-                (void)scene->CreateEntity("Entity", handle);
+                (void)scene->create_entity("Entity", handle);
             }
             ImGui::EndMenu();
         }
@@ -105,33 +105,33 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         ImGui::Separator();
 
         if (ImGui::MenuItem("Duplicate")) {
-            auto new_handle = scene->CloneEntity(handle);
+            auto new_handle = scene->clone_entity(handle);
             if (new_handle != Fussion::EntityHandle::Invalid) {
-                auto* new_entity = scene->GetEntity(new_handle);
-                new_entity->Name += " (Clone)";
+                auto* new_entity = scene->get_entity(new_handle);
+                new_entity->name += " (Clone)";
             }
         }
 
         if (ImGui::MenuItem("Parent to Scene")) {
-            entity->SetParent(scene->GetRoot());
+            entity->set_parent(scene->root());
         }
 
         if (ImGui::MenuItem("Align camera to object")) {
-            Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;
-            Editor::GetCamera().Position = entity->Transform.Position;
+            Editor::camera().euler_angles = entity->transform.euler_angles;
+            Editor::camera().position = entity->transform.position;
         }
 
         if (ImGui::MenuItem("Align object to camera")) {
-            entity->Transform.EulerAngles = Editor::GetCamera().EulerAngles;
-            entity->Transform.Position = Editor::GetCamera().Position;
+            entity->transform.euler_angles = Editor::camera().euler_angles;
+            entity->transform.position = Editor::camera().position;
         }
 
         ImGui::Separator();
 
         ImGui::PushStyleColor(ImGuiCol_Text, Color::Red);
         if (ImGui::MenuItem("Destroy")) {
-            m_Selection.erase(entity->GetHandle());
-            scene->Destroy(*entity);
+            m_selection.erase(entity->handle());
+            scene->destroy(*entity);
         }
         ImGui::PopStyleColor();
         ImGui::EndPopup();
@@ -146,8 +146,8 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
     if (ImGui::BeginDragDropTarget()) {
         if (auto const payload = ImGui::AcceptDragDropPayload("SCENE_TREE_NODE"); payload != nullptr) {
             Fsn::Uuid const source_handle = *CAST(Fsn::Uuid*, payload->Data);
-            auto const source = scene->GetEntity(source_handle);
-            source->SetParent(*entity);
+            auto const source = scene->get_entity(source_handle);
+            source->set_parent(*entity);
         }
         ImGui::EndDragDropTarget();
     }
@@ -156,18 +156,18 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         // TODO: Is there a way to prevent the copy here?
         // NOTE: We copy here because the children vector might get
         //       modified if we duplicate an entity.
-        auto children = entity->GetChildren();
-        for (auto child : entity->GetChildren()) {
-            DrawEntityHierarchy(child);
+        auto children = entity->children();
+        for (auto child : entity->children()) {
+            draw_entity_hierarchy(child);
         }
         ImGui::TreePop();
     }
 }
 
-void SceneTreeWindow::SelectEntity(Fussion::Uuid entity, bool clear)
+void SceneTreeWindow::select_entity(Fussion::Uuid entity, bool clear)
 {
     if (clear) {
-        m_Selection.clear();
+        m_selection.clear();
     }
-    m_Selection[entity] = {};
+    m_selection[entity] = {};
 }

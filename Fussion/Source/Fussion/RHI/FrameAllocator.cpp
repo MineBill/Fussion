@@ -26,21 +26,21 @@ namespace Fussion::RHI {
         }
 
         auto result = m_CurrentFramePools[m_CurrentFrame]->Allocate(layout, name);
-        if (result.IsError()) {
+        if (result.is_error()) {
             using enum ResourcePool::AllocationError;
 
-            if (auto err = result.Error();
+            if (auto err = result.error();
                 err == FragmentedPool || err == OutOfMemory) {
                 auto pool = GetAvailablePool(DEFAULT_MAX_RESOURCES);
                 m_CurrentFramePools[m_CurrentFrame] = pool;
                 m_UsedPools[m_CurrentFrame].push_back(pool);
 
                 auto new_result = pool->Allocate(layout);
-                VERIFY(new_result.IsValue());
-                return new_result.Value();
+                VERIFY(new_result.is_value());
+                return new_result.value();
             }
         }
-        return result.Value();
+        return result.value();
     }
 
     void FrameAllocator::Reset()

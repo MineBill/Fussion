@@ -4,78 +4,76 @@
 #include "Debug/Debug.h"
 #include "Scene/Entity.h"
 #include "Serialization/Serializer.h"
-#include "RHI/Device.h"
-#include "RHI/FrameAllocator.h"
 #include "Rendering/Renderer.h"
 
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    void MeshRenderer::OnStart() {}
+    void MeshRenderer::on_start() {}
 
-    void MeshRenderer::OnUpdate([[maybe_unused]] f32 delta) {}
+    void MeshRenderer::on_update([[maybe_unused]] f32 delta) {}
 
-    void MeshRenderer::OnDraw(RenderContext& ctx)
+    void MeshRenderer::on_draw(RenderContext& ctx)
     {
         ZoneScoped;
-        if (!m_Owner->IsEnabled())
+        if (!m_owner->is_enabled())
             return;
-        auto model = Model.Get();
-        if (model == nullptr)
+        auto m = model.get();
+        if (m == nullptr)
             return;
 
-        Materials.resize(model->Meshes.size());
-        for (auto& mesh : model->Meshes) {
+        materials.resize(m->meshes.size());
+        for (auto& mesh : m->meshes) {
             PbrMaterial* material = nullptr;
-            if (mesh.MaterialIndex != -1) {
-                material = Materials.at(mesh.MaterialIndex).Get();
+            if (mesh.material_index != -1) {
+                material = materials.at(mesh.material_index).get();
             } else {
-                if (!Materials.empty()) {
-                    material = Materials.at(0).Get();
+                if (!materials.empty()) {
+                    material = materials.at(0).get();
                 }
             }
             if (material == nullptr) {
-                material = Renderer::GetDefaultMaterial().Get();
+                material = Renderer::default_material().get();
             }
 
             RenderObject obj;
-            obj.Material = material;
-            obj.Position = m_Owner->Transform.Position;
-            obj.WorldMatrix = translate(m_Owner->GetWorldMatrix(), CAST(glm::vec3, mesh.Offset));
-            obj.VertexBuffer = mesh.VertexBuffer;
-            obj.IndexBuffer = mesh.IndexBuffer;
-            obj.IndexCount = mesh.IndexCount;
-            obj.InstanceBuffer = mesh.InstanceBuffer;
-            obj.Pass = DrawPass::All;
+            obj.material = material;
+            obj.position = m_owner->transform.position;
+            obj.world_matrix = translate(m_owner->world_matrix(), CAST(glm::vec3, mesh.offset));
+            obj.vertex_buffer = mesh.vertex_buffer;
+            obj.index_buffer = mesh.index_buffer;
+            obj.index_count = mesh.index_count;
+            obj.instance_buffer = mesh.instance_buffer;
+            obj.pass = DrawPass::All;
 
-            ctx.AddRenderObject(obj);
+            ctx.add_render_object(obj);
         }
     }
 
-    void MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
+    void MeshRenderer::on_debug_draw(DebugDrawContext& ctx)
     {
-        if (!m_Owner->IsEnabled())
+        if (!m_owner->is_enabled())
             return;
-        auto draw_normals = ctx.Flags.Test(DebugDrawFlag::DrawMeshNormals);
-        auto draw_tangents = ctx.Flags.Test(DebugDrawFlag::DrawMeshTangents);
+        auto draw_normals = ctx.flags.test(DebugDrawFlag::DrawMeshNormals);
+        auto draw_tangents = ctx.flags.test(DebugDrawFlag::DrawMeshTangents);
         if (!draw_normals && !draw_tangents) {
             return;
         }
-        auto model = Model.Get();
-        if (!model)
+        auto m = model.get();
+        if (!m)
             return;
 
         auto mat = glm::mat3(glm::eulerAngleZXY(
-            glm::radians(m_Owner->Transform.EulerAngles.Z),
-            glm::radians(m_Owner->Transform.EulerAngles.X),
-            glm::radians(m_Owner->Transform.EulerAngles.Y)) * glm::scale(Mat4(1.0), CAST(glm::vec3, m_Owner->Transform.Scale)));
+            glm::radians(m_owner->transform.euler_angles.z),
+            glm::radians(m_owner->transform.euler_angles.x),
+            glm::radians(m_owner->transform.euler_angles.y)) * glm::scale(Mat4(1.0), CAST(glm::vec3, m_owner->transform.scale)));
 
-        for (auto const& mesh : model->Meshes) {
-            for (auto const& vertex : mesh.Vertices) {
-                auto base = Vector3(mat * vertex.Position) + m_Owner->Transform.Position;
+        for (auto const& mesh : m->meshes) {
+            for (auto const& vertex : mesh.vertices) {
+                auto base = Vector3(mat * vertex.position) + m_owner->transform.position;
 
                 if (draw_normals) {
-                    Debug::DrawLine(base, base + mat * vertex.Normal * 0.1f, 0, Color::Green);
+                    Debug::draw_line(base, base + mat * vertex.normal * 0.1f, 0, Color::Green);
                 }
                 if (draw_tangents) {
                     // Debug::DrawLine(base, base + mat * vertex.Tangent * 0.1f, 0, Color::SkyBlue);
@@ -84,25 +82,25 @@ namespace Fussion {
         }
     }
 
-    Ref<Component> MeshRenderer::Clone()
+    Ref<Component> MeshRenderer::clone()
     {
-        auto mr = MakeRef<MeshRenderer>();
-        mr->Model = Model;
-        mr->Materials = Materials;
+        auto mr = make_ref<MeshRenderer>();
+        mr->model = model;
+        mr->materials = materials;
         return mr;
     }
 
-    void MeshRenderer::Serialize(Serializer& ctx) const
+    void MeshRenderer::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(Model);
-        ctx.WriteCollection("Materials", Materials);
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(model);
+        ctx.write_collection("materials", materials);
     }
 
-    void MeshRenderer::Deserialize(Deserializer& ctx)
+    void MeshRenderer::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(Model);
-        ctx.ReadCollection("Materials", Materials);
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(model);
+        ctx.read_collection("materials", materials);
     }
 }

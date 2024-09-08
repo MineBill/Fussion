@@ -7,39 +7,39 @@ namespace Fussion {
     public:
         ThreadProtected() = default;
 
-        ThreadProtected(T const& value): m_Object(value) {}
-        ThreadProtected(T&& value): m_Object(std::move(value)) {}
+        ThreadProtected(T const& value): m_object(value) {}
+        ThreadProtected(T&& value): m_object(std::move(value)) {}
 
         template<typename Func>
-        auto Access(Func&& func) const
+        auto access(Func&& func) const
         {
             using ResultType = std::invoke_result_t<Func, T const&>;
-            std::lock_guard lock(m_Mutex);
+            std::lock_guard lock(m_mutex);
 
             if constexpr (std::is_void_v<ResultType>) {
-                func(m_Object);
+                func(m_object);
             } else {
-                return func(m_Object);
+                return func(m_object);
             }
         }
 
         template<typename Func>
-        auto Access(Func&& func)
+        auto access(Func&& func)
         {
             using ResultType = std::invoke_result_t<Func, T&>;
-            std::lock_guard lock(m_Mutex);
+            std::lock_guard lock(m_mutex);
 
             if constexpr (std::is_void_v<ResultType>) {
-                func(m_Object);
+                func(m_object);
             } else {
-                return func(m_Object);
+                return func(m_object);
             }
         }
 
-        T* UnsafePtr() { return &m_Object; }
+        T* unsafe_ptr() { return &m_object; }
 
     private:
-        T m_Object;
-        mutable std::mutex m_Mutex;
+        T m_object;
+        mutable std::mutex m_mutex;
     };
 }

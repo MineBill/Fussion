@@ -14,18 +14,18 @@
 
 using namespace Fussion;
 
-void ProjectCreatorLayer::OnStart()
+void ProjectCreatorLayer::on_start()
 {
     LOG_INFOF("TestLayer::OnStart");
     ImGui::ClearIniSettings();
     ImGui::ClearWindowSettings("Window");
 
-    Application::Instance()->GetWindow().SetTitle("Fussion - Project Creator");
+    Application::inst()->window().set_title("Fussion - Project Creator");
 
     LoadProjects();
 }
 
-void ProjectCreatorLayer::OnUpdate(f32 delta)
+void ProjectCreatorLayer::on_update(f32 delta)
 {
     (void)delta;
     ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -43,8 +43,8 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         }
     } request;
 
-    EUI::Window("Window", [&] {
-        ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::RegularHuge]);
+    EUI::window("Window", [&] {
+        ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::RegularHuge]);
         ImGuiH::Text("Project Creator");
         ImGui::PopFont();
 
@@ -60,14 +60,14 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         constexpr auto button_width = width - padding;
         ImGui::SetCursorPosX(padding / 2.f);
         ImGui::SetCursorPosY(padding / 2.f);
-        EUI::Button("New", [&] {
+        EUI::button("New", [&] {
             m_OpenNewProjectPopup = true;
-        }, { .Style = ButtonStyleProjectCreator, .Size = Vector2{ button_width, 0 } });
+        }, { .style = ButtonStyleProjectCreator, .size = Vector2{ button_width, 0 } });
 
         ImGui::SetCursorPosX(padding / 2.f);
-        EUI::Button("Import", [&] {
+        EUI::button("Import", [&] {
             m_OpenImportProjectPopup = true;
-        }, { .Style = ButtonStyleProjectCreator, .Size = Vector2{ button_width, 0 } });
+        }, { .style = ButtonStyleProjectCreator, .size = Vector2{ button_width, 0 } });
         ImGui::EndChild();
 #pragma endregion
 
@@ -90,12 +90,12 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
                     ImGui::BeginGroup();
                     PADDED(5, 5);
 
-                    EUI::WithFont(EditorStyle::GetStyle().Fonts[EditorFont::RegularBig], [&] {
+                    EUI::with_font(EditorStyle::get_style().fonts[EditorFont::RegularBig], [&] {
                         ImGui::TextUnformatted(project.Name.c_str());
                     });
 
                     PADDED(5, 5);
-                    EUI::WithFont(EditorStyle::GetStyle().Fonts[EditorFont::RegularSmall], [&] {
+                    EUI::with_font(EditorStyle::get_style().fonts[EditorFont::RegularSmall], [&] {
                         ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
                         defer(ImGui::PopStyleColor());
 
@@ -145,22 +145,22 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         auto size = Vector2(viewport->Size) / 2.0f;
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::ModalWindow("New Project", [&] {
+        EUI::modal_window("New Project", [&] {
             ImGui::Separator();
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
-            ImGui::BeginChild("awd", { 0, size.Y - 75 });
+            ImGui::BeginChild("awd", { 0, size.y - 75 });
             static std::string project_name;
-            if (EUI::Property("Project Name", &project_name)) {
-                m_ProjectNameValidated = !project_name.empty() && !StringUtils::IsWhitespace(project_name);
+            if (EUI::property("Project Name", &project_name)) {
+                m_ProjectNameValidated = !project_name.empty() && !StringUtils::is_whitespace(project_name);
             }
 
             static std::string project_folder;
 
-            EUI::Property("Project Folder", [] {
-                EUI::Button("Select", [] {
-                    project_folder = Dialogs::ShowDirectoryPicker().string();
-                }, { .Style = ButtonStyleViewportButton });
+            EUI::property("Project Folder", [] {
+                EUI::button("Select", [] {
+                    project_folder = Dialogs::show_directory_picker().string();
+                }, { .style = ButtonStyleViewportButton });
 
                 ImGui::SameLine();
 
@@ -170,7 +170,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
             ImGui::Spacing();
 
             if (!m_ProjectNameValidated || project_folder.empty()) {
-                ImGui::PushFont(EditorStyle::GetStyle().Fonts[EditorFont::Bold]);
+                ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::Bold]);
                 defer(ImGui::PopFont());
                 ImGui::Text("Invalid project name and/or folder.");
             }
@@ -180,39 +180,39 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
             ImGui::Separator();
 
-            EUI::Button("Cancel", [] {
+            EUI::button("Cancel", [] {
                 ImGui::CloseCurrentPopup();
-            }, { .Style = ButtonStyleProjectCreator });
+            }, { .style = ButtonStyleProjectCreator });
             ImGui::SameLine();
 
             if (!m_ProjectNameValidated)
                 ImGui::BeginDisabled();
 
-            EUI::Button("Create", [&] {
-                auto path = EditorApplication::CreateProject(fs::path(project_folder), project_name);
+            EUI::button("Create", [&] {
+                auto path = EditorApplication::create_project(fs::path(project_folder), project_name);
                 AddProject(path);
 
                 request.Set(path);
                 ImGui::CloseCurrentPopup();
-            }, { .Style = ButtonStyleProjectCreator });
+            }, { .style = ButtonStyleProjectCreator });
 
             if (!m_ProjectNameValidated)
                 ImGui::EndDisabled();
-        }, { .Flags = flags });
+        }, { .flags = flags });
 
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::ModalWindow("Import Project", [&] {
+        EUI::modal_window("Import Project", [&] {
             static std::string project_path;
-            EUI::Property("Project Folder", [] {
-                EUI::Button("Select", [] {
-                    auto file = Dialogs::ShowFilePicker(Dialogs::FilePickerFilter{
-                        .Name = "Project File",
-                        .FilePatterns = { "*.fsnproj" }
+            EUI::property("Project Folder", [] {
+                EUI::button("Select", [] {
+                    auto file = Dialogs::show_file_picker(Dialogs::FilePickerFilter{
+                        .name = "Project File",
+                        .file_patterns = { "*.fsnproj" }
                     });
 
                     project_path = file[0].string();
-                }, { .Style = ButtonStyleViewportButton });
+                }, { .style = ButtonStyleViewportButton });
                 ImGui::SameLine();
                 ImGui::InputText("", &project_path);
             });
@@ -225,50 +225,50 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
                 AddProject(project_path);
                 ImGui::CloseCurrentPopup();
             }
-        }, { .Flags = flags });
+        }, { .flags = flags });
 
-    }, { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {}, .UseChild = false });
+    }, { .style = WindowStyleCreator, .flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .size = {}, .use_child = false });
 
     if (request.Requested) {
-        EditorApplication::CreateEditorFromProjectCreator(request.Path);
+        EditorApplication::create_editor_from_project_creator(request.Path);
     }
 }
 
-void ProjectCreatorLayer::OnEvent(Event& event)
+void ProjectCreatorLayer::on_event(Event& event)
 {
-    if (event.Type() == EventType::WindowClose) {
-        Application::Instance()->Quit();
+    if (event.type() == EventType::WindowClose) {
+        Application::inst()->quit();
     }
 }
 
 void ProjectCreatorLayer::Serialize(Serializer& s) const
 {
-    s.BeginArray("Projects", m_Projects.size());
+    s.begin_array("Projects", m_Projects.size());
     for (auto const& project : m_Projects) {
-        s.BeginObject("", 2);
-        s.Write("Name", project.Name);
-        s.Write("Location", project.Location);
-        s.EndObject();
+        s.begin_object("", 2);
+        s.write("Name", project.Name);
+        s.write("Location", project.Location);
+        s.end_object();
     }
-    s.EndArray();
+    s.end_array();
 }
 
 void ProjectCreatorLayer::Deserialize(Deserializer& ds)
 {
     size_t size;
-    ds.BeginArray("Projects", size);
+    ds.begin_array("Projects", size);
     m_Projects.reserve(size);
 
     for (sz i = 0; i < size; ++i) {
         auto& project = m_Projects.emplace_back();
         sz obj_size;
-        ds.BeginObject("", obj_size);
-        ds.Read("Name", project.Name);
-        ds.Read("Location", project.Location);
-        ds.EndObject();
+        ds.begin_object("", obj_size);
+        ds.read("Name", project.Name);
+        ds.read("Location", project.Location);
+        ds.end_object();
     }
 
-    ds.EndArray();
+    ds.end_array();
 }
 
 void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
@@ -278,7 +278,7 @@ void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
         return;
     }
 
-    auto project_file = FileSystem::ReadEntireFile(path);
+    auto project_file = FileSystem::read_entire_file(path);
     auto j = json::parse(*project_file);
 
     if (!j.contains("Name")) {
@@ -299,22 +299,22 @@ void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
 
 void ProjectCreatorLayer::SaveProjects() const
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
+    auto projects_location = get_known_folder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
 
     JsonSerializer js;
-    js.Initialize();
+    js.initialize();
     Serialize(js);
 
-    FileSystem::WriteEntireFile(projects_location, js.ToString());
+    FileSystem::write_entire_file(projects_location, js.to_string());
 }
 
 void ProjectCreatorLayer::LoadProjects()
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
+    auto projects_location = get_known_folder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
 
-    if (auto file = FileSystem::ReadEntireFile(projects_location)) {
+    if (auto file = FileSystem::read_entire_file(projects_location)) {
         JsonDeserializer ds(*file);
-        ds.Initialize();
+        ds.initialize();
 
         Deserialize(ds);
     }

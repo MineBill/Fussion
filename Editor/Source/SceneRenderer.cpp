@@ -20,91 +20,91 @@
 using namespace Fussion;
 using namespace Fussion::RHI;
 
-void SceneRenderer::Init()
+void SceneRenderer::init()
 {
-    auto window_size = Application::Instance()->GetWindow().GetSize();
+    auto window_size = Application::inst()->window().size();
 
-    CreateSceneRenderTarget(window_size);
+    create_scene_render_target(window_size);
 
-    SceneViewData = UniformBuffer<ViewData>::Create(Renderer::Device(), std::string_view{ "View Data" });
-    SceneLightData = UniformBuffer<LightData>::Create(Renderer::Device(), std::string_view{ "Light Data" });
+    scene_view_data = UniformBuffer<ViewData>::create(Renderer::device(), std::string_view{ "View Data" });
+    scene_light_data = UniformBuffer<LightData>::create(Renderer::device(), std::string_view{ "Light Data" });
 
     ///////////////////////
     /// BIND GROUP CREATION
     ///////////////////////
 
-    SetupShadowPassRenderTarget();
+    setup_shadow_pass_render_target();
 
     {
         std::array entries{
             GPU::BindGroupLayoutEntry{
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer{
-                    .Type = GPU::BufferBindingType::Uniform{},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
+                .binding = 0,
+                .visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer{
+                    .type = GPU::BufferBindingType::Uniform{},
+                    .has_dynamic_offset = false,
+                    .min_binding_size = None(),
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer{
-                    .Type = GPU::BufferBindingType::Uniform{},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
+                .binding = 1,
+                .visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer{
+                    .type = GPU::BufferBindingType::Uniform{},
+                    .has_dynamic_offset = false,
+                    .min_binding_size = None(),
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 2,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Depth{},
-                    .ViewDimension = GPU::TextureViewDimension::D2_Array,
-                    .MultiSampled = false,
+                .binding = 2,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Depth{},
+                    .view_dimension = GPU::TextureViewDimension::D2_Array,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
         };
 
         GPU::BindGroupLayoutSpec spec{
-            .Label = "Global BGL"sv,
-            .Entries = entries,
+            .label = "Global BGL"sv,
+            .entries = entries,
         };
 
-        m_GlobalBindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
+        m_global_bind_group_layout = Renderer::device().create_bind_group_layout(spec);
 
         std::array bind_group_entries{
             GPU::BindGroupEntry{
-                .Binding = 0,
-                .Resource = GPU::BufferBinding{
-                    .Buffer = SceneViewData.GetBuffer(),
-                    .Offset = 0,
-                    .Size = SceneViewData.Size(),
+                .binding = 0,
+                .resource = GPU::BufferBinding{
+                    .buffer = scene_view_data.buffer(),
+                    .offset = 0,
+                    .size = scene_view_data.size(),
                 }
             },
             GPU::BindGroupEntry{
-                .Binding = 1,
-                .Resource = GPU::BufferBinding{
-                    .Buffer = SceneLightData.GetBuffer(),
-                    .Offset = 0,
-                    .Size = SceneLightData.Size(),
+                .binding = 1,
+                .resource = GPU::BufferBinding{
+                    .buffer = scene_light_data.buffer(),
+                    .offset = 0,
+                    .size = scene_light_data.size(),
                 }
             },
             GPU::BindGroupEntry{
-                .Binding = 2,
-                .Resource = m_ShadowPassRenderTarget.View
+                .binding = 2,
+                .resource = m_shadow_pass_render_target.view
             }
         };
 
         GPU::BindGroupSpec global_bg_spec{
-            .Label = "Global Bind Group"sv,
-            .Entries = bind_group_entries
+            .label = "Global Bind Group"sv,
+            .entries = bind_group_entries
         };
 
-        m_GlobalBindGroup = Renderer::Device().CreateBindGroup(m_GlobalBindGroupLayout, global_bg_spec);
+        m_global_bind_group = Renderer::device().create_bind_group(m_global_bind_group_layout, global_bg_spec);
     }
 
     // {
@@ -150,102 +150,102 @@ void SceneRenderer::Init()
     {
         std::array entries{
             GPU::BindGroupLayoutEntry{
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex,
-                .Type = GPU::BindingType::Buffer{
-                    .Type = GPU::BufferBindingType::Storage{
-                        .ReadOnly = true,
+                .binding = 0,
+                .visibility = GPU::ShaderStage::Vertex,
+                .type = GPU::BindingType::Buffer{
+                    .type = GPU::BufferBindingType::Storage{
+                        .read_only = true,
                     },
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
+                    .has_dynamic_offset = false,
+                    .min_binding_size = None(),
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer{
-                    .Type = GPU::BufferBindingType::Uniform{},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
+                .binding = 1,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer{
+                    .type = GPU::BufferBindingType::Uniform{},
+                    .has_dynamic_offset = false,
+                    .min_binding_size = None(),
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 2,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Float{},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 2,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Float{},
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 3,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Float{},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 3,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Float{},
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 4,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Float{},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 4,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Float{},
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 5,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Float{},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 5,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Float{},
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 6,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture{
-                    .SampleType = GPU::TextureSampleType::Float{},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 6,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture{
+                    .sample_type = GPU::TextureSampleType::Float{},
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 7,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler{
-                    .Type = GPU::SamplerBindingType::Filtering,
+                .binding = 7,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Sampler{
+                    .type = GPU::SamplerBindingType::Filtering,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry{
-                .Binding = 8,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler{
-                    .Type = GPU::SamplerBindingType::Filtering,
+                .binding = 8,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Sampler{
+                    .type = GPU::SamplerBindingType::Filtering,
                 },
-                .Count = 1,
+                .count = 1,
             },
 
         };
 
         GPU::BindGroupLayoutSpec spec{
-            .Label = "Object BGL"sv,
-            .Entries = entries,
+            .label = "Object BGL"sv,
+            .entries = entries,
         };
 
-        m_ObjectBindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
+        m_object_bind_group_layout = Renderer::device().create_bind_group_layout(spec);
     }
 
     ////////////////////////
@@ -253,309 +253,309 @@ void SceneRenderer::Init()
     ////////////////////////
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/simple.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/simple.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "Simple WGSL Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "Simple WGSL Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
-            m_GlobalBindGroupLayout
+            m_global_bind_group_layout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "Simple RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = GPU::PrimitiveState::Default(),
-            .DepthStencil = None(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage{
-                .Targets = {
+            .label = "Simple RP"sv,
+            .layout = layout,
+            .vertex = {},
+            .primitive = GPU::PrimitiveState::get_default(),
+            .depth_stencil = None(),
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = GPU::FragmentStage{
+                .targets = {
                     GPU::ColorTargetState{
-                        .Format = GPU::TextureFormat::RGBA8Unorm,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = GPU::TextureFormat::RGBA8Unorm,
+                        .blend = GPU::BlendState::get_default(),
+                        .write_mask = GPU::ColorWrite::All,
                     }
                 }
             },
         };
 
-        m_SimplePipeline = Renderer::Device().CreateRenderPipeline(shader, rp_spec);
+        m_simple_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
     }
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/PBR.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/PBR.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "PBR Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "PBR Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
-            m_GlobalBindGroupLayout,
-            m_ObjectBindGroupLayout,
+            m_global_bind_group_layout,
+            m_object_bind_group_layout,
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
         std::array attributes{
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 0,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 1,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 1,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
+                .type = GPU::ElementType::Float4,
+                .shader_location = 2,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float2,
-                .ShaderLocation = 3,
+                .type = GPU::ElementType::Float2,
+                .shader_location = 3,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 4,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 4,
             },
         };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+        auto attribute_layout = GPU::VertexBufferLayout::create(attributes);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "PBR Render Pass"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout } },
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
+            .label = "PBR Render Pass"sv,
+            .layout = layout,
+            .vertex = {
+                .attribute_layouts = { attribute_layout } },
+            .primitive = {
+                .topology = GPU::PrimitiveTopology::TriangleList,
+                .strip_index_format = None(),
+                .front_face = GPU::FrontFace::Ccw,
+                .cull = GPU::Face::None,
             },
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage{
-                .Targets = {
+            .depth_stencil = GPU::DepthStencilState::get_default(),
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = GPU::FragmentStage{
+                .targets = {
                     GPU::ColorTargetState{
-                        .Format = HDRPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = HDRPipeline::Format,
+                        .blend = GPU::BlendState::get_default(),
+                        .write_mask = GPU::ColorWrite::All,
                     },
                 }
             },
         };
 
-        m_PbrPipeline = Renderer::Device().CreateRenderPipeline(shader, rp_spec);
+        m_pbr_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
     }
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/Editor/Grid.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/Editor/Grid.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "Grid Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "Grid Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
-            m_GlobalBindGroupLayout
+            m_global_bind_group_layout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "Grid RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = GPU::PrimitiveState::Default(),
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage{
-                .Targets = {
+            .label = "Grid RP"sv,
+            .layout = layout,
+            .vertex = {},
+            .primitive = GPU::PrimitiveState::get_default(),
+            .depth_stencil = GPU::DepthStencilState::get_default(),
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = GPU::FragmentStage{
+                .targets = {
                     GPU::ColorTargetState{
-                        .Format = HDRPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = HDRPipeline::Format,
+                        .blend = GPU::BlendState::get_default(),
+                        .write_mask = GPU::ColorWrite::All,
                     }
                 }
             },
         };
 
-        m_GridPipeline = Renderer::Device().CreateRenderPipeline(shader, rp_spec);
+        m_grid_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
     }
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/Sky.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/Sky.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "Sky Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "Sky Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
-            m_GlobalBindGroupLayout
+            m_global_bind_group_layout
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
-        auto primitive = GPU::PrimitiveState::Default();
-        primitive.Topology = GPU::PrimitiveTopology::TriangleStrip;
+        auto primitive = GPU::PrimitiveState::get_default();
+        primitive.topology = GPU::PrimitiveTopology::TriangleStrip;
 
-        auto depth = GPU::DepthStencilState::Default();
-        depth.DepthWriteEnabled = false;
-        depth.DepthCompare = GPU::CompareFunction::Always;
+        auto depth = GPU::DepthStencilState::get_default();
+        depth.depth_write_enabled = false;
+        depth.depth_compare = GPU::CompareFunction::Always;
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "Sky RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = primitive,
-            .DepthStencil = depth,
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage{
-                .Targets = {
+            .label = "Sky RP"sv,
+            .layout = layout,
+            .vertex = {},
+            .primitive = primitive,
+            .depth_stencil = depth,
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = GPU::FragmentStage{
+                .targets = {
                     GPU::ColorTargetState{
-                        .Format = HDRPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = HDRPipeline::Format,
+                        .blend = GPU::BlendState::get_default(),
+                        .write_mask = GPU::ColorWrite::All,
                     }
                 }
             },
         };
 
-        m_SkyPipeline = Renderer::Device().CreateRenderPipeline(shader, rp_spec);
+        m_sky_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
     }
 
     GPU::BufferSpec ibs{
-        .Label = "PBR Instance Buffer"sv,
-        .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-        .Size = sizeof(Mat4) * 2'000,
-        .Mapped = false,
+        .label = "PBR Instance Buffer"sv,
+        .usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+        .size = sizeof(Mat4) * 2'000,
+        .mapped = false,
     };
-    m_PbrInstanceBuffer = Renderer::Device().CreateBuffer(ibs);
+    m_pbr_instance_buffer = Renderer::device().create_buffer(ibs);
 
-    m_PbrInstanceStagingBuffer.reserve(sizeof(Mat4) * 2'000);
+    m_pbr_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 
     GPU::SamplerSpec bilinear_sampler_spec{
-        .Label = "Bilinear Sampler"sv,
-        .AddressModeU = GPU::AddressMode::Repeat,
-        .AddressModeV = GPU::AddressMode::Repeat,
-        .AddressModeW = GPU::AddressMode::Repeat,
-        .MagFilter = GPU::FilterMode::Linear,
-        .MinFilter = GPU::FilterMode::Linear,
-        .MipMapFilter = GPU::FilterMode::Linear,
-        .LodMinClamp = 0.f,
-        .LodMaxClamp = 32.f,
-        .AnisotropyClamp = 16
+        .label = "Bilinear Sampler"sv,
+        .address_mode_u = GPU::AddressMode::Repeat,
+        .address_mode_v = GPU::AddressMode::Repeat,
+        .address_mode_w = GPU::AddressMode::Repeat,
+        .mag_filter = GPU::FilterMode::Linear,
+        .min_filter = GPU::FilterMode::Linear,
+        .mip_map_filter = GPU::FilterMode::Linear,
+        .lod_min_clamp = 0.f,
+        .lod_max_clamp = 32.f,
+        .anisotropy_clamp = 16
     };
 
-    m_LinearSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
-    bilinear_sampler_spec.MagFilter = GPU::FilterMode::Nearest;
-    bilinear_sampler_spec.MinFilter = GPU::FilterMode::Nearest;
-    bilinear_sampler_spec.AnisotropyClamp = 1_u16;
+    m_linear_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
+    bilinear_sampler_spec.mag_filter = GPU::FilterMode::Nearest;
+    bilinear_sampler_spec.min_filter = GPU::FilterMode::Nearest;
+    bilinear_sampler_spec.anisotropy_clamp = 1_u16;
 
-    m_ShadowSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+    m_shadow_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
 
-    m_HDRPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
+    m_hdr_pipeline.init(window_size, m_scene_render_target.spec.format);
 
-    Debug::Initialize(Renderer::Device(), m_GlobalBindGroupLayout, m_HDRPipeline.Format);
+    Debug::initialize(Renderer::device(), m_global_bind_group_layout, m_hdr_pipeline.Format);
 
-    SetupShadowPass();
+    setup_shadow_pass();
 }
 
-void SceneRenderer::Resize(Vector2 const& new_size)
+void SceneRenderer::resize(Vector2 const& new_size)
 {
     ZoneScoped;
-    m_RenderArea = new_size;
+    m_render_area = new_size;
 
-    m_SceneRenderTarget.Release();
-    m_SceneRenderDepthTarget.Release();
-    CreateSceneRenderTarget(new_size);
-    m_HDRPipeline.Resize(new_size);
+    m_scene_render_target.release();
+    m_scene_render_depth_target.release();
+    create_scene_render_target(new_size);
+    m_hdr_pipeline.resize(new_size);
 }
 
 f32 GetSplitDepth(s32 current_split, s32 max_splits, f32 near, f32 far, f32 l = 1.0f)
 {
     auto split_ratio = CAST(f32, current_split) / CAST(f32, max_splits);
-    auto log = near * Math::Pow(far / near, split_ratio);
+    auto log = near * Math::pow(far / near, split_ratio);
     auto uniform = near + (far - near) * split_ratio;
     auto d = l * (log - uniform) + uniform;
     return (d - near) / (far - near);
 }
 
-void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
+void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
 {
     ZoneScoped;
 
-    m_RenderContext.Reset();
+    m_render_context.reset();
 
     {
         ZoneScopedN("Render Object Collection");
-        m_RenderContext.RenderFlags = RenderState::LightCollection;
-        if (packet.Scene) {
-            packet.Scene->ForEachEntity([&](Entity* entity) {
-                entity->OnDraw(m_RenderContext);
+        m_render_context.render_flags = RenderState::LightCollection;
+        if (packet.scene) {
+            packet.scene->for_each_entity([&](Entity* entity) {
+                entity->on_draw(m_render_context);
             });
         }
     }
 
-    SceneViewData.Data.Perspective = packet.Camera.Perspective;
-    SceneViewData.Data.View = packet.Camera.View;
-    SceneViewData.Data.Position = packet.Camera.Position;
-    SceneViewData.Flush();
+    scene_view_data.data.perspective = packet.camera.perspective;
+    scene_view_data.data.view = packet.camera.view;
+    scene_view_data.data.position = packet.camera.position;
+    scene_view_data.flush();
 
-    if (!m_RenderContext.DirectionalLights.empty()) {
-        SceneLightData.Data.DirectionalLight = m_RenderContext.DirectionalLights[0].ShaderData;
-        SceneLightData.Data.ShadowSplitDistances = Vector4{ 0.0f };
+    if (!m_render_context.directional_lights.empty()) {
+        scene_light_data.data.directional_light = m_render_context.directional_lights[0].shader_data;
+        scene_light_data.data.shadow_split_distances = Vector4{ 0.0f };
     }
-    SceneLightData.Flush();
+    scene_light_data.flush();
 
-    DepthPass(encoder, packet);
-    PbrPass(encoder, packet, game_view);
+    depth_pass(encoder, packet);
+    pbr_pass(encoder, packet, game_view);
 
-    m_HDRPipeline.Process(encoder, m_SceneRenderTarget.View);
+    m_hdr_pipeline.process(encoder, m_scene_render_target.view);
 
-    for (auto& group : m_ObjectGroupsToRelease) {
-        group.Release();
+    for (auto& group : m_object_groups_to_release) {
+        group.release();
     }
-    m_ObjectGroupsToRelease.clear();
+    m_object_groups_to_release.clear();
 
-    Debug::Reset();
+    Debug::reset();
     /* #if 0
         using namespace Fussion;
         auto current_frame = Renderer::GetInstance()->GetSwapchain()->GetCurrentFrame();
@@ -914,161 +914,161 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     #endif */
 }
 
-void SceneRenderer::SetupShadowPassRenderTarget()
+void SceneRenderer::setup_shadow_pass_render_target()
 {
     GPU::TextureSpec spec{
-        .Label = "DepthPass::RenderTarget"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = { ShadowMapResolution, ShadowMapResolution, ShadowCascades },
-        .Format = GPU::TextureFormat::Depth24Plus,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::DepthOnly,
+        .label = "DepthPass::RenderTarget"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION, MAX_SHADOW_CASCADES },
+        .format = GPU::TextureFormat::Depth24Plus,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_ShadowPassRenderTarget = Renderer::Device().CreateTexture(spec);
-    m_ShadowPassRenderTarget.InitializeView(ShadowCascades);
+    m_shadow_pass_render_target = Renderer::device().create_texture(spec);
+    m_shadow_pass_render_target.initialize_view(MAX_SHADOW_CASCADES);
 
-    for (u32 i = 0; i < ShadowCascades; ++i) {
-        m_ShadowPassRenderTargetViews[i] = m_ShadowPassRenderTarget.CreateView({
-            .Label = "Shadow Pass Render Target"sv,
-            .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .Dimension = GPU::TextureViewDimension::D2,
-            .Format = GPU::TextureFormat::Depth24Plus,
-            .BaseMipLevel = 0,
-            .MipLevelCount = 1,
-            .BaseArrayLayer = i,
-            .ArrayLayerCount = 1,
-            .Aspect = GPU::TextureAspect::DepthOnly,
+    for (u32 i = 0; i < MAX_SHADOW_CASCADES; ++i) {
+        m_shadow_pass_render_target_views[i] = m_shadow_pass_render_target.create_view({
+            .label = "Shadow Pass Render Target"sv,
+            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+            .dimension = GPU::TextureViewDimension::D2,
+            .format = GPU::TextureFormat::Depth24Plus,
+            .base_mip_level = 0,
+            .mip_level_count = 1,
+            .base_array_layer = i,
+            .array_layer_count = 1,
+            .aspect = GPU::TextureAspect::DepthOnly,
         });
     }
 }
 
-void SceneRenderer::SetupShadowPass()
+void SceneRenderer::setup_shadow_pass()
 {
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DepthPass.wgsl").Value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/DepthPass.wgsl").value();
 
         GPU::ShaderModuleSpec shader_spec{
-            .Label = "PBR Shader"sv,
-            .Type = GPU::WGSLShader{
-                .Source = shader_src,
+            .label = "PBR Shader"sv,
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
+            .vertex_entry_point = "vs_main",
             //.FragmentEntryPoint = "fs_main",
         };
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bgl_entries{
             GPU::BindGroupLayoutEntry{
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex,
-                .Type = GPU::BindingType::Buffer{
-                    .Type = GPU::BufferBindingType::Storage{
-                        .ReadOnly = true,
+                .binding = 0,
+                .visibility = GPU::ShaderStage::Vertex,
+                .type = GPU::BindingType::Buffer{
+                    .type = GPU::BufferBindingType::Storage{
+                        .read_only = true,
                     },
                 },
-                .Count = 1,
+                .count = 1,
             },
         };
         GPU::BindGroupLayoutSpec bgl_spec{
-            .Entries = bgl_entries,
+            .entries = bgl_entries,
         };
 
-        m_ObjectDepthBGL = Renderer::Device().CreateBindGroupLayout(bgl_spec);
+        m_object_depth_bgl = Renderer::device().create_bind_group_layout(bgl_spec);
 
         std::array bind_group_layouts{
-            m_ObjectDepthBGL,
+            m_object_depth_bgl,
         };
         GPU::PipelineLayoutSpec pl_spec{
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
         std::array attributes{
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 0,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 1,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 1,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
+                .type = GPU::ElementType::Float4,
+                .shader_location = 2,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float2,
-                .ShaderLocation = 3,
+                .type = GPU::ElementType::Float2,
+                .shader_location = 3,
             },
             GPU::VertexAttribute{
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 4,
+                .type = GPU::ElementType::Float3,
+                .shader_location = 4,
             },
         };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+        auto attribute_layout = GPU::VertexBufferLayout::create(attributes);
 
         GPU::RenderPipelineSpec rp_spec{
-            .Label = "DepthPass::Pipeline"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout } },
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
+            .label = "DepthPass::Pipeline"sv,
+            .layout = layout,
+            .vertex = {
+                .attribute_layouts = { attribute_layout } },
+            .primitive = {
+                .topology = GPU::PrimitiveTopology::TriangleList,
+                .strip_index_format = None(),
+                .front_face = GPU::FrontFace::Ccw,
+                .cull = GPU::Face::None,
             },
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = None(),
+            .depth_stencil = GPU::DepthStencilState::get_default(),
+            .multi_sample = GPU::MultiSampleState::get_default(),
+            .fragment = None(),
         };
 
-        m_DepthPipeline = Renderer::Device().CreateRenderPipeline(shader, rp_spec);
+        m_depth_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
     }
 
     GPU::BufferSpec ibs{
-        .Label = "Depth Instance Buffer"sv,
-        .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-        .Size = sizeof(Mat4) * 2'000,
-        .Mapped = false,
+        .label = "Depth Instance Buffer"sv,
+        .usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+        .size = sizeof(Mat4) * 2'000,
+        .mapped = false,
     };
-    m_DepthInstanceBuffer = Renderer::Device().CreateBuffer(ibs);
+    m_depth_instance_buffer = Renderer::device().create_buffer(ibs);
 
-    m_DepthInstanceStagingBuffer.reserve(sizeof(Mat4) * 2'000);
+    m_depth_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 }
 
-void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& packet)
+void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const& packet)
 {
     {
         ZoneScopedN("Depth Pass");
 
-        for (auto& light : m_RenderContext.DirectionalLights) {
+        for (auto& light : m_render_context.directional_lights) {
 
-            std::array<f32, ShadowCascades> shadow_splits{};
-            for (auto i = 0; i < ShadowCascades; i++) {
+            std::array<f32, MAX_SHADOW_CASCADES> shadow_splits{};
+            for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
                 // SceneLightData.Data.ShadowSplitDistances[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
-                shadow_splits[i] = GetSplitDepth(i + 1, ShadowCascades, packet.Camera.Near, packet.Camera.Far, light.Split);
+                shadow_splits[i] = GetSplitDepth(i + 1, MAX_SHADOW_CASCADES, packet.camera.near, packet.camera.far, light.split);
             }
 
             GPU::Buffer instance_buffer;
-            if (!m_InstanceBufferPool.empty()) {
-                instance_buffer = m_InstanceBufferPool.back();
-                m_InstanceBufferPool.pop_back();
+            if (!m_instance_buffer_pool.empty()) {
+                instance_buffer = m_instance_buffer_pool.back();
+                m_instance_buffer_pool.pop_back();
             } else {
                 GPU::BufferSpec spec{
-                    .Label = "Depth Instance Buffer"sv,
-                    .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
-                    .Size = sizeof(Mat4) * 2 * 2'000,
-                    .Mapped = true,
+                    .label = "Depth Instance Buffer"sv,
+                    .usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+                    .size = sizeof(Mat4) * 2 * 2'000,
+                    .mapped = true,
                 };
-                instance_buffer = Renderer::Device().CreateBuffer(spec);
+                instance_buffer = Renderer::device().create_buffer(spec);
             }
 
             f32 last_split{ 0 };
-            u32 buffer_offset = 0;
-            for (auto i = 0; i < ShadowCascades; i++) {
+            sz buffer_offset = 0;
+            for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
                 ZoneScopedN("Shadow Cascade");
 
                 Vector3 frustum_corners[8] = {
@@ -1083,10 +1083,10 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 };
 
                 // Project frustum corners into world space
-                glm::mat4 inv_cam = glm::inverse(packet.Camera.Perspective * packet.Camera.View);
+                glm::mat4 inv_cam = glm::inverse(packet.camera.perspective * packet.camera.view);
                 for (auto& frustum_corner : frustum_corners) {
                     Vector4 inv_corner = inv_cam * Vector4(frustum_corner, 1.0f);
-                    frustum_corner = inv_corner / inv_corner.W;
+                    frustum_corner = inv_corner / inv_corner.w;
                 }
 
                 auto split = shadow_splits[i];
@@ -1104,39 +1104,39 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
 
                 float radius = 0.0f;
                 for (auto frustum_corner : frustum_corners) {
-                    f32 distance = (frustum_corner - center).Length();
-                    radius = Math::Max(radius, distance);
+                    f32 distance = (frustum_corner - center).length();
+                    radius = Math::max(radius, distance);
                 }
                 radius = std::ceil(radius * 16.f) / 16.f;
 
-                auto texel_size = CAST(f32, ShadowMapResolution) / (radius * 2.0f);
+                auto texel_size = CAST(f32, SHADOWMAP_RESOLUTION) / (radius * 2.0f);
                 Mat4 scalar(texel_size);
 
                 Vector3 max_extents{ radius, radius, radius };
                 Vector3 min_extents = -max_extents;
 
-                glm::mat4 view = glm::lookAt(glm::vec3(center - Vector3(light.ShaderData.Direction) * min_extents.Z), glm::vec3(center), glm::vec3(Vector3::Up));
+                glm::mat4 view = glm::lookAt(glm::vec3(center - Vector3(light.shader_data.direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
                 view = scalar * view;
                 center = glm::mat3(view) * center;
-                center.X = Math::Floor(center.X);
-                center.Y = Math::Floor(center.Y);
+                center.x = Math::floor(center.x);
+                center.y = Math::floor(center.y);
                 center = inverse(glm::mat3(view)) * center;
-                view = glm::lookAt(glm::vec3(center - Vector3(light.ShaderData.Direction) * min_extents.Z), glm::vec3(center), glm::vec3(Vector3::Up));
+                view = glm::lookAt(glm::vec3(center - Vector3(light.shader_data.direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
 
-                glm::mat4 proj = glm::ortho(min_extents.X, max_extents.X, min_extents.Y, max_extents.Y, -20.0f, max_extents.Z - min_extents.Z);
+                glm::mat4 proj = glm::ortho(min_extents.x, max_extents.x, min_extents.y, max_extents.y, -20.0f, max_extents.z - min_extents.z);
 
-                light.ShaderData.LightSpaceMatrix[i] = proj * view;
+                light.shader_data.light_space_matrix[i] = proj * view;
 
-                SceneLightData.Data.ShadowSplitDistances[i] = packet.Camera.Near + split * (packet.Camera.Far - packet.Camera.Near) * -1.0f;
-                SceneLightData.Data.DirectionalLight.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
+                scene_light_data.data.shadow_split_distances[i] = packet.camera.near + split * (packet.camera.far - packet.camera.near) * -1.0f;
+                scene_light_data.data.directional_light.light_space_matrix[i] = light.shader_data.light_space_matrix[i];
 
-                for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
-                    auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.GetSlice().GetMappedRange()) + buffer_offset;
+                for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
+                    auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.slice().mapped_range()) + buffer_offset;
                     int j = 0;
                     for (auto index : list) {
-                        auto& obj = m_RenderContext.RenderObjects[index];
-                        data[j].Model = obj.WorldMatrix;
-                        data[j++].LightSpace = light.ShaderData.LightSpaceMatrix[i];
+                        auto& obj = m_render_context.render_objects[index];
+                        data[j].model = obj.world_matrix;
+                        data[j++].light_space = light.shader_data.light_space_matrix[i];
                     }
 
                     buffer_offset += list.size();
@@ -1144,278 +1144,279 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 last_split = split;
             }
 
-            instance_buffer.UnMap();
-            auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+            instance_buffer.unmap();
+            auto copy_encoder = Renderer::device().create_command_encoder();
 
-            copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_DepthInstanceBuffer, 0, buffer_offset * sizeof(DepthInstanceData));
-            Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
-            copy_encoder.Release();
+            copy_encoder.copy_buffer_to_buffer(instance_buffer, 0, m_depth_instance_buffer, 0, buffer_offset * sizeof(DepthInstanceData));
+            Renderer::device().submit_command_buffer(copy_encoder.finish());
+            copy_encoder.release();
 
-            instance_buffer.GetSlice().MapAsync([instance_buffer, this] {
-                m_InstanceBufferPool.push_back(instance_buffer);
+            instance_buffer.slice().map_async([instance_buffer, this] {
+                m_instance_buffer_pool.push_back(instance_buffer);
             });
 
             buffer_offset = 0;
-            for (auto i = 0; i < ShadowCascades; i++) {
+            for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
                 GPU::RenderPassSpec rp_spec{
-                    .Label = "DepthPass::RenderPass"sv,
-                    .DepthStencilAttachment = GPU::RenderPassColorAttachment{
-                        .View = m_ShadowPassRenderTargetViews[i],
-                        .LoadOp = GPU::LoadOp::Clear,
-                        .StoreOp = GPU::StoreOp::Store,
-                        .DepthClear = 1.0f,
+                    .label = "DepthPass::RenderPass"sv,
+                    .depth_stencil_attachment = GPU::RenderPassColorAttachment{
+                        .view = m_shadow_pass_render_target_views[i],
+                        .load_op = GPU::LoadOp::Clear,
+                        .store_op = GPU::StoreOp::Store,
+                        .depth_clear = 1.0f,
                     },
                 };
-                auto rp = encoder.BeginRendering(rp_spec);
-                rp.SetViewport({}, { ShadowMapResolution, ShadowMapResolution });
-                rp.SetPipeline(m_DepthPipeline);
+                auto rp = encoder.begin_rendering(rp_spec);
+                rp.set_viewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
+                rp.set_pipeline(m_depth_pipeline);
 
-                for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+                for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
                     ZoneScopedN("Command Buffer Dispatch");
                     (void)buffer;
 
-                    auto const& hack = m_RenderContext.RenderObjects[list[0]];
+                    auto const& hack = m_render_context.render_objects[list[0]];
 
                     std::array bind_group_entries{
                         GPU::BindGroupEntry{
-                            .Binding = 0,
-                            .Resource = GPU::BufferBinding{
-                                .Buffer = m_DepthInstanceBuffer,
-                                .Offset = 0,
-                                .Size = m_DepthInstanceBuffer.GetSize(),
+                            .binding = 0,
+                            .resource = GPU::BufferBinding{
+                                .buffer = m_depth_instance_buffer,
+                                .offset = 0,
+                                .size = m_depth_instance_buffer.size(),
                             }
                         },
                     };
 
                     GPU::BindGroupSpec bg_spec{
-                        .Label = "Object Depth Bind Group"sv,
-                        .Entries = bind_group_entries
+                        .label = "Object Depth Bind Group"sv,
+                        .entries = bind_group_entries
                     };
 
-                    auto object_group = Renderer::Device().CreateBindGroup(m_ObjectDepthBGL, bg_spec);
-                    m_ObjectGroupsToRelease.push_back(object_group);
+                    auto object_group = Renderer::device().create_bind_group(m_object_depth_bgl, bg_spec);
+                    m_object_groups_to_release.push_back(object_group);
 
-                    rp.SetVertexBuffer(0, hack.VertexBuffer);
-                    rp.SetIndexBuffer(hack.IndexBuffer);
-                    rp.SetBindGroup(object_group, 0);
+                    rp.set_vertex_buffer(0, hack.vertex_buffer);
+                    rp.set_index_buffer(hack.index_buffer);
+                    rp.set_bind_group(object_group, 0);
 
-                    rp.DrawIndex({ 0, hack.IndexCount }, { buffer_offset, CAST(u32, list.size()) });
+                    rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
                     buffer_offset += list.size();
                 }
-                rp.End();
-                rp.Release();
+                rp.end();
+                rp.release();
             }
-            SceneLightData.Flush();
+            scene_light_data.flush();
         }
     }
 }
 
-void SceneRenderer::PbrPass(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
+void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view)
 {
+    (void)packet;
     ZoneScopedN("PBR Pass");
     std::array color_attachments{
         GPU::RenderPassColorAttachment{
-            .View = m_HDRPipeline.View(),
-            .LoadOp = GPU::LoadOp::Clear,
-            .StoreOp = GPU::StoreOp::Store,
-            .ClearColor = Color::Black,
+            .view = m_hdr_pipeline.view(),
+            .load_op = GPU::LoadOp::Clear,
+            .store_op = GPU::StoreOp::Store,
+            .clear_color = Color::Black,
         },
     };
 
     GPU::RenderPassSpec scene_rp_spec{
-        .Label = "Scene Render Pass"sv,
-        .ColorAttachments = color_attachments,
-        .DepthStencilAttachment = GPU::RenderPassColorAttachment{
-            .View = m_SceneRenderDepthTarget.View,
-            .LoadOp = GPU::LoadOp::Clear,
-            .StoreOp = GPU::StoreOp::Store,
-            .DepthClear = 1.0f,
+        .label = "Scene Render Pass"sv,
+        .color_attachments = color_attachments,
+        .depth_stencil_attachment = GPU::RenderPassColorAttachment{
+            .view = m_scene_render_depth_target.view,
+            .load_op = GPU::LoadOp::Clear,
+            .store_op = GPU::StoreOp::Store,
+            .depth_clear = 1.0f,
         },
     };
-    auto scene_rp = encoder.BeginRendering(scene_rp_spec);
+    auto scene_rp = encoder.begin_rendering(scene_rp_spec);
 
-    scene_rp.SetViewport(Vector2::Zero, { m_RenderArea.X, m_RenderArea.Y });
+    scene_rp.set_viewport(Vector2::Zero, { m_render_area.x, m_render_area.y });
 
-    scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
+    scene_rp.set_bind_group(m_global_bind_group, 0);
     {
-        scene_rp.SetPipeline(m_SkyPipeline);
-        scene_rp.Draw({ 0, 4 }, { 0, 1 });
+        scene_rp.set_pipeline(m_sky_pipeline);
+        scene_rp.draw({ 0, 4 }, { 0, 1 });
     }
 
-    scene_rp.SetPipeline(m_PbrPipeline);
+    scene_rp.set_pipeline(m_pbr_pipeline);
 
     GPU::Buffer instance_buffer;
-    if (!m_InstanceBufferPool.empty()) {
-        instance_buffer = m_InstanceBufferPool.back();
-        m_InstanceBufferPool.pop_back();
+    if (!m_instance_buffer_pool.empty()) {
+        instance_buffer = m_instance_buffer_pool.back();
+        m_instance_buffer_pool.pop_back();
     } else {
         GPU::BufferSpec spec{
-            .Label = "PBR Instance Buffer"sv,
-            .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
-            .Size = sizeof(Mat4) * 2'000,
-            .Mapped = true,
+            .label = "PBR Instance Buffer"sv,
+            .usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+            .size = sizeof(Mat4) * 2'000,
+            .mapped = true,
         };
-        instance_buffer = Renderer::Device().CreateBuffer(spec);
+        instance_buffer = Renderer::device().create_buffer(spec);
     }
 
-    u32 buffer_count_offset = 0;
+    sz buffer_count_offset = 0;
 
-    for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
-        auto data = TRANSMUTE(InstanceData*, instance_buffer.GetSlice().GetMappedRange()) + buffer_count_offset;
+    for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
+        auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range()) + buffer_count_offset;
         int j = 0;
         for (auto index : list) {
-            auto& obj = m_RenderContext.RenderObjects[index];
-            data[j++].Model = obj.WorldMatrix;
+            auto& obj = m_render_context.render_objects[index];
+            data[j++].model = obj.world_matrix;
         }
 
         buffer_count_offset += list.size();
     }
-    instance_buffer.UnMap();
+    instance_buffer.unmap();
 
-    auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+    auto copy_encoder = Renderer::device().create_command_encoder();
 
-    copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_PbrInstanceBuffer, 0, buffer_count_offset * sizeof(InstanceData));
-    Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
-    copy_encoder.Release();
+    copy_encoder.copy_buffer_to_buffer(instance_buffer, 0, m_pbr_instance_buffer, 0, buffer_count_offset * sizeof(InstanceData));
+    Renderer::device().submit_command_buffer(copy_encoder.finish());
+    copy_encoder.release();
 
-    instance_buffer.GetSlice().MapAsync([instance_buffer, this] {
-        m_InstanceBufferPool.push_back(instance_buffer);
+    instance_buffer.slice().map_async([instance_buffer, this] {
+        m_instance_buffer_pool.push_back(instance_buffer);
     });
 
     buffer_count_offset = 0;
-    for (auto const& [buffer, list] : m_RenderContext.MeshRenderLists) {
+    for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
         ZoneScopedN("PBR Command Buffer Dispatch");
         (void)buffer;
 
-        auto const& hack = m_RenderContext.RenderObjects[list[0]];
+        auto const& hack = m_render_context.render_objects[list[0]];
 
-        hack.Material->MaterialUniformBuffer.Data.ObjectColor = hack.Material->ObjectColor;
-        hack.Material->MaterialUniformBuffer.Data.Metallic = hack.Material->Metallic;
-        hack.Material->MaterialUniformBuffer.Data.Roughness = hack.Material->Roughness;
-        hack.Material->MaterialUniformBuffer.Flush();
+        hack.material->material_uniform_buffer.data.object_color = hack.material->object_color;
+        hack.material->material_uniform_buffer.data.metallic = hack.material->metallic;
+        hack.material->material_uniform_buffer.data.roughness = hack.material->roughness;
+        hack.material->material_uniform_buffer.flush();
 
-        auto albedo = hack.Material->AlbedoMap.Get();
+        auto albedo = hack.material->albedo_map.get();
         if (!albedo) {
-            albedo = Renderer::WhiteTexture().Get();
+            albedo = Renderer::white_texture().get();
         }
 
-        auto normal = hack.Material->NormalMap.Get();
+        auto normal = hack.material->normal_map.get();
         if (!normal) {
-            normal = Renderer::DefaultNormalMap().Get();
+            normal = Renderer::default_normal_map().get();
         }
 
-        auto ao = hack.Material->AmbientOcclusionMap.Get();
+        auto ao = hack.material->ambient_occlusion_map.get();
         if (!ao) {
-            ao = Renderer::WhiteTexture().Get();
+            ao = Renderer::white_texture().get();
         }
 
-        auto metallic_roughness = hack.Material->MetallicRoughnessMap.Get();
+        auto metallic_roughness = hack.material->metallic_roughness_map.get();
         if (!metallic_roughness) {
-            metallic_roughness = Renderer::WhiteTexture().Get();
+            metallic_roughness = Renderer::white_texture().get();
         }
 
-        auto emissive = hack.Material->EmissiveMap.Get();
+        auto emissive = hack.material->emissive_map.get();
         if (!emissive) {
-            emissive = Renderer::BlackTexture().Get();
+            emissive = Renderer::black_texture().get();
         }
 
         std::array bind_group_entries{
             GPU::BindGroupEntry{
-                .Binding = 0,
-                .Resource = GPU::BufferBinding{
-                    .Buffer = m_PbrInstanceBuffer,
-                    .Offset = 0,
-                    .Size = m_PbrInstanceBuffer.GetSize(),
+                .binding = 0,
+                .resource = GPU::BufferBinding{
+                    .buffer = m_pbr_instance_buffer,
+                    .offset = 0,
+                    .size = m_pbr_instance_buffer.size(),
                 }
             },
             GPU::BindGroupEntry{
-                .Binding = 1, .Resource = GPU::BufferBinding{
-                    .Buffer = hack.Material->MaterialUniformBuffer.GetBuffer(),
-                    .Offset = 0,
-                    .Size = hack.Material->MaterialUniformBuffer.GetBuffer().GetSize(),
+                .binding = 1, .resource = GPU::BufferBinding{
+                    .buffer = hack.material->material_uniform_buffer.buffer(),
+                    .offset = 0,
+                    .size = hack.material->material_uniform_buffer.buffer().size(),
                 }
             },
             GPU::BindGroupEntry{
-                .Binding = 2,
-                .Resource = albedo->GetImage().View,
+                .binding = 2,
+                .resource = albedo->image().view,
             },
             GPU::BindGroupEntry{
-                .Binding = 3,
-                .Resource = normal->GetImage().View,
+                .binding = 3,
+                .resource = normal->image().view,
             },
             GPU::BindGroupEntry{
-                .Binding = 4,
-                .Resource = metallic_roughness->GetImage().View,
+                .binding = 4,
+                .resource = metallic_roughness->image().view,
             },
             GPU::BindGroupEntry{
-                .Binding = 5,
-                .Resource = ao->GetImage().View,
+                .binding = 5,
+                .resource = ao->image().view,
             },
             GPU::BindGroupEntry{
-                .Binding = 6,
-                .Resource = emissive->GetImage().View,
+                .binding = 6,
+                .resource = emissive->image().view,
             },
             GPU::BindGroupEntry{
-                .Binding = 7,
-                .Resource = m_LinearSampler,
+                .binding = 7,
+                .resource = m_linear_sampler,
             },
             GPU::BindGroupEntry{
-                .Binding = 8,
-                .Resource = m_ShadowSampler,
+                .binding = 8,
+                .resource = m_shadow_sampler,
             },
         };
 
         GPU::BindGroupSpec global_bg_spec{
-            .Label = "Object Bind Group"sv,
-            .Entries = bind_group_entries
+            .label = "Object Bind Group"sv,
+            .entries = bind_group_entries
         };
 
-        auto object_group = Renderer::Device().CreateBindGroup(m_ObjectBindGroupLayout, global_bg_spec);
-        m_ObjectGroupsToRelease.push_back(object_group);
+        auto object_group = Renderer::device().create_bind_group(m_object_bind_group_layout, global_bg_spec);
+        m_object_groups_to_release.push_back(object_group);
 
-        scene_rp.SetVertexBuffer(0, hack.VertexBuffer);
-        scene_rp.SetIndexBuffer(hack.IndexBuffer);
-        scene_rp.SetBindGroup(object_group, 1);
+        scene_rp.set_vertex_buffer(0, hack.vertex_buffer);
+        scene_rp.set_index_buffer(hack.index_buffer);
+        scene_rp.set_bind_group(object_group, 1);
 
-        scene_rp.DrawIndex({ 0, hack.IndexCount }, { buffer_count_offset, CAST(u32, list.size()) });
+        scene_rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
         buffer_count_offset += list.size();
     }
 
     // Draw editor specific stuff only if we are not rendering a game view.
     if (!game_view) {
-        Debug::Render(scene_rp);
+        Debug::render(scene_rp);
 
-        scene_rp.SetPipeline(m_GridPipeline);
-        scene_rp.Draw({ 0, 6 }, { 0, 1 });
+        scene_rp.set_pipeline(m_grid_pipeline);
+        scene_rp.draw({ 0, 6 }, { 0, 1 });
     }
 
-    scene_rp.End();
-    scene_rp.Release();
+    scene_rp.end();
+    scene_rp.release();
 }
 
-void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
+void SceneRenderer::create_scene_render_target(Vector2 const& size)
 {
     GPU::TextureSpec spec{
-        .Label = "Main Render Target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3{ size, 1 },
-        .Format = GPU::TextureFormat::RGBA8Unorm,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "Main Render Target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3{ size, 1 },
+        .format = GPU::TextureFormat::RGBA8Unorm,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    m_SceneRenderTarget = Renderer::Device().CreateTexture(spec);
-    m_SceneRenderTarget.InitializeView();
+    m_scene_render_target = Renderer::device().create_texture(spec);
+    m_scene_render_target.initialize_view();
 
     GPU::TextureSpec depth_spec{
-        .Label = "Main Render Depth Target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3{ size, 1 },
-        .Format = GPU::TextureFormat::Depth24Plus,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::DepthOnly,
+        .label = "Main Render Depth Target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3{ size, 1 },
+        .format = GPU::TextureFormat::Depth24Plus,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_SceneRenderDepthTarget = Renderer::Device().CreateTexture(depth_spec);
-    m_SceneRenderDepthTarget.InitializeView();
+    m_scene_render_depth_target = Renderer::device().create_texture(depth_spec);
+    m_scene_render_depth_target.initialize_view();
 }

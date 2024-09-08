@@ -9,9 +9,9 @@ struct EditorProject {
 
 class ProjectCreatorLayer final : public Fussion::Layer {
 public:
-    virtual void OnStart() override;
-    virtual void OnUpdate(f32 delta) override;
-    virtual void OnEvent(Fussion::Event& event) override;
+    virtual void on_start() override;
+    virtual void on_update(f32 delta) override;
+    virtual void on_event(Fussion::Event& event) override;
 
     void Serialize(Fussion::Serializer& s) const;
     void Deserialize(Fussion::Deserializer& ds);

@@ -11,35 +11,35 @@ namespace Fussion {
     template<typename T, size_t N, bool EnableLogging = false>
     class SmallVector {
     public:
-        constexpr Result<void, SmallVectorError> PushBack(T&& value)
+        constexpr Result<void, SmallVectorError> push_back(T&& value)
         {
-            if (m_Index >= N) {
+            if (m_index >= N) {
                 if constexpr (EnableLogging) {
                     LOG_ERRORF("Small vector exceeded size of {}", N);
                 }
                 return SmallVectorError::CapacityExceeded;
             }
-            m_Array[m_Index++] = value;
+            m_array[m_index++] = value;
             return {};
         }
 
         [[nodiscard]]
-        constexpr T& PopBack()
+        constexpr T& pop_back()
         {
-            return m_Array[--m_Index];
+            return m_array[--m_index];
         }
 
         [[nodiscard]]
-        constexpr T* Data() { return m_Array.data(); }
+        constexpr T* data() { return m_array.data(); }
 
         [[nodiscard]]
-        constexpr size_t Size() const { return m_Index; }
+        constexpr size_t size() const { return m_index; }
 
         [[nodiscard]]
-        static constexpr size_t Capacity() { return N; }
+        static constexpr size_t capacity() { return N; }
 
     private:
-        size_t m_Index{ 0 };
-        std::array<T, N> m_Array{};
+        size_t m_index{ 0 };
+        std::array<T, N> m_array{};
     };
 }

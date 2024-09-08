@@ -141,8 +141,8 @@ VulkanRenderPass::VulkanRenderPass(VulkanDevice* device, RenderPassSpecification
         VkAttachmentReference depth_ref{};
         if (subpass.DepthStencilAttachment) {
             depth_ref = VkAttachmentReference{
-                .attachment = subpass.DepthStencilAttachment.Value().Attachment,
-                .layout = ImageLayoutToVulkan(subpass.DepthStencilAttachment.Value().Layout),
+                .attachment = subpass.DepthStencilAttachment.value().Attachment,
+                .layout = ImageLayoutToVulkan(subpass.DepthStencilAttachment.value().Layout),
             };
 
             if (spec.Attachments[depth_ref.attachment].FinalLayout == ImageLayout::DepthStencilReadOnlyOptimal) {

@@ -5,5 +5,5 @@ class AssetRegistryViewer final : public EditorWindow {
 public:
     EDITOR_WINDOW(AssetRegistryViewer)
 
-    virtual void OnDraw() override;
+    virtual void on_draw() override;
 };
