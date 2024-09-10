@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Attribute.h"
 #include "angelscript.h"
 #include "Fussion/Core/Uuid.h"
@@ -8,6 +8,7 @@
 #include "scriptbuilder/scriptbuilder.h"
 
 #include <cstring>
+#include <any>
 
 namespace Fussion {
     class ScriptClass;
@@ -38,6 +39,8 @@ namespace Fussion {
 
         template<typename... Args>
         void call_method(std::string_view name, Args&&... args);
+        
+        void call_method(std::string_view name, std::initializer_list<std::any> args);
 
         template<typename T>
         void set_property(std::string const& name, T& value);

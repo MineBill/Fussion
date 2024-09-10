@@ -54,6 +54,30 @@ ScriptInstance& ScriptInstance::operator=(ScriptInstance const& other)
     return *this;
 }
 
+void ScriptInstance::call_method(std::string_view name, std::initializer_list<std::any> args)
+{
+    if (auto m = m_script_class->get_method(std::string(name))) {
+        m_context->Prepare(m);
+        m_context->SetObject(m_instance);
+        u32 i = 0;
+        
+        for (std::any const&  arg: args) {
+            if (f32 const* f = std::any_cast<f32>(&arg)) {
+                m_context->SetArgFloat(i, *f);
+            } else if (f64 const* f = std::any_cast<f64>(&arg)) {
+                m_context->SetArgDouble(i, *f);
+            } else if (u32 const* f = std::any_cast<u32>(&arg)) {
+                m_context->SetArgDWord(i, *f);
+            } else if (u64 const* f = std::any_cast<u64>(&arg)) {
+                m_context->SetArgQWord(i, *f);
+            } else {
+                LOG_ERRORF("Unsupported argument type");
+            }
+        }
+        m_context->Execute();
+    }
+}
+
 ScriptClass::ScriptClass(asITypeInfo* type)
 {
     reload(type);
