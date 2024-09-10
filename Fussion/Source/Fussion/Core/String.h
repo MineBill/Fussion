@@ -2,7 +2,7 @@
 #include <Fussion/Core/Types.h>
 #include <Fussion/Core/Maybe.h>
 #include <Fussion/Core/Mem.h>
-#include <FUssion/Log/Formatters.h>
+#include <Fussion/Log/Formatters.h>
 
 #define HAS_MICROSHIT_FINALLY_IMPLEMENTED_MULTIDIMENSIONAL_SUBSCRIPT 0
 

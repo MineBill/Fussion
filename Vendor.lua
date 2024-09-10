@@ -156,7 +156,7 @@ package("wgpu-native")
         add_versions("v22.1.0+3", "0fd81fab2154dc01fdec1eca22d506771179454e2f5a83b165883e237117f3e6")
     elseif is_plat("linux") and is_arch("x86_64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-linux-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+3", "e78adde9e9fba49e029906a8928e6d41760b1bcb27ea23af2abf65d988005043")
+        add_versions("v22.1.0+3", "0728ed35aad418e016c68e8af42931a3bca466158f8fae681d054ddc5c7ba9a2")
     elseif is_plat("macosx") and is_arch("x86_64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-macos-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
         add_versions("v22.1.0+3", "1488fc2fb19b156266f0b50ef026d677a261ae2dc30a13d6624f0ff701b489e7")

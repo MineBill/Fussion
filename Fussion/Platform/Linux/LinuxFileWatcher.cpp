@@ -3,11 +3,11 @@
 namespace Fussion {
     class LinuxFileWatcher: public FileWatcher {
     public:
-        virtual void RegisterListener(std::function<CallbackType>) {}
-        virtual void Start() {}
+        virtual void register_listener(std::function<CallbackType>) override {}
+        virtual void start() override {}
     };
 
-    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root) {
-        return MakePtr<LinuxFileWatcher>();
+    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root) {
+        return make_ptr<LinuxFileWatcher>();
     }
 }

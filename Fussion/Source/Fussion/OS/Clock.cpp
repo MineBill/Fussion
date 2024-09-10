@@ -18,12 +18,12 @@ Clock::Clock()
     LARGE_INTEGER integer;
     QueryPerformanceCounter(&integer);
     m_tick_count = integer.QuadPart;
-    // m_TickCount = GetTickCount64();
+    // m_tick_count = GetTickCount64();
 #elif defined(OS_LINUX)
     timespec now{};
     clock_gettime(CLOCK_BOOTTIME, &now);
 
-    m_TickCount = CAST(u64, now.tv_sec) * 1000000000LL + CAST(u64, now.tv_nsec);
+    m_tick_count = CAST(u64, now.tv_sec) * 1000000000LL + CAST(u64, now.tv_nsec);
 #endif
 }
 
@@ -42,8 +42,8 @@ f64 Clock::reset()
     clock_gettime(CLOCK_BOOTTIME, &ts);
 
     const u64 now = CAST(u64, ts.tv_sec) * 1000000000LL + CAST(u64, ts.tv_nsec);
-    u64 diff = (now - m_TickCount) / 1000; // to ms
-    m_TickCount = now;
+    u64 diff = (now - m_tick_count) / 1000; // to ms
+    m_tick_count = now;
 
     return CAST(f64, diff) / 1000.0f / 1000.0f;
 #endif

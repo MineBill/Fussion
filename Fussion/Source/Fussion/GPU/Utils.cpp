@@ -1,11 +1,14 @@
 #include "Utils.h"
 
+#if OS_WINDOWS
 #include "C:/Users/Jonathan/scoop/apps/renderdoc/1.34/renderdoc_app.h"
 #include "FussionPCH.h"
 #define WIN32_LEAN_AND_MEAN
 #include "Windows.h"
+#endif
 
 namespace Fussion::GPU::Utils {
+#if OS_WINDOWS
     RENDERDOC_API_1_1_2* g_Rdoc_Api = nullptr;
 
     void RenderDoc::initialize()
@@ -34,4 +37,9 @@ namespace Fussion::GPU::Utils {
             g_Rdoc_Api->EndFrameCapture(nullptr, nullptr);
         }
     }
+#else if OS_LINUX
+    void RenderDoc::initialize() {}
+    void RenderDoc::start_capture() {}
+    void RenderDoc::end_capture() {}
+#endif
 }
