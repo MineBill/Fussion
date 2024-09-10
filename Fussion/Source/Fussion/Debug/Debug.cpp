@@ -16,9 +16,9 @@
 namespace Fussion {
 
     struct Point {
-        Vector3 Position{};
-        f32 Thickness{};
-        Color Color{};
+        Vector3 position{};
+        f32 thickness{};
+        Color color{};
     };
 
     struct DebugData {

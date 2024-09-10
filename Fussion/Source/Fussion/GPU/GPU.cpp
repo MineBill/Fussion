@@ -54,22 +54,22 @@ namespace Fussion::GPU {
     overloaded(Ts...) -> overloaded<Ts...>;
 
     struct MipMapPipeline {
-        ShaderModule Shader{};
-        RenderPipeline Pipeline{};
-        BindGroupLayout Layout{};
-        BindGroup BindGroup{};
-        Sampler TheSampler{};
-        Texture RenderTexture{};
-        Texture TargetTexture{};
-        u32 MipLevels{};
-        std::vector<TextureView> Views{};
+        ShaderModule shader{};
+        RenderPipeline pipeline{};
+        BindGroupLayout layout{};
+        BindGroup bind_group{};
+        Sampler sampler{};
+        Texture render_texture{};
+        Texture target_texture{};
+        u32 mip_levels{};
+        std::vector<TextureView> views{};
 
         void Initalize(Device const& device, Texture& texture)
         {
-            TargetTexture = texture;
+            target_texture = texture;
             {
                 Vector2 size = { texture.spec.size.x, texture.spec.size.y };
-                RenderTexture = device.create_texture({
+                render_texture = device.create_texture({
                     .usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
                     .dimension = TextureDimension::D2,
                     .size = { texture.spec.size.x, texture.spec.size.y, 1 },
@@ -78,14 +78,14 @@ namespace Fussion::GPU {
                     .aspect = TextureAspect::All,
                     .generate_mip_maps = true,
                 });
-                RenderTexture.initialize_view();
+                render_texture.initialize_view();
 
                 auto encoder = device.create_command_encoder();
-                encoder.copy_texture_to_texture(texture, RenderTexture, size);
+                encoder.copy_texture_to_texture(texture, render_texture, size);
                 auto cmd = encoder.finish();
                 device.submit_command_buffer(cmd);
             }
-            MipLevels = texture.mip_level_count;
+            mip_levels = texture.mip_level_count;
             ShaderModuleSpec shader_spec{
                 .label = "MipMap Generator"sv,
                 .type = GPU::WGSLShader{
@@ -94,7 +94,7 @@ namespace Fussion::GPU {
                 .vertex_entry_point = "vs_main",
                 .fragment_entry_point = "fs_main",
             };
-            Shader = device.create_shader_module(shader_spec);
+            shader = device.create_shader_module(shader_spec);
 
             RenderPipelineSpec spec{
                 .label = "fuck"sv,
@@ -119,16 +119,16 @@ namespace Fussion::GPU {
             };
             spec.primitive.topology = PrimitiveTopology::TriangleStrip;
 
-            Pipeline = device.create_render_pipeline(Shader, spec);
+            pipeline = device.create_render_pipeline(shader, spec);
 
-            Layout = Pipeline.bind_group_layout(0);
+            layout = pipeline.bind_group_layout(0);
 
             SamplerSpec sampler_spec{
                 .lod_min_clamp = 0.f,
                 .lod_max_clamp = 0.f,
                 .anisotropy_clamp = 2,
             };
-            TheSampler = device.create_sampler(sampler_spec);
+            sampler = device.create_sampler(sampler_spec);
 
             std::array entries = {
                 BindGroupEntry{
@@ -137,7 +137,7 @@ namespace Fussion::GPU {
                 },
                 BindGroupEntry{
                     .binding = 1,
-                    .resource = TheSampler
+                    .resource = sampler
                 },
             };
             BindGroupSpec bg_spec{
@@ -145,32 +145,33 @@ namespace Fussion::GPU {
                 .entries = entries,
             };
 
-            BindGroup = device.create_bind_group(Layout, bg_spec);
+            bind_group = device.create_bind_group(layout, bg_spec);
 
-            //LOG_DEBUGF("Creating {} views", MipLevels);
-            for (u32 i = 1; i < MipLevels; ++i) {
-                //LOG_DEBUGF("View {}", i);
-                Views.emplace_back(RenderTexture.create_view({
+            // NOTE: When this is called from another thread logging
+            //       stuff here causes problems like segfaults and
+            //       other race condition fun stuff.
+
+            for (u32 i = 1; i < mip_levels; ++i) {
+                views.emplace_back(render_texture.create_view({
                     .label = "View"sv,
-                    .usage = RenderTexture.spec.usage,
+                    .usage = render_texture.spec.usage,
                     .dimension = TextureViewDimension::D2,
-                    .format = RenderTexture.spec.format,
+                    .format = render_texture.spec.format,
                     .base_mip_level = i,
                     .mip_level_count = 1,
                     .base_array_layer = 0,
                     .array_layer_count = 1,
-                    .aspect = RenderTexture.spec.aspect
+                    .aspect = render_texture.spec.aspect
                 }));
             }
         }
 
         void Process(Device const& device)
         {
-            //LOG_DEBUGF("Generating mipmaps");
             auto encoder = device.create_command_encoder("MipMap Generation");
             u32 i = 1;
-            Vector2 size = RenderTexture.spec.size;
-            for (auto& view : Views) {
+            Vector2 size = render_texture.spec.size;
+            for (auto& view : views) {
                 if (size.x > 1)
                     size.x = CAST(f32, CAST(u32, size.x) / 2);
                 if (size.y > 1)
@@ -189,33 +190,13 @@ namespace Fussion::GPU {
                 };
                 auto rp = encoder.begin_rendering(spec);
 
-                rp.set_pipeline(Pipeline);
-                rp.set_bind_group(BindGroup, 0);
+                rp.set_pipeline(pipeline);
+                rp.set_bind_group(bind_group, 0);
                 rp.draw({ 0, 6 }, { 0, 1 });
                 rp.end();
                 rp.release();
 
-                encoder.copy_texture_to_texture(RenderTexture, TargetTexture, size, i, i);
-
-                // std::vector<uint8_t> pixels(4 * size.X * size.Y);
-                // for (uint32_t k = 0; k < size.X; ++k) {
-                //     for (uint32_t j = 0; j < size.Y; ++j) {
-                //         uint8_t* p = &pixels[4 * (j * size.X + k)];
-                //         if (k == 0) {
-                //             // Our initial texture formula
-                //             p[0] = (k / 16) % 2 == (j / 16) % 2 ? 255 : 0; // r
-                //             p[1] = ((k - j) / 16) % 2 == 0 ? 255 : 0; // g
-                //             p[2] = ((k + j) / 16) % 2 == 0 ? 255 : 0; // b
-                //         } else {
-                //             // Some debug value for visualizing mip levels
-                //             p[0] = i % 2 == 0 ? 255 : 0;
-                //             p[1] = (i / 2) % 2 == 0 ? 255 : 0;
-                //             p[2] = (i / 4) % 2 == 0 ? 255 : 0;
-                //         }
-                //         p[3] = 255; // a
-                //     }
-                // }
-                // device.WriteTexture(TargetTexture, pixels.data(), pixels.size(), {}, size, i);
+                encoder.copy_texture_to_texture(render_texture, target_texture, size, i, i);
                 ++i;
             }
 
@@ -223,13 +204,13 @@ namespace Fussion::GPU {
             device.submit_command_buffer(cmd);
 
             encoder.release();
-            for (auto& view : Views) {
+            for (auto& view : views) {
                 view.release();
             }
-            Pipeline.release();
-            TheSampler.release();
-            BindGroup.release();
-            Shader.release();
+            pipeline.release();
+            sampler.release();
+            bind_group.release();
+            shader.release();
         }
     };
 

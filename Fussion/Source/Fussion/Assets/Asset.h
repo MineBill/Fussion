@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/ReflRegistrar.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
