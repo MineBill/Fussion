@@ -59,7 +59,6 @@ TEST_CASE("RefCounted Benchmarks", "[!benchmark]")
 #include "../Common.h"
 TEST_CASE("UUID", "[!benchmark]")
 {
-    constexpr auto iter_count = 100000;
     BENCHMARK("UUID") {
         return Uuid();
     };

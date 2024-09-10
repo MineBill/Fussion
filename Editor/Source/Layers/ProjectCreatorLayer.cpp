@@ -259,9 +259,9 @@ void ProjectCreatorLayer::Deserialize(Deserializer& ds)
     ds.begin_array("Projects", size);
     m_Projects.reserve(size);
 
-    for (sz i = 0; i < size; ++i) {
+    for (usz i = 0; i < size; ++i) {
         auto& project = m_Projects.emplace_back();
-        sz obj_size;
+        usz obj_size;
         ds.begin_object("", obj_size);
         ds.read("Name", project.Name);
         ds.read("Location", project.Location);

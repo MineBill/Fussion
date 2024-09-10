@@ -1065,7 +1065,7 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
             }
 
             f32 last_split{ 0 };
-            sz buffer_offset = 0;
+            usz buffer_offset = 0;
             for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
                 ZoneScopedN("Shadow Cascade");
 
@@ -1257,7 +1257,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         instance_buffer = Renderer::device().create_buffer(spec);
     }
 
-    sz buffer_count_offset = 0;
+    usz buffer_count_offset = 0;
 
     for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
         auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range()) + buffer_count_offset;

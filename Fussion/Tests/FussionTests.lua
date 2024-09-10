@@ -8,6 +8,7 @@ target("FussionTests")
     add_headerfiles("Source/**.h")
 
     add_rules("CompilerFlags")
+	add_rules("CommonFlags")
 
     add_deps("Fussion")
     add_packages("Catch2")

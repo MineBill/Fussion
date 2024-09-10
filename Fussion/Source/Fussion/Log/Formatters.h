@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Fussion/Core/Types.h"
 
 #include <fmt/format.h>
