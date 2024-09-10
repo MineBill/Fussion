@@ -5,7 +5,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <Fussion/Core/SmallVector.h>
-#include <Fussion/Core/Clap.h>
 #include <Fussion/Core/Ref.h>
 
 using namespace Fussion;
