@@ -19,7 +19,7 @@
                 } else {                                                                                \
                     LOG_ERRORF("    No additional information provided");                               \
                 }                                                                                       \
-                LOG_ERRORF("{}", cpptrace::generate_trace().to_string(true));                           \
+                LOG_ERRORF("{}", cpptrace::generate_trace().to_string(false));                          \
                 BUILTIN_TRAP_FUNCTION();                                                                \
             }                                                                                           \
         }

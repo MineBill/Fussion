@@ -65,4 +65,11 @@ namespace Fussion::System {
 
         return {};
     }
+    
+    bool console_supports_color() {
+        auto console = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode;
+        GetConsoleMode(console, &mode);
+        return mode & ENABLE_PROCESSED_OUTPUT;
+    }
 }

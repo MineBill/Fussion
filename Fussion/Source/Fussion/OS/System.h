@@ -17,4 +17,6 @@ namespace Fussion::System {
 
     /// Returns the location of the specified known folder for the current OS.
     auto get_known_folder(KnownFolders folder) -> std::filesystem::path;
+    
+    bool console_supports_color();
 }

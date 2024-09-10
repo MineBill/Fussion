@@ -2,12 +2,18 @@
 #include "Log.h"
 
 #include "Fussion/Core/Types.h"
+#include <Fussion/OS/System.h>
 
 #include <iostream>
 
 namespace Fussion {
     class ConsoleSink final : public LogSink {
     public:
+        bool enable_color;
+        ConsoleSink() {
+            enable_color = System::console_supports_color();
+        }
+
         virtual void write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc) override
         {
             static std::map<LogLevel, int> const ColorCodes{
@@ -21,9 +27,24 @@ namespace Fussion {
             static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
             if (level >= m_logger->get_priority()) {
-                std::cout << fmt::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[static_cast<int>(level)], message);
-                if (level == LogLevel::Fatal) {
-                    // Do something special?
+                switch (level) {
+                case LogLevel::Debug:
+                case LogLevel::Info:
+                case LogLevel::Warning:
+                    if (enable_color) {
+                        std::cout << fmt::format("\033[38;5;{}m[Console] {}: {}\033[0m\n", ColorCodes.at(level), prefixes[CAST(int, level)], message);
+                    } else {
+                        std::cout << fmt::format("[Console] {}: {}\n", prefixes[CAST(int, level)], message);
+                    }
+                    break;
+                case LogLevel::Error:
+                case LogLevel::Fatal:
+                    if (enable_color) {
+                        std::cerr << fmt::format("\033[38;5;{}m{} [Console]: {}\033[0m\n", ColorCodes.at(level), prefixes[CAST(int, level)], message);
+                    } else {
+                        std::cerr << fmt::format("[Console] {}: {}\n", prefixes[CAST(int, level)], message);
+                    }
+                    break;
                 }
             }
         }
