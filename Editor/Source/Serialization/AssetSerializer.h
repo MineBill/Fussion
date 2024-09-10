@@ -1,6 +1,6 @@
-﻿#pragma once
+#pragma once
 
-#include "Project/EditorAssetManager.h"
+#include "Project/EditorAssetMetadata.h"
 
 #include <Fussion/Assets/Asset.h>
 
