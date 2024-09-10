@@ -198,4 +198,8 @@ namespace Fussion::Dialogs {
         create_native_dialog();
         return g_NativeDialog->open_directory_picker();
     }
+    
+    void open_directory(std::filesystem::path const& path) {
+        (void)shell_execute(std::format("xdg-open {}", path.string()));
+    }
 }
