@@ -54,8 +54,8 @@ namespace Fussion {
             .type = GPU::WGSLShader{
                 .source = shader_src,
             },
-            .vertex_entry_point = "vs_main",
-            .fragment_entry_point = "fs_main",
+            .vertex_entry_point = "vs_main"sv,
+            .fragment_entry_point = "fs_main"sv,
         };
 
         auto shader = Renderer::device().create_shader_module(shader_spec);
@@ -110,7 +110,7 @@ namespace Fussion {
         g_DebugData.Pipeline = device.create_render_pipeline(shader, rp_spec);
 
         GPU::BufferSpec spec{
-            .label = "Debug::VertexBuffer",
+            .label = "Debug::VertexBuffer"sv,
             .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
             .size = 20'000 * sizeof(Point),
             .mapped = false,
