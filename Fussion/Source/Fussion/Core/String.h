@@ -23,7 +23,7 @@ namespace Fussion {
         /// Splits the string using separator, returning an allocated slice of all the parts.
         /// The parts are views into the original string.
         Slice<String> split(String separator, mem::Allocator const& allocator = mem::heap_allocator()) const;
-        
+
         void replace(String from, String to, mem::Allocator const& allocator = mem::heap_allocator());
 
         /// Returns the index of the needle if found, None otherwise.
@@ -57,3 +57,7 @@ namespace Fussion {
 
 // TODO: Figure out a way to make this formattable without using std::string_view.
 FSN_MAKE_FORMATTABLE(Fussion::String, "{}", std::string_view(v.data.ptr, v.data.length))
+
+#if FSN_CORE_USE_GLOBALLY
+using Fussion::String;
+#endif

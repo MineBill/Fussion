@@ -38,6 +38,7 @@ namespace Fussion::mem {
     };
 
     auto heap_allocator() -> Allocator;
+    auto temp_allocator() -> Allocator;
 
     uintptr_t align_forward(uintptr_t ptr, size_t alignment);
 

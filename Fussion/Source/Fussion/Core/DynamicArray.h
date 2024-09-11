@@ -9,6 +9,7 @@ namespace Fussion {
     template<typename T>
     class DynamicArray {
     public:
+        DynamicArray() = default;
         explicit DynamicArray(mem::Allocator const& allocator): m_allocator(allocator) {}
 
         ~DynamicArray()
@@ -17,6 +18,11 @@ namespace Fussion {
                 return;
             }
             mem::free(m_buffer, m_allocator);
+        }
+
+        void init(mem::Allocator const& allocator)
+        {
+            m_allocator = allocator;
         }
 
         template<std::convertible_to<T> V>
@@ -37,11 +43,10 @@ namespace Fussion {
 
             if (m_capacity == 0) {
                 m_capacity = 10;
-            } 
-            else {
+            } else {
                 m_capacity = Math::max(m_capacity + m_capacity / 2, size);
             }
-            
+
             auto new_buffer = mem::alloc<T>(m_capacity, m_allocator);
             mem::copy(new_buffer, m_buffer);
 
@@ -75,6 +80,7 @@ namespace Fussion {
         Slice<T> leak()
         {
             m_leaked = true;
+            m_buffer.length = m_length;
             return m_buffer;
         }
 
@@ -87,7 +93,7 @@ namespace Fussion {
         usz capacity() const { return m_capacity; }
 
     private:
-        mem::Allocator m_allocator;
+        mem::Allocator m_allocator{};
         Slice<T> m_buffer{};
         usz m_length{ 0 };
         usz m_capacity{ 0 };

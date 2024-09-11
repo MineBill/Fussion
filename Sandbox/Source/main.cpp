@@ -1,103 +1,230 @@
-#include "Fussion/Core/String.h"
-#include <Fussion/Core/Mem.h>
+#include "Token.h"
+#include "Allocators/ArenaAllocator.h"
+#include "Fussion/Core/DynamicArray.h"
 
-#include <iostream>
-#include <unordered_map>
+#include "Fussion/Core/String.h"
 
 using namespace Fussion;
 
-struct TrackingAllocator {
-    mem::Allocator backing_allocator;
-    std::unordered_map<void*, s32> allocations;
-
-    auto allocator() -> mem::Allocator
+class Scanner {
+public:
+    void init(String source, mem::Allocator const& allocator = mem::heap_allocator())
     {
-        return {
-            .alloc_proc = [](usz size, void* data, std::source_location const& loc) -> void* {
-                auto self = CAST(TrackingAllocator*, data);
-                auto ptr = self->backing_allocator.alloc_proc(size, self->backing_allocator.data, loc);
-                self->allocations.emplace(ptr, size);
-                return ptr;
-            },
-            .dealloc_proc = [](void* ptr, void* data, std::source_location const& loc) {
-                auto self = CAST(TrackingAllocator*, data);
-                self->allocations.erase(ptr);
-                self->backing_allocator.dealloc_proc(ptr, self->backing_allocator.data, loc);
-            },
-            .data = this
-        };
+        m_source = source;
+        m_tokens.init(allocator);
     }
 
-    void check()
+    auto scan_tokens() -> Slice<Token>
     {
-        if (!allocations.empty()) {
-            std::cout << "Leak!" << std::endl;
+        while (!is_at_end()) {
+            m_start = m_current;
+            scan();
         }
-    }
-};
-
-struct ArenaAllocator {
-    auto allocator() -> mem::Allocator
-    {
-        return {
-            .alloc_proc = [](usz size, void* data, std::source_location const& loc) -> void* {
-                auto self = CAST(ArenaAllocator*, data);
-                if ((self->m_offset + size) > self->m_capacity) {
-                    LOG_ERRORF("{} {}", self->m_offset, size);
-                }
-                auto ptr = mem::align_forward(TRANSMUTE(uintptr_t, self->m_base_ptr) + self->m_offset, mem::DEFAULT_ALIGNMENT);
-                // Alignment might change the offset so we can't just += size.
-                self->m_offset = (ptr - TRANSMUTE(uintptr_t, self->m_base_ptr)) + size;
-                return TRANSMUTE(void*, ptr);
-            },
-            .dealloc_proc = [](void* ptr, void* data, std::source_location const& loc) {
-                (void)ptr;
-                (void)data;
-            },
-            .data = this
-        };
-    }
-
-    static ArenaAllocator create(mem::Allocator const& backing, usz initial_capacity)
-    {
-        ArenaAllocator allocator;
-        allocator.m_backing_allocator = backing;
-        allocator.m_capacity = initial_capacity;
-        allocator.m_base_ptr = mem::alloc(initial_capacity, backing);
-        return allocator;
+        return m_tokens.leak();
     }
 
 private:
-    mem::Allocator m_backing_allocator{};
-    usz m_capacity{};
-    void* m_base_ptr{};
-    usz m_offset{};
+    void scan()
+    {
+        auto ch = advance();
+        switch (ch) {
+        case ' ':
+        case '\t':
+            break;
+        case '\n':
+            m_position.next_line();
+            break;
+        case '(':
+            push_token(TokenType::LeftParen);
+            break;
+        case ')':
+            push_token(TokenType::RightParen);
+            break;
+        case '{':
+            push_token(TokenType::LeftBrace);
+            break;
+        case '}':
+            push_token(TokenType::RightBrace);
+            break;
+        case ',':
+            push_token(TokenType::Comma);
+            break;
+        case '.':
+            push_token(TokenType::Dot);
+            break;
+        case '-':
+            push_token(TokenType::Minus);
+            break;
+        case '+':
+            push_token(TokenType::Plus);
+            break;
+        case ';':
+            push_token(TokenType::Semicolon);
+            break;
+        case '*':
+            push_token(TokenType::Star);
+            break;
+        case '/':
+            if (match('/')) {
+                while (peek() != '\n' && !is_at_end()) {
+                    (void)advance();
+                }
+            } else {
+                push_token(TokenType::Slash);
+            }
+            break;
+        case '=':
+            if (match('=')) {
+                push_token(TokenType::EqualEqual);
+            } else {
+                push_token(TokenType::Equal);
+            }
+            break;
+        case '!':
+            if (match('=')) {
+                push_token(TokenType::BangEqual);
+            } else {
+                push_token(TokenType::Bang);
+            }
+            break;
+        case '<':
+            if (match('=')) {
+                push_token(TokenType::LessEqual);
+            } else {
+                push_token(TokenType::Less);
+            }
+            break;
+        case '>':
+            if (match('=')) {
+                push_token(TokenType::GreaterEqual);
+            } else {
+                push_token(TokenType::Greater);
+            }
+            break;
+        case '"':
+            do_string();
+            break;
+        default:
+            if (is_digit(ch)) {
+                do_number();
+            } else {
+                LOG_ERRORF("Unexpected character '{}' at {}", ch, m_position);
+            }
+        }
+    }
+
+    void do_number()
+    {
+        while (is_digit(peek())) {
+            (void)advance();
+        }
+
+        // We don't use match here in case the character after
+        // the '.' is not a number.
+        if (peek() == '.' && is_digit(peek_next())) {
+            (void)advance();
+            while (is_digit(peek())) {
+                (void)advance();
+            }
+        }
+
+        String s = m_source.view(m_start, m_current);
+        auto number = std::strtod(s.data.ptr, nullptr);
+        push_token(TokenType::Number, number);
+    }
+
+    void do_string()
+    {
+        while (peek() != '"' && !is_at_end()) {
+            if (peek_next() == '\n') {
+                m_position.next_line();
+            }
+            (void)advance();
+        }
+
+        if (is_at_end()) {
+            LOG_ERRORF("Unterminated string");
+            return;
+        }
+
+        (void)advance();
+
+        String s = m_source.view(m_start + 1, m_current - 1);
+        push_token(TokenType::String, s);
+    }
+
+    void push_token(TokenType type)
+    {
+        push_token(type, {});
+    }
+
+    void push_token(TokenType type, Object const& obj)
+    {
+        m_tokens.append(Token{
+            .type = type,
+            .file_position = m_position,
+            .lexeme = m_source.view(m_start, m_current),
+            .literal = obj,
+        });
+    }
+
+    bool is_digit(char ch)
+    {
+        return '0' <= ch && ch <= '9';
+    }
+
+    bool is_at_end() const
+    {
+        return m_current >= m_source.len();
+    }
+
+    char advance()
+    {
+        m_position.column++;
+        return m_source[m_current++];
+    }
+
+    bool match(char ch)
+    {
+        if (is_at_end())
+            return false;
+        if (peek() != ch)
+            return false;
+        (void)advance();
+        return true;
+    }
+
+    char peek() const
+    {
+        if (is_at_end())
+            return 0;
+        return m_source[m_current];
+    }
+
+    char peek_next() const
+    {
+        if (m_current + 1 >= m_source.len())
+            return 0;
+        return m_source[m_current + 1];
+    }
+
+    String m_source{};
+    DynamicArray<Token> m_tokens{};
+
+    usz m_start{};
+    usz m_current{};
+    Position m_position{};
 };
 
 int main()
 {
-    auto arena = ArenaAllocator::create(mem::heap_allocator(), 1'000 * 10);
-
+    ArenaAllocator arena = ArenaAllocator::create(mem::heap_allocator(), 10'000);
     auto allocator = arena.allocator();
-    Slice<u8> bytes = mem::alloc<u8>(10, allocator);
-    s32* number = mem::alloc<s32>(allocator);
-    *number = 12;
-    auto* big_number = mem::alloc<s64>(allocator);
-    *big_number = 11;
 
-    std::cout << *number << std::endl;
-    *number = 9;
-    std::cout << *big_number << std::endl;
+    Scanner scanner;
+    scanner.init("{}23.2!21()\"pepegas\"", allocator);
 
-    String s("Hello World!");
-
-    std::cout << "sizeof(void*): " << sizeof(void*) << std::endl;
-    for (usz i = 0; i < bytes.length; ++i) {
-        bytes[i] = 'A' + i;
-        std::cout << bytes[i] << std::endl;
+    for (auto const& token : scanner.scan_tokens()) {
+        LOG_INFOF("token: {}", token);
     }
-    String ss = String::alloc("Jonathan");
-    ss.free();
-    auto asd = mem::alloc<u8>(10);
-    mem::free(asd);
 }

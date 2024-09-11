@@ -1,11 +1,12 @@
-﻿#include "Fussion/Core/Maybe.h"
+#include "../Common.h"
+
+#include "Fussion/Core/Maybe.h"
 #include "Fussion/Core/StringUtils.h"
+#include <Fussion/Core/SmallVector.h>
+#include <Fussion/Core/Ref.h>
 
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
-
-#include <Fussion/Core/SmallVector.h>
-#include <Fussion/Core/Ref.h>
 
 using namespace Fussion;
 
@@ -86,49 +87,6 @@ TEST_CASE("RefCounted")
         CHECK(ptr->Age == 42);
     }
 }
-
-struct DebugObject {
-    DebugObject()
-    {
-        LOG_DEBUGF("Constructed");
-    }
-
-    ~DebugObject()
-    {
-        LOG_DEBUGF("Destructed. Moved: {}", Moved);
-
-    }
-
-    DebugObject(DebugObject const& other)
-    {
-        LOG_DEBUGF("Copied");
-
-    }
-
-    DebugObject(DebugObject&& other) noexcept
-    {
-        other.Moved = true;
-        LOG_DEBUGF("Moved");
-    }
-
-    DebugObject& operator=(DebugObject const& other)
-    {
-        if (this == &other)
-            return *this;
-        LOG_DEBUGF("Assigned");
-        return *this;
-    }
-
-    DebugObject& operator=(DebugObject&& other) noexcept
-    {
-        if (this == &other)
-            return *this;
-        LOG_DEBUGF("Assigned-Moved?");
-        return *this;
-    }
-
-    bool Moved{ false };
-};
 
 TEST_CASE("Optional")
 {

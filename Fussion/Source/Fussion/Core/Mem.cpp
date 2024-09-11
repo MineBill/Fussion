@@ -2,6 +2,33 @@
 #include "Mem.h"
 
 namespace Fussion::mem {
+    struct TempAllocator {
+        TempAllocator()
+        {
+            m_buffer = mem::alloc<u8>(1'000'000, mem::heap_allocator());
+        }
+
+        auto allocator() -> Allocator
+        {
+            return {
+                .alloc_proc = [](usz size, void* data, std::source_location const&) -> void* {
+                    auto self = TRANSMUTE(TempAllocator*, data);
+                    if (self->m_offset + size >= self->m_buffer.length) {
+                        self->m_offset = 0;
+                    }
+                    auto ptr = self->m_buffer.ptr + self->m_offset;
+                    self->m_offset += size;
+                    return ptr;
+                },
+                .dealloc_proc = [](void*, void*, std::source_location const&) {},
+                .data = this,
+            };
+        }
+
+    private:
+        Slice<u8> m_buffer{};
+        usz m_offset{};
+    };
 
     bool is_power_of_two(size_t x)
     {
@@ -18,9 +45,17 @@ namespace Fussion::mem {
         .data = nullptr
     };
 
+    thread_local TempAllocator TEMP_ALLOCATOR_DATA{};
+    thread_local Allocator TEMP_ALLOCATOR = TEMP_ALLOCATOR_DATA.allocator();
+
     auto heap_allocator() -> Allocator
     {
         return HEAP_ALLOCATOR;
+    }
+
+    auto temp_allocator() -> Allocator
+    {
+        return TEMP_ALLOCATOR;
     }
 
     uintptr_t align_forward(uintptr_t ptr, usz alignment)
