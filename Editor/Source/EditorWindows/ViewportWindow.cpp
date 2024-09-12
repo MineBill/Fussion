@@ -10,10 +10,12 @@
 #include <cmath>
 #include <imgui.h>
 #include "ImGuizmo.h"
+#include "Fussion/Assets/Model.h"
 #include "Fussion/Core/Time.h"
 #include "Fussion/Events/KeyboardEvents.h"
 #include "Fussion/Input/Input.h"
 #include "Fussion/Math/Rect.h"
+#include "Fussion/Scene/Components/MeshRenderer.h"
 
 #include <tracy/Tracy.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -173,6 +175,13 @@ void ViewportWindow::on_draw()
                         scene.wait_until_loaded();
 
                         Editor::change_scene(scene);
+                    }
+                } else if (metadata.type == AssetType::Model) {
+                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET") && m_editor->active_scene() != nullptr) {
+                        auto model = AssetManager::get_asset<Model>(*handle);
+                        auto entity = m_editor->active_scene()->create_entity(metadata.name);
+                        auto mr = entity->add_component<MeshRenderer>();
+                        mr->model = model;
                     }
                 }
             }
