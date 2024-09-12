@@ -5,20 +5,28 @@ namespace Fussion::mem {
     struct TempAllocator {
         TempAllocator()
         {
-            m_buffer = mem::alloc<u8>(1'000'000, mem::heap_allocator());
+            m_base_ptr = mem::alloc(1'000'000, mem::heap_allocator());
         }
 
         auto allocator() -> Allocator
         {
             return {
                 .alloc_proc = [](usz size, void* data, std::source_location const&) -> void* {
-                    auto self = TRANSMUTE(TempAllocator*, data);
-                    if (self->m_offset + size >= self->m_buffer.length) {
+                    // auto self = TRANSMUTE(TempAllocator*, data);
+                    // if (self->m_offset + size >= self->m_buffer.length) {
+                    //     self->m_offset = 0;
+                    // }
+                    // auto ptr = self->m_buffer.ptr + self->m_offset;
+                    // self->m_offset += size;
+                    // return ptr;
+
+                    auto self = CAST(TempAllocator*, data);
+                    if ((self->m_offset + size) >= 1'000'000) {
                         self->m_offset = 0;
                     }
-                    auto ptr = self->m_buffer.ptr + self->m_offset;
-                    self->m_offset += size;
-                    return ptr;
+                    auto ptr = Fussion::mem::align_forward(TRANSMUTE(uintptr_t, self->m_base_ptr) + self->m_offset, Fussion::mem::DEFAULT_ALIGNMENT);
+                    self->m_offset = (ptr - TRANSMUTE(uintptr_t, self->m_base_ptr)) + size;
+                    return TRANSMUTE(void*, ptr);
                 },
                 .dealloc_proc = [](void*, void*, std::source_location const&) {},
                 .data = this,
@@ -26,7 +34,7 @@ namespace Fussion::mem {
         }
 
     private:
-        Slice<u8> m_buffer{};
+        void* m_base_ptr{};
         usz m_offset{};
     };
 

@@ -7,10 +7,47 @@ namespace Fussion {
         T* ptr;
         usz length;
 
+        Slice() = default;
+
+        Slice(T* ptr, usz length)
+            : ptr(ptr),
+              length(length) {}
+
+        Slice(Slice const& other)
+            : ptr(other.ptr),
+              length(other.length) {}
+
+        Slice(Slice&& other) noexcept
+            : ptr(other.ptr),
+              length(other.length) {}
+
+        Slice& operator=(Slice const& other)
+        {
+            if (this == &other)
+                return *this;
+            ptr = other.ptr;
+            length = other.length;
+            return *this;
+        }
+
+        Slice& operator=(Slice&& other) noexcept
+        {
+            if (this == &other)
+                return *this;
+            ptr = other.ptr;
+            length = other.length;
+            return *this;
+        }
+
         T& operator[](usz index) const
         {
             VERIFY(index < length);
             return ptr[index];
+        }
+
+        usz len() const
+        {
+            return length;
         }
 
         template<typename Y>
@@ -23,6 +60,12 @@ namespace Fussion {
                     return false;
             }
             return false;
+        }
+
+        Slice slice(usz start, usz end)
+        {
+            VERIFY(start <= end, "start: {}, end: {}", start, end);
+            return Slice(ptr + start, end - start);
         }
 
         struct Iterator {

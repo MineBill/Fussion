@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="Fussion::String">
+        <DisplayString>{data.ptr, [data.length] s8}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">data.length</Item>
+            <ArrayItems>
+                <Size>data.length</Size>
+                <ValuePointer>data.ptr</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Fussion::Slice&lt;*&gt;">
+        <DisplayString>{ptr, [length]}</DisplayString>
+        <Expand>
+            <Item Name="[size]" ExcludeView="simple">length</Item>
+            <ArrayItems>
+                <Size>length</Size>
+                <ValuePointer>ptr</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Fussion::Maybe&lt;*&gt;">
+        <!-- Conditionally display based on whether the Optional is engaged -->
+        <DisplayString Condition="m_nullable_value != nullptr">Value: {m_nullable_value}</DisplayString>
+        <DisplayString Condition="m_nullable_value == nullptr">Empty</DisplayString>
+
+        <!-- Custom expansion view when user inspects the Optional -->
+        <Expand>
+            <!-- Show whether the Optional contains a value -->
+            <Item Name="HasValue">m_nullable_value != nullptr</Item>
+            <!-- If it contains a value, show the value -->
+            <Item Name="Value" Condition="m_nullable_value != nullptr">m_nullable_value</Item>
+        </Expand>
+    </Type>
+    <Type Name="Fussion::DynamicArray&lt;*&gt;">
+        <DisplayString>length = {m_length}</DisplayString>
+        <Expand>
+            <Item Name="[length]" ExcludeView="simple">m_length</Item>
+            <Item Name="[capacity]" ExcludeView="simple">m_capacity</Item>
+            <Item Name="[leaked]" ExcludeView="simple">m_leaked</Item>
+            <ArrayItems>
+                <Size>m_length</Size>
+                <ValuePointer>m_buffer.ptr</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+</AutoVisualizer>

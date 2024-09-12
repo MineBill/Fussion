@@ -44,7 +44,7 @@ namespace Fussion::mem {
 
     inline void* alloc(
         usz size,
-        Allocator const& allocator = heap_allocator(),
+        Allocator const& allocator,
         std::source_location const& loc = std::source_location::current())
     {
         return allocator.alloc_proc(size, allocator.data, loc);
@@ -52,7 +52,7 @@ namespace Fussion::mem {
 
     inline void free(
         void* ptr,
-        Allocator const& allocator = heap_allocator(),
+        Allocator const& allocator,
         std::source_location const& loc = std::source_location::current())
     {
         allocator.dealloc_proc(ptr, allocator.data, loc);
@@ -64,34 +64,32 @@ namespace Fussion::mem {
     template<typename T>
     Slice<T> alloc(
         usz size,
-        Allocator const& allocator = heap_allocator(),
+        Allocator const& allocator,
         std::source_location const& loc = std::source_location::current())
     {
-        return Slice<T>{
-            .ptr = CAST(T*, alloc(size * sizeof(T), allocator, loc)),
-            .length = size,
-        };
+        return Slice<T>(CAST(T*, alloc(size * sizeof(T), allocator, loc)), size);
     }
 
     template<typename T>
-    T* alloc(Allocator const& allocator = heap_allocator(), std::source_location const& loc = std::source_location::current())
+    T* alloc(Allocator const& allocator, std::source_location const& loc = std::source_location::current())
     {
         return CAST(T*, alloc(sizeof(T), allocator, loc));
     }
 
     template<typename T>
     void free(
-        Slice<T> const& slice,
-        Allocator const& allocator = heap_allocator(),
+        Slice<T>& slice,
+        Allocator const& allocator,
         std::source_location const& loc = std::source_location::current())
     {
+        slice.length = 0;
         allocator.dealloc_proc(slice.ptr, allocator.data, loc);
     }
 
     template<typename T>
-    void copy(Slice<T>& dst, Slice<T> const& src)
+    void copy(Slice<T> const& dst, Slice<T> const& src)
     {
-        VERIFY(dst.length >= src.length);
+        VERIFY(dst.length >= src.length, "dst: {}, src: {}", dst.length, src.length);
         mem::copy(dst.ptr, src.ptr, src.length);
     }
 

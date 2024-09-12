@@ -16,18 +16,22 @@ namespace Fussion {
 
         String() = default;
         String(char const* cstr): data(const_cast<char*>(cstr), CAST(u32, strutils::strlen(cstr))) {}
+        explicit String(Slice<char> buffer): data(buffer) {}
 
         String clone(mem::Allocator const& allocator = mem::heap_allocator()) const;
-        void free();
+        void free(mem::Allocator const& allocator);
 
         /// Splits the string using separator, returning an allocated slice of all the parts.
         /// The parts are views into the original string.
-        Slice<String> split(String separator, mem::Allocator const& allocator = mem::heap_allocator()) const;
+        Slice<String> split(String const& separator, mem::Allocator const& allocator = mem::heap_allocator()) const;
 
-        void replace(String from, String to, mem::Allocator const& allocator = mem::heap_allocator());
+        /// Returns a new allocated string with 'old_str' replaced by 'new_str'.
+        /// If the string is empty, an empty Maybe is returned.
+        /// If 'old_str' could not be located, an empty Maybe is returned.
+        Maybe<String> replace(String const& old_str, String const& new_str, mem::Allocator const& allocator = mem::heap_allocator()) const;
 
         /// Returns the index of the needle if found, None otherwise.
-        Maybe<usz> index_of(String needle) const;
+        Maybe<usz> index_of(String const& needle) const;
 
         usz len() const;
 
@@ -48,10 +52,14 @@ namespace Fussion {
         String operator[](int, int) const;
 #endif
 
+        /// Create an allocated string form a cstring.
         static String alloc(char const* str, mem::Allocator const& allocator = mem::heap_allocator());
 
         template<typename... Args>
-        static String format(String fmt, Args&&...) {}
+        static String format(String fmt, Args&&...)
+        {
+            // TODO: Not implemented yet.
+        }
     };
 }
 

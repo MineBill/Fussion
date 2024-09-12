@@ -1,6 +1,8 @@
 #include "FussionPCH.h"
 #include "String.h"
 
+#include "Input/Keys.h"
+
 #include <cstring>
 
 namespace Fussion {
@@ -22,17 +24,24 @@ namespace Fussion {
         return s;
     }
 
-    void String::free()
+    void String::free(mem::Allocator const& allocator)
     {
         if (data.length == 0) {
             return;
         }
-        mem::free(data.ptr);
+        mem::free(data.ptr, allocator);
         data.ptr = nullptr;
+        data.length = 0;
     }
 
-    Slice<String> String::split(String separator, mem::Allocator const& allocator) const
+    Slice<String> String::split(String const& separator, mem::Allocator const& allocator) const
     {
+        if (separator == *this) {
+            // TODO: big oof
+            auto part = mem::alloc<String>(1, allocator);
+            part[0] = *this;
+            return part;
+        }
         String str = *this;
         u32 count = 1;
         while (true) {
@@ -41,6 +50,10 @@ namespace Fussion {
                 break;
             str = str.view(*pos + separator.len(), str.len());
             count++;
+        }
+
+        if (count == 1) {
+            return {};
         }
 
         auto parts = mem::alloc<String>(count, allocator);
@@ -59,18 +72,37 @@ namespace Fussion {
         }
         return parts;
     }
-    
-    void String::replace(String from, String to, mem::Allocator const& allocator)
+
+    Maybe<String> String::replace(String const& old_str, String const& new_str, mem::Allocator const& allocator) const
     {
-        // auto parts = split(from, allocator);
-        // StringBuilder sb(allocator);
-        // for (usz i = 0; i < parts.length; ++i) {
-        //     sb.append(parts[i]);
-        //     sb.append(to);
-        // }
+        if (len() == 0 || old_str.len() == 0) {
+            return None();
+        }
+
+        auto parts = split(old_str, mem::temp_allocator());
+        if (parts.len() == 0) {
+            return None();
+        }
+
+        // only one part means old_str == *this
+        if (parts.len() == 1) {
+            return new_str.clone(allocator);
+        }
+        auto new_size = len() - old_str.len() * (parts.len() - 1) + new_str.len() * (parts.len() - 1);
+        auto str_buffer = mem::alloc<char>(new_size, allocator);
+        usz pos = 0;
+        for (auto const& part : parts) {
+            // str_buffer.append()
+            mem::copy(str_buffer.slice(pos, 1000), part.data);
+            pos += part.len();
+            mem::copy(str_buffer.slice(pos, 1000), new_str.data);
+            pos += new_str.len();
+        }
+
+        return String(str_buffer);
     }
 
-    Maybe<usz> String::index_of(String needle) const
+    Maybe<usz> String::index_of(String const& needle) const
     {
         for (usz i = 0; i < data.length; ++i) {
             if (view(i, i + needle.data.length) == needle) {
@@ -94,14 +126,16 @@ namespace Fussion {
         return s;
     }
 
-    void String::trim(String whitespace) {
+    void String::trim(String whitespace)
+    {
         trim_left(whitespace);
         trim_right(whitespace);
     }
 
     void String::trim_left(String whitespace)
     {
-        if (len() == 0) return;
+        if (len() == 0)
+            return;
         auto match_any = [](char ch, String from) {
             for (usz i = 0; i < from.len(); ++i) {
                 if (from[i] == ch)
@@ -126,7 +160,8 @@ namespace Fussion {
 
     void String::trim_right(String whitespace)
     {
-        if (len() == 0) return;
+        if (len() == 0)
+            return;
         auto match_any = [](char ch, String from) {
             for (usz i = 0; i < from.len(); ++i) {
                 if (from[i] == ch)
