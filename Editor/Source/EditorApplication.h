@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Fussion/Core/Application.h"
 #include "Fussion/Core/Maybe.h"
-#include "Layers/ImGuiLayer.h"
 
 #include <argparse.hpp>
 
@@ -23,7 +22,7 @@ static_assert(std::is_move_assignable_v<EditorCLI>);
 
 class Editor;
 
-class EditorApplication : public Fussion::Application {
+class EditorApplication final : public Fussion::Application {
 public:
     EditorApplication();
 
@@ -42,7 +41,5 @@ public:
 private:
     static EditorApplication* s_editor_instance;
 
-    ImGuiLayer* m_im_gui_layer{};
     EditorCLI m_args;
-    // Ptr<Editor> m_Editor{};
 };

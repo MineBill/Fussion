@@ -22,7 +22,7 @@ void ProjectCreatorLayer::on_start()
 
     Application::inst()->window().set_title("Fussion - Project Creator");
 
-    LoadProjects();
+    load_projects();
 }
 
 void ProjectCreatorLayer::on_update(f32 delta)
@@ -61,12 +61,12 @@ void ProjectCreatorLayer::on_update(f32 delta)
         ImGui::SetCursorPosX(padding / 2.f);
         ImGui::SetCursorPosY(padding / 2.f);
         EUI::button("New", [&] {
-            m_OpenNewProjectPopup = true;
+            m_open_new_project_popup = true;
         }, { .style = ButtonStyleProjectCreator, .size = Vector2{ button_width, 0 } });
 
         ImGui::SetCursorPosX(padding / 2.f);
         EUI::button("Import", [&] {
-            m_OpenImportProjectPopup = true;
+            m_open_import_project_popup = true;
         }, { .style = ButtonStyleProjectCreator, .size = Vector2{ button_width, 0 } });
         ImGui::EndChild();
 #pragma endregion
@@ -79,7 +79,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
             if (ImGui::BeginTabItem("Projects")) {
                 ImGui::BeginChild("scrolling_region");
 
-                for (auto const& project : m_Projects) {
+                for (auto const& project : m_projects) {
                     auto list = ImGui::GetWindowDrawList();
                     list->ChannelsSplit(2);
                     list->ChannelsSetCurrent(1);
@@ -91,7 +91,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
                     PADDED(5, 5);
 
                     EUI::with_font(EditorStyle::get_style().fonts[EditorFont::RegularBig], [&] {
-                        ImGui::TextUnformatted(project.Name.c_str());
+                        ImGui::TextUnformatted(project.name.c_str());
                     });
 
                     PADDED(5, 5);
@@ -99,7 +99,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
                         ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
                         defer(ImGui::PopStyleColor());
 
-                        ImGui::TextUnformatted(project.Location.string().c_str());
+                        ImGui::TextUnformatted(project.location.string().c_str());
                     });
 
                     ImGui::EndGroup();
@@ -115,7 +115,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
                         list->AddRectFilled(start, end, 0xFF383838, 5);
                     }
                     if (ImGui::IsItemClicked()) {
-                        request.Set(project.Location);
+                        request.Set(project.location);
                     }
                     list->ChannelsMerge();
 
@@ -131,14 +131,14 @@ void ProjectCreatorLayer::on_update(f32 delta)
         }
         ImGui::EndChild();
 
-        if (m_OpenNewProjectPopup) {
+        if (m_open_new_project_popup) {
             ImGui::OpenPopup("New Project");
-            m_OpenNewProjectPopup = false;
+            m_open_new_project_popup = false;
         }
 
-        if (m_OpenImportProjectPopup) {
+        if (m_open_import_project_popup) {
             ImGui::OpenPopup("Import Project");
-            m_OpenImportProjectPopup = false;
+            m_open_import_project_popup = false;
         }
 
         auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
@@ -152,7 +152,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
             ImGui::BeginChild("awd", { 0, size.y - 75 });
             static std::string project_name;
             if (EUI::property("Project Name", &project_name)) {
-                m_ProjectNameValidated = !project_name.empty() && !StringUtils::is_whitespace(project_name);
+                m_project_name_validated = !project_name.empty() && !StringUtils::is_whitespace(project_name);
             }
 
             static std::string project_folder;
@@ -169,7 +169,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
 
             ImGui::Spacing();
 
-            if (!m_ProjectNameValidated || project_folder.empty()) {
+            if (!m_project_name_validated || project_folder.empty()) {
                 ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::Bold]);
                 defer(ImGui::PopFont());
                 ImGui::Text("Invalid project name and/or folder.");
@@ -185,18 +185,18 @@ void ProjectCreatorLayer::on_update(f32 delta)
             }, { .style = ButtonStyleProjectCreator });
             ImGui::SameLine();
 
-            if (!m_ProjectNameValidated)
+            if (!m_project_name_validated)
                 ImGui::BeginDisabled();
 
             EUI::button("Create", [&] {
                 auto path = EditorApplication::create_project(fs::path(project_folder), project_name);
-                AddProject(path);
+                add_project(path);
 
                 request.Set(path);
                 ImGui::CloseCurrentPopup();
             }, { .style = ButtonStyleProjectCreator });
 
-            if (!m_ProjectNameValidated)
+            if (!m_project_name_validated)
                 ImGui::EndDisabled();
         }, { .flags = flags });
 
@@ -222,7 +222,7 @@ void ProjectCreatorLayer::on_update(f32 delta)
             }
             ImGui::SameLine();
             if (ImGui::Button("Import")) {
-                AddProject(project_path);
+                add_project(project_path);
                 ImGui::CloseCurrentPopup();
             }
         }, { .flags = flags });
@@ -241,40 +241,40 @@ void ProjectCreatorLayer::on_event(Event& event)
     }
 }
 
-void ProjectCreatorLayer::Serialize(Serializer& s) const
+void ProjectCreatorLayer::serialize(Serializer& s) const
 {
-    s.begin_array("Projects", m_Projects.size());
-    for (auto const& project : m_Projects) {
+    s.begin_array("projects", m_projects.size());
+    for (auto const& project : m_projects) {
         s.begin_object("", 2);
-        s.write("Name", project.Name);
-        s.write("Location", project.Location);
+        s.write("name", project.name);
+        s.write("location", project.location);
         s.end_object();
     }
     s.end_array();
 }
 
-void ProjectCreatorLayer::Deserialize(Deserializer& ds)
+void ProjectCreatorLayer::deserialize(Deserializer& ds)
 {
     size_t size;
-    ds.begin_array("Projects", size);
-    m_Projects.reserve(size);
+    ds.begin_array("projects", size);
+    m_projects.reserve(size);
 
     for (usz i = 0; i < size; ++i) {
-        auto& project = m_Projects.emplace_back();
+        auto& project = m_projects.emplace_back();
         usz obj_size;
         ds.begin_object("", obj_size);
-        ds.read("Name", project.Name);
-        ds.read("Location", project.Location);
+        ds.read("name", project.name);
+        ds.read("location", project.location);
         ds.end_object();
     }
 
     ds.end_array();
 }
 
-void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
+void ProjectCreatorLayer::add_project(std::filesystem::path const& path)
 {
     if (!exists(path) || is_directory(path)) {
-        LOG_WARNF("Invalid project filr");
+        LOG_WARNF("Invalid project file");
         return;
     }
 
@@ -292,23 +292,23 @@ void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
 
     auto name = j["Name"].get<std::string>();
 
-    m_Projects.emplace_back(name, path);
+    m_projects.emplace_back(name, path);
 
-    SaveProjects();
+    save_projects();
 }
 
-void ProjectCreatorLayer::SaveProjects() const
+void ProjectCreatorLayer::save_projects() const
 {
     auto projects_location = get_known_folder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
 
     JsonSerializer js;
     js.initialize();
-    Serialize(js);
+    serialize(js);
 
     FileSystem::write_entire_file(projects_location, js.to_string());
 }
 
-void ProjectCreatorLayer::LoadProjects()
+void ProjectCreatorLayer::load_projects()
 {
     auto projects_location = get_known_folder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
 
@@ -316,6 +316,6 @@ void ProjectCreatorLayer::LoadProjects()
         JsonDeserializer ds(*file);
         ds.initialize();
 
-        Deserialize(ds);
+        deserialize(ds);
     }
 }

@@ -14,14 +14,14 @@ namespace Fussion {
     Application* Application::s_instance = nullptr;
 
     class SimpleSink final : public LogSink {
-        Application* m_Application;
+        Application* m_application;
 
     public:
-        explicit SimpleSink(Application* app): m_Application(app) {}
+        explicit SimpleSink(Application* app): m_application(app) {}
 
         virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override
         {
-            m_Application->on_log_received(level, message, loc);
+            m_application->on_log_received(level, message, loc);
         }
     };
 
@@ -76,18 +76,6 @@ namespace Fussion {
         }
 
         Renderer::shutdown();
-    }
-
-    Layer* Application::push_layer(Ptr<Layer> layer)
-    {
-        auto ptr = layer.get();
-        m_layers.push_back(std::move(layer));
-        return ptr;
-    }
-
-    void Application::pop_layer()
-    {
-        m_layers.pop_back();
     }
 
     void Application::quit()
