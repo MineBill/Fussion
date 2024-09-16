@@ -93,17 +93,17 @@ namespace Fussion::GPU {
     };
 
     struct SamplerSpec {
-        Maybe<std::string_view> label {};
-        AddressMode address_mode_u { AddressMode::Repeat };
-        AddressMode address_mode_v { AddressMode::Repeat };
-        AddressMode address_mode_w { AddressMode::Repeat };
-        FilterMode mag_filter { FilterMode::Linear };
-        FilterMode min_filter { FilterMode::Linear };
-        FilterMode mip_map_filter { FilterMode::Linear };
-        f32 lod_min_clamp { 0.0f };
-        f32 lod_max_clamp { 32.0f };
-        Maybe<CompareFunction> compare {};
-        u16 anisotropy_clamp { 1_u16 };
+        Maybe<std::string_view> label{};
+        AddressMode address_mode_u{ AddressMode::Repeat };
+        AddressMode address_mode_v{ AddressMode::Repeat };
+        AddressMode address_mode_w{ AddressMode::Repeat };
+        FilterMode mag_filter{ FilterMode::Linear };
+        FilterMode min_filter{ FilterMode::Linear };
+        FilterMode mip_map_filter{ FilterMode::Linear };
+        f32 lod_min_clamp{ 0.0f };
+        f32 lod_max_clamp{ 32.0f };
+        Maybe<CompareFunction> compare{};
+        u16 anisotropy_clamp{ 1_u16 };
     };
 
     struct Sampler : GPUHandle<void> {
@@ -162,7 +162,7 @@ namespace Fussion::GPU {
         u32 sample_count{ 1 };
         TextureAspect aspect{};
 
-        bool generate_mip_maps { false };
+        bool generate_mip_maps{ false };
     };
 
     struct TextureViewSpec {
@@ -193,8 +193,8 @@ namespace Fussion::GPU {
     struct Texture final : GPUHandle<TextureSpec> {
         using GPUHandle::GPUHandle;
 
-        u32 mip_level_count {};
-        TextureView view {};
+        u32 mip_level_count{};
+        TextureView view{};
 
         void initialize_view(u32 array_count = 1);
         void generate_mipmaps(Device const& device);
@@ -255,7 +255,7 @@ namespace Fussion::GPU {
         struct Texture {
             TextureSampleType::Type sample_type{};
             TextureViewDimension view_dimension{};
-            bool multi_sampled{};
+            bool multi_sampled{ false };
         };
 
         struct StorageTexture {
@@ -607,7 +607,14 @@ namespace Fussion::GPU {
             write_buffer(buffer, offset, data.data(), data.size_bytes());
         }
 
-        void write_texture(Texture const& texture, void const* data, size_t data_size, Vector2 const& origin, Vector2 const& size, u32 mip_level = 0) const;
+        void write_texture(
+            Texture const& texture,
+            void const* data,
+            size_t data_size,
+            Vector2 const& origin,
+            Vector2 const& size,
+            u32 bytes_per_pixel = 4,
+            u32 mip_level = 0) const;
 
         virtual void release() override;
 

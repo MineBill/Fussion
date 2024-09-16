@@ -6,6 +6,7 @@
 #include "Fussion/Math/Vector4.h"
 #include "Fussion/Rendering/UniformBuffer.h"
 #include "Fussion/Rendering/Pipelines/HDRPipeline.h"
+#include "Fussion/Rendering/Pipelines/SSAOBlur.h"
 
 namespace Fsn = Fussion;
 
@@ -15,9 +16,7 @@ struct ViewData {
     Mat4 perspective{};
     Mat4 view{};
     Vector4 position{};
-
-    // Mat4 RotationView{};
-    // Vector2 ScreenSize{};
+    Vector2 screen_size{}, _padding;
 };
 
 struct DebugOptions {
@@ -61,6 +60,31 @@ struct RenderPacket {
 constexpr s32 MAX_SHADOW_CASCADES = 4;
 constexpr s32 SHADOWMAP_RESOLUTION = 4096;
 
+struct GBuffer {
+    Fussion::GPU::Texture rt_position;
+    Fussion::GPU::Texture rt_normal;
+    Fussion::GPU::Texture rt_albedo;
+    Fussion::GPU::RenderPipeline pipeline{};
+    Fussion::GPU::BindGroupLayout bind_group_layout{};
+
+    void init(Vector2 const& size, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
+    void resize(Vector2 const& new_size);
+    void do_pass(Fussion::GPU::CommandEncoder& encoder);
+};
+
+struct SSAO {
+    Fussion::GPU::Texture render_target{};
+    Fussion::GPU::Texture noise_texture{};
+    Fussion::GPU::RenderPipeline pipeline{};
+    Fussion::GPU::BindGroupLayout bind_group_layout{};
+    Fussion::GPU::BindGroup bind_group{};
+    Fussion::GPU::Sampler sampler{};
+
+    Fussion::GPU::Buffer samples_buffer{};
+
+    void init(Vector2 const& size, GBuffer const& gbuffer, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
+    void resize(Vector2 const& new_size, GBuffer const& gbuffer);
+};
 
 class SceneRenderer {
 public:
@@ -76,12 +100,17 @@ public:
 
     Fussion::UniformBuffer<SceneData> scene_scene_data;
 
+
     void init();
     void resize(Vector2 const& new_size);
 
     void render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
 
     auto render_target() const -> Fussion::GPU::Texture const& { return m_scene_render_target; }
+
+    GBuffer m_gbuffer;
+    SSAO ssao;
+    Fussion::SSAOBlur ssao_blur{};
 
 private:
     struct InstanceData {
@@ -93,10 +122,14 @@ private:
         Mat4 light_space;
     };
 
+    void setup_scene_bind_group();
+    void update_scene_bind_group(Fussion::GPU::Texture const& ssao_texture);
+
     void setup_shadow_pass_render_target();
     void setup_shadow_pass();
     void depth_pass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
     void pbr_pass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
+    void setup_gbuffer();
 
     void create_scene_render_target(Vector2 const& size);
 

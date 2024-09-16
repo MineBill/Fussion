@@ -47,6 +47,7 @@ struct ViewData {
     projection: mat4x4f,
     view: mat4x4f,
     position: vec4f,
+    screen_size: vec2f,
 }
 
 struct DirectionalLight {
@@ -68,7 +69,11 @@ struct InstanceData {
 @group(0) @binding(0) var<uniform> view_data: ViewData;
 @group(0) @binding(1) var<uniform> light_data: LightData;
 @group(0) @binding(2) var shadow_texture: texture_depth_2d_array;
-@group(1) @binding(0) var<storage, read> instance_data: InstanceData;
+
+@group(1) @binding(0) var ssao_texture: texture_2d<f32>;
+@group(1) @binding(1) var ssao_sampler: sampler;
+
+@group(2) @binding(0) var<storage, read> instance_data: InstanceData;
 
 // @group(1) @binding(1) var shadow_map_texture: texture_2d<f32>;
 
@@ -129,7 +134,15 @@ fn do_directional_shadow(in: VertexOutput, light: DirectionalLight, index: u32) 
         in.pos_light_space3,
         in.pos_light_space4
     );
-    let frag_pos_light_space: vec4f = pos_light_space[index];
+    var i = u32(0);
+    var frag_pos_light_space: vec4f = pos_light_space[0];
+    if (index == 1) {
+        frag_pos_light_space = pos_light_space[1];
+    } else if (index == 2) {
+        frag_pos_light_space = pos_light_space[2];
+    } else if (index == 3) {
+        frag_pos_light_space = pos_light_space[3];
+    }
     var coords = (frag_pos_light_space.xyz / frag_pos_light_space.w);
     if (coords.z > 1.0 || coords.z < -1.0) {
         return 1.0;
@@ -147,11 +160,13 @@ fn do_directional_shadow(in: VertexOutput, light: DirectionalLight, index: u32) 
     let samples = 1;
     let samples_start = (samples - 1) / 2;
     let samples_squared = samples * samples;
-    for (var x = -samples_start; x <= samples_start; x++) {
-        for (var y = -samples_start; y <= samples_start; y++) {
-            shadow += sample_shadow_linear(index, coords.xy + vec2f(f32(x), f32(y)), coords.z - bias, texel_size);
-        }
-    }
+    // for (var x = -samples_start; x <= samples_start; x++) {
+    //     for (var y = -samples_start; y <= samples_start; y++) {
+    //         shadow += sample_shadow_linear(index, coords.xy + vec2f(f32(x), f32(y)), coords.z - bias, texel_size);
+    //     }
+    // }
+    shadow += sample_shadow_linear(index, coords.xy, coords.z - bias, texel_size);
+
     return shadow / f32(samples_squared);
 }
 
@@ -196,14 +211,14 @@ struct Material {
     roughness: f32,
 }
 
-@group(1) @binding(1) var<uniform> material: Material;
-@group(1) @binding(2) var albedo_map: texture_2d<f32>;
-@group(1) @binding(3) var normal_map: texture_2d<f32>;
-@group(1) @binding(4) var metallic_roughness_map: texture_2d<f32>;
-@group(1) @binding(5) var occlusion_map: texture_2d<f32>;
-@group(1) @binding(6) var emissive_map: texture_2d<f32>;
-@group(1) @binding(7) var linear_sampler: sampler;
-@group(1) @binding(8) var shdadow_sampler: sampler;
+@group(2) @binding(1) var<uniform> material: Material;
+@group(2) @binding(2) var albedo_map: texture_2d<f32>;
+@group(2) @binding(3) var normal_map: texture_2d<f32>;
+@group(2) @binding(4) var metallic_roughness_map: texture_2d<f32>;
+@group(2) @binding(5) var occlusion_map: texture_2d<f32>;
+@group(2) @binding(6) var emissive_map: texture_2d<f32>;
+@group(2) @binding(7) var linear_sampler: sampler;
+@group(2) @binding(8) var shdadow_sampler: sampler;
 
 fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     var n = textureSample(normal_map, linear_sampler, in.frag_uv).rgb;
@@ -242,9 +257,8 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
 
     let ndotl = max(dot(n, l), 0.0);
 
-    let shadow_cascades: u32 = u32(4);
     var index: u32 = 0;
-    for (var i = u32(0); i < shadow_cascades; i++) {
+    for (var i = u32(0); i < 4; i++) {
         if (in.view_pos.z < light_data.shadow_split_distances[i]) {
             index = i + 1;
         }
@@ -253,10 +267,13 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let shadow = do_directional_shadow(in, light, index);
 
     let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv).r;
+    let ssao_occlusion = textureSample(ssao_texture, linear_sampler, in.position.xy / view_data.screen_size).r;
 
     var ambient = albedo * material.albedo_color.rgb * 0.2;
     ambient *= occlusion;
-    var ret = ambient + (kd * material.albedo_color.rgb * albedo / pi + specular + reflection * metalness * ks) * radiance * ndotl * shadow * occlusion;
+    ambient *= ssao_occlusion;
+    // ambient += 1.0 - ;
+    var ret = ambient + (kd * material.albedo_color.rgb * albedo / pi + specular + reflection * metalness * ks) * radiance * ndotl * shadow * occlusion * ssao_occlusion;
     ret += textureSample(emissive_map, linear_sampler, in.frag_uv).rgb;
 
     return ret;

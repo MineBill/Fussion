@@ -134,7 +134,21 @@ void ViewportWindow::on_draw()
 
         {
             ZoneScopedN("Get image from set");
-            auto image = Editor::inst().scene_renderer().render_target();
+            GPU::Texture image;
+            switch (m_texture_view_mode) {
+            case TEXTURE_SCENE:
+                image = Editor::inst().scene_renderer().render_target();
+                break;
+            case TEXTURE_GBUFFER_POSITION:
+                image = Editor::inst().scene_renderer().m_gbuffer.rt_position;
+                break;
+            case TEXTURE_GBUFFER_NORMAL:
+                image = Editor::inst().scene_renderer().m_gbuffer.rt_normal;
+                break;
+            case TEXTURE_SSAO:
+                image = Editor::inst().scene_renderer().ssao_blur.render_target();
+                break;
+            }
 
             ImGui::Image(image.view, m_size);
         }
@@ -210,12 +224,30 @@ void ViewportWindow::on_draw()
             if (ImGui::BeginMenu("Debug")) {
                 if (ImGui::BeginMenu("Views")) {
                     constexpr auto flags = ImGuiSelectableFlags_DontClosePopups;
-                    auto& scene_debug_options = m_editor->scene_renderer().scene_debug_options.data;
-                    if (ImGui::Selectable("Show Cascade Boxes", scene_debug_options.show_cascade_boxes, flags)) {
-                        scene_debug_options.show_cascade_boxes = !scene_debug_options.show_cascade_boxes;
+                    if (ImGui::BeginMenu("Scene")) {
+                        if (ImGui::Selectable("Default", m_texture_view_mode == TEXTURE_SCENE, flags)) {
+                            m_texture_view_mode = TEXTURE_SCENE;
+                        }
+                        auto& scene_debug_options = m_editor->scene_renderer().scene_debug_options.data;
+                        if (ImGui::Selectable("Show Cascade Boxes", scene_debug_options.show_cascade_boxes, flags)) {
+                            scene_debug_options.show_cascade_boxes = !scene_debug_options.show_cascade_boxes;
+                        }
+                        if (ImGui::Selectable("Show Cascade Colors", scene_debug_options.show_cascade_colors, flags)) {
+                            scene_debug_options.show_cascade_colors = !scene_debug_options.show_cascade_colors;
+                        }
+                        ImGui::EndMenu();
                     }
-                    if (ImGui::Selectable("Show Cascade Colors", scene_debug_options.show_cascade_colors, flags)) {
-                        scene_debug_options.show_cascade_colors = !scene_debug_options.show_cascade_colors;
+                    if (ImGui::BeginMenu("G-Buffer")) {
+                        if (ImGui::Selectable("Position", m_texture_view_mode == TEXTURE_GBUFFER_POSITION, flags)) {
+                            m_texture_view_mode = TEXTURE_GBUFFER_POSITION;
+                        }
+                        if (ImGui::Selectable("Normal", m_texture_view_mode == TEXTURE_GBUFFER_NORMAL, flags)) {
+                            m_texture_view_mode = TEXTURE_GBUFFER_NORMAL;
+                        }
+                        ImGui::EndMenu();
+                    }
+                    if (ImGui::Selectable("SSAO", m_texture_view_mode == TEXTURE_SSAO, flags)) {
+                        m_texture_view_mode = TEXTURE_SSAO;
                     }
                     ImGui::EndMenu();
                 }

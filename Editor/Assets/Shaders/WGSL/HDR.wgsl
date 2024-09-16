@@ -6,19 +6,7 @@ struct VertexOutput {
 @vertex
 fn vs_main(@builtin(vertex_index) vtx: u32) -> VertexOutput {
     var out: VertexOutput;
-    // var plane: array<vec3f, 6> = array(
-    //     vec3f(-1, -1, 0), vec3f(1, -1, 0), vec3f(-1, 1, 0),
-    //     vec3f(-1, 1, 0), vec3f(1, -1, 0), vec3f(1, 1, 0)
-    // );
-    // var uvs: array<vec2<f32>, 6> = array(
-    //     vec2f(0, 1), vec2f(1, 1), vec2f(0, 0),
-    //     vec2f(0, 0), vec2f(1, 1), vec2f(1, 0),
-    // );
-    // let p = plane[vtx].xyz;
-
-    // out.position = vec4<f32>(p, 1.0);
-    // out.uv = uvs[vtx];
-        out.uv = vec2f(f32((vtx << 1) & 2), f32(vtx & 2));
+    out.uv = vec2f(f32((vtx << 1) & 2), f32(vtx & 2));
     out.position = vec4f(out.uv * vec2f(2.0f, -2.0f) + vec2f( -1.0f, 1.0f), 0.0f, 1.0f);
     return out;
 }
@@ -58,8 +46,7 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
     var out: FragmentOutput;
     let hdr = textureSample(hdr_texture, hdr_sampler, in.uv);
     let sdr = aces_tone_map(hdr.rgb);
-    /* let sdr1 = aces_tone_map(hdr.rgb);
-    let sdr2 = reinhard(sdr1); */
+    // let sdr = reinhard(hdr.rgb);
     let gamma = 2.2;
     let exposure = 1.0;
     var mapped = vec3f(1.0) - exp(-sdr.rgb * exposure);

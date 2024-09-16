@@ -1058,6 +1058,7 @@ namespace Fussion::GPU {
         size_t data_size,
         Vector2 const& origin,
         Vector2 const& size,
+        u32 bytes_per_pixel,
         u32 mip_level) const
     {
         WGPUImageCopyTexture copy_texture{
@@ -1075,7 +1076,7 @@ namespace Fussion::GPU {
         WGPUTextureDataLayout layout{
             .nextInChain = nullptr,
             .offset = 0,
-            .bytesPerRow = CAST(u32, size.x * 4),
+            .bytesPerRow = CAST(u32, size.x * bytes_per_pixel),
             .rowsPerImage = CAST(u32, size.y),
         };
 
@@ -1114,11 +1115,15 @@ namespace Fussion::GPU {
 
     auto Adapter::device() -> Device
     {
+        std::array features{
+            WGPUFeatureName_Float32Filterable,
+        };
+
         WGPUDeviceDescriptor desc{
             .nextInChain = nullptr,
             .label = "Device",
-            // .requiredFeatureCount = ,
-            // .requiredFeatures = ,
+            .requiredFeatureCount = features.size(),
+            .requiredFeatures = features.data(),
             // .requiredLimits = ,
             .defaultQueue = {
                 .nextInChain = nullptr,
@@ -1152,7 +1157,7 @@ namespace Fussion::GPU {
 
     void Surface::configure(Device const& device, Adapter adapter, Config const& config)
     {
-        WGPUSurfaceCapabilities caps {};
+        WGPUSurfaceCapabilities caps{};
         wgpuSurfaceGetCapabilities(CAST(WGPUSurface, handle), CAST(WGPUAdapter, adapter.handle), &caps);
         VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
 
