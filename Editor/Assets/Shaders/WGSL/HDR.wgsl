@@ -45,8 +45,8 @@ fn reinhard(x: vec3<f32>) -> vec3<f32> {
 fn fs_main(in: VertexOutput) -> FragmentOutput {
     var out: FragmentOutput;
     let hdr = textureSample(hdr_texture, hdr_sampler, in.uv);
-    let sdr = aces_tone_map(hdr.rgb);
-    // let sdr = reinhard(hdr.rgb);
+    // let sdr = aces_tone_map(hdr.rgb);
+    let sdr = reinhard(hdr.rgb);
     let gamma = 2.2;
     let exposure = 1.0;
     var mapped = vec3f(1.0) - exp(-sdr.rgb * exposure);

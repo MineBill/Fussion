@@ -234,9 +234,9 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let h = normalize(v + l);
 
     let radiance = light.color.rgb;
-    let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv).rgb;
+    let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv).rgb * material.albedo_color.rgb;
     let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).b * material.metallic;
-    var f0 = mix(vec3f(0.04), material.albedo_color.rgb * albedo, metalness);
+    var f0 = mix(vec3f(0.04), albedo, metalness);
     let f = frensel_schlick(max(dot(h, v), 0.0), f0);
 
     let roughness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).g * material.roughness;
@@ -269,11 +269,11 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv).r;
     let ssao_occlusion = textureSample(ssao_texture, linear_sampler, in.position.xy / view_data.screen_size).r;
 
-    var ambient = albedo * material.albedo_color.rgb * 0.2;
+    var ambient = albedo * 0.03;
     ambient *= occlusion;
     ambient *= ssao_occlusion;
-    // ambient += 1.0 - ;
-    var ret = ambient + (kd * material.albedo_color.rgb * albedo / pi + specular + reflection * metalness * ks) * radiance * ndotl * shadow * occlusion * ssao_occlusion;
+
+    var ret = ambient + (kd * albedo / pi + specular) * radiance * ndotl * shadow;
     ret += textureSample(emissive_map, linear_sampler, in.frag_uv).rgb;
 
     return ret;
