@@ -23,6 +23,7 @@ namespace Fussion {
             return;
 
         materials.resize(m->meshes.size());
+        auto const world_matrix = m_owner->world_matrix();
         for (auto& mesh : m->meshes) {
             PbrMaterial* material = nullptr;
             if (mesh.material_index != -1) {
@@ -39,7 +40,7 @@ namespace Fussion {
             RenderObject obj;
             obj.material = material;
             obj.position = m_owner->transform.position;
-            obj.world_matrix = translate(m_owner->world_matrix(), CAST(glm::vec3, mesh.offset));
+            obj.world_matrix = translate(world_matrix, CAST(glm::vec3, mesh.offset));
             obj.vertex_buffer = mesh.vertex_buffer;
             obj.index_buffer = mesh.index_buffer;
             obj.index_count = mesh.index_count;
