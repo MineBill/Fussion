@@ -157,7 +157,7 @@ void SceneTreeWindow::draw_entity_hierarchy(Fsn::Uuid handle)
         // NOTE: We copy here because the children vector might get
         //       modified if we duplicate an entity.
         auto children = entity->children();
-        for (auto child : entity->children()) {
+        for (auto child : children) {
             draw_entity_hierarchy(child);
         }
         ImGui::TreePop();
