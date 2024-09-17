@@ -43,7 +43,7 @@ fn fs_main(in: VertexOutput) -> @location(0) f32 {
     let tbn = mat3x3f(tangent, bitangent, frag_normal);
 
     let kernel_size = 64;
-    let radius = 0.1;
+    let radius = 0.5;
     var occlusion: f32 = 0.0;
     for(var i = 0; i < kernel_size; i++) {
         var sample_pos = tbn * ssao_data.samples[i];

@@ -281,6 +281,7 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
     std::default_random_engine generator{};
 
     std::array<Vector3, 64> samples;
+    u32 i = 0;
     for (auto& sample : samples) {
         sample = Vector3(
             random(generator) * 2.0 - 1.0,
@@ -288,7 +289,10 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
             random(generator)
             );
         sample.normalize();
-        sample *= random(generator);
+
+        auto scale = CAST(f32, i++) / 64.0f;
+        scale = Math::lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
     }
 
     mem::copy(samples_buffer.slice().mapped_range(), samples.data(), buffer_spec.size);

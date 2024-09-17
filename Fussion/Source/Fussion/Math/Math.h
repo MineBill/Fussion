@@ -82,6 +82,11 @@ namespace Fussion::Math {
         return std::cos(value);
     }
 
+    auto lerp(ScalarType auto a, ScalarType auto b, ScalarType auto t)
+    {
+        return a + (b - a) * t;
+    }
+
     template<ScalarType T>
     auto pow(T value, T power) -> decltype(value)
     {
