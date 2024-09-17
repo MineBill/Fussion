@@ -1,14 +1,17 @@
 ﻿#include "FussionPCH.h"
 #include "RenderTypes.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace Fussion {
 
-    void RenderContext::add_render_object(RenderObject& obj)
+    void RenderContext::add_render_object(RenderObject const& obj)
     {
+        ZoneScoped;
         size_t index = render_objects.size();
         render_objects.push_back(obj);
 
-        mesh_render_lists[obj.vertex_buffer.handle].push_back(index);
+        mesh_render_lists[obj.material][obj.vertex_buffer.handle].push_back(index);
     }
 
     void RenderContext::reset()
@@ -16,9 +19,10 @@ namespace Fussion {
         render_objects.clear();
         directional_lights.clear();
 
-        for (auto& list : mesh_render_lists) {
-            list.second.clear();
+        for (auto& map : mesh_render_lists) {
+            for (auto& list : map.second) {
+                list.second.clear();
+            }
         }
-        mesh_render_lists.clear();
     }
 }

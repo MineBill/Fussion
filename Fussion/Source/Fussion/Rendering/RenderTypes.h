@@ -77,6 +77,8 @@ namespace Fussion {
         u32 index_count{};
     };
 
+    using MeshBatchMap = std::unordered_map<GPU::HandleT, std::vector<size_t>>;
+
     struct RenderContext {
         RenderStateFlags render_flags;
 
@@ -86,10 +88,9 @@ namespace Fussion {
 
         std::vector<RenderObject> render_objects{};
 
-        /// This maps unique mesh buffers to an index of the @ref RenderContext::RenderObjects vector.
-        std::unordered_map<GPU::HandleT, std::vector<size_t>> mesh_render_lists{};
+        std::unordered_map<PbrMaterial*, MeshBatchMap> mesh_render_lists{};
 
-        void add_render_object(RenderObject& obj);
+        void add_render_object(RenderObject const& obj);
         void reset();
     };
 }

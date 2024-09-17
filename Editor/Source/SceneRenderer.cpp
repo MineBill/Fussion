@@ -1228,16 +1228,20 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                 scene_light_data.data.shadow_split_distances[i] = packet.camera.near + split * (packet.camera.far - packet.camera.near) * -1.0f;
                 scene_light_data.data.directional_light.light_space_matrix[i] = light.shader_data.light_space_matrix[i];
 
-                for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
-                    auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.slice().mapped_range()) + buffer_offset;
-                    int j = 0;
-                    for (auto index : list) {
-                        auto& obj = m_render_context.render_objects[index];
-                        data[j].model = obj.world_matrix;
-                        data[j++].light_space = light.shader_data.light_space_matrix[i];
-                    }
+                for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
+                    (void)material;
+                    for (auto const& [buffer, list] : mesh_map) {
+                        (void)buffer;
+                        auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.slice().mapped_range()) + buffer_offset;
+                        int j = 0;
+                        for (auto index : list) {
+                            auto& obj = m_render_context.render_objects[index];
+                            data[j].model = obj.world_matrix;
+                            data[j++].light_space = light.shader_data.light_space_matrix[i];
+                        }
 
-                    buffer_offset += list.size();
+                        buffer_offset += list.size();
+                    }
                 }
                 last_split = split;
             }
@@ -1268,37 +1272,39 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                 rp.set_viewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
                 rp.set_pipeline(m_depth_pipeline);
 
-                for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
-                    ZoneScopedN("Command Buffer Dispatch");
-                    (void)buffer;
+                std::array bind_group_entries{
+                    GPU::BindGroupEntry{
+                        .binding = 0,
+                        .resource = GPU::BufferBinding{
+                            .buffer = m_depth_instance_buffer,
+                            .offset = 0,
+                            .size = m_depth_instance_buffer.size(),
+                        }
+                    },
+                };
 
-                    auto const& hack = m_render_context.render_objects[list[0]];
+                GPU::BindGroupSpec bg_spec{
+                    .label = "Object Depth Bind Group"sv,
+                    .entries = bind_group_entries
+                };
 
-                    std::array bind_group_entries{
-                        GPU::BindGroupEntry{
-                            .binding = 0,
-                            .resource = GPU::BufferBinding{
-                                .buffer = m_depth_instance_buffer,
-                                .offset = 0,
-                                .size = m_depth_instance_buffer.size(),
-                            }
-                        },
-                    };
+                auto object_group = Renderer::device().create_bind_group(m_object_depth_bgl, bg_spec);
+                m_object_groups_to_release.push_back(object_group);
+                rp.set_bind_group(object_group, 0);
+                for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
-                    GPU::BindGroupSpec bg_spec{
-                        .label = "Object Depth Bind Group"sv,
-                        .entries = bind_group_entries
-                    };
+                    for (auto const& [buffer, list] : mesh_map) {
+                        if (list.empty())
+                            continue;
+                        (void)buffer;
 
-                    auto object_group = Renderer::device().create_bind_group(m_object_depth_bgl, bg_spec);
-                    m_object_groups_to_release.push_back(object_group);
+                        auto const& hack = m_render_context.render_objects[list[0]];
+                        rp.set_vertex_buffer(0, hack.vertex_buffer);
+                        rp.set_index_buffer(hack.index_buffer);
 
-                    rp.set_vertex_buffer(0, hack.vertex_buffer);
-                    rp.set_index_buffer(hack.index_buffer);
-                    rp.set_bind_group(object_group, 0);
-
-                    rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
-                    buffer_offset += list.size();
+                        rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
+                        buffer_offset += list.size();
+                    }
                 }
                 rp.end();
                 rp.release();
@@ -1327,15 +1333,18 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
 
     usz buffer_count_offset = 0;
 
-    for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
-        auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range()) + buffer_count_offset;
-        int j = 0;
-        for (auto index : list) {
-            auto& obj = m_render_context.render_objects[index];
-            data[j++].model = obj.world_matrix;
-        }
+    for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
+        for (auto const& [buffer, list] : mesh_map) {
 
-        buffer_count_offset += list.size();
+            auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range()) + buffer_count_offset;
+            int j = 0;
+            for (auto index : list) {
+                auto& obj = m_render_context.render_objects[index];
+                data[j++].model = obj.world_matrix;
+            }
+
+            buffer_count_offset += list.size();
+        }
     }
     instance_buffer.unmap();
 
@@ -1386,38 +1395,40 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         gpass.set_pipeline(m_gbuffer.pipeline);
         gpass.set_bind_group(m_global_bind_group, 0);
 
+        std::array bind_group_entries{
+            GPU::BindGroupEntry{
+                .binding = 0,
+                .resource = GPU::BufferBinding{
+                    .buffer = m_pbr_instance_buffer,
+                    .offset = 0,
+                    .size = m_pbr_instance_buffer.size(),
+                }
+            },
+        };
+
+        GPU::BindGroupSpec bg_spec{
+            .label = "Object Bind Group"sv,
+            .entries = bind_group_entries
+        };
+
+        auto object_group = Renderer::device().create_bind_group(m_gbuffer.bind_group_layout, bg_spec);
+        m_object_groups_to_release.push_back(object_group);
+        gpass.set_bind_group(object_group, 1);
         buffer_count_offset = 0;
-        for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
-            ZoneScopedN("PBR Command Buffer Dispatch");
-            (void)buffer;
+        for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
-            auto const& hack = m_render_context.render_objects[list[0]];
+            for (auto& [buffer, list] : mesh_map) {
+                if (list.empty())
+                    continue;
+                (void)buffer;
+                auto const& hack = m_render_context.render_objects[list[0]];
+                gpass.set_vertex_buffer(0, hack.vertex_buffer);
+                gpass.set_index_buffer(hack.index_buffer);
 
-            std::array bind_group_entries{
-                GPU::BindGroupEntry{
-                    .binding = 0,
-                    .resource = GPU::BufferBinding{
-                        .buffer = m_pbr_instance_buffer,
-                        .offset = 0,
-                        .size = m_pbr_instance_buffer.size(),
-                    }
-                },
-            };
+                gpass.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                buffer_count_offset += list.size();
+            }
 
-            GPU::BindGroupSpec bg_spec{
-                .label = "Object Bind Group"sv,
-                .entries = bind_group_entries
-            };
-
-            auto object_group = Renderer::device().create_bind_group(m_gbuffer.bind_group_layout, bg_spec);
-            m_object_groups_to_release.push_back(object_group);
-
-            gpass.set_vertex_buffer(0, hack.vertex_buffer);
-            gpass.set_index_buffer(hack.index_buffer);
-            gpass.set_bind_group(object_group, 1);
-
-            gpass.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
-            buffer_count_offset += list.size();
         }
         gpass.end();
         gpass.release();
@@ -1492,38 +1503,34 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         // -- Draw it
 
         buffer_count_offset = 0;
-        for (auto const& [buffer, list] : m_render_context.mesh_render_lists) {
-            ZoneScopedN("PBR Command Buffer Dispatch");
-            (void)buffer;
+        for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
-            auto const& hack = m_render_context.render_objects[list[0]];
+            material->material_uniform_buffer.data.object_color = material->object_color;
+            material->material_uniform_buffer.data.metallic = material->metallic;
+            material->material_uniform_buffer.data.roughness = material->roughness;
+            material->material_uniform_buffer.flush();
 
-            hack.material->material_uniform_buffer.data.object_color = hack.material->object_color;
-            hack.material->material_uniform_buffer.data.metallic = hack.material->metallic;
-            hack.material->material_uniform_buffer.data.roughness = hack.material->roughness;
-            hack.material->material_uniform_buffer.flush();
-
-            auto albedo = hack.material->albedo_map.get();
+            auto albedo = material->albedo_map.get();
             if (!albedo) {
                 albedo = Renderer::white_texture().get();
             }
 
-            auto normal = hack.material->normal_map.get();
+            auto normal = material->normal_map.get();
             if (!normal) {
                 normal = Renderer::default_normal_map().get();
             }
 
-            auto ao = hack.material->ambient_occlusion_map.get();
+            auto ao = material->ambient_occlusion_map.get();
             if (!ao) {
                 ao = Renderer::white_texture().get();
             }
 
-            auto metallic_roughness = hack.material->metallic_roughness_map.get();
+            auto metallic_roughness = material->metallic_roughness_map.get();
             if (!metallic_roughness) {
                 metallic_roughness = Renderer::white_texture().get();
             }
 
-            auto emissive = hack.material->emissive_map.get();
+            auto emissive = material->emissive_map.get();
             if (!emissive) {
                 emissive = Renderer::black_texture().get();
             }
@@ -1539,9 +1546,9 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 },
                 GPU::BindGroupEntry{
                     .binding = 1, .resource = GPU::BufferBinding{
-                        .buffer = hack.material->material_uniform_buffer.buffer(),
+                        .buffer = material->material_uniform_buffer.buffer(),
                         .offset = 0,
-                        .size = hack.material->material_uniform_buffer.buffer().size(),
+                        .size = material->material_uniform_buffer.buffer().size(),
                     }
                 },
                 GPU::BindGroupEntry{
@@ -1581,13 +1588,20 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
 
             auto object_group = Renderer::device().create_bind_group(m_object_bind_group_layout, global_bg_spec);
             m_object_groups_to_release.push_back(object_group);
-
-            scene_rp.set_vertex_buffer(0, hack.vertex_buffer);
-            scene_rp.set_index_buffer(hack.index_buffer);
             scene_rp.set_bind_group(object_group, 2);
 
-            scene_rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
-            buffer_count_offset += list.size();
+            for (auto const& [buffer, list] : mesh_map) {
+                if (list.empty())
+                    continue;
+                (void)buffer;
+                auto const& hack = m_render_context.render_objects[list[0]];
+
+                scene_rp.set_vertex_buffer(0, hack.vertex_buffer);
+                scene_rp.set_index_buffer(hack.index_buffer);
+
+                scene_rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                buffer_count_offset += list.size();
+            }
         }
         // Draw editor specific stuff only if we are not rendering a game view.
         if (!game_view) {
