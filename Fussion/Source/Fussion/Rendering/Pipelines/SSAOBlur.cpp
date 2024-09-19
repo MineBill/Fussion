@@ -162,7 +162,7 @@ namespace Fussion {
         m_render_target.initialize_view();
     }
 
-    void SSAOBlur::draw(GPU::CommandEncoder const& encoder)
+    void SSAOBlur::draw(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end)
     {
         ZoneScopedN("SSAO::Blur");
 
@@ -180,6 +180,11 @@ namespace Fussion {
             .label = "SSAOBlur::RenderPass"sv,
             .color_attachments = color_attachments,
             .depth_stencil_attachment = None(),
+            .timestamp_writes = RenderPassTimestampWrites{
+                .query_set = set,
+                .beginning_of_pass_write_index = begin,
+                .end_of_pass_write_index = end,
+            }
         };
         auto rp = encoder.begin_rendering(spec);
 

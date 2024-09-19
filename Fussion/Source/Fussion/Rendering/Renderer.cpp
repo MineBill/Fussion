@@ -31,7 +31,14 @@ namespace Fussion {
             .power_preference = GPU::DevicePower::HighPerformance
         });
 
-        auto device = adapter.device();
+        GPU::DeviceSpec spec{
+            .label = "Device",
+            .required_features = {
+                GPU::Features::Float32Filterable,
+                GPU::Features::TimestampQuery,
+            }
+        };
+        auto device = adapter.device(spec);
 
         s_renderer->m_window_size = window.size();
 

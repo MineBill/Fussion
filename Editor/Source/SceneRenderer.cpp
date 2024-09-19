@@ -859,8 +859,8 @@ void SceneRenderer::init()
 
     m_hdr_pipeline.init(window_size, m_scene_render_target.spec.format);
 
-    m_gbuffer.init(window_size, m_global_bind_group_layout);
-    ssao.init(window_size, m_gbuffer, m_global_bind_group_layout);
+    gbuffer.init(window_size, m_global_bind_group_layout);
+    ssao.init(window_size, gbuffer, m_global_bind_group_layout);
     ssao_blur.init(window_size);
 
     setup_scene_bind_group();
@@ -944,6 +944,8 @@ void SceneRenderer::init()
     Debug::initialize(Renderer::device(), m_global_bind_group_layout, m_hdr_pipeline.Format);
 
     setup_shadow_pass();
+
+    setup_timings();
 }
 
 void SceneRenderer::resize(Vector2 const& new_size)
@@ -956,8 +958,8 @@ void SceneRenderer::resize(Vector2 const& new_size)
     create_scene_render_target(new_size);
     m_hdr_pipeline.resize(new_size);
 
-    m_gbuffer.resize(new_size);
-    ssao.resize(new_size, m_gbuffer);
+    gbuffer.resize(new_size);
+    ssao.resize(new_size, gbuffer);
     ssao_blur.resize(new_size, ssao.render_target);
     update_scene_bind_group(ssao_blur.render_target());
 }
@@ -974,6 +976,19 @@ f32 GetSplitDepth(s32 current_split, s32 max_splits, f32 near, f32 far, f32 l = 
 void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
 {
     ZoneScoped;
+
+    if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
+        m_timings_read_buffer.slice().map_async(GPU::MapMode::Read, [this] {
+            VERIFY(m_timings_read_buffer.map_state() == GPU::MapState::Mapped);
+            auto data = CAST(u64*, m_timings_read_buffer.slice().mapped_range());
+            timings.gbuffer   = CAST(f64, data[3] - data[2]) * 1e-6;
+            timings.ssao      = CAST(f64, data[5] - data[4]) * 1e-6;
+            timings.ssao_blur = CAST(f64, data[7] - data[6]) * 1e-6;
+            timings.pbr       = CAST(f64, data[9] - data[8]) * 1e-6;
+
+            m_timings_read_buffer.unmap();
+        });
+    }
 
     m_render_context.reset();
 
@@ -1253,7 +1268,7 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
             Renderer::device().submit_command_buffer(copy_encoder.finish());
             copy_encoder.release();
 
-            instance_buffer.slice().map_async([instance_buffer, this] {
+            instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
                 m_instance_buffer_pool.push_back(instance_buffer);
             });
 
@@ -1298,7 +1313,7 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                             continue;
                         (void)buffer;
 
-                        auto const& hack = m_render_context.render_objects[list[0]];
+                        auto& hack = m_render_context.render_objects[list[0]];
                         rp.set_vertex_buffer(0, hack.vertex_buffer);
                         rp.set_index_buffer(hack.index_buffer);
 
@@ -1354,7 +1369,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
     Renderer::device().submit_command_buffer(copy_encoder.finish());
     copy_encoder.release();
 
-    instance_buffer.slice().map_async([instance_buffer, this] {
+    instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
         m_instance_buffer_pool.push_back(instance_buffer);
     });
 
@@ -1362,25 +1377,30 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         ZoneScopedN("G-Buffer");
         std::array color_attachments{
             GPU::RenderPassColorAttachment{
-                .view = m_gbuffer.rt_position.view,
+                .view = gbuffer.rt_position.view,
                 .load_op = GPU::LoadOp::Clear,
                 .store_op = GPU::StoreOp::Store,
                 .clear_color = Color::Black,
             },
             GPU::RenderPassColorAttachment{
-                .view = m_gbuffer.rt_normal.view,
+                .view = gbuffer.rt_normal.view,
                 .load_op = GPU::LoadOp::Clear,
                 .store_op = GPU::StoreOp::Store,
                 .clear_color = Color::Black,
             },
             GPU::RenderPassColorAttachment{
-                .view = m_gbuffer.rt_albedo.view,
+                .view = gbuffer.rt_albedo.view,
                 .load_op = GPU::LoadOp::Clear,
                 .store_op = GPU::StoreOp::Store,
                 .clear_color = Color::Black,
             },
         };
 
+        GPU::RenderPassTimestampWrites timestamp_writes{
+            .query_set = m_timings_set,
+            .beginning_of_pass_write_index = 2,
+            .end_of_pass_write_index = 3
+        };
         GPU::RenderPassSpec gpass_rp_spec{
             .label = "GBuffer::render_pass"sv,
             .color_attachments = color_attachments,
@@ -1390,9 +1410,10 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 .store_op = GPU::StoreOp::Store,
                 .depth_clear = 1.0f,
             },
+            .timestamp_writes = timestamp_writes,
         };
         auto gpass = encoder.begin_rendering(gpass_rp_spec);
-        gpass.set_pipeline(m_gbuffer.pipeline);
+        gpass.set_pipeline(gbuffer.pipeline);
         gpass.set_bind_group(m_global_bind_group, 0);
 
         std::array bind_group_entries{
@@ -1411,7 +1432,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             .entries = bind_group_entries
         };
 
-        auto object_group = Renderer::device().create_bind_group(m_gbuffer.bind_group_layout, bg_spec);
+        auto object_group = Renderer::device().create_bind_group(gbuffer.bind_group_layout, bg_spec);
         m_object_groups_to_release.push_back(object_group);
         gpass.set_bind_group(object_group, 1);
         buffer_count_offset = 0;
@@ -1421,7 +1442,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 if (list.empty())
                     continue;
                 (void)buffer;
-                auto const& hack = m_render_context.render_objects[list[0]];
+                auto& hack = m_render_context.render_objects[list[0]];
                 gpass.set_vertex_buffer(0, hack.vertex_buffer);
                 gpass.set_index_buffer(hack.index_buffer);
 
@@ -1445,9 +1466,16 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             },
         };
 
+        GPU::RenderPassTimestampWrites timestamp_writes{
+            .query_set = m_timings_set,
+            .beginning_of_pass_write_index = 4,
+            .end_of_pass_write_index = 5
+        };
+
         GPU::RenderPassSpec rp_spec{
             .label = "SSAO::render_pass"sv,
             .color_attachments = color_attachments,
+            .timestamp_writes = timestamp_writes
         };
         auto pass = encoder.begin_rendering(rp_spec);
 
@@ -1460,7 +1488,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         pass.release();
     }
 
-    ssao_blur.draw(encoder);
+    ssao_blur.draw(encoder, m_timings_set, 6, 7);
 
     {
         ZoneScopedN("PBR Pass");
@@ -1482,6 +1510,11 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 .store_op = GPU::StoreOp::Store,
                 .depth_clear = 1.0f,
             },
+            .timestamp_writes = GPU::RenderPassTimestampWrites{
+                .query_set = m_timings_set,
+                .beginning_of_pass_write_index = 8,
+                .end_of_pass_write_index = 9
+            }
         };
         auto scene_rp = encoder.begin_rendering(scene_rp_spec);
 
@@ -1594,7 +1627,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 if (list.empty())
                     continue;
                 (void)buffer;
-                auto const& hack = m_render_context.render_objects[list[0]];
+                auto& hack = m_render_context.render_objects[list[0]];
 
                 scene_rp.set_vertex_buffer(0, hack.vertex_buffer);
                 scene_rp.set_index_buffer(hack.index_buffer);
@@ -1614,8 +1647,43 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         scene_rp.end();
         scene_rp.release();
     }
+
+    encoder.resolve_query_set(m_timings_set, { 0, 10 }, m_timings_resolve_buffer, 0);
+
+    if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
+        encoder.copy_buffer_to_buffer(m_timings_resolve_buffer, 0, m_timings_read_buffer, 0, m_timings_read_buffer.size());
+    }
 }
 
+
+void SceneRenderer::setup_timings()
+{
+    GPU::QuerySetSpec query_set_spec{
+        .label = "Timings Set",
+        .type = GPU::QueryType::Timestamp,
+        .count = 5 * 2, // 5, one for each pass, times 2 for start and end
+    };
+
+    m_timings_set = Renderer::device().create_query_set(query_set_spec);
+
+    GPU::BufferSpec resolve_spec{
+        .label = "Timings Resolve Buffer"sv,
+        .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
+        .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
+        .mapped = false
+    };
+
+    m_timings_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
+
+    GPU::BufferSpec read_spec{
+        .label = "Timings Read Buffer"sv,
+        .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
+        .size = resolve_spec.size,
+        .mapped = false
+    };
+
+    m_timings_read_buffer = Renderer::device().create_buffer(read_spec);
+}
 
 void SceneRenderer::create_scene_render_target(Vector2 const& size)
 {

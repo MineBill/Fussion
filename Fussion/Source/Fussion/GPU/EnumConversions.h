@@ -5,11 +5,17 @@
 namespace Fussion::GPU {
     auto to_wgpu(BackendRenderer backend) -> WGPUInstanceBackendFlags;
 
+    auto to_wgpu(Features feature) -> WGPUFeatureName;
+
+    auto to_wgpu(QueryType set) -> WGPUQueryType;
+
     auto to_wgpu(DevicePower power) -> WGPUPowerPreference;
 
     auto to_wgpu(PresentMode mode) -> WGPUPresentMode;
 
     auto to_wgpu(BufferUsageFlags usage) -> WGPUBufferUsageFlags;
+
+    auto to_wgpu(MapModeFlags mode) -> WGPUMapModeFlags;
 
     auto to_wgpu(TextureDimension dim) -> WGPUTextureDimension;
 
@@ -53,4 +59,6 @@ namespace Fussion::GPU {
     auto to_wgpu(TextureFormat format) -> WGPUTextureFormat;
 
     auto from_wgpu(WGPUTextureFormat format) -> TextureFormat;
+
+    auto from_wgpu(WGPUBufferMapState state) -> MapState;
 }

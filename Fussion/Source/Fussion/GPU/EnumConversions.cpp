@@ -20,6 +20,28 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
+    auto to_wgpu(Features feature) -> WGPUFeatureName
+    {
+        switch (feature) {
+        case Features::TimestampQuery:
+            return WGPUFeatureName_TimestampQuery;
+        case Features::Float32Filterable:
+            return WGPUFeatureName_Float32Filterable;
+        }
+        UNREACHABLE;
+    }
+
+    auto to_wgpu(QueryType set) -> WGPUQueryType
+    {
+        switch (set) {
+        case QueryType::Occlusion:
+            return WGPUQueryType_Occlusion;
+        case QueryType::Timestamp:
+            return WGPUQueryType_Timestamp;
+        }
+        UNREACHABLE;
+    }
+
     auto to_wgpu(DevicePower power) -> WGPUPowerPreference
     {
         switch (power) {
@@ -80,6 +102,22 @@ namespace Fussion::GPU {
             result |= WGPUBufferUsage_QueryResolve;
 
         return result;
+    }
+
+    auto to_wgpu(MapModeFlags mode) -> WGPUMapModeFlags
+    {
+        using enum MapMode;
+        WGPUMapModeFlags flags{};
+        if (mode.test(None)) {
+            flags |= WGPUMapMode_None;
+        }
+        if (mode.test(Read)) {
+            flags |= WGPUMapMode_Read;
+        }
+        if (mode.test(Write)) {
+            flags |= WGPUMapMode_Write;
+        }
+        return flags;
     }
 
     auto to_wgpu(TextureDimension dim) -> WGPUTextureDimension
@@ -876,6 +914,20 @@ namespace Fussion::GPU {
             return ASTC12x12UnormSrgb;
         case WGPUTextureFormat_Force32:
             return Force32;
+        }
+    }
+
+    auto from_wgpu(WGPUBufferMapState state) -> MapState
+    {
+        switch (state) {
+        case WGPUBufferMapState_Unmapped:
+            return MapState::Unmapped;
+        case WGPUBufferMapState_Pending:
+            return MapState::Pending;
+        case WGPUBufferMapState_Mapped:
+            return MapState::Mapped;
+        default:
+            UNREACHABLE;
         }
     }
 }

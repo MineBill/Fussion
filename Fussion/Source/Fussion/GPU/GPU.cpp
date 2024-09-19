@@ -7,6 +7,7 @@
 
 #include <GLFW/glfw3.h>
 #include <magic_enum/magic_enum.hpp>
+#include <tracy/Tracy.hpp>
 #include <webgpu/wgpu.h>
 #include <webgpu/webgpu.h>
 
@@ -215,54 +216,59 @@ namespace Fussion::GPU {
     };
 
     // Utility function to retrieve the adapter without callbacks.
-    WGPUAdapter RequestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
+    WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
     {
         struct UserData {
-            WGPUAdapter Adapter;
-            bool RequestEnded;
+            WGPUAdapter adapter;
+            bool request_ended;
         } user_data;
         wgpuInstanceRequestAdapter(
             instance, options,
             [](WGPURequestAdapterStatus status, WGPUAdapter adapter, char const* message,
-            void* pUserData) {
-                auto user_data = static_cast<UserData*>(pUserData);
+            void* p_user_data) {
+                auto user_data = static_cast<UserData*>(p_user_data);
 
                 if (status == WGPURequestAdapterStatus_Success) {
-                    user_data->Adapter = adapter;
+                    user_data->adapter = adapter;
                 } else {
                     LOG_ERRORF("Could not get adapter: {}", message);
                 }
-                user_data->RequestEnded = true;
+                user_data->request_ended = true;
             },
             &user_data);
 
-        return user_data.Adapter;
+        return user_data.adapter;
     }
 
     // Utility function to retrieve the device without callbacks.
-    WGPUDevice RequestDeviceSync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor)
+    WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor)
     {
         struct UserData {
-            WGPUDevice Device;
-            bool RequestEnded;
+            WGPUDevice device;
+            bool request_ended;
         } user_data;
 
         wgpuAdapterRequestDevice(
             adapter, descriptor,
             [](WGPURequestDeviceStatus status, WGPUDevice device, char const* message,
-            void* pUserData) {
-                auto user_data = static_cast<UserData*>(pUserData);
+            void* p_user_data) {
+                auto user_data = static_cast<UserData*>(p_user_data);
 
                 if (status == WGPURequestDeviceStatus_Success) {
-                    user_data->Device = device;
+                    user_data->device = device;
                 } else {
                     LOG_ERRORF("Could not get device: {}", message);
                 }
-                user_data->RequestEnded = true;
+                user_data->request_ended = true;
             },
             &user_data);
 
-        return user_data.Device;
+        return user_data.device;
+    }
+
+    void QuerySet::release()
+    {
+        wgpuQuerySetRelease(as<WGPUQuerySet>());
     }
 
     void Sampler::release()
@@ -270,24 +276,36 @@ namespace Fussion::GPU {
         wgpuSamplerRelease(as<WGPUSampler>());
     }
 
+    Buffer::Buffer(HandleT handle, BufferSpec const& spec): GPUHandle(handle, spec)
+    {
+        if (spec.mapped)
+            m_map_state = MapState::Mapped;
+    }
+
     auto Buffer::size() const -> u64
     {
         return wgpuBufferGetSize(CAST(WGPUBuffer, handle));
     }
 
-    auto Buffer::slice(u32 start, u32 size) const -> BufferSlice
+    auto Buffer::slice(u32 start, u32 size) -> BufferSlice
     {
         return BufferSlice(*this, start, size);
     }
 
-    auto Buffer::slice() const -> BufferSlice
+    auto Buffer::slice() -> BufferSlice
     {
         return BufferSlice(*this, 0, size());
     }
 
-    void Buffer::unmap() const
+    auto Buffer::map_state() const -> MapState
+    {
+        return m_map_state;
+    }
+
+    void Buffer::unmap()
     {
         wgpuBufferUnmap(as<WGPUBuffer>());
+        m_map_state = MapState::Unmapped;
     }
 
     void Buffer::release()
@@ -295,36 +313,40 @@ namespace Fussion::GPU {
         wgpuBufferRelease(CAST(WGPUBuffer, handle));
     }
 
-    BufferSlice::BufferSlice(Buffer const& buffer, u32 start, u32 size)
-        : backing_buffer(buffer)
+    BufferSlice::BufferSlice(Buffer& buffer, u32 start, u32 size)
+        : backing_buffer(&buffer)
           , start(start)
           , size(size) {}
 
-    BufferSlice::BufferSlice(Buffer const& buffer)
-        : backing_buffer(buffer)
+    BufferSlice::BufferSlice(Buffer& buffer)
+        : backing_buffer(&buffer)
           , start(0)
           , size(buffer.size()) {}
 
     auto BufferSlice::mapped_range() -> void*
     {
-        return wgpuBufferGetMappedRange(backing_buffer.as<WGPUBuffer>(), start, size);
+        return wgpuBufferGetMappedRange(backing_buffer->as<WGPUBuffer>(), start, size);
     }
 
-    void BufferSlice::map_async(AsyncMapCallback const& callback)
+    void BufferSlice::map_async(MapModeFlags map_mode, AsyncMapCallback const& callback) const
     {
         struct UserData {
-            AsyncMapCallback Callback;
+            Buffer* buffer;
+            AsyncMapCallback callback;
         };
-        wgpuBufferMapAsync(backing_buffer.as<WGPUBuffer>(), WGPUMapMode_Write, start, size, [](WGPUBufferMapAsyncStatus status, void* userdata) {
+        backing_buffer->m_map_state = MapState::Pending;
+
+        wgpuBufferMapAsync(backing_buffer->as<WGPUBuffer>(), to_wgpu(map_mode), start, size, [](WGPUBufferMapAsyncStatus status, void* userdata) {
             auto user_data = CAST(UserData*, userdata);
             if (status == WGPUBufferMapAsyncStatus_Success) {
-                user_data->Callback();
+                user_data->buffer->m_map_state = MapState::Mapped;
+                user_data->callback();
             } else {
                 LOG_ERRORF("Could not map buffer: {}", magic_enum::enum_name(status));
             }
 
             delete user_data;
-        }, new UserData(callback));
+        }, new UserData(backing_buffer, callback));
     }
 
     void TextureView::release()
@@ -479,12 +501,12 @@ namespace Fussion::GPU {
 
     void RenderPassEncoder::set_vertex_buffer(u32 slot, BufferSlice const& slice) const
     {
-        wgpuRenderPassEncoderSetVertexBuffer(as<WGPURenderPassEncoder>(), slot, slice.backing_buffer.as<WGPUBuffer>(), slice.start, slice.size);
+        wgpuRenderPassEncoderSetVertexBuffer(as<WGPURenderPassEncoder>(), slot, slice.backing_buffer->as<WGPUBuffer>(), slice.start, slice.size);
     }
 
     void RenderPassEncoder::set_index_buffer(BufferSlice const& slice) const
     {
-        wgpuRenderPassEncoderSetIndexBuffer(as<WGPURenderPassEncoder>(), slice.backing_buffer.as<WGPUBuffer>(), WGPUIndexFormat_Uint32, slice.start, slice.size);
+        wgpuRenderPassEncoderSetIndexBuffer(as<WGPURenderPassEncoder>(), slice.backing_buffer->as<WGPUBuffer>(), WGPUIndexFormat_Uint32, slice.start, slice.size);
     }
 
     void RenderPassEncoder::set_pipeline(RenderPipeline const& pipeline) const
@@ -538,6 +560,7 @@ namespace Fussion::GPU {
                 },
             };
         }
+
         WGPURenderPassDescriptor desc{
             .nextInChain = nullptr,
             .label = spec.label.value_or("Render Pass"sv).data(),
@@ -547,6 +570,18 @@ namespace Fussion::GPU {
             .occlusionQuerySet = nullptr,
             .timestampWrites = nullptr,
         };
+
+        WGPURenderPassTimestampWrites timestamp_writes{};
+        if (spec.timestamp_writes) {
+            timestamp_writes.querySet = spec.timestamp_writes->query_set.as<WGPUQuerySet>();
+            if (spec.timestamp_writes->beginning_of_pass_write_index) {
+                timestamp_writes.beginningOfPassWriteIndex = spec.timestamp_writes->beginning_of_pass_write_index.value();
+            }
+            if (spec.timestamp_writes->end_of_pass_write_index) {
+                timestamp_writes.endOfPassWriteIndex = spec.timestamp_writes->end_of_pass_write_index.value();
+            }
+            desc.timestampWrites = &timestamp_writes;
+        }
 
         if (auto depth = spec.depth_stencil_attachment) {
             WGPURenderPassDepthStencilAttachment d{
@@ -608,9 +643,33 @@ namespace Fussion::GPU {
         wgpuCommandEncoderCopyTextureToTexture(CAST(WGPUCommandEncoder, handle), &source, &dest, &copy_size);
     }
 
+    void CommandEncoder::resolve_query_set(
+        QuerySet const& set,
+        Range<u32> query_range,
+        Buffer const& destination,
+        u64 destination_offset) const
+    {
+        wgpuCommandEncoderResolveQuerySet(
+            CAST(WGPUCommandEncoder, handle),
+            set.as<WGPUQuerySet>(),
+            query_range.start, query_range.count(),
+            destination.as<WGPUBuffer>(),
+            destination_offset);
+    }
+
     void CommandEncoder::release() const
     {
         wgpuCommandEncoderRelease(CAST(WGPUCommandEncoder, handle));
+    }
+
+    Limits Limits::default_()
+    {
+        return {};
+    }
+
+    Limits Limits::downlevel_defaults()
+    {
+        return {};
     }
 
     Device::Device(HandleT handle)
@@ -826,6 +885,19 @@ namespace Fussion::GPU {
         };
         auto bg_layout = wgpuDeviceCreateBindGroupLayout(CAST(WGPUDevice, handle), &desc);
         return BindGroupLayout{ bg_layout };
+    }
+
+    auto Device::create_query_set(QuerySetSpec const& spec) const -> QuerySet
+    {
+        WGPUQuerySetDescriptor desc{
+            .nextInChain = nullptr,
+            .label = spec.label.value_or("QuerySet").data.ptr,
+            .type = to_wgpu(spec.type),
+            .count = spec.count,
+        };
+
+        auto set = wgpuDeviceCreateQuerySet(CAST(WGPUDevice, handle), &desc);
+        return QuerySet(set, spec);
     }
 
     auto Device::create_shader_module(ShaderModuleSpec const& spec) const -> ShaderModule
@@ -1113,21 +1185,22 @@ namespace Fussion::GPU {
     //         this);
     // }
 
-    auto Adapter::device() -> Device
+    auto Adapter::device(DeviceSpec const& spec) -> Device
     {
-        std::array features{
-            WGPUFeatureName_Float32Filterable,
-        };
+        std::vector<WGPUFeatureName> features{};
+        for (auto const& feature : spec.required_features) {
+            features.push_back(to_wgpu(feature));
+        }
 
         WGPUDeviceDescriptor desc{
             .nextInChain = nullptr,
-            .label = "Device",
+            .label = spec.label.value_or("Device").data.ptr,
             .requiredFeatureCount = features.size(),
             .requiredFeatures = features.data(),
-            // .requiredLimits = ,
             .defaultQueue = {
                 .nextInChain = nullptr,
-                .label = "Default Queue" },
+                .label = "Default Queue"
+            },
             .deviceLostCallback = [](WGPUDeviceLostReason reason, char const* message, void* /* pUserData */) {
                 PANIC("!DEVICE LOST!: \n\tREASON: {}\n\tMESSAGE: {}", magic_enum::enum_name(reason), message);
             },
@@ -1140,7 +1213,7 @@ namespace Fussion::GPU {
             },
         };
 
-        auto device = RequestDeviceSync(CAST(WGPUAdapter, handle), &desc);
+        auto device = request_device_sync(CAST(WGPUAdapter, handle), &desc);
 
         return Device{ device };
     }
@@ -1161,8 +1234,15 @@ namespace Fussion::GPU {
         wgpuSurfaceGetCapabilities(CAST(WGPUSurface, handle), CAST(WGPUAdapter, adapter.handle), &caps);
         VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
 
+        WGPUSurfaceConfigurationExtras extras{
+            .chain = WGPUChainedStruct{
+                .next = nullptr,
+                .sType = CAST(WGPUSType, WGPUSType_SurfaceConfigurationExtras),
+            },
+            .desiredMaximumFrameLatency = 2
+        };
         WGPUSurfaceConfiguration conf{
-            .nextInChain = nullptr,
+            .nextInChain = &extras.chain,
             .device = CAST(WGPUDevice, device.handle),
             .format = caps.formats[0], // TODO: Check this properly
             .usage = WGPUTextureUsage_RenderAttachment,
@@ -1181,7 +1261,10 @@ namespace Fussion::GPU {
     auto Surface::get_next_view() const -> Result<TextureView, Error>
     {
         WGPUSurfaceTexture texture;
-        wgpuSurfaceGetCurrentTexture(CAST(WGPUSurface, handle), &texture);
+        {
+            ZoneScopedN("GetCurrentTexture");
+            wgpuSurfaceGetCurrentTexture(CAST(WGPUSurface, handle), &texture);
+        }
 
         if (texture.status != WGPUSurfaceGetCurrentTextureStatus_Success) {
             switch (texture.status) {
@@ -1254,7 +1337,7 @@ namespace Fussion::GPU {
             .compatibleSurface = CAST(WGPUSurface, surface.handle),
             .powerPreference = to_wgpu(opt.power_preference),
         };
-        auto adapter = RequestAdapterSync(CAST(WGPUInstance, handle), &options);
+        auto adapter = request_adapter_sync(CAST(WGPUInstance, handle), &options);
         return Adapter{ adapter };
     }
 

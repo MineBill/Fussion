@@ -6,6 +6,7 @@
 #include "Layers/ImGuiLayer.h"
 #include "Fussion/Assets/AssetManager.h"
 #include "EditorUI.h"
+#include "ImGuiHelpers.h"
 
 #include <cmath>
 #include <imgui.h>
@@ -72,7 +73,38 @@ void ViewportWindow::render_stats() const
 
     ImGui::SetNextWindowBgAlpha(0.35f);
     if (ImGui::Begin("Stats Overlay", nullptr, window_flags)) {
-        ImGui::Text("CPU Time: %4.2fms", Time::smooth_delta_time() * 1000.0f);
+        ImGui::BeginTabBar("huh");
+        {
+            if (ImGui::BeginTabItem("Timings")) {
+                ImGuiH::BeginGroupPanel("Timings");
+                {
+                    EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
+                        auto& renderer = m_editor->scene_renderer();
+                        ImGui::Text("CPU Time    : %4.2fms", Time::smooth_delta_time() * 1000.0f);
+                        ImGui::Text("Shadow Pass : %4.2fms", renderer.timings.depth);
+                        ImGui::Text("G-Buffer    : %4.2fms", renderer.timings.gbuffer);
+                        ImGui::Text("SSAO Pass   : %4.2fms", renderer.timings.ssao);
+                        ImGui::Text("SSAO Blur   : %4.2fms", renderer.timings.ssao_blur);
+                        ImGui::Text("PBR Pass    : %4.2fms", renderer.timings.pbr);
+                    });
+                }
+                ImGuiH::EndGroupPanel();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Pipeline Stats")) {
+                if (ImGui::CollapsingHeader("SSAO")) {
+
+                }
+
+                if (ImGui::CollapsingHeader("PBR")) {
+                    
+                }
+                ImGui::EndTabItem();
+            }
+        }
+        ImGui::EndTabBar();
+
         if (ImGui::BeginPopupContextWindow()) {
             if (ImGui::MenuItem("Custom", nullptr, location == -1))
                 location = -1;
@@ -140,10 +172,10 @@ void ViewportWindow::on_draw()
                 image = Editor::inst().scene_renderer().render_target();
                 break;
             case TEXTURE_GBUFFER_POSITION:
-                image = Editor::inst().scene_renderer().m_gbuffer.rt_position;
+                image = Editor::inst().scene_renderer().gbuffer.rt_position;
                 break;
             case TEXTURE_GBUFFER_NORMAL:
-                image = Editor::inst().scene_renderer().m_gbuffer.rt_normal;
+                image = Editor::inst().scene_renderer().gbuffer.rt_normal;
                 break;
             case TEXTURE_SSAO:
                 image = Editor::inst().scene_renderer().ssao_blur.render_target();

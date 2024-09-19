@@ -1,4 +1,5 @@
 #pragma once
+#include "Fussion/Core/String.h"
 #include "Fussion/Core/Ref.h"
 #include "Fussion/Math/Color.h"
 #include "Fussion/Math/Vector3.h"
@@ -92,6 +93,18 @@ namespace Fussion::GPU {
         virtual void release() = 0;
     };
 
+    struct QuerySetSpec {
+        Maybe<String> label{};
+        QueryType type{};
+        u32 count{};
+    };
+
+    struct QuerySet final : GPUHandle<QuerySetSpec> {
+        using GPUHandle::GPUHandle;
+
+        virtual void release() override;
+    };
+
     struct SamplerSpec {
         Maybe<std::string_view> label{};
         AddressMode address_mode_u{ AddressMode::Repeat };
@@ -106,7 +119,7 @@ namespace Fussion::GPU {
         u16 anisotropy_clamp{ 1_u16 };
     };
 
-    struct Sampler : GPUHandle<void> {
+    struct Sampler final : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
         virtual void release() override;
@@ -124,24 +137,30 @@ namespace Fussion::GPU {
     struct Buffer final : GPUHandle<BufferSpec> {
         using GPUHandle::GPUHandle;
 
+        Buffer(HandleT handle, BufferSpec const& spec);
         auto size() const -> u64;
-        auto slice(u32 start, u32 size) const -> BufferSlice;
-        auto slice() const -> BufferSlice;
+        auto slice(u32 start, u32 size) -> BufferSlice;
+        auto slice() -> BufferSlice;
+        auto map_state() const -> MapState;
 
-        void unmap() const;
+        void unmap();
 
         virtual void release() override;
+
+        friend BufferSlice;
+    private:
+        MapState m_map_state{ MapState::Unmapped };
     };
 
     struct BufferSlice {
         using AsyncMapCallback = std::function<void()>;
 
-        Buffer backing_buffer;
+        Buffer* backing_buffer;
         u32 start{};
         u32 size{};
 
-        BufferSlice(Buffer const& buffer, u32 start, u32 size);
-        BufferSlice(Buffer const& buffer);
+        BufferSlice(Buffer& buffer, u32 start, u32 size);
+        BufferSlice(Buffer& buffer);
 
         /// Returns the slice as a mapped ranged.
         /// This assumes buffer was created with Mapped = true
@@ -149,7 +168,7 @@ namespace Fussion::GPU {
         auto mapped_range() -> void*;
 
 
-        void map_async(AsyncMapCallback const& callback);
+        void map_async(MapModeFlags map_mode, AsyncMapCallback const& callback) const;
     };
 
     struct TextureSpec {
@@ -277,6 +296,7 @@ namespace Fussion::GPU {
     };
 
     struct BindGroupLayoutSpec {
+        /// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
         Maybe<std::string_view> label{};
         std::span<BindGroupLayoutEntry> entries{};
     };
@@ -314,22 +334,23 @@ namespace Fussion::GPU {
     };
 
     struct BindGroupSpec {
-        /// Label for the bind group.
+        /// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
         Maybe<std::string_view> label{};
         std::span<BindGroupEntry> entries{};
     };
 
     /// A BindGroup represents the set of resources bound to the bindings
-    /// described by a BindGroupLayout. It can be created with Device::CreateBindGroup.
-    /// A BindGroup can be bound to a particular RenderPass with RenderPassEncoder::SetBindGroup,
-    /// or to a ComputePass with ComputePassEncoder::SetBindGroup.
-    struct BindGroup : GPUHandle<void> {
+    /// described by a BindGroupLayout. It can be created with Device::create_bind_group().
+    /// A BindGroup can be bound to a particular RenderPass with RenderPassEncoder::set_bind_group(),
+    /// or to a ComputePass with ComputePassEncoder::set_bind_group.
+    struct BindGroup final : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
         virtual void release() override;
     };
 
     struct PipelineLayoutSpec {
+        /// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
         Maybe<std::string_view> label{};
         std::span<BindGroupLayout> bind_group_layouts{};
     };
@@ -501,6 +522,7 @@ namespace Fussion::GPU {
     };
 
     struct RenderPipelineSpec {
+        /// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
         Maybe<std::string_view> label{};
         Maybe<PipelineLayout> layout{};
         VertexState vertex{};
@@ -527,13 +549,30 @@ namespace Fussion::GPU {
         f32 depth_clear{};
     };
 
-    struct RenderPassSpec {
-        Maybe<std::string_view> label{};
-        std::span<RenderPassColorAttachment> color_attachments{};
-        Maybe<RenderPassColorAttachment> depth_stencil_attachment{};
+    /// Describes the timestamp writes of a render pass.
+    /// For use with RenderPassSpec.
+    struct RenderPassTimestampWrites {
+        /// The query set to write to.
+        QuerySet query_set{};
+        /// The index of the query set at which a start timestamp of this pass is written, if any.
+        Maybe<u32> beginning_of_pass_write_index{};
+        /// The index of the query set at which an end timestamp of this pass is written, if any.
+        Maybe<u32> end_of_pass_write_index{};
     };
 
-    struct RenderPassEncoder : GPUHandle<void> {
+    struct RenderPassSpec {
+        /// Debug label of the render pass. This will show up in graphics debuggers for easy identification.
+        Maybe<std::string_view> label{};
+        /// The color attachments of the render pass.
+        std::span<RenderPassColorAttachment> color_attachments{};
+        /// The depth and stencil attachment of the render pass, if any.
+        Maybe<RenderPassColorAttachment> depth_stencil_attachment{};
+        /// Defines which timestamp values will be written for this pass, and where to write them to.
+        Maybe<RenderPassTimestampWrites> timestamp_writes{};
+        // occlusion_query_set
+    };
+
+    struct RenderPassEncoder final : GPUHandle<void> {
         using GPUHandle::GPUHandle;
 
         /// Sets the viewport used during the rasterization stage to
@@ -556,6 +595,7 @@ namespace Fussion::GPU {
         virtual void release() override;
     };
 
+
     struct CommandBuffer {
         HandleT handle{};
 
@@ -565,13 +605,67 @@ namespace Fussion::GPU {
     struct CommandEncoder {
         HandleT handle{};
 
+        [[nodiscard]]
         auto begin_rendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
         auto finish() -> CommandBuffer;
 
         void copy_buffer_to_buffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
         void copy_texture_to_texture(Texture const& from, Texture const& to, Vector2 const& size, u32 from_mip_level = 0, u32 to_mip_level = 0) const;
 
+        void resolve_query_set(
+            QuerySet const& set,
+            Range<u32> query_range,
+            Buffer const& destination,
+            u64 destination_offset) const;
+
         void release() const;
+    };
+
+    struct Limits {
+        u32 max_texture_dimension_1d{};
+        u32 max_texture_dimension_2d{};
+        u32 max_texture_dimension_3d{};
+        u32 max_texture_array_layers{};
+        u32 max_bind_groups{};
+        u32 max_bindings_per_bind_group{};
+        u32 max_dynamic_uniform_buffers_per_pipeline_layout{}; //8,
+        u32 max_dynamic_storage_buffers_per_pipeline_layout{}; //4,
+        u32 max_sampled_textures_per_shader_stage{}; //16,
+        u32 max_samplers_per_shader_stage{}; //16,
+        u32 max_storage_buffers_per_shader_stage{}; //4, // *
+        u32 max_storage_textures_per_shader_stage{}; //4,
+        u32 max_uniform_buffers_per_shader_stage{}; //12,
+        u32 max_uniform_buffer_binding_size{}; //16 << 10, // * (16 KiB)
+        u32 max_storage_buffer_binding_size{}; //128 << 20, // (128 MiB)
+        u32 max_vertex_buffers{}; //8,
+        u32 max_vertex_attributes{}; //16,
+        u32 max_vertex_buffer_array_stride{}; //2048,
+        u32 min_subgroup_size{}; //0,
+        u32 max_subgroup_size{}; //0,
+        u32 max_push_constant_size{}; //0,
+        u32 min_uniform_buffer_offset_alignment{}; //256,
+        u32 min_storage_buffer_offset_alignment{}; //256,
+        u32 max_inter_stage_shader_components{}; //60,
+        u32 max_color_attachments{}; //8,
+        u32 max_color_attachment_bytes_per_sample{}; //32,
+        u32 max_compute_workgroup_storage_size{}; //16352, // *
+        u32 max_compute_invocations_per_workgroup{}; //256,
+        u32 max_compute_workgroup_size_x{}; //256,
+        u32 max_compute_workgroup_size_y{}; //256,
+        u32 max_compute_workgroup_size_z{}; //64,
+        u32 max_compute_workgroups_per_dimension{}; //65535,
+        u64 max_buffer_size{};
+        u32 max_non_sampler_bindings{};
+
+        static Limits default_();
+        static Limits downlevel_defaults();
+    };
+
+    struct DeviceSpec final {
+        Maybe<String> label{};
+        /// Specifies the features that are required by the device request. The request will fail if the adapter cannot provide these features.
+        /// Exactly the specified set of features, and no more or less, will be allowed in validation of API calls on the resulting device.
+        std::vector<Features> required_features{};
     };
 
     struct Device final : GPUHandle<void> {
@@ -580,17 +674,26 @@ namespace Fussion::GPU {
         Device() = default;
         explicit Device(HandleT handle);
 
-        // void SetErrorCallback(ErrorFn const& function);
-
+        [[nodiscard]]
         auto create_buffer(BufferSpec const& spec) const -> Buffer;
+        [[nodiscard]]
         auto create_texture(TextureSpec const& spec) const -> Texture;
+        [[nodiscard]]
         auto create_sampler(SamplerSpec const& spec) const -> Sampler;
+        [[nodiscard]]
         auto create_command_encoder(const char* label = "") const -> CommandEncoder;
+        /// Create a bind group, duh.
         auto create_bind_group(BindGroupLayout layout, BindGroupSpec const& spec) const -> BindGroup;
+        [[nodiscard]]
         auto create_bind_group_layout(BindGroupLayoutSpec const& spec) const -> BindGroupLayout;
+        [[nodiscard]]
+        auto create_query_set(QuerySetSpec const& spec) const -> QuerySet;
 
+        [[nodiscard]]
         auto create_shader_module(ShaderModuleSpec const& spec) const -> ShaderModule;
+        [[nodiscard]]
         auto create_pipeline_layout(PipelineLayoutSpec const& spec) const -> PipelineLayout;
+        [[nodiscard]]
         auto create_render_pipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline;
 
         void submit_command_buffer(CommandBuffer cmd) const;
@@ -629,7 +732,7 @@ namespace Fussion::GPU {
     struct Adapter {
         HandleT handle{};
 
-        auto device() -> Device;
+        auto device(DeviceSpec const& spec) -> Device;
 
         void release() const;
     };

@@ -9,7 +9,7 @@ namespace Fussion {
         void init(Vector2 const& size);
 
         void resize(Vector2 const& new_size, GPU::Texture const& ssao_texture);
-        void draw(GPU::CommandEncoder const& encoder);
+        void draw(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end);
 
         auto render_target() -> GPU::Texture { return m_render_target; }
 

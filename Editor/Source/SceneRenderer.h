@@ -92,6 +92,14 @@ public:
         s32 cascade_index{ 0 };
     } render_debug_options;
 
+    struct Timings {
+        f64 depth{}; // [0, 1]
+        f64 gbuffer{}; // [2, 3]
+        f64 ssao{}; // [4, 5]
+        f64 ssao_blur{}; // [6, 7]
+        f64 pbr{}; // [8, 9]
+    } timings{};
+
     Fussion::UniformBuffer<ViewData> scene_view_data;
     Fussion::UniformBuffer<LightData> scene_light_data;
 
@@ -108,7 +116,7 @@ public:
 
     auto render_target() const -> Fussion::GPU::Texture const& { return m_scene_render_target; }
 
-    GBuffer m_gbuffer;
+    GBuffer gbuffer;
     SSAO ssao;
     Fussion::SSAOBlur ssao_blur{};
 
@@ -129,7 +137,7 @@ private:
     void setup_shadow_pass();
     void depth_pass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
     void pbr_pass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
-    void setup_gbuffer();
+    void setup_timings();
 
     void create_scene_render_target(Vector2 const& size);
 
@@ -154,6 +162,12 @@ private:
 
     Fussion::GPU::Sampler m_linear_sampler{};
     Fussion::GPU::Sampler m_shadow_sampler{};
+
+    Fussion::GPU::QuerySet m_timings_set{};
+    /// Used to resolve the query set into it.
+    Fussion::GPU::Buffer m_timings_resolve_buffer{};
+    /// Used to read from it on the CPU once we copy the resolve buffer into it.
+    Fussion::GPU::Buffer m_timings_read_buffer{};
 
     Vector2 m_render_area{};
 

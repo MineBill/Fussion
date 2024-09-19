@@ -10,6 +10,16 @@ namespace Fussion::GPU {
         OpenGL,
     };
 
+    enum class Features {
+        TimestampQuery,
+        Float32Filterable,
+    };
+
+    enum class QueryType {
+        Occlusion,
+        Timestamp,
+    };
+
     enum class BufferUsage {
         None = 1 << 0,
         MapRead = 1 << 1,
@@ -26,6 +36,20 @@ namespace Fussion::GPU {
     };
 
     BITFLAGS(BufferUsage)
+
+    enum class MapState {
+        Unmapped,
+        Pending,
+        Mapped,
+    };
+
+    enum class MapMode {
+        None = 1 << 0,
+        Read = 1 << 1,
+        Write = 1 << 2,
+    };
+
+    BITFLAGS(MapMode)
 
     enum class TextureUsage {
         None = 1 << 0,
