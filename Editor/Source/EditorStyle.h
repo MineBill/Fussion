@@ -22,6 +22,8 @@ enum class EditorFont {
 
     Bold,
     BoldSmall,
+
+    MonospaceRegular,
 };
 
 struct CommonStyle {

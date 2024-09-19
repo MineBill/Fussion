@@ -319,4 +319,12 @@ namespace EUI {
         callback();
         ImGui::PopFont();
     }
+
+    void with_editor_font(EditorFont font, auto&& callback)
+    {
+        auto* f = EditorStyle::get_style().fonts[font];
+        ImGui::PushFont(f);
+        callback();
+        ImGui::PopFont();
+    }
 }

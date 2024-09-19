@@ -90,12 +90,12 @@ void ProjectCreatorLayer::on_update(f32 delta)
                     ImGui::BeginGroup();
                     PADDED(5, 5);
 
-                    EUI::with_font(EditorStyle::get_style().fonts[EditorFont::RegularBig], [&] {
+                    EUI::with_editor_font(EditorFont::RegularBig, [&] {
                         ImGui::TextUnformatted(project.name.c_str());
                     });
 
                     PADDED(5, 5);
-                    EUI::with_font(EditorStyle::get_style().fonts[EditorFont::RegularSmall], [&] {
+                    EUI::with_editor_font(EditorFont::RegularSmall, [&] {
                         ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
                         defer(ImGui::PopStyleColor());
 
