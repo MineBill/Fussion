@@ -10,14 +10,14 @@ namespace Fussion {
 
         virtual void on_start() {}
 
-        virtual void on_update(f32 delta) {}
+        virtual void on_update([[maybe_unused]] f32 delta) {}
 
-        virtual void on_event(Event& event) {}
+        virtual void on_event([[maybe_unused]] Event& event) {}
 
         virtual void on_log_received(
-            LogLevel level,
-            std::string_view message,
-            std::source_location const& loc) {}
+            [[maybe_unused]] LogLevel level,
+            [[maybe_unused]] std::string_view message,
+            [[maybe_unused]] std::source_location const& loc) {}
 
         Window& window() const { return *m_window.get(); }
         static Application* inst() { return s_instance; }

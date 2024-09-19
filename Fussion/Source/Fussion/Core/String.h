@@ -16,7 +16,7 @@ namespace Fussion {
 
         String() = default;
         String(char const* cstr): data(const_cast<char*>(cstr), CAST(u32, strutils::strlen(cstr))) {}
-        explicit String(Slice<char> buffer): data(buffer) {}
+        explicit String(Slice<char> buffer): data(std::move(buffer)) {}
 
         String clone(mem::Allocator const& allocator = mem::heap_allocator()) const;
         void free(mem::Allocator const& allocator);
