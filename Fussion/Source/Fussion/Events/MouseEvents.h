@@ -51,13 +51,13 @@ namespace Fussion {
     class MouseWheelMoved final : public Event {
     public:
         EVENT(MouseWheelMoved)
-        explicit MouseWheelMoved(float x, float y) : X(x), Y(y) {}
+        explicit MouseWheelMoved(f32 x, f32 y) : x(x), y(y) {}
 
         Vector2 offset() const
         {
-            return { X, Y };
+            return { x, y };
         }
 
-        f32 X, Y{ 0.0f };
+        f32 x, y{ 0.0f };
     };
 }

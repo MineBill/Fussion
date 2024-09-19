@@ -3,10 +3,8 @@
 #include "Fussion/Core/Types.h"
 #include "GLFW/glfw3.h"
 
-namespace Fussion
-{
-    class GlfwWindow: public Window
-    {
+namespace Fussion {
+    class GlfwWindow : public Window {
     public:
         explicit GlfwWindow(WindowOptions const& options);
         virtual ~GlfwWindow() override;
@@ -29,13 +27,13 @@ namespace Fussion
         virtual void* native_handle() const override;
 
     private:
-        bool m_IsMinimized{false};
+        bool m_is_minimized{ false };
 
-        WindowOptions m_Options{};
-        GLFWwindow* m_Window{};
-        EventFnType m_EventCallback{};
+        WindowOptions m_options{};
+        GLFWwindow* m_window{};
+        EventFnType m_event_callback{};
 
-        f32 m_OldX{}, m_OldY{};
-        u32 m_Width{}, m_Height{};
+        f32 m_old_x{}, m_old_y{};
+        u32 m_width{}, m_height{};
     };
 }
