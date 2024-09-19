@@ -64,7 +64,7 @@ void EditorCamera::handle_event(Event& event)
             constexpr auto max_speed = 10.0f;
             constexpr auto min_speed = 0.1f;
 
-            speed += mouse_wheel_moved.Y * (speed / max_speed);
+            speed += mouse_wheel_moved.y * (speed / max_speed);
             speed = Math::clamp(speed, min_speed, max_speed);
         }
         return false;
