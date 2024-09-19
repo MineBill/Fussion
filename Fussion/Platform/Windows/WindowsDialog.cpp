@@ -80,7 +80,7 @@ namespace Fussion::Dialogs {
 
     auto show_file_picker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        return show_file_picker(std::vector{ filter });
+        return show_file_picker(std::vector{ filter }, allow_multiple);
     }
 
     auto show_file_picker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
@@ -118,6 +118,9 @@ namespace Fussion::Dialogs {
         arg.lpstrFilter = w_filter.c_str();
         arg.nFilterIndex = 1;
         arg.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+        if (allow_multiple) {
+            arg.Flags |= OFN_ALLOWMULTISELECT;
+        }
 
         if (GetOpenFileNameW(&arg)) {
             auto buffer = std::string(file.begin(), file.end());
