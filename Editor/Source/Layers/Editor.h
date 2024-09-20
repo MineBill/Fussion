@@ -19,6 +19,7 @@
 #include <Fussion/OS/FileWatcher.h>
 #include <Fussion/Scene/Scene.h>
 
+class RendererReport;
 class AssetRegistryViewer;
 
 class Editor final : public Fsn::Layer {
@@ -121,6 +122,7 @@ private:
     Ptr<SceneTreeWindow> m_scene_window;
     Ptr<ConsoleWindow> m_console_window;
     Ptr<ContentBrowser> m_content_browser;
+    Ptr<RendererReport> m_renderer_report;
 
     Ptr<AssetRegistryViewer> m_asset_registry_viewer;
     Ptr<ScriptsInspector> m_scripts_inspector;

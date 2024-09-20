@@ -24,6 +24,8 @@
 
 using namespace Fussion;
 
+
+
 ImGuizmo::MODE GizmoSpaceToImGuizmo(ViewportWindow::GizmoSpace space)
 {
     switch (space) {
@@ -75,11 +77,11 @@ void ViewportWindow::render_stats() const
     if (ImGui::Begin("Stats Overlay", nullptr, window_flags)) {
         ImGui::BeginTabBar("huh");
         {
+            auto& renderer = m_editor->scene_renderer();
             if (ImGui::BeginTabItem("Timings")) {
                 ImGuiH::BeginGroupPanel("Timings");
                 {
                     EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
-                        auto& renderer = m_editor->scene_renderer();
                         ImGui::Text("CPU Time    : %4.2fms", Time::smooth_delta_time() * 1000.0f);
                         ImGui::Text("Shadow Pass : %4.2fms", renderer.timings.depth);
                         ImGui::Text("G-Buffer    : %4.2fms", renderer.timings.gbuffer);
@@ -93,13 +95,24 @@ void ViewportWindow::render_stats() const
             }
 
             if (ImGui::BeginTabItem("Pipeline Stats")) {
-                if (ImGui::CollapsingHeader("SSAO")) {
+                EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
+                    if (ImGui::CollapsingHeader("G-Buffer")) {
+                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.gbuffer.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.gbuffer.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.gbuffer.clipper_invocations);
+                    }
+                    if (ImGui::CollapsingHeader("SSAO")) {
+                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.ssao.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.ssao.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.ssao.clipper_invocations);
+                    }
 
-                }
-
-                if (ImGui::CollapsingHeader("PBR")) {
-                    
-                }
+                    if (ImGui::CollapsingHeader("PBR")) {
+                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.pbr.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.pbr.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.pbr.clipper_invocations);
+                    }
+                });
                 ImGui::EndTabItem();
             }
         }

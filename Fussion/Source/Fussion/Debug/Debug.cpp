@@ -107,7 +107,7 @@ namespace Fussion {
             },
         };
 
-        g_DebugData.Pipeline = device.create_render_pipeline(shader, rp_spec);
+        g_DebugData.Pipeline = device.create_render_pipeline(shader, shader, rp_spec);
 
         GPU::BufferSpec spec{
             .label = "Debug::VertexBuffer"sv,

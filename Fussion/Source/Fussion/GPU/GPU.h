@@ -78,7 +78,7 @@ namespace Fussion::GPU {
 
     template<>
     struct GPUHandle<void> {
-        HandleT handle{};
+        HandleT handle{ nullptr };
 
         virtual ~GPUHandle() = default;
         GPUHandle() = default;
@@ -93,9 +93,44 @@ namespace Fussion::GPU {
         virtual void release() = 0;
     };
 
+    struct RegistryReport {
+        size_t num_allocated;
+        size_t num_kept_from_user;
+        size_t num_released_from_user;
+        size_t num_error;
+        size_t element_size;
+    };
+
+    struct GlobalReport {
+        RegistryReport adapters;
+        RegistryReport devices;
+        RegistryReport queues;
+        RegistryReport pipeline_layouts;
+        RegistryReport shader_modules;
+        RegistryReport bind_group_layouts;
+        RegistryReport bind_groups;
+        RegistryReport command_buffers;
+        RegistryReport render_bundles;
+        RegistryReport render_pipelines;
+        RegistryReport compute_pipelines;
+        RegistryReport query_sets;
+        RegistryReport buffers;
+        RegistryReport textures;
+        RegistryReport texture_views;
+        RegistryReport samplers;
+    };
+
+    namespace QueryType {
+        struct Occlusion {};
+
+        struct Timestamp {};
+
+        using Type = std::variant<Occlusion, PipelineStatisticNameFlags, Timestamp>;
+    }
+
     struct QuerySetSpec {
         Maybe<String> label{};
-        QueryType type{};
+        QueryType::Type type{};
         u32 count{};
     };
 
@@ -146,8 +181,10 @@ namespace Fussion::GPU {
         void unmap();
 
         virtual void release() override;
+        void force_map_state(MapState state);
 
         friend BufferSlice;
+
     private:
         MapState m_map_state{ MapState::Unmapped };
     };
@@ -585,11 +622,17 @@ namespace Fussion::GPU {
         void set_bind_group(BindGroup group, u32 index) const;
         void set_vertex_buffer(u32 slot, BufferSlice const& slice) const;
         void set_index_buffer(BufferSlice const& slice) const;
-        // void SetStorageBuffer(u32 slot, BufferSlice const& slice) const;
 
         void set_pipeline(RenderPipeline const& pipeline) const;
         void draw(Range<u32> vertices, Range<u32> instances) const;
         void draw_index(Range<u32> indices, Range<u32> instances) const;
+
+        /// Start a pipeline statistics query on this render pass. It can be ended with end_pipeline_statistics_query().
+        /// Pipeline statistics queries may not be nested.
+        void begin_pipeline_statistics_query(QuerySet const& set, u32 index) const;
+        /// End the pipeline statistics query on this render pass. It can be started with begin_pipeline_statistics_query().
+        /// Pipeline statistics queries may not be nested.
+        void end_pipeline_statistics_query() const;
 
         void end() const;
         virtual void release() override;
@@ -694,7 +737,7 @@ namespace Fussion::GPU {
         [[nodiscard]]
         auto create_pipeline_layout(PipelineLayoutSpec const& spec) const -> PipelineLayout;
         [[nodiscard]]
-        auto create_render_pipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline;
+        auto create_render_pipeline(ShaderModule const& vert_module, ShaderModule const& frag_module, RenderPipelineSpec const& spec) const -> RenderPipeline;
 
         void submit_command_buffer(CommandBuffer cmd) const;
 
@@ -718,6 +761,7 @@ namespace Fussion::GPU {
             Vector2 const& size,
             u32 bytes_per_pixel = 4,
             u32 mip_level = 0) const;
+
 
         virtual void release() override;
 
@@ -775,6 +819,8 @@ namespace Fussion::GPU {
 
         // TODO: Make this take a reference.
         auto surface(Window const* window) const -> Surface;
+
+        GlobalReport generate_global_report() const;
     };
 
 

@@ -118,9 +118,10 @@ void EditorApplication::on_update(f32 delta)
     main_rp.end();
     main_rp.release();
 
-    view->release();
-    Renderer::end_rendering(encoder.finish());
+    auto cmd = encoder.finish();
     encoder.release();
+    Renderer::end_rendering(cmd);
+    view->release();
 }
 
 void EditorApplication::on_event(Event& event)

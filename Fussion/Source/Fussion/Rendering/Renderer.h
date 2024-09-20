@@ -25,6 +25,11 @@ namespace Fussion {
             return s_renderer->m_surface;
         }
 
+        static auto gpu_instance() -> GPU::Instance&
+        {
+            return s_renderer->m_instance;
+        }
+
         [[nodiscard]]
         static auto default_material() -> AssetRef<PbrMaterial> { return s_renderer->m_default_material; }
 

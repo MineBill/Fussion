@@ -7,7 +7,7 @@ namespace Fussion::GPU {
 
     auto to_wgpu(Features feature) -> WGPUFeatureName;
 
-    auto to_wgpu(QueryType set) -> WGPUQueryType;
+    // auto to_wgpu(QueryType set) -> WGPUQueryType;
 
     auto to_wgpu(DevicePower power) -> WGPUPowerPreference;
 

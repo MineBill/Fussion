@@ -120,7 +120,7 @@ namespace Fussion::GPU {
             };
             spec.primitive.topology = PrimitiveTopology::TriangleStrip;
 
-            pipeline = device.create_render_pipeline(shader, spec);
+            pipeline = device.create_render_pipeline(shader, shader, spec);
 
             layout = pipeline.bind_group_layout(0);
 
@@ -313,6 +313,12 @@ namespace Fussion::GPU {
         wgpuBufferRelease(CAST(WGPUBuffer, handle));
     }
 
+    void Buffer::force_map_state(MapState state)
+    {
+        m_map_state = state;
+
+    }
+
     BufferSlice::BufferSlice(Buffer& buffer, u32 start, u32 size)
         : backing_buffer(&buffer)
           , start(start)
@@ -402,6 +408,9 @@ namespace Fussion::GPU {
     void Texture::release()
     {
         wgpuTextureRelease(CAST(WGPUTexture, handle));
+        if (view != nullptr) {
+            view.release();
+        }
     }
 
     void BindGroup::release()
@@ -528,6 +537,16 @@ namespace Fussion::GPU {
             indices.start,
             0,
             instances.start);
+    }
+
+    void RenderPassEncoder::begin_pipeline_statistics_query(QuerySet const& set, u32 index) const
+    {
+        wgpuRenderPassEncoderBeginPipelineStatisticsQuery(as<WGPURenderPassEncoder>(), set.as<WGPUQuerySet>(), index);
+    }
+
+    void RenderPassEncoder::end_pipeline_statistics_query() const
+    {
+        wgpuRenderPassEncoderEndPipelineStatisticsQuery(as<WGPURenderPassEncoder>());
     }
 
     void RenderPassEncoder::end() const
@@ -889,12 +908,54 @@ namespace Fussion::GPU {
 
     auto Device::create_query_set(QuerySetSpec const& spec) const -> QuerySet
     {
+        // This is declared outside the visit lambdas because it will be reffered
+        // to, by a pointer from the WGPUQuerySetDescriptorExtras struct.
+        std::vector<WGPUPipelineStatisticName> pipeline_statistic_names{};
+        pipeline_statistic_names.reserve(5);
+
+        WGPUQuerySetDescriptorExtras extras{
+            .chain = {
+                .next = nullptr,
+                .sType = CAST(WGPUSType, WGPUSType_QuerySetDescriptorExtras)
+            },
+        };
+
         WGPUQuerySetDescriptor desc{
             .nextInChain = nullptr,
             .label = spec.label.value_or("QuerySet").data.ptr,
-            .type = to_wgpu(spec.type),
             .count = spec.count,
         };
+
+        std::visit(overloaded{
+            [&desc](QueryType::Occlusion const&) {
+                desc.type = WGPUQueryType_Occlusion;
+            },
+            [&desc](QueryType::Timestamp const&) {
+                desc.type = WGPUQueryType_Timestamp;
+            },
+            [&desc, &extras, &pipeline_statistic_names](PipelineStatisticNameFlags const& flags) {
+                if (flags.test(PipelineStatisticName::ClipperInvocations)) {
+                    pipeline_statistic_names.push_back(WGPUPipelineStatisticName_ClipperInvocations);
+                }
+                if (flags.test(PipelineStatisticName::ClipperPrimitivesOut)) {
+                    pipeline_statistic_names.push_back(WGPUPipelineStatisticName_ClipperPrimitivesOut);
+                }
+                if (flags.test(PipelineStatisticName::ComputeShaderInvocations)) {
+                    pipeline_statistic_names.push_back(WGPUPipelineStatisticName_ComputeShaderInvocations);
+                }
+                if (flags.test(PipelineStatisticName::FragmentShaderInvocations)) {
+                    pipeline_statistic_names.push_back(WGPUPipelineStatisticName_FragmentShaderInvocations);
+                }
+                if (flags.test(PipelineStatisticName::VertexShaderInvocations)) {
+                    pipeline_statistic_names.push_back(WGPUPipelineStatisticName_VertexShaderInvocations);
+                }
+
+                desc.type = CAST(WGPUQueryType, WGPUNativeQueryType_PipelineStatistics);
+                desc.nextInChain = &extras.chain;
+                extras.pipelineStatistics = pipeline_statistic_names.data();
+                extras.pipelineStatisticCount = pipeline_statistic_names.size();
+            },
+        }, spec.type);
 
         auto set = wgpuDeviceCreateQuerySet(CAST(WGPUDevice, handle), &desc);
         return QuerySet(set, spec);
@@ -964,7 +1025,7 @@ namespace Fussion::GPU {
         return PipelineLayout{ layout };
     }
 
-    auto Device::create_render_pipeline(ShaderModule const& module, RenderPipelineSpec const& spec) const -> RenderPipeline
+    auto Device::create_render_pipeline(ShaderModule const& vert_module, ShaderModule const& frag_module, RenderPipelineSpec const& spec) const -> RenderPipeline
     {
         std::vector<WGPUVertexBufferLayout> vertex_buffer_layouts{};
         std::vector<std::vector<WGPUVertexAttribute>> attributes{};
@@ -993,8 +1054,8 @@ namespace Fussion::GPU {
 
         WGPUVertexState vertex{
             .nextInChain = nullptr,
-            .module = module.as<WGPUShaderModule>(),
-            .entryPoint = module.spec.vertex_entry_point.data(),
+            .module = vert_module.as<WGPUShaderModule>(),
+            .entryPoint = vert_module.spec.vertex_entry_point.data(),
             .constantCount = 0,
             .constants = nullptr,
             .bufferCount = CAST(u32, vertex_buffer_layouts.size()),
@@ -1027,8 +1088,8 @@ namespace Fussion::GPU {
         WGPUFragmentState fragment{};
 
         if (spec.fragment.has_value()) {
-            fragment.module = module.as<WGPUShaderModule>();
-            fragment.entryPoint = module.spec.fragment_entry_point.data();
+            fragment.module = frag_module.as<WGPUShaderModule>();
+            fragment.entryPoint = frag_module.spec.fragment_entry_point.data();
             fragment.constantCount = 0;
             fragment.constants = nullptr;
             // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
@@ -1328,6 +1389,128 @@ namespace Fussion::GPU {
         auto glfw_window = CAST(GLFWwindow*, window->native_handle());
         auto surface = glfwGetWGPUSurface(CAST(WGPUInstance, handle), glfw_window);
         return Surface{ surface };
+    }
+
+    GlobalReport Instance::generate_global_report() const
+    {
+        WGPUGlobalReport report{};
+        wgpuGenerateReport(CAST(WGPUInstance, handle), &report);
+
+        GlobalReport my_report{
+            .adapters = {
+                .num_allocated = report.vulkan.adapters.numAllocated,
+                .num_kept_from_user = report.vulkan.adapters.numKeptFromUser,
+                .num_released_from_user = report.vulkan.adapters.numReleasedFromUser,
+                .num_error = report.vulkan.adapters.numError,
+                .element_size = report.vulkan.adapters.elementSize
+            },
+            .devices = {
+                .num_allocated = report.vulkan.devices.numAllocated,
+                .num_kept_from_user = report.vulkan.devices.numKeptFromUser,
+                .num_released_from_user = report.vulkan.devices.numReleasedFromUser,
+                .num_error = report.vulkan.devices.numError,
+                .element_size = report.vulkan.devices.elementSize
+            },
+            .queues = {
+                .num_allocated = report.vulkan.queues.numAllocated,
+                .num_kept_from_user = report.vulkan.queues.numKeptFromUser,
+                .num_released_from_user = report.vulkan.queues.numReleasedFromUser,
+                .num_error = report.vulkan.queues.numError,
+                .element_size = report.vulkan.queues.elementSize
+            },
+            .pipeline_layouts = {
+                .num_allocated = report.vulkan.pipelineLayouts.numAllocated,
+                .num_kept_from_user = report.vulkan.pipelineLayouts.numKeptFromUser,
+                .num_released_from_user = report.vulkan.pipelineLayouts.numReleasedFromUser,
+                .num_error = report.vulkan.pipelineLayouts.numError,
+                .element_size = report.vulkan.pipelineLayouts.elementSize
+            },
+            .shader_modules = {
+                .num_allocated = report.vulkan.shaderModules.numAllocated,
+                .num_kept_from_user = report.vulkan.shaderModules.numKeptFromUser,
+                .num_released_from_user = report.vulkan.shaderModules.numReleasedFromUser,
+                .num_error = report.vulkan.shaderModules.numError,
+                .element_size = report.vulkan.shaderModules.elementSize
+            },
+            .bind_group_layouts = {
+                .num_allocated = report.vulkan.bindGroupLayouts.numAllocated,
+                .num_kept_from_user = report.vulkan.bindGroupLayouts.numKeptFromUser,
+                .num_released_from_user = report.vulkan.bindGroupLayouts.numReleasedFromUser,
+                .num_error = report.vulkan.bindGroupLayouts.numError,
+                .element_size = report.vulkan.bindGroupLayouts.elementSize
+            },
+            .bind_groups = {
+                .num_allocated = report.vulkan.bindGroups.numAllocated,
+                .num_kept_from_user = report.vulkan.bindGroups.numKeptFromUser,
+                .num_released_from_user = report.vulkan.bindGroups.numReleasedFromUser,
+                .num_error = report.vulkan.bindGroups.numError,
+                .element_size = report.vulkan.bindGroups.elementSize
+            },
+            .command_buffers = {
+                .num_allocated = report.vulkan.commandBuffers.numAllocated,
+                .num_kept_from_user = report.vulkan.commandBuffers.numKeptFromUser,
+                .num_released_from_user = report.vulkan.commandBuffers.numReleasedFromUser,
+                .num_error = report.vulkan.commandBuffers.numError,
+                .element_size = report.vulkan.commandBuffers.elementSize
+            },
+            .render_bundles = {
+                .num_allocated = report.vulkan.renderBundles.numAllocated,
+                .num_kept_from_user = report.vulkan.renderBundles.numKeptFromUser,
+                .num_released_from_user = report.vulkan.renderBundles.numReleasedFromUser,
+                .num_error = report.vulkan.renderBundles.numError,
+                .element_size = report.vulkan.renderBundles.elementSize
+            },
+            .render_pipelines = {
+                .num_allocated = report.vulkan.renderPipelines.numAllocated,
+                .num_kept_from_user = report.vulkan.renderPipelines.numKeptFromUser,
+                .num_released_from_user = report.vulkan.renderPipelines.numReleasedFromUser,
+                .num_error = report.vulkan.renderPipelines.numError,
+                .element_size = report.vulkan.renderPipelines.elementSize
+            },
+            .compute_pipelines = {
+                .num_allocated = report.vulkan.computePipelines.numAllocated,
+                .num_kept_from_user = report.vulkan.computePipelines.numKeptFromUser,
+                .num_released_from_user = report.vulkan.computePipelines.numReleasedFromUser,
+                .num_error = report.vulkan.computePipelines.numError,
+                .element_size = report.vulkan.computePipelines.elementSize
+            },
+            .query_sets = {
+                .num_allocated = report.vulkan.querySets.numAllocated,
+                .num_kept_from_user = report.vulkan.querySets.numKeptFromUser,
+                .num_released_from_user = report.vulkan.querySets.numReleasedFromUser,
+                .num_error = report.vulkan.querySets.numError,
+                .element_size = report.vulkan.querySets.elementSize
+            },
+            .buffers = {
+                .num_allocated = report.vulkan.buffers.numAllocated,
+                .num_kept_from_user = report.vulkan.buffers.numKeptFromUser,
+                .num_released_from_user = report.vulkan.buffers.numReleasedFromUser,
+                .num_error = report.vulkan.buffers.numError,
+                .element_size = report.vulkan.buffers.elementSize
+            },
+            .textures = {
+                .num_allocated = report.vulkan.textures.numAllocated,
+                .num_kept_from_user = report.vulkan.textures.numKeptFromUser,
+                .num_released_from_user = report.vulkan.textures.numReleasedFromUser,
+                .num_error = report.vulkan.textures.numError,
+                .element_size = report.vulkan.textures.elementSize
+            },
+            .texture_views = {
+                .num_allocated = report.vulkan.textureViews.numAllocated,
+                .num_kept_from_user = report.vulkan.textureViews.numKeptFromUser,
+                .num_released_from_user = report.vulkan.textureViews.numReleasedFromUser,
+                .num_error = report.vulkan.textureViews.numError,
+                .element_size = report.vulkan.textureViews.elementSize
+            },
+            .samplers = {
+                .num_allocated = report.vulkan.samplers.numAllocated,
+                .num_kept_from_user = report.vulkan.samplers.numKeptFromUser,
+                .num_released_from_user = report.vulkan.samplers.numReleasedFromUser,
+                .num_error = report.vulkan.samplers.numError,
+                .element_size = report.vulkan.samplers.elementSize
+            }
+        };
+        return my_report;
     }
 
     auto Instance::adapter(Surface surface, AdapterOptions const& opt) const -> Adapter

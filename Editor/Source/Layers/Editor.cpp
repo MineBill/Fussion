@@ -4,6 +4,7 @@
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "EditorWindows/AssetRegistryViewer.h"
+#include "EditorWindows/RendererReport.h"
 
 #include <Fussion/Input/Input.h>
 #include <Fussion/Core/Application.h>
@@ -46,6 +47,7 @@ void Editor::on_start()
     m_scripts_inspector = make_ptr<ScriptsInspector>(this);
     m_content_browser = make_ptr<ContentBrowser>(this);
     m_asset_registry_viewer = make_ptr<AssetRegistryViewer>(this);
+    m_renderer_report = make_ptr<RendererReport>(this);
 
     ScriptingEngine::inst().compile_game_assembly(Project::scripts_folder());
     FileSystem::write_entire_file(Project::scripts_folder() / "as.predefined", ScriptingEngine::inst().dump_current_types().str());
@@ -116,7 +118,7 @@ void Editor::on_disable() {}
 
 void Editor::save() const
 {
-    for (auto& asd: m_asset_windows) {
+    for (auto& asd : m_asset_windows) {
         asd.second->on_save();
     }
 
@@ -347,6 +349,7 @@ void Editor::on_update(f32 delta)
     m_scene_window->on_draw();
     m_scripts_inspector->on_draw();
     m_content_browser->on_draw();
+    m_renderer_report->on_draw();
 
     if (m_asset_registry_viewer->is_visible())
         m_asset_registry_viewer->on_draw();

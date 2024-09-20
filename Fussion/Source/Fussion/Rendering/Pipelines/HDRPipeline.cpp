@@ -122,7 +122,7 @@ namespace Fussion {
             },
         };
 
-        m_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     void HDRPipeline::process(GPU::CommandEncoder& encoder, GPU::TextureView& output)
@@ -165,7 +165,6 @@ namespace Fussion {
             .aspect = GPU::TextureAspect::All,
         };
         m_render_texture = Renderer::device().create_texture(rt_spec);
-        m_render_texture.initialize_view();
 
         m_bind_group.release();
         std::array bind_group_entries{

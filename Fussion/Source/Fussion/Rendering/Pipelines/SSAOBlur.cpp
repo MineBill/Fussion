@@ -123,7 +123,7 @@ namespace Fussion {
             },
         };
 
-        m_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     void SSAOBlur::resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)
@@ -159,7 +159,6 @@ namespace Fussion {
             .aspect = GPU::TextureAspect::All,
         };
         m_render_target = Renderer::device().create_texture(rt_spec);
-        m_render_target.initialize_view();
     }
 
     void SSAOBlur::draw(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end)

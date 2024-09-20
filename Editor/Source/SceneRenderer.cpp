@@ -140,13 +140,15 @@ void GBuffer::init(Vector2 const& size, GPU::BindGroupLayout const& global_bind_
         },
     };
 
-    pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+    pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
 }
 
 void GBuffer::resize(Vector2 const& new_size)
 {
     rt_position.release();
+
     rt_normal.release();
+
     rt_albedo.release();
 
     GPU::TextureSpec spec{
@@ -376,7 +378,7 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
         },
     };
 
-    pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+    pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
 
 }
 
@@ -732,7 +734,7 @@ void SceneRenderer::init()
             },
         };
 
-        m_simple_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_simple_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     {
@@ -775,22 +777,40 @@ void SceneRenderer::init()
             },
         };
 
-        m_grid_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_grid_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     {
         auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/Sky.wgsl").value();
 
+        auto src = FileSystem::read_entire_file("Assets/Shaders/Sky.shader");
+        auto spirv_shader = GPU::ShaderCompiler::compile(src.value(), "Sky.shader");
+        VERIFY(spirv_shader.has_value());
+
         GPU::ShaderModuleSpec shader_spec{
-            .label = "Sky Shader"sv,
-            .type = GPU::WGSLShader{
-                .source = shader_src,
+            .label = "Sky Shader:VS"sv,
+            // .type = GPU::WGSLShader{
+            //     .source = shader_src,
+            // },
+            .type = GPU::SPIRVShader{
+                .binary = spirv_shader->shader_stages[0].Bytecode
             },
-            .vertex_entry_point = "vs_main",
-            .fragment_entry_point = "fs_main",
+            .vertex_entry_point = "main",
+            .fragment_entry_point = "main",
         };
 
-        auto shader = Renderer::device().create_shader_module(shader_spec);
+        auto vert_shader = Renderer::device().create_shader_module(shader_spec);
+
+        GPU::ShaderModuleSpec frag_shader_spec{
+            .label = "Sky Shader:FS"sv,
+            .type = GPU::SPIRVShader{
+                .binary = spirv_shader->shader_stages[1].Bytecode
+            },
+            .vertex_entry_point = "main",
+            .fragment_entry_point = "main",
+        };
+
+        auto frag_shader = Renderer::device().create_shader_module(frag_shader_spec);
 
         std::array bind_group_layouts{
             m_global_bind_group_layout
@@ -824,7 +844,7 @@ void SceneRenderer::init()
             },
         };
 
-        m_sky_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_sky_pipeline = Renderer::device().create_render_pipeline(vert_shader, frag_shader, rp_spec);
     }
 
     GPU::BufferSpec ibs{
@@ -851,9 +871,9 @@ void SceneRenderer::init()
     };
 
     m_linear_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
-    bilinear_sampler_spec.mag_filter = GPU::FilterMode::Nearest;
-    bilinear_sampler_spec.min_filter = GPU::FilterMode::Nearest;
-    bilinear_sampler_spec.anisotropy_clamp = 1_u16;
+    bilinear_sampler_spec.mag_filter = GPU::FilterMode::Linear;
+    bilinear_sampler_spec.min_filter = GPU::FilterMode::Linear;
+    // bilinear_sampler_spec.anisotropy_clamp = 1_u16;
 
     m_shadow_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
 
@@ -938,14 +958,14 @@ void SceneRenderer::init()
             },
         };
 
-        m_pbr_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_pbr_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     Debug::initialize(Renderer::device(), m_global_bind_group_layout, m_hdr_pipeline.Format);
 
     setup_shadow_pass();
 
-    setup_timings();
+    setup_queries();
 }
 
 void SceneRenderer::resize(Vector2 const& new_size)
@@ -979,14 +999,37 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
 
     if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
         m_timings_read_buffer.slice().map_async(GPU::MapMode::Read, [this] {
-            VERIFY(m_timings_read_buffer.map_state() == GPU::MapState::Mapped);
             auto data = CAST(u64*, m_timings_read_buffer.slice().mapped_range());
-            timings.gbuffer   = CAST(f64, data[3] - data[2]) * 1e-6;
-            timings.ssao      = CAST(f64, data[5] - data[4]) * 1e-6;
+            timings.gbuffer = CAST(f64, data[3] - data[2]) * 1e-6;
+            timings.ssao = CAST(f64, data[5] - data[4]) * 1e-6;
             timings.ssao_blur = CAST(f64, data[7] - data[6]) * 1e-6;
-            timings.pbr       = CAST(f64, data[9] - data[8]) * 1e-6;
+            timings.pbr = CAST(f64, data[9] - data[8]) * 1e-6;
 
             m_timings_read_buffer.unmap();
+        });
+    }
+
+    if (m_statistics_read_buffer.map_state() == GPU::MapState::Unmapped) {
+        m_statistics_read_buffer.slice().map_async(GPU::MapMode::Read, [this] {
+            auto data = CAST(u64*, m_statistics_read_buffer.slice().mapped_range());
+            // 1st VertexShaderInvocations
+            // 2nd ClipperInvocations
+            // 3d FragmentShaderInvocations
+
+            u32 i = 0;
+            pipeline_statistics.gbuffer.vertex_shader_invocations = data[i++];
+            pipeline_statistics.gbuffer.clipper_invocations = data[i++];
+            pipeline_statistics.gbuffer.fragment_shader_invocations = data[i++];
+
+            pipeline_statistics.ssao.vertex_shader_invocations = data[i++];
+            pipeline_statistics.ssao.clipper_invocations = data[i++];
+            pipeline_statistics.ssao.fragment_shader_invocations = data[i++];
+
+            pipeline_statistics.pbr.vertex_shader_invocations = data[i++];
+            pipeline_statistics.pbr.clipper_invocations = data[i++];
+            pipeline_statistics.pbr.fragment_shader_invocations = data[i++];
+
+            m_statistics_read_buffer.unmap();
         });
     }
 
@@ -1138,7 +1181,7 @@ void SceneRenderer::setup_shadow_pass()
             .fragment = None(),
         };
 
-        m_depth_pipeline = Renderer::device().create_render_pipeline(shader, rp_spec);
+        m_depth_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     GPU::BufferSpec ibs{
@@ -1269,7 +1312,8 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
             copy_encoder.release();
 
             instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
-                m_instance_buffer_pool.push_back(instance_buffer);
+                auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
+                copy.force_map_state(GPU::MapState::Mapped);
             });
 
             buffer_offset = 0;
@@ -1350,7 +1394,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
 
     for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
         for (auto const& [buffer, list] : mesh_map) {
-
+            VERIFY(instance_buffer.map_state() == GPU::MapState::Mapped, "{}", magic_enum::enum_name(instance_buffer.map_state()));
             auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range()) + buffer_count_offset;
             int j = 0;
             for (auto index : list) {
@@ -1370,7 +1414,8 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
     copy_encoder.release();
 
     instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
-        m_instance_buffer_pool.push_back(instance_buffer);
+        auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
+        copy.force_map_state(GPU::MapState::Mapped);
     });
 
     {
@@ -1415,6 +1460,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         auto gpass = encoder.begin_rendering(gpass_rp_spec);
         gpass.set_pipeline(gbuffer.pipeline);
         gpass.set_bind_group(m_global_bind_group, 0);
+        gpass.begin_pipeline_statistics_query(m_statistics_query_set, 0);
 
         std::array bind_group_entries{
             GPU::BindGroupEntry{
@@ -1451,6 +1497,8 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             }
 
         }
+
+        gpass.end_pipeline_statistics_query();
         gpass.end();
         gpass.release();
     }
@@ -1478,12 +1526,14 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             .timestamp_writes = timestamp_writes
         };
         auto pass = encoder.begin_rendering(rp_spec);
+        pass.begin_pipeline_statistics_query(m_statistics_query_set, 1);
 
         pass.set_pipeline(ssao.pipeline);
         pass.set_bind_group(m_global_bind_group, 0);
         pass.set_bind_group(ssao.bind_group, 1);
         pass.draw({ 0, 6 }, { 0, 1 });
 
+        pass.end_pipeline_statistics_query();
         pass.end();
         pass.release();
     }
@@ -1517,6 +1567,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             }
         };
         auto scene_rp = encoder.begin_rendering(scene_rp_spec);
+        scene_rp.begin_pipeline_statistics_query(m_statistics_query_set, 2);
 
         scene_rp.set_viewport(Vector2::Zero, { m_render_area.x, m_render_area.y });
 
@@ -1644,45 +1695,81 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             scene_rp.draw({ 0, 6 }, { 0, 1 });
         }
 
+        scene_rp.end_pipeline_statistics_query();
         scene_rp.end();
         scene_rp.release();
     }
 
     encoder.resolve_query_set(m_timings_set, { 0, 10 }, m_timings_resolve_buffer, 0);
+    encoder.resolve_query_set(m_statistics_query_set, { 0, 3 }, m_statistics_resolve_buffer, 0);
 
     if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
         encoder.copy_buffer_to_buffer(m_timings_resolve_buffer, 0, m_timings_read_buffer, 0, m_timings_read_buffer.size());
     }
+    if (m_statistics_read_buffer.map_state() == GPU::MapState::Unmapped) {
+        encoder.copy_buffer_to_buffer(m_statistics_resolve_buffer, 0, m_statistics_read_buffer, 0, m_statistics_read_buffer.size());
+    }
 }
 
 
-void SceneRenderer::setup_timings()
+void SceneRenderer::setup_queries()
 {
-    GPU::QuerySetSpec query_set_spec{
-        .label = "Timings Set",
-        .type = GPU::QueryType::Timestamp,
-        .count = 5 * 2, // 5, one for each pass, times 2 for start and end
-    };
+    {
+        GPU::QuerySetSpec query_set_spec{
+            .label = "Timings Set",
+            .type = GPU::QueryType::Timestamp{},
+            .count = 5 * 2, // 5, one for each pass, times 2 for start and end
+        };
 
-    m_timings_set = Renderer::device().create_query_set(query_set_spec);
+        m_timings_set = Renderer::device().create_query_set(query_set_spec);
 
-    GPU::BufferSpec resolve_spec{
-        .label = "Timings Resolve Buffer"sv,
-        .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
-        .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
-        .mapped = false
-    };
+        GPU::BufferSpec resolve_spec{
+            .label = "Timings Resolve Buffer"sv,
+            .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
+            .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
+            .mapped = false
+        };
 
-    m_timings_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
+        m_timings_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
 
-    GPU::BufferSpec read_spec{
-        .label = "Timings Read Buffer"sv,
-        .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
-        .size = resolve_spec.size,
-        .mapped = false
-    };
+        GPU::BufferSpec read_spec{
+            .label = "Timings Read Buffer"sv,
+            .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
+            .size = resolve_spec.size,
+            .mapped = false
+        };
 
-    m_timings_read_buffer = Renderer::device().create_buffer(read_spec);
+        m_timings_read_buffer = Renderer::device().create_buffer(read_spec);
+    }
+
+    {
+        using enum GPU::PipelineStatisticName;
+        GPU::QuerySetSpec query_set_spec{
+            .label = "Pipeline Statistics Set",
+            .type = FragmentShaderInvocations | VertexShaderInvocations | ClipperInvocations,
+            .count = 4 * 3, // 5, one for each pass, times 3, for each of the types above
+        };
+
+        m_statistics_query_set = Renderer::device().create_query_set(query_set_spec);
+
+        GPU::BufferSpec resolve_spec{
+            .label = "Pipeline Statistics Resolve Buffer"sv,
+            .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
+            .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
+            .mapped = false
+        };
+
+        m_statistics_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
+
+        GPU::BufferSpec read_spec{
+            .label = "Pipeline Statistics Read Buffer"sv,
+            .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
+            .size = resolve_spec.size,
+            .mapped = false
+        };
+
+        m_statistics_read_buffer = Renderer::device().create_buffer(read_spec);
+    }
 }
 
 void SceneRenderer::create_scene_render_target(Vector2 const& size)
@@ -1697,7 +1784,6 @@ void SceneRenderer::create_scene_render_target(Vector2 const& size)
         .aspect = GPU::TextureAspect::All,
     };
     m_scene_render_target = Renderer::device().create_texture(spec);
-    m_scene_render_target.initialize_view();
 
     GPU::TextureSpec depth_spec{
         .label = "Main Render Depth Target"sv,
@@ -1709,5 +1795,4 @@ void SceneRenderer::create_scene_render_target(Vector2 const& size)
         .aspect = GPU::TextureAspect::DepthOnly,
     };
     m_scene_render_depth_target = Renderer::device().create_texture(depth_spec);
-    m_scene_render_depth_target.initialize_view();
 }

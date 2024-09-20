@@ -36,6 +36,7 @@ namespace Fussion {
             .required_features = {
                 GPU::Features::Float32Filterable,
                 GPU::Features::TimestampQuery,
+                GPU::Features::PipelineStatistics,
             }
         };
         auto device = adapter.device(spec);

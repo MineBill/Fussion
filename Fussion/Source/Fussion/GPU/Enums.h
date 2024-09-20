@@ -12,13 +12,24 @@ namespace Fussion::GPU {
 
     enum class Features {
         TimestampQuery,
+        PipelineStatistics,
         Float32Filterable,
     };
 
-    enum class QueryType {
-        Occlusion,
-        Timestamp,
+    // enum class QueryType {
+    //     Occlusion,
+    //     Timestamp,
+    // };
+
+    enum class PipelineStatisticName {
+        VertexShaderInvocations,
+        ClipperInvocations,
+        ClipperPrimitivesOut,
+        FragmentShaderInvocations,
+        ComputeShaderInvocations,
     };
+
+    BITFLAGS(PipelineStatisticName)
 
     enum class BufferUsage {
         None = 1 << 0,

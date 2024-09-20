@@ -100,6 +100,20 @@ public:
         f64 pbr{}; // [8, 9]
     } timings{};
 
+    struct PipelineStatistics {
+        struct Statistic {
+            u64 vertex_shader_invocations{};
+            u64 clipper_invocations{};
+            // u64 clipper_primitives_out{};
+            u64 fragment_shader_invocations{};
+            // u64 compute_shader_invocations{};
+        };
+
+        Statistic gbuffer{};
+        Statistic ssao{};
+        Statistic pbr{};
+    } pipeline_statistics{};
+
     Fussion::UniformBuffer<ViewData> scene_view_data;
     Fussion::UniformBuffer<LightData> scene_light_data;
 
@@ -137,7 +151,7 @@ private:
     void setup_shadow_pass();
     void depth_pass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
     void pbr_pass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
-    void setup_timings();
+    void setup_queries();
 
     void create_scene_render_target(Vector2 const& size);
 
@@ -168,6 +182,12 @@ private:
     Fussion::GPU::Buffer m_timings_resolve_buffer{};
     /// Used to read from it on the CPU once we copy the resolve buffer into it.
     Fussion::GPU::Buffer m_timings_read_buffer{};
+
+    Fussion::GPU::QuerySet m_statistics_query_set{};
+    /// Used to resolve the query set into it.
+    Fussion::GPU::Buffer m_statistics_resolve_buffer{};
+    /// Used to read from it on the CPU once we copy the resolve buffer into it.
+    Fussion::GPU::Buffer m_statistics_read_buffer{};
 
     Vector2 m_render_area{};
 

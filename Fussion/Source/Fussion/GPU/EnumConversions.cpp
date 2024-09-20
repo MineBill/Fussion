@@ -27,20 +27,22 @@ namespace Fussion::GPU {
             return WGPUFeatureName_TimestampQuery;
         case Features::Float32Filterable:
             return WGPUFeatureName_Float32Filterable;
+        case Features::PipelineStatistics:
+            return CAST(WGPUFeatureName, WGPUNativeFeature_PipelineStatisticsQuery);
         }
         UNREACHABLE;
     }
 
-    auto to_wgpu(QueryType set) -> WGPUQueryType
-    {
-        switch (set) {
-        case QueryType::Occlusion:
-            return WGPUQueryType_Occlusion;
-        case QueryType::Timestamp:
-            return WGPUQueryType_Timestamp;
-        }
-        UNREACHABLE;
-    }
+    // auto to_wgpu(QueryType set) -> WGPUQueryType
+    // {
+    //     switch (set) {
+    //     case QueryType::Occlusion:
+    //         return WGPUQueryType_Occlusion;
+    //     case QueryType::Timestamp:
+    //         return WGPUQueryType_Timestamp;
+    //     }
+    //     UNREACHABLE;
+    // }
 
     auto to_wgpu(DevicePower power) -> WGPUPowerPreference
     {
