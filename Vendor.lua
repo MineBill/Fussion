@@ -174,13 +174,13 @@ package("wgpu-native")
 
     if is_plat("windows") and is_arch("x64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-windows-x86_64-msvc-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+3", "0fd81fab2154dc01fdec1eca22d506771179454e2f5a83b165883e237117f3e6")
+        add_versions("v22.1.0+5", "81b1c6d83c1a9b8d507d6c5862c71d45b877ff952488daf7bc53edc3817ae3b8")
     elseif is_plat("linux") and is_arch("x86_64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-linux-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+3", "0728ed35aad418e016c68e8af42931a3bca466158f8fae681d054ddc5c7ba9a2")
+        add_versions("v22.1.0+5", "0728ed35aad418e016c68e8af42931a3bca466158f8fae681d054ddc5c7ba9a2")
     elseif is_plat("macosx") and is_arch("x86_64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-macos-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+3", "1488fc2fb19b156266f0b50ef026d677a261ae2dc30a13d6624f0ff701b489e7")
+        add_versions("v22.1.0+5", "1488fc2fb19b156266f0b50ef026d677a261ae2dc30a13d6624f0ff701b489e7")
     end
 
     if is_plat("windows") then
@@ -209,7 +209,7 @@ package("wgpu-native")
     end)
 
     on_install("windows|x64", "windows|x86", "linux|arm64-v8a", "linux|x86_64", "macosx|x86_64", "macosx|arm64", function (package)
-        os.cp("include/*.h", package:installdir("include", "webgpu"))
+        os.cp("include/**.h", package:installdir("include", "webgpu"))
         if package:is_plat("windows") then
             if package:config("shared") then
                 os.cp("lib/wgpu_native.dll", package:installdir("bin"))
