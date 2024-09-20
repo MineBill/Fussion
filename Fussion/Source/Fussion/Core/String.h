@@ -66,6 +66,6 @@ namespace Fussion {
 // TODO: Figure out a way to make this formattable without using std::string_view.
 FSN_MAKE_FORMATTABLE(Fussion::String, "{}", std::string_view(v.data.ptr, v.data.length))
 
-#if FSN_CORE_USE_GLOBALLY
+#ifdef FSN_CORE_USE_GLOBALLY
 using Fussion::String;
 #endif

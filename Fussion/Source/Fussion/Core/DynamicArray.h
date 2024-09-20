@@ -25,7 +25,7 @@ namespace Fussion {
             m_allocator = allocator;
         }
 
-        template<std::convertible_to<T> V>
+        template<std::same_as<T> V>
         void append(V const& value)
         {
             ensure_capacity(m_length + 1);
@@ -91,6 +91,64 @@ namespace Fussion {
         /// Returns the current capacity of the array.
         [[nodiscard]]
         usz capacity() const { return m_capacity; }
+
+        struct Iterator {
+            explicit Iterator(T* ptr): m_ptr(ptr) {}
+
+            Iterator& operator++()
+            {
+                (void)m_ptr++;
+                return *this;
+            }
+
+            T operator++(int)
+            {
+                Iterator copy = *this;
+                ++(*this);
+                return copy;
+            }
+
+            Iterator& operator--()
+            {
+                (void)m_ptr--;
+                return *this;
+            }
+
+            T operator--(int)
+            {
+                Iterator copy = *this;
+                --(*this);
+                return copy;
+            }
+
+            T& operator*()
+            {
+                return *m_ptr;
+            }
+
+            T* operator->()
+            {
+                return m_ptr;
+            }
+
+            bool operator==(Iterator const& other) const
+            {
+                return m_ptr == other.m_ptr;
+            }
+
+        private:
+            T* m_ptr;
+        };
+
+        Iterator begin()
+        {
+            return Iterator(m_buffer.ptr);
+        }
+
+        Iterator end()
+        {
+            return Iterator(m_buffer.ptr + m_leaked);
+        }
 
     private:
         mem::Allocator m_allocator{};

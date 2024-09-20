@@ -90,7 +90,7 @@ namespace Fussion::mem {
     void copy(Slice<T> const& dst, Slice<T> const& src)
     {
         VERIFY(dst.length >= src.length, "dst: {}, src: {}", dst.length, src.length);
-        mem::copy(dst.ptr, src.ptr, src.length);
+        mem::copy(dst.ptr, src.ptr, src.length * sizeof(T));
     }
 
     template<typename T>
