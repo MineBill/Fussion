@@ -5,7 +5,6 @@
 #include <Fussion/Assets/Model.h>
 
 #include "tiny_gltf.h"
-#include <vulkan/vulkan_core.h>
 #include "mikktspace.h"
 #include "meshoptimizer.h"
 

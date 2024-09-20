@@ -783,34 +783,16 @@ void SceneRenderer::init()
     {
         auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/Sky.wgsl").value();
 
-        auto src = FileSystem::read_entire_file("Assets/Shaders/Sky.shader");
-        auto spirv_shader = GPU::ShaderCompiler::compile(src.value(), "Sky.shader");
-        VERIFY(spirv_shader.has_value());
-
         GPU::ShaderModuleSpec shader_spec{
             .label = "Sky Shader:VS"sv,
-            // .type = GPU::WGSLShader{
-            //     .source = shader_src,
-            // },
-            .type = GPU::SPIRVShader{
-                .binary = spirv_shader->shader_stages[0].Bytecode
+            .type = GPU::WGSLShader{
+                .source = shader_src,
             },
-            .vertex_entry_point = "main",
-            .fragment_entry_point = "main",
+            .vertex_entry_point = "vs_main",
+            .fragment_entry_point = "fs_main",
         };
 
-        auto vert_shader = Renderer::device().create_shader_module(shader_spec);
-
-        GPU::ShaderModuleSpec frag_shader_spec{
-            .label = "Sky Shader:FS"sv,
-            .type = GPU::SPIRVShader{
-                .binary = spirv_shader->shader_stages[1].Bytecode
-            },
-            .vertex_entry_point = "main",
-            .fragment_entry_point = "main",
-        };
-
-        auto frag_shader = Renderer::device().create_shader_module(frag_shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts{
             m_global_bind_group_layout
@@ -844,7 +826,7 @@ void SceneRenderer::init()
             },
         };
 
-        m_sky_pipeline = Renderer::device().create_render_pipeline(vert_shader, frag_shader, rp_spec);
+        m_sky_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     GPU::BufferSpec ibs{
