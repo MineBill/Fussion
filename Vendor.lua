@@ -95,6 +95,27 @@ package("Catch2")
 package_end()
 add_requires("Catch2")
 
+package("JoltPhysics")
+    add_deps("cmake")
+    set_sourcedir(path.join(os.scriptdir(), "Fussion/Vendor/JoltPhysics/Build"))
+    on_install(function (package)
+        local configs = {}
+        table.insert(configs, "-DTARGET_UNIT_TESTS=OFF")
+		table.insert(configs, "-DTARGET_HELLO_WORLD=OFF")
+		table.insert(configs, "-DTARGET_PERFORMANCE_TEST=OFF")
+		table.insert(configs, "-DTARGET_SAMPLES=OFF")
+		table.insert(configs, "-DTARGET_VIEWER=OFF")
+		table.insert(configs, "-DUSE_STATIC_MSVC_RUNTIME_LIBRARY=OFF")
+		table.insert(configs, "-DINTERPROCEDURAL_OPTIMIZATION=OFF")
+		table.insert(configs, "-DUSE_ASSERTS=ON")
+
+        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
+        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+        import("package.tools.cmake").install(package, configs)
+    end)
+package_end()
+add_requires("JoltPhysics")
+
 target("glm", function()
     set_kind "headeronly"
     set_group "Vendor"
