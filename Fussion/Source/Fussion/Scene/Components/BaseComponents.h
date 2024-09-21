@@ -54,6 +54,19 @@ namespace Fussion {
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
     };
+
+    class Environment final : public Component {
+    public:
+        COMPONENT_DEFAULT(Environment)
+        COMPONENT_DEFAULT_COPY(Environment)
+
+        virtual void on_draw(RenderContext& context) override;
+
+        bool ssao{};
+
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
+    };
 }
 
 namespace Fsn = Fussion;

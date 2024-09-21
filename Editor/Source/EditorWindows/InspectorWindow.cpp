@@ -94,6 +94,11 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
         // Special case gui for some components.
         if (component_type == meta_hpp::resolve_type<ScriptComponent>()) {
             DrawProps();
+        } else if (component_type == meta_hpp::resolve_type<Environment>()) {
+            auto env = *CAST(Environment**, ptr.get_data());
+            if (ImGui::CollapsingHeader("Post-Processing Effects")) {
+                EUI::property("SSAO", &env->ssao);
+            }
         } else if (component_type == meta_hpp::resolve_type<MeshRenderer>()) {
             DrawProps();
 

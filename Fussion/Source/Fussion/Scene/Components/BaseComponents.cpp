@@ -74,4 +74,24 @@ namespace Fussion {
         Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(speed);
     }
+
+    void Environment::on_draw(RenderContext& context)
+    {
+        if (!context.render_flags.test(RenderState::LightCollection))
+            return;
+
+        context.post_processing.use_ssao = ssao;
+    }
+
+    void Environment::serialize(Serializer& ctx) const
+    {
+        Component::serialize(ctx);
+        FSN_SERIALIZE_MEMBER(ssao);
+    }
+
+    void Environment::deserialize(Deserializer& ctx)
+    {
+        Component::deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(ssao);
+    }
 }

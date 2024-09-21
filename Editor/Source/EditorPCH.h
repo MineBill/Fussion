@@ -21,6 +21,7 @@
 
 #include <cpptrace/cpptrace.hpp>
 
+#pragma region std
 #include <cstdint>
 #include <concepts>
 #include <functional>
@@ -38,3 +39,4 @@
 #include <unordered_map>
 #include <set>
 #include <concepts>
+#pragma endregion

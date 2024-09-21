@@ -24,5 +24,7 @@ namespace Fussion {
                 list.second.clear();
             }
         }
+
+        post_processing.use_ssao = false;
     }
 }

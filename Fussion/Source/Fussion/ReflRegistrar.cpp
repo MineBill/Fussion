@@ -146,6 +146,11 @@ namespace Fussion {
                 .member_("DrawType"s, &DebugDrawer::draw_type, as_pointer)
                 .member_("Size"s, &DebugDrawer::size, as_pointer);
 
+            meta::class_<Environment>(metadata_()
+                    ("Name"s, "Environment"s))
+                .constructor_<>(as_raw_pointer)
+                .constructor_<Entity*>(as_raw_pointer);
+
             meta::static_scope_("Components")
                 .typedef_<MeshRenderer>("MeshRenderer"s)
                 .typedef_<ScriptComponent>("ScriptComponent"s)
@@ -153,7 +158,8 @@ namespace Fussion {
                 .typedef_<MoverComponent>("MoverComponent"s)
                 .typedef_<PointLight>("PointLight"s)
                 .typedef_<DebugDrawer>("DebugDrawer"s)
-                .typedef_<DirectionalLight>("DirectionalLight"s);
+                .typedef_<DirectionalLight>("DirectionalLight"s)
+                .typedef_<Environment>("Environment"s);
         }
         // endregion Components
 

@@ -44,9 +44,7 @@ namespace Fussion {
         ObjectPicking = 1 << 4,
     };
 
-    DECLARE_FLAGS(RenderState, RenderStateFlags)
-
-    DECLARE_OPERATORS_FOR_FLAGS(RenderStateFlags)
+    BITFLAGS(RenderState)
 
     enum class DrawPass: u32 {
         None = 1 << 0,
@@ -61,6 +59,10 @@ namespace Fussion {
     DECLARE_FLAGS(DrawPass, DrawPassFlags)
 
     DECLARE_OPERATORS_FOR_FLAGS(DrawPassFlags)
+
+    struct PostProcessing {
+        bool use_ssao{};
+    };
 
     // NOTE: Ideally this would hold an actual material, that defines
     //       a shader to use. For now, we assume that all render objects
@@ -81,6 +83,7 @@ namespace Fussion {
 
     struct RenderContext {
         RenderStateFlags render_flags;
+        PostProcessing post_processing{};
 
         std::vector<GPUPointLight> point_lights{};
         std::vector<GPUDirectionalLight> directional_lights{};

@@ -1510,10 +1510,13 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         auto pass = encoder.begin_rendering(rp_spec);
         pass.begin_pipeline_statistics_query(m_statistics_query_set, 1);
 
-        pass.set_pipeline(ssao.pipeline);
-        pass.set_bind_group(m_global_bind_group, 0);
-        pass.set_bind_group(ssao.bind_group, 1);
-        pass.draw({ 0, 6 }, { 0, 1 });
+        if (m_render_context.post_processing.use_ssao) {
+            pass.set_pipeline(ssao.pipeline);
+            pass.set_bind_group(m_global_bind_group, 0);
+            pass.set_bind_group(ssao.bind_group, 1);
+            pass.draw({ 0, 6 }, { 0, 1 });
+
+        }
 
         pass.end_pipeline_statistics_query();
         pass.end();
