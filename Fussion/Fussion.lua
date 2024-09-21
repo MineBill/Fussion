@@ -35,7 +35,7 @@ target("Fussion")
     add_includedirs("Vendor/entt/src", {public = true})
 
     add_packages("fmt", "cpptrace", {public = true})
-    add_packages("glfw", "VMA", "wgpu-native")
+    add_packages("glfw", "VMA", "wgpu-native", "JoltPhysics")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
