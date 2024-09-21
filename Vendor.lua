@@ -19,20 +19,6 @@ package("glfw")
 package_end()
 add_requires("glfw")
 
-package("VMA")
-    add_deps("cmake")
-    set_sourcedir(path.join(os.scriptdir(), "Vendor/VulkanMemoryAllocator-3.1.0"))
-    on_install(function (package)
-        local configs = {}
-        table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
-        table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
-        table.insert(configs, "-DTINYGLTF_BUILD_LOADER_EXAMPLE=OFF")
-        table.insert(configs, "-DTINYGLTF_INSTALL=OFF")
-        import("package.tools.cmake").install(package, configs)
-    end)
-package_end()
-add_requires("VMA")
-
 package("fmt")
     add_deps("cmake")
     set_sourcedir(path.join(os.scriptdir(), "Vendor/fmt-11.0.2"))
@@ -162,10 +148,6 @@ target("argparse", function()
 
     add_sysincludedirs("Vendor/argparse/include", {public = true})
 end)
-
-if is_plat("linux") then
-    add_requires("spirv-cross", "spirv-tools")
-end
 
 package("wgpu-native")
     set_homepage("https://github.com/gfx-rs/wgpu-native")

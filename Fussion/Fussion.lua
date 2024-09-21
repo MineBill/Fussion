@@ -45,9 +45,7 @@ target("Fussion")
     add_sysincludedirs("Vendor/tracy/public", {public = true})
 
     add_defines (
-        "GLM_ENABLE_EXPERIMENTAL",
-        "VMA_DYNAMIC_VULKAN_FUNCTIONS",
-        "VK_NO_PROTOTYPES"
+        "GLM_ENABLE_EXPERIMENTAL"
     )
 
     add_rules("CompilerFlags")
@@ -55,30 +53,16 @@ target("Fussion")
     add_options("Tracy")
 
     if is_plat("windows") then
-        add_defines("OS_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR", {public = true})
+        add_defines("OS_WINDOWS", {public = true})
         add_links("gdi32", "user32", "shell32", "Comdlg32")
         set_runtimes("MDd")
-        add_sysincludedirs(os.getenv("VULKAN_SDK") .. "/Include", {public = true})
-        add_links (
-            -- Shader compiler
-            os.getenv("VULKAN_SDK") .. "/Lib/shaderc_sharedd.lib",
-
-            -- Shader linker
-            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Tools-linkd.lib",
-            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Tools-optd.lib",
-            os.getenv("VULKAN_SDK") .. "/Lib/SPIRV-Toolsd.lib",
-
-            -- Shader reflection
-            os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-cored.lib",
-            os.getenv("VULKAN_SDK") .. "/Lib/spirv-cross-glsld.lib"
-        )
         add_cxxflags("cl::/bigobj")
         add_cxxflags("cl::/utf-8", {public = true})
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})
         add_links("shaderc_shared")
 
-        add_packages("spirv-cross", "spirv-tools")
+        add_packages("spirv-cross")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end
