@@ -32,7 +32,7 @@ namespace Fussion {
         });
 
         GPU::DeviceSpec spec{
-            .label = "Device",
+            .label = String("Device"),
             .required_features = {
                 GPU::Features::Float32Filterable,
                 GPU::Features::TimestampQuery,

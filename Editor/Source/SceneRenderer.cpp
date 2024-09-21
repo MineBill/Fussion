@@ -1701,7 +1701,7 @@ void SceneRenderer::setup_queries()
 {
     {
         GPU::QuerySetSpec query_set_spec{
-            .label = "Timings Set",
+            .label = String("Timings Set"),
             .type = GPU::QueryType::Timestamp{},
             .count = 5 * 2, // 5, one for each pass, times 2 for start and end
         };
@@ -1730,7 +1730,7 @@ void SceneRenderer::setup_queries()
     {
         using enum GPU::PipelineStatisticName;
         GPU::QuerySetSpec query_set_spec{
-            .label = "Pipeline Statistics Set",
+            .label = String("Pipeline Statistics Set"),
             .type = FragmentShaderInvocations | VertexShaderInvocations | ClipperInvocations,
             .count = 4 * 3, // 5, one for each pass, times 3, for each of the types above
         };
