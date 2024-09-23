@@ -5,6 +5,7 @@
 #include "EditorUI.h"
 #include "Fussion/Assets/Model.h"
 #include "Fussion/Math/Color.h"
+#include "Fussion/Reflection/Attributes.h"
 
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -47,17 +48,24 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
     ZoneScoped;
     bool modified{ false };
 
-    auto DrawProps = [&] {
+    auto draw_props = [&] {
         for (auto const& member : component_type.get_members()) {
             auto value = member.get(ptr);
+            auto& metadata = member.get_metadata();
 
-            ImGui::PushID(member.get_name().data());
-            defer(ImGui::PopID());
-
-            if (!member.get_metadata().contains("vector")) {
+            if (auto region_attr = metadata.find("Region"); region_attr != metadata.end()) {
+                auto& region = region_attr->second.as<Attributes::Region>();
+                (void)region;
+                // TODO: Support regions. Appending to the same collapsing header is not possible.
                 EUI::property(member.get_name(), [&] {
                     draw_property(std::move(value), member, ptr);
                 });
+            } else {
+                if (!metadata.contains("vector")) {
+                    EUI::property(member.get_name(), [&] {
+                        draw_property(std::move(value), member, ptr);
+                    });
+                }
             }
         }
     };
@@ -93,25 +101,19 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
     if (opened) {
         // Special case gui for some components.
         if (component_type == meta_hpp::resolve_type<ScriptComponent>()) {
-            DrawProps();
-        } else if (component_type == meta_hpp::resolve_type<Environment>()) {
-            auto env = *CAST(Environment**, ptr.get_data());
-            if (ImGui::CollapsingHeader("Post-Processing Effects")) {
-                EUI::property("SSAO", &env->ssao);
-            }
+            // TODO: Override this to display the exported script variables.
+            draw_props();
         } else if (component_type == meta_hpp::resolve_type<MeshRenderer>()) {
-            DrawProps();
-
+            draw_props();
             if (ImGui::TreeNode("Materials")) {
                 for (auto mr = *CAST(MeshRenderer**, ptr.get_data()); auto& material : mr->materials) {
                     EUI::asset_property(material.meta_poly_ptr().get_type().as_pointer().get_data_type().as_class(), material.meta_poly_ptr());
                 }
                 ImGui::TreePop();
             }
-
         } else {
             // Generic case
-            DrawProps();
+            draw_props();
         }
 
         ImGui::Separator();
@@ -124,7 +126,9 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
 {
     ZoneScoped;
     bool modified{ false };
-    if (auto const prop_type = prop_value.get_type().as_pointer().get_data_type(); prop_type.is_number()) {
+    auto const prop_type = prop_value.get_type().as_pointer().get_data_type();
+    auto& metadata = member.get_metadata();
+    if (prop_type.is_number() && !prop_value.is<bool*>()) {
         ImGuiDataType type;
         if (prop_value.is<f32*>()) {
             type = ImGuiDataType_Float;
@@ -143,8 +147,16 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
         }
         // @note value has a pointer to the member pointer, so get_data returns that
         // pointer to the pointer.
-        if (ImGui::InputScalar("", type, *CAST(void**, prop_value.get_data()))) {
-            modified = true;
+        auto data_ptr = *CAST(void**, prop_value.get_data());
+        if (auto range_attr = metadata.find("Range"); range_attr != metadata.end()) {
+            auto range = range_attr->second.as<Attributes::Range>();
+            if (ImGui::DragScalar("", type, data_ptr, range.step, &range.min, &range.max)) {
+                modified = true;
+            }
+        } else {
+            if (ImGui::InputScalar("", type, data_ptr)) {
+                modified = true;
+            }
         }
     } else if (prop_value.is<bool*>()) {
         if (ImGui::Checkbox("", prop_value.as<bool*>())) {
@@ -166,6 +178,8 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
         auto class_type = prop_type.as_class();
         if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
             EUI::asset_property(class_type, std::move(prop_value));
+        } else if (member.get_metadata().contains("vector")) {
+            auto& inner_type = member.get_metadata().at("vector");
             // } else if (member.get_metadata().contains("vector")) {
             // // class_type is std::vector<T>
             // auto type_t = class_type.get_argument_type(0);

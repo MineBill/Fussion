@@ -2,7 +2,7 @@
 #include <Fussion/Scene/Component.h>
 
 namespace Fussion {
-    class DirectionalLight final : public Component {
+    class [[API]] DirectionalLight final : public Component {
     public:
         COMPONENT_DEFAULT(DirectionalLight)
         COMPONENT_DEFAULT_COPY(DirectionalLight)

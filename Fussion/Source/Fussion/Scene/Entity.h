@@ -32,13 +32,13 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class ReflRegistrar;
+    class ReflectionRegistry;
 
     class Entity final : public ISerializable {
         META_HPP_ENABLE_POLY_INFO()
         friend Scene;
         friend SceneSerializer;
-        friend ReflRegistrar;
+        friend ReflectionRegistry;
 
     public:
         Transform transform;

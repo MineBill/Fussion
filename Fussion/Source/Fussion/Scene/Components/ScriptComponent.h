@@ -4,7 +4,7 @@
 #include "Fussion/Scripting/ScriptingEngine.h"
 
 namespace Fussion {
-    class ScriptComponent final : public Component {
+    class [[API]] ScriptComponent final : public Component {
     public:
         COMPONENT_DEFAULT(ScriptComponent)
 

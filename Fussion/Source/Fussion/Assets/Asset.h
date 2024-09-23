@@ -1,8 +1,8 @@
 #pragma once
 #include "Fussion/Core/Uuid.h"
-#include "Fussion/ReflRegistrar.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
+#include "Fussion/Reflection/ReflectionRegistry.h"
 #include "Fussion/Serialization/ISerializable.h"
+#include "Fussion/meta.hpp/meta_all.hpp"
 
 namespace Fussion {
     enum class [[nodiscard]] AssetType {
@@ -28,7 +28,7 @@ namespace Fussion {
     };
 
     class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset>, public ISerializable {
-        friend ReflRegistrar;
+        friend ReflectionRegistry;
 
     public:
         virtual ~Asset() override = default;

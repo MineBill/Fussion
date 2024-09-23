@@ -3,6 +3,7 @@
 #include "./subtree.h"
 #include "./length.h"
 #include "./unicode.h"
+#include <stdarg.h>
 
 #define LOG(message, character)              \
   if (self->logger.log) {                    \
@@ -284,6 +285,17 @@ static bool ts_lexer__is_at_included_range_start(const TSLexer *_self) {
   }
 }
 
+static void ts_lexer__log(const TSLexer *_self, const char *fmt, ...) {
+  Lexer *self = (Lexer *)_self;
+  va_list args;
+  va_start(args, fmt);
+  if (self->logger.log) {
+    vsnprintf(self->debug_buffer, TREE_SITTER_SERIALIZATION_BUFFER_SIZE, fmt, args);
+    self->logger.log(self->logger.payload, TSLogTypeLex, self->debug_buffer);
+  }
+  va_end(args);
+}
+
 void ts_lexer_init(Lexer *self) {
   *self = (Lexer) {
     .data = {
@@ -295,6 +307,7 @@ void ts_lexer_init(Lexer *self) {
       .get_column = ts_lexer__get_column,
       .is_at_included_range_start = ts_lexer__is_at_included_range_start,
       .eof = ts_lexer__eof,
+      .log = ts_lexer__log,
       .lookahead = 0,
       .result_symbol = 0,
     },
@@ -365,7 +378,7 @@ void ts_lexer_finish(Lexer *self, uint32_t *lookahead_end_byte) {
   // Therefore, the next byte *after* the current (invalid) character
   // affects the interpretation of the current character.
   if (self->data.lookahead == TS_DECODE_ERROR) {
-    current_lookahead_end_byte++;
+    current_lookahead_end_byte += 4; // the maximum number of bytes read to identify an invalid code point
   }
 
   if (current_lookahead_end_byte > *lookahead_end_byte) {

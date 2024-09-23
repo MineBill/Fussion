@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Log/Log.h"
 
 namespace Fussion {
-    class PointLight final : public Component {
+    class [[API]] PointLight final : public Component {
     public:
         COMPONENT_DEFAULT(PointLight)
         COMPONENT_DEFAULT_COPY(PointLight)
@@ -13,14 +13,16 @@ namespace Fussion {
         virtual void on_update(f32 delta) override;
         virtual void on_draw(RenderContext& context) override;
 
+        [[API, BackgroundColor(Color::Red)]]
         f32 radius{ 10.0f };
+        [[Fussion::API]]
         Vector3 offset{};
 
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class DebugDrawer final : public Component {
+    class [[API]] DebugDrawer final : public Component {
     public:
         enum class Type {
             Sphere,
@@ -42,7 +44,7 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class MoverComponent final : public Component {
+    class [[API]] MoverComponent final : public Component {
     public:
         COMPONENT_DEFAULT(MoverComponent)
         COMPONENT_DEFAULT_COPY(MoverComponent)
@@ -55,15 +57,20 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class Environment final : public Component {
+    class [[API]] Environment final : public Component {
     public:
         COMPONENT_DEFAULT(Environment)
         COMPONENT_DEFAULT_COPY(Environment)
 
         virtual void on_draw(RenderContext& context) override;
 
+        [[API, Region("Post-Processing")]]
         bool ssao{};
+        [[API, Region("Post-Processing")]]
+        bool other_cool_effect{};
 
+        [[API, Region("Different Cooler Region")]]
+        f64 different_region {};
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
     };

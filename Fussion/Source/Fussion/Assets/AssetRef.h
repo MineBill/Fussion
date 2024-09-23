@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "AssetManagerBase.h"
 #include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/ReflRegistrar.h"
+#include "Fussion/Reflection/ReflectionRegistry.h"
 
 namespace Fussion {
     namespace Detail {
@@ -10,7 +10,7 @@ namespace Fussion {
 
     class AssetRefBase : public ISerializable {
         META_HPP_ENABLE_POLY_INFO()
-        friend ReflRegistrar;
+        friend ReflectionRegistry;
 
     public:
         AssetRefBase() = default;

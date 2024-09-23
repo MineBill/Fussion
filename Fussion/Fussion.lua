@@ -40,6 +40,8 @@ target("Fussion")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
 
+    add_rules("HeaderTool")
+
     set_pcxxheader("Source/FussionPCH.h")
 
     add_sysincludedirs("Vendor/tracy/public", {public = true})

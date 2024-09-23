@@ -4,7 +4,6 @@ add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
 set_policy("package.install_locally", true)
 
 set_runtimes("MDd")
-
 rule("CompilerFlags")
     on_load(function (target)
         --[[ target:add("cxxflags", "gcc::-Wno-changes-meaning")
@@ -13,7 +12,7 @@ rule("CompilerFlags")
 
         target:add("cxxflags", "cl::/EHsc")
         target:add("cxxflags", "cl::/permissive-")
-        target:add("cxxflags", "cl::/wd4514 /wd4820")
+        target:add("cxxflags", "cl::/wd4514 /wd4820 /wd5030 /wd5222")
     end)
 rule_end()
 

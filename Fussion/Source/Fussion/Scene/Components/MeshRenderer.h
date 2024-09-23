@@ -5,7 +5,7 @@
 #include "Fussion/Assets/Model.h"
 
 namespace Fussion {
-    class MeshRenderer final : public Component {
+    class [[API]] MeshRenderer final : public Component {
     public:
         COMPONENT_DEFAULT(MeshRenderer)
 

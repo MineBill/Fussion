@@ -12,8 +12,8 @@ namespace Fussion {
     {
         (void)ctx;
         auto aspect = Application::inst()->window().size().aspect();
-        m_Perspective = glm::perspective(glm::radians(Fov), aspect, Near, Far);
-        auto corners = Math::get_frustum_corners_world_space(m_Perspective, m_owner->transform.camera_matrix());
+        m_perspective = glm::perspective(glm::radians(fov), aspect, near, far);
+        auto corners = Math::get_frustum_corners_world_space(m_perspective, m_owner->transform.camera_matrix());
 
         constexpr auto color = Color::SkyBlue;
 
@@ -39,31 +39,31 @@ namespace Fussion {
         (void)delta;
 
         auto aspect = Application::inst()->window().size().aspect();
-        m_Perspective = glm::perspective(glm::radians(Fov), aspect, Near, Far);
+        m_perspective = glm::perspective(glm::radians(fov), aspect, near, far);
     }
 
     Ref<Component> Camera::clone()
     {
         auto camera = make_ref<Camera>();
-        camera->Far = Far;
-        camera->Near = Near;
-        camera->Fov = Fov;
+        camera->far = far;
+        camera->near = near;
+        camera->fov = fov;
         return camera;
     }
 
     void Camera::serialize(Serializer& ctx) const
     {
         Component::serialize(ctx);
-        FSN_SERIALIZE_MEMBER(Far);
-        FSN_SERIALIZE_MEMBER(Near);
-        FSN_SERIALIZE_MEMBER(Fov);
+        FSN_SERIALIZE_MEMBER(far);
+        FSN_SERIALIZE_MEMBER(near);
+        FSN_SERIALIZE_MEMBER(fov);
     }
 
     void Camera::deserialize(Deserializer& ctx)
     {
         Component::deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(Far);
-        FSN_DESERIALIZE_MEMBER(Near);
-        FSN_DESERIALIZE_MEMBER(Fov);
+        FSN_DESERIALIZE_MEMBER(far);
+        FSN_DESERIALIZE_MEMBER(near);
+        FSN_DESERIALIZE_MEMBER(fov);
     }
 }

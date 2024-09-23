@@ -188,6 +188,7 @@ void Editor::on_update(f32 delta)
     }
     break;
     case PlayState::Paused: {}
+    case PlayState::Detached: {}
     break;
     }
 
@@ -304,7 +305,7 @@ void Editor::on_update(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::image_button(style.editor_icons[EditorIcon::Dots], [this] {
+        EUI::image_button(style.editor_icons[EditorIcon::Dots], [] {
             ImGui::OpenPopup("Toolbar::Options");
         }, { .size = Vector2{ height, height }, .disabled = m_state != PlayState::Playing });
 
@@ -447,11 +448,11 @@ void Editor::on_draw(GPU::CommandEncoder& encoder)
         auto entity = camera.owner();
         m_scene_renderer.render(encoder, {
             .camera = RenderCamera{
-                .perspective = camera.GetPerspective(),
+                .perspective = camera.get_perspective(),
                 .view = inverse(entity->world_matrix()),
                 .position = entity->transform.position,
-                .near = camera.Near,
-                .far = camera.Far,
+                .near = camera.near,
+                .far = camera.far,
                 .direction = entity->transform.forward(),
             },
             .scene = m_play_scene.get(),

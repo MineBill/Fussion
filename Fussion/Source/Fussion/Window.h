@@ -46,12 +46,11 @@ namespace Fussion {
 
         virtual bool should_close() = 0;
 
-        virtual void set_title(std::string const& title) = 0;
-
         virtual void on_event(EventFnType callback) = 0;
 
         virtual void* native_handle() const = 0;
 
+        virtual void set_title(std::string const& title) = 0;
         virtual void set_position(Vector2 position) const = 0;
         virtual auto position() const -> Vector2 = 0;
 
