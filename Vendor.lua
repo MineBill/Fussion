@@ -94,6 +94,7 @@ package("JoltPhysics")
 		table.insert(configs, "-DUSE_STATIC_MSVC_RUNTIME_LIBRARY=OFF")
 		table.insert(configs, "-DINTERPROCEDURAL_OPTIMIZATION=OFF")
 		table.insert(configs, "-DUSE_ASSERTS=ON")
+		table.insert(configs, "-DENABLE_ALL_WARNINGS=OFF")
 
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))

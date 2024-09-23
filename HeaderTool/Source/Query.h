@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Common.h"
 
+#include <iterator>
 #include <tree_sitter/api.h>
 #include <tree-sitter-cpp.h>
 

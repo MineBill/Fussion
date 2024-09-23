@@ -433,7 +433,7 @@ int main(int argc, char** argv)
 #define NEW_LINE_SLASH " \\\n"
 #define TAB_NEW_LINE " \t\n"
 #define F(s) f << s << '\n';
-#define FMT(s, ...) f << std::format(s, __VA_ARGS__) << '\n';
+#define FMT(s, ...) f << std::format(s, ##__VA_ARGS__) << '\n';
 
     F("// GENERATED FILE -- DO NOT EDIT");
     F(R"(#include "Fussion/meta.hpp/meta_all.hpp")");
