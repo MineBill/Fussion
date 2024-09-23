@@ -26,8 +26,8 @@ fn fs_main(in: VertexOutput) -> @location(0) f32 {
     let texel_size = 1.0 / vec2f(textureDimensions(ssao_texture, 0));
 
     var result = f32(0.0);
-    for (var x = -4; x < 4; x++) {
-        for (var y = -4; y < 4; y++) {
+    for (var x = -2; x < 2; x++) {
+        for (var y = -2; y < 2; y++) {
             var offset = vec2f(f32(x), f32(y)) * texel_size;
             offset.y *= -1.0;
 
@@ -36,5 +36,5 @@ fn fs_main(in: VertexOutput) -> @location(0) f32 {
     }
 
     // return textureSample(ssao_texture, texture_sampler, in.uv).r;
-    return result / (64.0);
+    return result / (16.0);
 }

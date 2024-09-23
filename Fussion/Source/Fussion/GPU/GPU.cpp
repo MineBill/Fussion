@@ -1100,6 +1100,7 @@ namespace Fussion::GPU {
                 WGPUColorTargetState wgpu_state{
                     .nextInChain = nullptr,
                     .format = to_wgpu(state.format),
+                    .blend = nullptr,
                     .writeMask = to_wgpu(state.write_mask),
                 };
 
@@ -1177,6 +1178,7 @@ namespace Fussion::GPU {
 
     void Device::submit_command_buffer(CommandBuffer cmd) const
     {
+        ZoneScoped;
         std::lock_guard lock(QueueMutex);
 
         WGPUCommandBuffer cmds[] = {
@@ -1294,6 +1296,7 @@ namespace Fussion::GPU {
         WGPUSurfaceCapabilities caps{};
         wgpuSurfaceGetCapabilities(CAST(WGPUSurface, handle), CAST(WGPUAdapter, adapter.handle), &caps);
         VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
+        LOG_DEBUGF("Configuring surface with format: {}", magic_enum::enum_name(caps.formats[0]));
 
         WGPUSurfaceConfigurationExtras extras{
             .chain = WGPUChainedStruct{
@@ -1358,6 +1361,7 @@ namespace Fussion::GPU {
 
     void Surface::present() const
     {
+        ZoneScoped;
         wgpuSurfacePresent(CAST(WGPUSurface, handle));
     }
 
@@ -1526,6 +1530,7 @@ namespace Fussion::GPU {
 
     void CommandBuffer::release() const
     {
+        ZoneScoped;
         wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, handle));
     }
 }

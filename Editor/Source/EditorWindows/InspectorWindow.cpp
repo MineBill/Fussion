@@ -52,17 +52,23 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
         for (auto const& member : component_type.get_members()) {
             auto value = member.get(ptr);
             auto& metadata = member.get_metadata();
+            auto& member_name = [&]() -> std::string const& {
+                if (metadata.contains("EditorName")) {
+                    return metadata.at("EditorName").as<Attributes::EditorName>().name;
+                }
+                return member.get_name();
+            }();
 
             if (auto region_attr = metadata.find("Region"); region_attr != metadata.end()) {
                 auto& region = region_attr->second.as<Attributes::Region>();
                 (void)region;
                 // TODO: Support regions. Appending to the same collapsing header is not possible.
-                EUI::property(member.get_name(), [&] {
+                EUI::property(member_name, [&] {
                     draw_property(std::move(value), member, ptr);
                 });
             } else {
                 if (!metadata.contains("vector")) {
-                    EUI::property(member.get_name(), [&] {
+                    EUI::property(member_name, [&] {
                         draw_property(std::move(value), member, ptr);
                     });
                 }

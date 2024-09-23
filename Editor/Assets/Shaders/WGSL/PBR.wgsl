@@ -233,7 +233,7 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let l = normalize(tangent_light_dir);
     let h = normalize(v + l);
 
-    let radiance = light.color.rgb;
+    let radiance = light.color.rgb * 1.0;
     let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv).rgb * material.albedo_color.rgb;
     let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).b * material.metallic;
     var f0 = mix(vec3f(0.04), albedo, metalness);
@@ -271,9 +271,14 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
 
     var ambient = albedo * 0.03;
     ambient *= occlusion;
-    ambient *= ssao_occlusion;
 
     var ret = ambient + (kd * albedo / pi + specular) * radiance * ndotl * shadow;
+    let gamma = 2.2;
+    let exposure = 1.0;
+    var mapped = vec3f(1.0) - exp(-ret.rgb * exposure);
+    mapped = pow(mapped, vec3f(1.0 / gamma));
+    ret = mapped;
+    ret *= ssao_occlusion;
     ret += textureSample(emissive_map, linear_sampler, in.frag_uv).rgb;
 
     return ret;

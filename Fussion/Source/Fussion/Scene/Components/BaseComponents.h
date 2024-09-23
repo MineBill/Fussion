@@ -15,7 +15,7 @@ namespace Fussion {
 
         [[API, BackgroundColor(Color::Red)]]
         f32 radius{ 10.0f };
-        [[Fussion::API]]
+        [[API]]
         Vector3 offset{};
 
         virtual void serialize(Serializer& ctx) const override;
@@ -64,13 +64,9 @@ namespace Fussion {
 
         virtual void on_draw(RenderContext& context) override;
 
-        [[API, Region("Post-Processing")]]
+        [[API, EditorName("SSAO")]]
         bool ssao{};
-        [[API, Region("Post-Processing")]]
-        bool other_cool_effect{};
 
-        [[API, Region("Different Cooler Region")]]
-        f64 different_region {};
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
     };

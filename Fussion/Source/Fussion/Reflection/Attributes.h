@@ -12,4 +12,9 @@ namespace Fussion::Attributes {
         f32 max{};
         f32 step{ 1.0f };
     };
+
+    class [[Attribute]] EditorName {
+    public:
+        std::string name{};
+    };
 }

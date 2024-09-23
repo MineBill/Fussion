@@ -115,7 +115,7 @@ namespace Fussion {
                 .targets = {
                     GPU::ColorTargetState{
                         .format = output_format,
-                        .blend = GPU::BlendState::get_default(),
+                        .blend = None(),
                         .write_mask = GPU::ColorWrite::All,
                     },
                 }
