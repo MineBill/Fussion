@@ -19,20 +19,38 @@
 #include <set>
 
 constexpr auto CLASS_QUERY = R"fennel(
-(class_specifier
-  (attribute_declaration
-    (attribute
+(
+ [(struct_specifier
+    (attribute_declaration
+      (attribute
         prefix: (identifier)? @attr-prefix
         name: (identifier) @attr-name
         (argument_list
           (_))? @attr-arguments))
     name: (type_identifier) @class-name
-  (base_class_clause
-  [
-    (type_identifier) @base-class
-    (qualified_identifier
-        name: (type_identifier) @base-class)
-   ])?) @class
+    (base_class_clause
+      [
+       (type_identifier) @base-class
+       (qualified_identifier
+         name: (type_identifier) @base-class)
+       ])?
+    )
+  (class_specifier
+    (attribute_declaration
+      (attribute
+        prefix: (identifier)? @attr-prefix
+        name: (identifier) @attr-name
+        (argument_list
+          (_))? @attr-arguments))
+    name: (type_identifier) @class-name
+    (base_class_clause
+      [
+       (type_identifier) @base-class
+       (qualified_identifier
+         name: (type_identifier) @base-class)
+       ])?
+    )]
+ ) @class
 )fennel";
 
 constexpr auto FIELD_QUERY = R"fennel(
@@ -420,20 +438,15 @@ int main(int argc, char** argv)
             attribute_classes[klass.name] = klass;
         }
     }
-    std::ofstream f(output_path);
-
-    if (!f.is_open()) {
-        std::println("[HeaderTool] Failed to open output file");
-        return -1;
-    }
+    std::stringstream ss;
 
 #define TAB "    "
-#define TAB_N(x) for(int i = 0; i < x; ++i) { f << TAB; }
+#define TAB_N(x) for(int i = 0; i < x; ++i) { ss << TAB; }
 #define NEW_LINE " \n"
 #define NEW_LINE_SLASH " \\\n"
 #define TAB_NEW_LINE " \t\n"
-#define F(s) f << s << '\n';
-#define FMT(s, ...) f << std::format(s, ##__VA_ARGS__) << '\n';
+#define F(s) ss << s << '\n';
+#define FMT(s, ...) ss << std::format(s, ##__VA_ARGS__) << '\n';
 
     F("// GENERATED FILE -- DO NOT EDIT");
     F(R"(#include "Fussion/meta.hpp/meta_all.hpp")");
@@ -443,7 +456,7 @@ int main(int argc, char** argv)
     F(R"(#include "Fussion/Reflection/ReflectionRegistry.h")");
     F(R"(#include "Fussion/Reflection/Attributes.h")");
 
-    for (auto const& include: include_files) {
+    for (auto const& include : include_files) {
         FMT(R"(#include "{}")", std::filesystem::relative(include, "Fussion/Source").string());
     }
     // @formatter:off
@@ -505,5 +518,23 @@ int main(int argc, char** argv)
     TAB_N(1); F("}");
     TAB_N(0); F("}");
     // @formatter:on
+
+    // std::ofstream f(output_path);
+    // if (!f.is_open()) {
+    //     std::println("[HeaderTool] Failed to open output file");
+    //     return -1;
+    // }
+
+    std::string output = ss.str();
+
+    if (auto file = read_entire_file(output_path)) {
+        if (std::hash<std::string>{}(output) == std::hash<std::string>{}(*file)) {
+            std::println("Generated code is the same as a previously generated file. Will not write to avoid rebuild.");
+            return 0;
+        }
+    }
+
+    std::ofstream out_file(output_path, std::ios::trunc);
+    out_file << output;
     std::println("[HeaderTool] Done");
 }

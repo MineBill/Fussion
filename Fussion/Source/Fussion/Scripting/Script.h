@@ -6,7 +6,6 @@ namespace Fussion
     {
     public:
     private:
-
         friend class ScriptingEngine;
     };
 }

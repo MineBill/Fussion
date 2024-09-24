@@ -1,20 +1,17 @@
 #pragma once
 
 namespace Fussion::Attributes {
-    class [[Attribute]] Region {
-    public:
+    struct [[Attribute]] Region {
         std::string name{};
     };
 
-    class [[Attribute]] Range {
-    public:
+    struct [[Attribute]] Range {
         f32 min{};
         f32 max{};
         f32 step{ 1.0f };
     };
 
-    class [[Attribute]] EditorName {
-    public:
+    struct [[Attribute]] EditorName {
         std::string name{};
     };
 }

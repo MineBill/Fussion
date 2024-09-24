@@ -41,7 +41,6 @@ target("HeaderTool", function()
     set_languages("c++23")
     set_warnings("allextra")
 	set_rundir("$(projectdir)")
-    set_optimize("fastest")
 
     add_options("Tracy")
 
