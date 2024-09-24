@@ -16,13 +16,12 @@ namespace Fussion {
         AssetRefBase() = default;
         virtual ~AssetRefBase() = default;
 
-        explicit AssetRefBase(AssetHandle handle)
-            : m_handle(handle) {}
+        explicit AssetRefBase(AssetHandle handle);
 
         operator bool() const { return is_valid(); }
 
         [[nodiscard]]
-        bool is_valid() const { return m_handle != 0; }
+        bool is_valid() const { return m_is_valid; }
 
         [[nodiscard]]
         bool is_loaded() const;
@@ -33,7 +32,7 @@ namespace Fussion {
         [[nodiscard]]
         bool is_virtual() const;
 
-        void set_handle(AssetHandle handle) { m_handle = handle; }
+        void set_handle(AssetHandle handle);
 
         virtual AssetType type() const = 0;
 
@@ -49,6 +48,7 @@ namespace Fussion {
         [[nodiscard]] Asset* get_raw(AssetType type) const;
 
         AssetHandle m_handle{ 0 };
+        bool m_is_valid{ true };
         bool m_loaded{ false };
     };
 

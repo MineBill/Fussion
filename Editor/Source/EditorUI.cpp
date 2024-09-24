@@ -43,7 +43,11 @@ namespace EUI {
                 ImGui::EndPopup();
             }
         } else {
-            ImGui::Button("[Empty]", Vector2(64, 64));
+            if (m_Handle.get(data).as<Fussion::Uuid>() == 0) {
+                ImGui::Button("[Empty]", Vector2(64, 64));
+            } else {
+                ImGui::Button("[Broken reference]", Vector2(64, 64));
+            }
         }
         ImGui::PopFont();
 
