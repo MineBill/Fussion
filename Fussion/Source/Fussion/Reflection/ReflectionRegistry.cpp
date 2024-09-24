@@ -1,17 +1,13 @@
 ﻿#include "FussionPCH.h"
 #include "Fussion/Assets/Asset.h"
-#include "Fussion/Scene/Components/BaseComponents.h"
-#include "Fussion/Scene/Components/Camera.h"
-#include "Fussion/Scene/Components/MeshRenderer.h"
-#include "Fussion/Scene/Components/ScriptComponent.h"
 #include "Fussion/Scene/Entity.h"
 #include "Math/Color.h"
 
 #include "ReflectionRegistry.h"
 
-#include "Debug/Debug.h"
+#include "Assets/AssetRef.h"
+#include "Assets/PbrMaterial.h"
 #include "Input/Input.h"
-#include "Input/Keys.h"
 #include "Scene/Scene.h"
 
 namespace Fussion {
@@ -103,7 +99,6 @@ namespace Fussion {
             .member_("Metallic", &PbrMaterial::metallic, as_pointer)
             .member_("Roughness", &PbrMaterial::roughness, as_pointer);
 
-        REGISTER_ENUM(DebugDrawer::Type, Type);
         REGISTER_ENUM(GPU::TextureFormat, TextureFormat);
 
         meta::class_<AssetMetadata>(metadata_()("Name"s, "AssetMetadata"s));

@@ -54,8 +54,6 @@ namespace Fussion {
         All = Depth | PBR,
     };
 
-    constexpr auto DrawPassCount = magic_enum::enum_count<DrawPass>();
-
     DECLARE_FLAGS(DrawPass, DrawPassFlags)
 
     DECLARE_OPERATORS_FOR_FLAGS(DrawPassFlags)
