@@ -364,6 +364,7 @@ int main(int argc, char** argv)
         for (auto& klass : classes_in_file | std::views::values) {
 
             std::unordered_map<std::string, ClassMember> members_in_class{};
+            std::unordered_map<std::string, ClassMethod> methods_in_class{};
 
             for (auto& match : field_query.execute(klass.class_node)) {
                 std::unordered_map<std::string, Capture> local_captures{};
@@ -395,6 +396,41 @@ int main(int argc, char** argv)
                     local_captures["attr-prefix"].value,
                     local_captures["attr-arguments"].value);
             }
+
+            for (auto& match : method_query.execute(klass.class_node)) {
+                std::unordered_map<std::string, Capture> local_captures{};
+                for (auto i = 0; i < match.capture_count; i++) {
+                    auto capture = match.captures[i];
+                    auto name = std::string(method_query.capture_name_for_id(capture.index));
+
+                    auto start = ts_node_start_byte(capture.node);
+                    auto end = ts_node_end_byte(capture.node);
+                    auto value = std::string(*file).substr(start, end - start);
+
+                    local_captures[name] = {
+                        std::move(value),
+                        capture.node,
+                    };
+                }
+
+                auto const& field_name = local_captures["method-name"].value;
+                if (!methods_in_class.contains(field_name)) {
+                    methods_in_class[field_name] = ClassMethod{
+                        .name = field_name,
+                        .node = local_captures["method"].node,
+                    };
+                }
+
+                auto& member = methods_in_class[field_name];
+                member.update_attribute(
+                    local_captures["attr-name"].value,
+                    local_captures["attr-prefix"].value,
+                    local_captures["attr-arguments"].value);
+            }
+
+            std::ranges::transform(methods_in_class, std::back_inserter(klass.methods), [&](auto&& pair) {
+                return pair.second;
+            });
 
             std::ranges::transform(members_in_class, std::back_inserter(klass.members), [&](auto&& pair) {
                 return pair.second;
@@ -435,7 +471,11 @@ int main(int argc, char** argv)
 
     for (auto const& klass : classes) {
         if (klass.has_attribute("Attribute")) {
-            attribute_classes[klass.name] = klass;
+            if (!klass.name.ends_with("Attribute")) {
+                std::println("[HeaderTool][Warning] class/struct '{}' marked with [[Attribute]] but the name does not end in 'Attribute'", klass.name);
+            } else {
+                attribute_classes[klass.name] = klass;
+            }
         }
     }
     std::stringstream ss;
@@ -501,10 +541,15 @@ int main(int argc, char** argv)
         }
 
         for (auto const& method : klass.methods) {
-            TAB_N(3); FMT(".method_(\"{}\"s, &{}::{}, as_pointer)", method.name, klass.qualified_name(), method.name);
-            // for (auto const& attr : member.attributes | std::views::values) {
-            //     std::print("\t\t\t[[{}::{}({})]]\n", attr.prefix, attr.name, attr.args);
-            // }
+            TAB_N(3); FMT(".method_(\"{}\"s, &{}::{}, as_pointer, metadata_()", method.name, klass.qualified_name(), method.name);
+            for (auto const& attr : method.attributes | std::views::values) {
+                auto attr_name_with_attribute = attr.name + "Attribute";
+                if (attribute_classes.contains(attr_name_with_attribute)) {
+                    auto& attr_klass = attribute_classes[attr_name_with_attribute];
+                    TAB_N(4); FMT("(\"{}\"s, {}{{{}}})", attr_name_with_attribute, attr_klass.qualified_name(), attr.args);
+                }
+            }
+            TAB_N(3); F(")");
         }
         TAB_N(2); FMT(";");
     }
