@@ -53,14 +53,14 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
             auto value = member.get(ptr);
             auto& metadata = member.get_metadata();
             auto& member_name = [&]() -> std::string const& {
-                if (metadata.contains("EditorName")) {
-                    return metadata.at("EditorName").as<Attributes::EditorName>().name;
+                if (metadata.contains("EditorNameAttribute")) {
+                    return metadata.at("EditorNameAttribute").as<Attributes::EditorNameAttribute>().name;
                 }
                 return member.get_name();
             }();
 
-            if (auto region_attr = metadata.find("Region"); region_attr != metadata.end()) {
-                auto& region = region_attr->second.as<Attributes::Region>();
+            if (auto region_attr = metadata.find("RegionAttribute"); region_attr != metadata.end()) {
+                auto& region = region_attr->second.as<Attributes::RegionAttribute>();
                 (void)region;
                 // TODO: Support regions. Appending to the same collapsing header is not possible.
                 EUI::property(member_name, [&] {
@@ -154,8 +154,8 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
         // @note value has a pointer to the member pointer, so get_data returns that
         // pointer to the pointer.
         auto data_ptr = *CAST(void**, prop_value.get_data());
-        if (auto range_attr = metadata.find("Range"); range_attr != metadata.end()) {
-            auto range = range_attr->second.as<Attributes::Range>();
+        if (auto range_attr = metadata.find("RangeAttribute"); range_attr != metadata.end()) {
+            auto range = range_attr->second.as<Attributes::RangeAttribute>();
             if (ImGui::DragScalar("", type, data_ptr, range.step, &range.min, &range.max)) {
                 modified = true;
             }

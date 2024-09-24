@@ -17,9 +17,10 @@ namespace Fussion {
 
         virtual void on_draw(RenderContext& context) override;
 
-        [[API]]
+        [[API, EditorName("Color")]]
         Color light_color{ Color::White };
-        [[API, EditorName("Split Lambda"), Range(0.1, 1.0, 0.05)]]
+
+        [[API, Region("Shadow"), EditorName("Split Lambda"), Range(0.1, 1.0, 0.05)]]
         f32 split_lambda{ 0.95f };
 
         virtual void serialize(Serializer& ctx) const override;

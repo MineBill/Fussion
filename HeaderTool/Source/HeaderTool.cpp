@@ -491,9 +491,10 @@ int main(int argc, char** argv)
         for (auto const& member : klass.members) {
             TAB_N(3); FMT(".member_(\"{}\"s, &{}::{}, as_pointer, metadata_()", member.name, klass.qualified_name(), member.name);
             for (auto const& attr : member.attributes | std::views::values) {
-                if (attribute_classes.contains(attr.name)) {
-                    auto& attr_klass = attribute_classes[attr.name];
-                    TAB_N(4); FMT("(\"{}\"s, {}{{{}}})", attr.name, attr_klass.qualified_name(), attr.args);
+                auto attr_name_with_attribute = attr.name + "Attribute";
+                if (attribute_classes.contains(attr_name_with_attribute)) {
+                    auto& attr_klass = attribute_classes[attr_name_with_attribute];
+                    TAB_N(4); FMT("(\"{}\"s, {}{{{}}})", attr_name_with_attribute, attr_klass.qualified_name(), attr.args);
                 }
             }
             TAB_N(3); F(")");
