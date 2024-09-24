@@ -41,10 +41,10 @@ namespace Fussion {
             Object,
         };
 
-        std::stack<Type> m_TypeStack{ { Type::Object } };
-        std::stack<std::string> m_Names{};
-        std::stack<u32> m_IndexStack{};
-        std::stack<nlohmann::ordered_json> m_ObjectStack{};
+        std::stack<Type> m_type_stack{ { Type::Object } };
+        std::stack<std::string> m_names{};
+        std::stack<u32> m_index_stack{};
+        std::stack<nlohmann::ordered_json> m_object_stack{};
     };
 
     class JsonDeserializer final : public Deserializer {
@@ -81,14 +81,15 @@ namespace Fussion {
     private:
         template<typename T>
         void generic_read(std::string_view name, T& value);
+
         enum class Type {
             Array,
             Object,
         };
 
-        std::stack<Type> m_TypeStack{ { Type::Object } };
-        std::stack<std::string> m_Names{};
-        std::stack<u32> m_IndexStack{};
-        std::stack<nlohmann::ordered_json> m_ObjectStack{};
+        std::stack<Type> m_type_stack{ { Type::Object } };
+        std::stack<std::string> m_names{};
+        std::stack<u32> m_index_stack{};
+        std::stack<nlohmann::ordered_json> m_object_stack{};
     };
 }

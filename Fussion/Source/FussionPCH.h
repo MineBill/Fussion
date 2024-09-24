@@ -6,8 +6,11 @@
 #include <Fussion/Core/Maybe.h>
 #include <Fussion/Core/Result.h>
 
+#include <Fussion/GPU/GPU.h>
+
 #include <glm/glm.hpp>
 #include <Fussion/meta.hpp/meta_all.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 #include <fmt/base.h>
 #include <fmt/format.h>

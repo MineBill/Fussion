@@ -194,9 +194,8 @@ namespace Fussion {
         return std::memcmp(other.data.ptr, data.ptr, data.length) == 0;
     }
 
-    char& String::operator[](int index) const
+    char& String::operator[](usz index) const
     {
-        VERIFY(index >= 0, "Negative index");
         VERIFY(index < data.length, "Index out-of-bounds");
         return data[index];
     }

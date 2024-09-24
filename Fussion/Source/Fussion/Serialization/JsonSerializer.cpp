@@ -4,16 +4,16 @@
 namespace Fussion {
     void JsonSerializer::initialize()
     {
-        m_ObjectStack.emplace();
+        m_object_stack.emplace();
     }
 
     template<typename T>
     void JsonSerializer::generic_write(std::string_view name, T value)
     {
-        if (m_TypeStack.top() == Type::Array) {
-            m_ObjectStack.top()[m_IndexStack.top()++] = value;
+        if (m_type_stack.top() == Type::Array) {
+            m_object_stack.top()[m_index_stack.top()++] = value;
         } else {
-            m_ObjectStack.top()[name] = value;
+            m_object_stack.top()[name] = value;
         }
     }
 
@@ -93,59 +93,59 @@ namespace Fussion {
     void JsonSerializer::begin_object(std::string_view name, size_t size)
     {
         (void)size;
-        m_ObjectStack.emplace();
-        m_Names.emplace(name);
-        m_TypeStack.emplace(Type::Object);
+        m_object_stack.emplace();
+        m_names.emplace(name);
+        m_type_stack.emplace(Type::Object);
     }
 
     void JsonSerializer::end_object()
     {
-        auto top = std::move(m_ObjectStack.top());
-        m_ObjectStack.pop();
+        auto top = std::move(m_object_stack.top());
+        m_object_stack.pop();
 
-        auto name = std::move(m_Names.top());
-        m_Names.pop();
+        auto name = std::move(m_names.top());
+        m_names.pop();
 
-        m_TypeStack.pop();
+        m_type_stack.pop();
 
-        if (m_TypeStack.top() == Type::Array) {
-            m_ObjectStack.top()[m_IndexStack.top()++] = top;
+        if (m_type_stack.top() == Type::Array) {
+            m_object_stack.top()[m_index_stack.top()++] = top;
         } else {
-            m_ObjectStack.top()[name] = top;
+            m_object_stack.top()[name] = top;
         }
     }
 
     void JsonSerializer::begin_array(std::string_view name, size_t size)
     {
         (void)size;
-        m_ObjectStack.emplace();
-        m_Names.emplace(name);
+        m_object_stack.emplace();
+        m_names.emplace(name);
 
-        m_IndexStack.emplace(0);
-        m_TypeStack.emplace(Type::Array);
+        m_index_stack.emplace(0);
+        m_type_stack.emplace(Type::Array);
     }
 
     void JsonSerializer::end_array()
     {
-        auto top = std::move(m_ObjectStack.top());
-        m_ObjectStack.pop();
+        auto top = std::move(m_object_stack.top());
+        m_object_stack.pop();
 
-        auto name = std::move(m_Names.top());
-        m_Names.pop();
+        auto name = std::move(m_names.top());
+        m_names.pop();
 
-        m_IndexStack.pop();
-        m_TypeStack.pop();
+        m_index_stack.pop();
+        m_type_stack.pop();
 
-        if (m_TypeStack.top() == Type::Array) {
-            m_ObjectStack.top()[m_IndexStack.top()++] = top;
+        if (m_type_stack.top() == Type::Array) {
+            m_object_stack.top()[m_index_stack.top()++] = top;
         } else {
-            m_ObjectStack.top()[name] = top;
+            m_object_stack.top()[name] = top;
         }
     }
 
     std::string JsonSerializer::to_string()
     {
-        return m_ObjectStack.top().dump(2);
+        return m_object_stack.top().dump(2);
     }
 
     // ======================================================
@@ -155,19 +155,19 @@ namespace Fussion {
     template<typename T>
     void JsonDeserializer::generic_read(std::string_view name, T& value)
     {
-        if (m_ObjectStack.empty())
+        if (m_object_stack.empty())
             return;
-        if (m_TypeStack.top() == Type::Array) {
-            value = m_ObjectStack.top().at(m_IndexStack.top()++);
+        if (m_type_stack.top() == Type::Array) {
+            value = m_object_stack.top().at(m_index_stack.top()++);
         } else {
-            value = m_ObjectStack.top().value(name, value);
+            value = m_object_stack.top().value(name, value);
         }
     }
 
     JsonDeserializer::JsonDeserializer(std::string const& data)
     {
         try {
-            m_ObjectStack.emplace(nlohmann::json::parse(data, nullptr, true, true));
+            m_object_stack.emplace(nlohmann::json::parse(data, nullptr, true, true));
         } catch (std::exception const& e) {
             LOG_ERRORF("Caught exception when parsing JSON: {}", e.what());
         }
@@ -176,7 +176,7 @@ namespace Fussion {
     JsonDeserializer JsonDeserializer::from_json_object(nlohmann::json const& json)
     {
         JsonDeserializer ds{};
-        ds.m_ObjectStack.emplace(nlohmann::ordered_json(json));
+        ds.m_object_stack.emplace(nlohmann::ordered_json(json));
         return ds;
     }
 
@@ -252,64 +252,64 @@ namespace Fussion {
 
     bool JsonDeserializer::begin_object(std::string_view name, size_t& size)
     {
-        if (m_TypeStack.top() == Type::Object) {
-            auto& top = m_ObjectStack.top();
+        if (m_type_stack.top() == Type::Object) {
+            auto& top = m_object_stack.top();
             VERIFY(top.is_object());
             size = top.size();
 
             if (!top.contains(name)) {
                 return false;
             }
-            m_ObjectStack.push(top[name]);
+            m_object_stack.push(top[name]);
         } else {
-            auto& top = m_ObjectStack.top();
+            auto& top = m_object_stack.top();
             VERIFY(top.is_array());
             size = top.size();
 
-            m_ObjectStack.push(top[m_IndexStack.top()++]);
+            m_object_stack.push(top[m_index_stack.top()++]);
         }
 
-        m_TypeStack.push(Type::Object);
+        m_type_stack.push(Type::Object);
         return true;
     }
 
     void JsonDeserializer::end_object()
     {
-        m_ObjectStack.pop();
-        m_TypeStack.pop();
+        m_object_stack.pop();
+        m_type_stack.pop();
     }
 
     void JsonDeserializer::begin_array(std::string_view name, size_t& size)
     {
-        if (m_TypeStack.top() == Type::Object) {
-            m_ObjectStack.push(m_ObjectStack.top()[name]);
+        if (m_type_stack.top() == Type::Object) {
+            m_object_stack.push(m_object_stack.top()[name]);
         } else {
-            m_ObjectStack.push(m_ObjectStack.top()[m_IndexStack.top()++]);
+            m_object_stack.push(m_object_stack.top()[m_index_stack.top()++]);
         }
-        size = m_ObjectStack.top().size();
+        size = m_object_stack.top().size();
 
-        m_IndexStack.emplace(0);
-        m_TypeStack.push(Type::Array);
+        m_index_stack.emplace(0);
+        m_type_stack.push(Type::Array);
     }
 
     void JsonDeserializer::end_array()
     {
-        m_ObjectStack.pop();
-        m_IndexStack.pop();
-        m_TypeStack.pop();
+        m_object_stack.pop();
+        m_index_stack.pop();
+        m_type_stack.pop();
     }
 
     auto JsonDeserializer::read_keys() -> std::vector<std::string>
     {
-        if (m_ObjectStack.top().is_null())
+        if (m_object_stack.top().is_null())
             return {};
-        VERIFY(m_ObjectStack.top().is_object());
+        VERIFY(m_object_stack.top().is_object());
         std::vector<std::string> keys{};
 
-        for (auto [k, v] : m_ObjectStack.top().items()) {
+        for (auto [k, v] : m_object_stack.top().items()) {
             (void)v;
             keys.push_back(k);
         }
-        return std::move(keys);
+        return keys;
     }
 }

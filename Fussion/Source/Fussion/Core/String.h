@@ -47,7 +47,7 @@ namespace Fussion {
         void trim_right(String whitespace = " ");
 
         bool operator==(String const&) const;
-        char& operator[](int) const;
+        char& operator[](usz) const;
 #if HAS_MICROSHIT_FINALLY_IMPLEMENTED_MULTIDIMENSIONAL_SUBSCRIPT
         String operator[](int, int) const;
 #endif
@@ -58,7 +58,8 @@ namespace Fussion {
         template<typename... Args>
         static String format(String fmt, Args&&...)
         {
-            // TODO: Not implemented yet.
+            (void)fmt;
+            PANIC("TODO");
         }
     };
 }

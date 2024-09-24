@@ -134,6 +134,29 @@ target("AngelScript", function()
     end
 end)
 
+target("TracyClient", function()
+    set_kind("static")
+    set_languages "c++20"
+    set_group("Vendor")
+    add_files(
+        "Fussion/Vendor/tracy/public/TracyClient.cpp"
+    )
+
+    add_headerfiles(
+        "Fussion/Vendor/tracy/public/common/*.hpp",
+        "Fussion/Vendor/tracy/public/tracy/*.hpp"
+    )
+
+    add_sysincludedirs("Fussion/Vendor/tracy/public", {public = true})
+
+    if is_plat("windows") then
+        set_runtimes "MDd"
+    end
+
+    add_defines("TRACY_ENABLE", {public = true})
+    add_defines("TRACY_ON_DEMAND", {public = true})
+end)
+
 target("magic_enum", function()
     set_kind "headeronly"
     set_group "Vendor"

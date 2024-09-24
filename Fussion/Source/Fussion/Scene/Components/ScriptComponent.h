@@ -23,7 +23,6 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
 
     private:
-        ScriptClass* m_script_class{ nullptr };
         ScriptInstance m_instance{};
     };
 }

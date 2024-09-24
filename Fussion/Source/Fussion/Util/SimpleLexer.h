@@ -81,7 +81,7 @@ namespace Fussion {
         void parse_number();
         void parse_identifier();
 
-        s32 m_Index{ 0 };
+        u32 m_Index{ 0 };
         Cursor m_Cursor{};
         std::string m_Source{};
         std::vector<Token> m_Tokens{};

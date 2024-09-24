@@ -372,6 +372,7 @@ namespace Fussion::GPU {
 
     auto to_wgpu(PolygonMode mode) -> void
     {
+        (void)mode;
         UNREACHABLE;
     }
 

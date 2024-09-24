@@ -4,7 +4,7 @@
 #include <Fussion/Math/Vector2.h>
 
 namespace Fussion {
-    enum class MouseButton {
+    enum class [[API]] MouseButton {
         None,
         Left,
         Right,
@@ -13,8 +13,9 @@ namespace Fussion {
         Button5,
         Button6,
         Button7,
-        Button8,
+        Button8
     };
+
 
     class MouseMoved final : public Event {
     public:

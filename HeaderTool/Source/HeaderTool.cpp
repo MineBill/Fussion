@@ -461,7 +461,7 @@ int main(int argc, char** argv)
 
     F("");
     for (auto const& enum_ : enums) {
-        TAB_N(2); FMT("REGISTER_ENUM({});", enum_.qualified_name);
+        TAB_N(2); FMT("REGISTER_ENUM({}, {});", enum_.qualified_name, enum_.name);
     }
 
     F("");

@@ -19,7 +19,7 @@ class EditorAssetManager;
 
 class WorkerPool final {
 public:
-    explicit WorkerPool(EditorAssetManager* asset_manager);
+    explicit WorkerPool();
     ~WorkerPool();
 
     void load(EditorAssetMetadata const& metadata);
@@ -35,15 +35,11 @@ private:
     std::vector<std::thread> m_workers{};
     std::condition_variable m_condition_variable{};
     std::atomic_bool m_quit{};
-    EditorAssetManager* m_asset_manager{ nullptr };
 };
 
 class AssetSerializer;
 
 class EditorAssetManager final : public Fussion::AssetManagerBase, Fussion::ISerializable {
-
-
-private:
     // NOTE: Is there a better way/abstraction to expose internals to the worker pool?
     friend WorkerPool;
 
@@ -135,5 +131,5 @@ private:
 
     Ptr<Fussion::FileWatcher> m_editor_watcher{};
 
-    WorkerPool m_worker_pool{ this };
+    WorkerPool m_worker_pool{};
 };

@@ -7,15 +7,15 @@
 namespace Fussion {
     std::stringstream& AngelDumper::print_enum_list(std::stringstream& out) const
     {
-        for (int i = 0; i < m_script_engine->GetEnumCount(); i++) {
-            const auto e = m_script_engine->GetEnumByIndex(i);
+        for (u32 i = 0; i < m_script_engine->GetEnumCount(); i++) {
+            auto e = m_script_engine->GetEnumByIndex(i);
             if (not e)
                 continue;
             const std::string_view ns = e->GetNamespace();
             if (not ns.empty())
                 out << std::format("namespace {} {{\n", ns);
             out << std::format("enum {} {{\n", e->GetName());
-            for (int j = 0; j < e->GetEnumValueCount(); ++j) {
+            for (u32 j = 0; j < e->GetEnumValueCount(); ++j) {
                 out << std::format("\t{}", e->GetEnumValueByIndex(j, nullptr));
                 if (j < e->GetEnumValueCount() - 1)
                     out << ",";
@@ -30,12 +30,12 @@ namespace Fussion {
 
     std::stringstream& AngelDumper::print_class_type_list(std::stringstream& out) const
     {
-        for (int i = 0; i < m_script_engine->GetObjectTypeCount(); i++) {
+        for (u32 i = 0; i < m_script_engine->GetObjectTypeCount(); i++) {
             const auto t = m_script_engine->GetObjectTypeByIndex(i);
             if (not t)
                 continue;
 
-            const std::string_view ns = t->GetNamespace();
+            std::string_view ns = t->GetNamespace();
             if (not ns.empty())
                 out << std::format("namespace {} {{\n", ns);
 
@@ -48,7 +48,7 @@ namespace Fussion {
 
             if (t->GetSubTypeCount() > 0) {
                 out << "<";
-                for (int sub = 0; sub < t->GetSubTypeCount(); ++sub) {
+                for (u32 sub = 0; sub < t->GetSubTypeCount(); ++sub) {
                     if (sub < t->GetSubTypeCount() - 1)
                         out << ", ";
                     const auto st = t->GetSubType(sub);
@@ -59,7 +59,7 @@ namespace Fussion {
             }
 
             out << " {\n";
-            for (int j = 0; j < t->GetBehaviourCount(); ++j) {
+            for (u32 j = 0; j < t->GetBehaviourCount(); ++j) {
                 asEBehaviours behaviours;
                 const auto f = t->GetBehaviourByIndex(j, &behaviours);
                 if (behaviours == asBEHAVE_CONSTRUCT
@@ -67,14 +67,14 @@ namespace Fussion {
                     out << std::format("\t{};\n", f->GetDeclaration(false, true, true));
                 }
             }
-            for (int j = 0; j < t->GetMethodCount(); ++j) {
+            for (u32 j = 0; j < t->GetMethodCount(); ++j) {
                 const auto m = t->GetMethodByIndex(j);
                 out << std::format("\t{};\n", m->GetDeclaration(false, true, true));
             }
-            for (int j = 0; j < t->GetPropertyCount(); ++j) {
+            for (u32 j = 0; j < t->GetPropertyCount(); ++j) {
                 out << std::format("\t{};\n", t->GetPropertyDeclaration(j, true));
             }
-            for (int j = 0; j < t->GetChildFuncdefCount(); ++j) {
+            for (u32 j = 0; j < t->GetChildFuncdefCount(); ++j) {
                 out << std::format("\tfuncdef {};\n", t->GetChildFuncdef(j)->GetFuncdefSignature()->GetDeclaration(false));
             }
             out << "}\n";
@@ -88,7 +88,7 @@ namespace Fussion {
     {
         std::unordered_map<std::string, std::vector<asIScriptFunction*>> namespaced_global_functions;
 
-        for (auto i = 0; i < m_script_engine->GetGlobalFunctionCount(); i++) {
+        for (u32 i = 0; i < m_script_engine->GetGlobalFunctionCount(); i++) {
             auto decl = m_script_engine->GetGlobalFunctionByIndex(i);
             if (!decl)
                 continue;
@@ -122,7 +122,7 @@ namespace Fussion {
         };
         std::unordered_map<std::string, std::vector<Prop>> namespaced_global_props;
 
-        for (int i = 0; i < m_script_engine->GetGlobalPropertyCount(); i++) {
+        for (u32 i = 0; i < m_script_engine->GetGlobalPropertyCount(); i++) {
             const char* name;
             const char* ns0;
             int type;
@@ -154,7 +154,7 @@ namespace Fussion {
 
     std::stringstream& AngelDumper::print_global_typedef(std::stringstream& out) const
     {
-        for (int i = 0; i < m_script_engine->GetTypedefCount(); ++i) {
+        for (u32 i = 0; i < m_script_engine->GetTypedefCount(); ++i) {
             const auto type = m_script_engine->GetTypedefByIndex(i);
             if (not type)
                 continue;

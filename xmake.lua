@@ -9,6 +9,13 @@ rule("CompilerFlags")
         --[[ target:add("cxxflags", "gcc::-Wno-changes-meaning")
         target:add("cxxflags", "clang::-Wno-changes-meaning") ]]
         target:add("cxxflags", "clang::-Wno-c++98-compat")
+        target:add("cxxflags", "clang_cl::-ftime-trace")
+
+        target:add("cxxflags", "clang_cl::-Wno-c++98-compat")
+        target:add("cxxflags", "clang_cl::-Wno-unknown-attributes")
+        target:add("cxxflags", "clang_cl::-Wno-missing-field-initializers")
+        target:add("cxxflags", "clang_cl::-Wno-microsoft-include")
+        target:add("cxxflags", "clang_cl::-Wno-pragma-system-header-outside-header")
 
         target:add("cxxflags", "cl::/EHsc")
         target:add("cxxflags", "cl::/permissive-")
@@ -33,6 +40,10 @@ option("Tracy")
     add_defines("TRACY_ENABLE", {public = true})
     add_defines("TRACY_ON_DEMAND", {public = true})
 option_end();
+
+option("TimeTrace")
+    set_showmenu(true)
+option_end()
 
 includes("Vendor.lua")
 

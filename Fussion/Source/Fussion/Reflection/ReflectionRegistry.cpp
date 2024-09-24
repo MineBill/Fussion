@@ -1,4 +1,4 @@
-﻿#include "Fussion/meta.hpp/meta_all.hpp"
+﻿#include "FussionPCH.h"
 #include "Fussion/Assets/Asset.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Fussion/Scene/Components/Camera.h"
@@ -13,9 +13,6 @@
 #include "Input/Input.h"
 #include "Input/Keys.h"
 #include "Scene/Scene.h"
-#include "Scene/Components/DirectionalLight.h"
-#include <angelscript.h>
-#include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
     void register_generated();
@@ -49,8 +46,7 @@ namespace Fussion {
 
             meta::class_<Vector2>(
                     metadata_()
-                    ("Name"s, "Vector2"s)
-                    ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
+                    ("Name"s, "Vector2"s))
                 .constructor_<f32, f32>()
                 .constructor_<f64, f64>()
                 .member_("X", &Vector2::x, as_pointer)
@@ -62,8 +58,7 @@ namespace Fussion {
 
             meta::class_<Vector3>(
                     metadata_()
-                    ("Name"s, "Vector3"s)
-                    ("ScriptFlags"s, asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS))
+                    ("Name"s, "Vector3"s))
                 .constructor_<f32, f32, f32>()
                 .constructor_<f64, f64, f64>()
                 .member_("X"s, &Vector3::x, as_pointer)
@@ -75,8 +70,6 @@ namespace Fussion {
                 .method_("LengthSquared"s, &Vector3::length_squared);
         }
 
-        REGISTER_ENUM(AssetType);
-
         meta::class_<Asset>(metadata_()
                 ("Name"s, "Asset"s))
             .method_("GetType"s, &Asset::type)
@@ -84,17 +77,12 @@ namespace Fussion {
             .member_("m_Handle"s, &Asset::m_handle);
 
         meta::class_<Entity>(metadata_()
-                ("Name"s, "Entity"s)
-                ("ScriptFlags"s, asOBJ_APP_CLASS_CAK))
+                ("Name"s, "Entity"s))
             .member_("m_Parent", &Entity::m_parent)
             .member_("m_Handle", &Entity::m_handle)
             .member_("m_Enabled", &Entity::m_enabled);
 
-        // region Components
-        {
-            meta::class_<Component>();
-        }
-        // endregion Components
+        meta::class_<Component>();
 
         meta::class_<Scene>(metadata_()
                 ("Name"s, "Scene"s))
@@ -115,40 +103,8 @@ namespace Fussion {
             .member_("Metallic", &PbrMaterial::metallic, as_pointer)
             .member_("Roughness", &PbrMaterial::roughness, as_pointer);
 
-        meta::class_<Debug>(metadata_()("Name"s, "Debug"s))
-            .function_("DrawLine"s, Debug::draw_line)
-            .function_("DrawCube"s, static_cast<void(*)(Vector3, Vector3, f32, Color)>(Debug::draw_cube));
-
-        meta::static_scope_("Scripting")
-            .typedef_<Vector2>("Vector2"s)
-            .typedef_<Vector3>("Vector3"s)
-            .typedef_<Entity>("Entity"s)
-            .typedef_<Scene>("Scene"s)
-            .typedef_<Debug>("Debug"s)
-            .typedef_<MeshRenderer>("MeshRenderer"s)
-            .typedef_<ScriptComponent>("ScriptComponent"s)
-            .typedef_<Camera>("Camera"s)
-            .typedef_<MoverComponent>("MoverComponent"s)
-            .typedef_<PointLight>("PointLight"s)
-            .typedef_<DebugDrawer>("DebugDrawer"s)
-            .typedef_<DirectionalLight>("DirectionalLight"s);
-
-        meta::class_<Input>(metadata_()("Name"s, "Input"s))
-            .function_("IsKeyPressed"s, Input::is_key_pressed)
-            .function_("IsKeyReleased"s, Input::is_key_released)
-            .function_("IsKeyDown"s, Input::is_key_down)
-            .function_("IsKeyUp"s, Input::is_key_up)
-            .function_("IsMouseButtonPressed"s, Input::is_mouse_button_pressed)
-            .function_("IsMouseButtonReleased"s, Input::is_mouse_button_released)
-            .function_("IsMouseButtonDown"s, Input::is_mouse_button_down)
-            .function_("IsMouseButtonUp"s, Input::is_mouse_button_up)
-            .function_("GetAxis"s, Input::get_axis);
-
-        REGISTER_ENUM(DebugDrawer::Type);
-        REGISTER_ENUM(MouseButton)
-        REGISTER_ENUM(Keys)
-
-        REGISTER_ENUM(GPU::TextureFormat);
+        REGISTER_ENUM(DebugDrawer::Type, Type);
+        REGISTER_ENUM(GPU::TextureFormat, TextureFormat);
 
         meta::class_<AssetMetadata>(metadata_()("Name"s, "AssetMetadata"s));
 

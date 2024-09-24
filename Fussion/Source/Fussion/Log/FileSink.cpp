@@ -24,37 +24,30 @@ int fprintf_s(FILE* stream, const char* fmt, Args... args)
 #endif
 
 namespace Fussion {
-FileSink::~FileSink()
-{
-    // fflush(m_OutputFile);
-    // fclose(m_OutputFile);
-    m_OutFile.close();
-}
-
-Ref<FileSink> FileSink::Create(std::filesystem::path const& file_name)
-{
-    Ref<FileSink> sink;
-    sink.reset(new FileSink(file_name.string()));
-    return sink;
-}
-
-FileSink::FileSink(std::string const& file_name)
-{
-    // const auto fopen_err = fopen_s(&m_OutputFile, file_name.c_str(), "w+");
-    // VERIFY(fopen_err == 0, "Could not open/create log file '{}'", file_name);
-
-    m_OutFile.open(file_name);
-    VERIFY(m_OutFile.is_open());
-}
-
-void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
-{
-    static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
-
-    if (level >= m_logger->get_priority()) {
-        // (void)fprintf_s(m_OutputFile, "%s [FileSink]: %s\n", prefixes[static_cast<int>(level)], message.data());
-        // fflush(m_OutputFile);
-        m_OutFile << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;
+    FileSink::~FileSink()
+    {
+        m_out_file.close();
     }
-}
+
+    Ref<FileSink> FileSink::create(std::filesystem::path const& file_name)
+    {
+        Ref<FileSink> sink;
+        sink.reset(new FileSink(file_name.string()));
+        return sink;
+    }
+
+    FileSink::FileSink(std::string const& file_name)
+    {
+        m_out_file.open(file_name);
+        VERIFY(m_out_file.is_open());
+    }
+
+    void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
+    {
+        static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
+
+        if (level >= m_logger->get_priority()) {
+            m_out_file << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;
+        }
+    }
 }

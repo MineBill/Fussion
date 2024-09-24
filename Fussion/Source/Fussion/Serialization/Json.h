@@ -6,8 +6,6 @@
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
 
-#include <Fussion/meta.hpp/meta_uvalue.hpp>
-
 namespace Fussion {
     using json = nlohmann::json;
     using ordered_json = nlohmann::ordered_json;

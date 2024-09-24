@@ -15,7 +15,7 @@ namespace Fussion {
         HeldDown,
     };
 
-    class Input {
+    class [[API]] Input {
         friend Application;
 
     public:

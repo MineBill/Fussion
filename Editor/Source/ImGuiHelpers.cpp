@@ -174,7 +174,7 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     auto DrawLabel = [font](const char* label, ImVec4 color) {
         ImGui::PushStyleColor(ImGuiCol_Text, color);
         ImGui::PushFont(font);
-        ImGui::Text(label);
+        ImGui::Text("%s", label);
         ImGui::PopFont();
         ImGui::PopStyleColor();
     };

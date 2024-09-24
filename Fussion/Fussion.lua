@@ -9,9 +9,9 @@ target("Fussion")
     add_files (
         "Source/**.cpp",
         "Source/**.c",
-        "Impl/**.cpp",
+        "Impl/**.cpp"
 
-        "Vendor/tracy/public/TracyClient.cpp"
+        -- "Vendor/tracy/public/TracyClient.cpp"
     )
     if is_plat("windows") then
         add_files("Platform/Windows/**.cpp")
@@ -39,12 +39,11 @@ target("Fussion")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
+    add_deps("TracyClient")
 
     add_rules("HeaderTool")
 
     set_pcxxheader("Source/FussionPCH.h")
-
-    add_sysincludedirs("Vendor/tracy/public", {public = true})
 
     add_defines (
         "GLM_ENABLE_EXPERIMENTAL"

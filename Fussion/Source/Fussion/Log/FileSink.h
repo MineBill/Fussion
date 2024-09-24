@@ -6,18 +6,17 @@
 #include <fstream>
 
 namespace Fussion {
-class FileSink : public LogSink {
-    explicit FileSink(std::string const& file_name);
+    class FileSink : public LogSink {
+        explicit FileSink(std::string const& file_name);
 
-public:
-    FileSink() = default;
-    virtual ~FileSink() override;
-    static Ref<FileSink> Create(std::filesystem::path const& file_name);
+    public:
+        FileSink() = default;
+        virtual ~FileSink() override;
+        static Ref<FileSink> create(std::filesystem::path const& file_name);
 
-    virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override;
+        virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override;
 
-private:
-    FILE* m_OutputFile{};
-    std::ofstream m_OutFile{};
-};
+    private:
+        std::ofstream m_out_file{};
+    };
 }

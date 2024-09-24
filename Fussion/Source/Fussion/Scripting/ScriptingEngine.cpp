@@ -116,7 +116,7 @@ void ScriptingEngine::parse_attributes(CScriptBuilder& builder, ScriptAssembly& 
                 SimpleLexer lexer(text);
                 AttributeParser parser(lexer.scan());
 
-                m_attributes[prop.uuid] = std::move(parser.parse());
+                m_attributes[prop.uuid] = parser.parse();
             }
         }
     }

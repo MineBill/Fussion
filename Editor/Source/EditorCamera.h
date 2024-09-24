@@ -32,6 +32,5 @@ private:
     Vector2 m_screen_size{};
     Vector3 m_direction{};
     bool m_has_focus{ false };
-    bool m_had_focus{ false };
     bool m_captured_mouse{ false };
 };

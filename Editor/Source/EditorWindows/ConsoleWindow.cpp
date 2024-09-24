@@ -16,20 +16,20 @@ void ConsoleWindow::on_start() {}
 void ConsoleWindow::on_draw()
 {
     ZoneScoped;
- /*   auto const& entries = Editor::Inst().GetLogEntries();
-    std::ranges::copy(entries, std::back_inserter(m_LogEntries));
+    auto const& entries = Editor::inst().log_entries();
+    std::ranges::copy(entries, std::back_inserter(m_log_entries));
 
     if (ImGui::Begin("Console")) {
-        m_IsFocused = ImGui::IsWindowFocused();
+        m_is_focused = ImGui::IsWindowFocused();
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(5, 5));
 
-        auto& style = EditorStyle::GetStyle();
-        ImGuiH::ImageToggleButton("##info_toggle", style.EditorIcons[EditorIcon::Info]->GetImage().View, m_InfoEnable, Vector2(15, 15));
+        auto& style = EditorStyle::get_style();
+        ImGuiH::ImageToggleButton("##info_toggle", style.editor_icons[EditorIcon::Info]->image().view, m_info_enable, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##warn_toggle", style.EditorIcons[EditorIcon::Warning]->GetImage().View, m_WarningEnabled, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##warn_toggle", style.editor_icons[EditorIcon::Warning]->image().view, m_warning_enabled, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##error_toggle", style.EditorIcons[EditorIcon::Error]->GetImage().View, m_ErrorEnabled, Vector2(15, 15));
+        ImGuiH::ImageToggleButton("##error_toggle", style.editor_icons[EditorIcon::Error]->image().view, m_error_enabled, Vector2(15, 15));
 
         ImGui::PopStyleVar();
 
@@ -39,7 +39,7 @@ void ConsoleWindow::on_draw()
 
         ImGui::TextUnformatted("Auto Scroll");
         ImGui::SameLine();
-        ImGui::Checkbox("##auto_scroll", &m_AutoScroll);
+        ImGui::Checkbox("##auto_scroll", &m_auto_scroll);
         ImGui::SameLine();
 
         ImGui::TextUnformatted("Search:");
@@ -51,39 +51,39 @@ void ConsoleWindow::on_draw()
 
         ImGui::SameLine();
         if (ImGui::Button("Clear")) {
-            m_LogEntries.clear();
+            m_log_entries.clear();
         }
 
         ImGui::Separator();
         if (ImGui::BeginChild("##console_content")) {
-            for (const auto& entry : m_LogEntries) {
-                if (entry.Message.find(search_term) != std::string::npos) {
+            for (const auto& entry : m_log_entries) {
+                if (entry.message.find(search_term) != std::string::npos) {
                     Vector4 text_color{};
-                    switch (entry.Level) {
+                    switch (entry.level) {
                         using enum Fsn::LogLevel;
                     case Debug:
                     case Info:
-                        if (!m_InfoEnable)
+                        if (!m_info_enable)
                             continue;
                         text_color = Vector4(1, 1, 1, 1);
                         break;
                     case Warning:
-                        if (!m_WarningEnabled)
+                        if (!m_warning_enabled)
                             continue;
                         text_color = Vector4(1, 1, 0, 1);
                         break;
                     case Error:
-                        if (!m_ErrorEnabled)
+                        if (!m_error_enabled)
                             continue;
                     case Fatal:
                         text_color = Vector4(1, 0, 0, 1);
                         break;
                     }
                     ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-                    ImGui::TextUnformatted(std::format("[{}]: {}", magic_enum::enum_name(entry.Level), entry.Message).c_str());
+                    ImGui::TextUnformatted(std::format("[{}]: {}", magic_enum::enum_name(entry.level), entry.message).c_str());
                     ImGui::PopStyleColor();
 
-                    if (m_AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
+                    if (m_auto_scroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
                         ImGui::SetScrollHereY(1.0);
                     }
                 }
@@ -91,5 +91,5 @@ void ConsoleWindow::on_draw()
         }
         ImGui::EndChild();
     }
-    ImGui::End();*/
+    ImGui::End();
 }

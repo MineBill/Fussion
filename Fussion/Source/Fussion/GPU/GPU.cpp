@@ -1264,12 +1264,12 @@ namespace Fussion::GPU {
                 .nextInChain = nullptr,
                 .label = "Default Queue"
             },
-            .deviceLostCallback = [](WGPUDeviceLostReason reason, char const* message, void* /* pUserData */) {
+            .deviceLostCallback = [](WGPUDeviceLostReason reason, char const* message, void*) {
                 PANIC("!DEVICE LOST!: \n\tREASON: {}\n\tMESSAGE: {}", magic_enum::enum_name(reason), message);
             },
             .deviceLostUserdata = this,
             .uncapturedErrorCallbackInfo = {
-                .callback = [](WGPUErrorType type, char const* message, void* userdata) {
+                .callback = [](WGPUErrorType type, char const* message, void*) {
                     LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
                 },
                 .userdata = this,

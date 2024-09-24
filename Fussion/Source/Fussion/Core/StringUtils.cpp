@@ -12,6 +12,6 @@ namespace Fussion::StringUtils {
 
     auto is_whitespace(std::string_view str) -> bool
     {
-        return str.size() == std::ranges::count_if(str, [](char c) { return std::isspace(c); });
+        return str.size() == CAST(usz, std::ranges::count_if(str, [](char c) { return std::isspace(c); }));
     }
 }

@@ -184,21 +184,6 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
         auto class_type = prop_type.as_class();
         if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
             EUI::asset_property(class_type, std::move(prop_value));
-        } else if (member.get_metadata().contains("vector")) {
-            auto& inner_type = member.get_metadata().at("vector");
-            // } else if (member.get_metadata().contains("vector")) {
-            // // class_type is std::vector<T>
-            // auto type_t = class_type.get_argument_type(0);
-            // if (type_t == meta_hpp::resolve_type<s32>()) {
-            //     auto vector = CAST(std::vector<s32>**, prop_value.get_data());
-            //     if (ImGui::CollapsingHeader("Values")) {
-            //         // for (auto &number : **vector) {
-            //         for (auto i = 0; i < (*vector)->size(); i++) {
-            //             auto& number = (**vector)[i];
-            //             DrawProperty(meta_hpp::uvalue(number), {});
-            //         }
-            //     }
-            // }
         } else {
             ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
         }

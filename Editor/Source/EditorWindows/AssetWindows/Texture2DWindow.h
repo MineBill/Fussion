@@ -11,7 +11,4 @@ public:
 
 private:
     Vector2 m_uv0{ 0, 0 }, m_uv1{ 1, 1 };
-    f32 m_zoom{ 1.0f };
-
-    f32 m_zoom_speed{ 0.01f };
 };

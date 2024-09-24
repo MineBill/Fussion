@@ -21,7 +21,7 @@
 using namespace Fussion;
 namespace fs = std::filesystem;
 
-WorkerPool::WorkerPool(EditorAssetManager* asset_manager): m_asset_manager(asset_manager)
+WorkerPool::WorkerPool()
 {
     auto max_threads = std::thread::hardware_concurrency();
     // auto max_threads = 1;

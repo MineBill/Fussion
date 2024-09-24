@@ -22,7 +22,7 @@ namespace Fussion {
     void ScriptComponent::on_update(f32 delta)
     {
         if (m_instance.is_valid()) {
-            m_instance.call_method("OnUpdate", {delta});
+            m_instance.call_method("OnUpdate", { delta });
         }
     }
 

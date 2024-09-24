@@ -205,7 +205,7 @@ namespace Fussion {
     void SimpleLexer::parse_identifier()
     {
         std::string str{ m_Source.at(m_Index - 1) };
-        while (!is_at_end() && std::isalnum(peek()) != 0 || peek() == '_') {
+        while (!is_at_end() && (std::isalnum(peek()) != 0 || peek() == '_')) {
             u8 ch = advance();
             str += static_cast<s8>(ch);
             m_Cursor.LineOffset++;

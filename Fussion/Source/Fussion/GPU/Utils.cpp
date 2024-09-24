@@ -37,7 +37,7 @@ namespace Fussion::GPU::Utils {
             g_Rdoc_Api->EndFrameCapture(nullptr, nullptr);
         }
     }
-#else if OS_LINUX
+#elif OS_LINUX
     void RenderDoc::initialize() {}
     void RenderDoc::start_capture() {}
     void RenderDoc::end_capture() {}

@@ -59,7 +59,10 @@ namespace Fussion {
         // }
     }
 
-    void RigidBody::on_update(f32 delta) {}
+    void RigidBody::on_update(f32 delta)
+    {
+        (void)delta;
+    }
 
     void RigidBody::serialize(Serializer& ctx) const
     {

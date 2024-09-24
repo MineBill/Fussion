@@ -169,7 +169,7 @@ void EditorApplication::create_editor(Maybe<fs::path> path)
     auto now = std::chrono::system_clock::now();
     auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::default_logger()->register_sink(FileSink::Create(Project::logs_folder() / log_file));
+    Log::default_logger()->register_sink(FileSink::create(Project::logs_folder() / log_file));
 
 }
 
@@ -190,5 +190,5 @@ void EditorApplication::create_editor_from_project_creator(fs::path path)
     auto now = std::chrono::system_clock::now();
     auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::default_logger()->register_sink(FileSink::Create(Project::logs_folder() / log_file));
+    Log::default_logger()->register_sink(FileSink::create(Project::logs_folder() / log_file));
 }

@@ -32,10 +32,10 @@ namespace Fussion {
     }
 
     Scene::Scene(Scene&& other) noexcept
-        : m_name(std::move(other.m_name))
+        : Asset(std::move(other))
+          , m_name(std::move(other.m_name))
           , m_entities(std::move(other.m_entities))
           , m_dirty(other.m_dirty)
-          , Asset(std::move(other))
     {
         m_handle = other.m_handle;
         for (auto& entity : m_entities | std::views::values) {

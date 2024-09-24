@@ -97,20 +97,20 @@ void ViewportWindow::render_stats() const
             if (ImGui::BeginTabItem("Pipeline Stats")) {
                 EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
                     if (ImGui::CollapsingHeader("G-Buffer")) {
-                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.gbuffer.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.gbuffer.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.gbuffer.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.gbuffer.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.gbuffer.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.gbuffer.clipper_invocations);
                     }
                     if (ImGui::CollapsingHeader("SSAO")) {
-                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.ssao.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.ssao.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.ssao.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.ssao.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.ssao.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.ssao.clipper_invocations);
                     }
 
                     if (ImGui::CollapsingHeader("PBR")) {
-                        ImGui::Text("Vertex Shader Invocations   %d", renderer.pipeline_statistics.pbr.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %d", renderer.pipeline_statistics.pbr.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %d", renderer.pipeline_statistics.pbr.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.pbr.vertex_shader_invocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.pbr.fragment_shader_invocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.pbr.clipper_invocations);
                     }
                 });
                 ImGui::EndTabItem();

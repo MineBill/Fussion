@@ -169,7 +169,10 @@ void GBuffer::resize(Vector2 const& new_size)
     rt_albedo = Renderer::device().create_texture(spec);
 }
 
-void GBuffer::do_pass(GPU::CommandEncoder& encoder) {}
+void GBuffer::do_pass(GPU::CommandEncoder& encoder)
+{
+    (void)encoder;
+}
 
 void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayout const& global_bind_group_layout)
 {

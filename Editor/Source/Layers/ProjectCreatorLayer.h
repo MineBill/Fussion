@@ -19,15 +19,11 @@ public:
     void add_project(std::filesystem::path const& path);
     void save_projects() const;
     void load_projects();
-private:
-    Vector2 m_mouse_drag_star_pos{}, m_offset{};
-    bool m_started_dragging{};
 
+private:
     bool m_open_new_project_popup{};
     bool m_open_import_project_popup{};
     bool m_project_name_validated{ false };
-
-    Ref<Fussion::Texture2D> m_test_texture{};
 
     std::vector<EditorProject> m_projects{};
 };

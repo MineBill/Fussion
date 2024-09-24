@@ -11,6 +11,7 @@
 #include <tracy/Tracy.hpp>
 
 #ifdef OS_WINDOWS
+#define WIN32_LEAN_AND_MEAN
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "Glfw/glfw3native.h"
 #include <dwmapi.h>
