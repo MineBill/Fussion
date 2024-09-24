@@ -1,7 +1,10 @@
 ﻿#include "BaseComponents.h"
 
+#include "MeshRenderer.h"
+#include "Assets/AssetManager.h"
 #include "Debug/Debug.h"
 #include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
@@ -58,18 +61,46 @@ namespace Fussion {
         FSN_DESERIALIZE_MEMBER(draw_type);
     }
 
-    void MoverComponent::on_update(f32 delta)
+    void BallSpawner::on_update(f32 delta)
     {
         m_owner->transform.position.x += delta * speed;
     }
 
-    void MoverComponent::serialize(Serializer& ctx) const
+    void BallSpawner::spawn()
+    {
+        for (u32 x = 0; x < 10; ++x) {
+            for (u32 y = 0; y < 10; ++y) {
+                auto new_entity = m_owner->scene().create_entity("Test", m_owner->handle());
+                auto mr = new_entity->add_component<MeshRenderer>();
+                mr->model = model;
+                new_entity->transform.position = Vector3(x, Math::sin((x + y) / 50.0f), y);
+
+                auto mat = make_ref<PbrMaterial>();
+                mat->object_color = Color::Red;
+                mat->roughness = CAST(f32, x) / 10.0f;
+                mat->metallic = CAST(f32, y) / 10.0f;
+                auto mat_ref = AssetManager::create_virtual_asset_ref<PbrMaterial>(mat);
+
+                mr->materials.push_back(mat_ref);
+            }
+        }
+    }
+
+    void BallSpawner::clear()
+    {
+        auto children = m_owner->children();
+        for (auto child : children) {
+            m_owner->scene().destroy(child);
+        }
+    }
+
+    void BallSpawner::serialize(Serializer& ctx) const
     {
         Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(speed);
     }
 
-    void MoverComponent::deserialize(Deserializer& ctx)
+    void BallSpawner::deserialize(Deserializer& ctx)
     {
         Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(speed);

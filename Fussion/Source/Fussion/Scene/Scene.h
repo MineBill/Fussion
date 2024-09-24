@@ -27,6 +27,7 @@ namespace Fussion {
         void on_debug_draw(DebugDrawContext& ctx);
 #endif
 
+        // TODO: Why return pointers?
         [[nodiscard]]
         auto create_entity(std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
         [[nodiscard]]

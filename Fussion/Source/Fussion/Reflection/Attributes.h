@@ -14,4 +14,8 @@ namespace Fussion::Attributes {
     struct [[Attribute]] EditorNameAttribute {
         std::string name{};
     };
+
+    struct [[Attribute]] EditorButtonAttribute {
+        std::string button_text{};
+    };
 }

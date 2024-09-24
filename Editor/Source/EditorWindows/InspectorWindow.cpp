@@ -74,6 +74,18 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
                 }
             }
         }
+
+        for (auto const& method : component_type.get_methods()) {
+            if (method.get_metadata().contains("EditorButtonAttribute")) {
+                auto& editor_button = method.get_metadata().at("EditorButtonAttribute").as<Attributes::EditorButtonAttribute>();
+                EUI::button(editor_button.button_text, [&] {
+                    auto result = method.try_invoke(ptr);
+                    if (result.has_error()) {
+                        LOG_ERRORF("Could not invoke method: {}", meta_hpp::get_error_code_message(result.get_error()));
+                    }
+                });
+            }
+        }
     };
 
     auto const name = component_type.get_metadata().at("Name").as<std::string>();

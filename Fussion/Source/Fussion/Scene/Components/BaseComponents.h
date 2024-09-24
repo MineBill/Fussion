@@ -1,6 +1,7 @@
 #pragma once
+#include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Assets/Model.h"
 #include "Fussion/Core/Types.h"
-#include "Fussion/Core/Uuid.h"
 #include "Fussion/Scene/Component.h"
 #include "Fussion/Log/Log.h"
 
@@ -44,14 +45,23 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class [[API]] MoverComponent final : public Component {
+    class [[API]] BallSpawner final : public Component {
     public:
-        COMPONENT_DEFAULT(MoverComponent)
-        COMPONENT_DEFAULT_COPY(MoverComponent)
+        COMPONENT_DEFAULT(BallSpawner)
+        COMPONENT_DEFAULT_COPY(BallSpawner)
 
         virtual void on_update(f32 delta) override;
 
+        [[API]]
         f32 speed{ 0.1f };
+
+        [[API]]
+        AssetRef<Model> model;
+
+        [[API, EditorButton("Spawn")]]
+        void spawn();
+        [[API, EditorButton("Clear")]]
+        void clear();
 
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;

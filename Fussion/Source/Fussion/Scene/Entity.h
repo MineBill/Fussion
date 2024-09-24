@@ -116,6 +116,8 @@ namespace Fussion {
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
 
+        Scene& scene() const { return *m_scene; }
+
     private:
         void on_start();
         void on_update(f32 delta);

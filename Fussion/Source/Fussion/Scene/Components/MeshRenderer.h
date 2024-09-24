@@ -17,6 +17,7 @@ namespace Fussion {
         virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
 
+        [[API]]
         AssetRef<Model> model;
 
         std::vector<AssetRef<PbrMaterial>> materials{};
