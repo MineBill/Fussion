@@ -38,6 +38,7 @@ Editor::~Editor() = default;
 void Editor::on_start()
 {
     Application::inst()->window().set_title(fmt::format("Fussion - {}", Project::name()));
+    Application::inst()->window().maximize();
 
     ZoneScoped;
     m_viewport_window = make_ptr<ViewportWindow>(this);

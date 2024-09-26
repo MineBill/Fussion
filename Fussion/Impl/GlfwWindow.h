@@ -23,6 +23,7 @@ namespace Fussion {
         virtual auto position() const -> Vector2 override;
 
         virtual void set_icon(Image const& image) override;
+        virtual void maximize() override;
 
         virtual void* native_handle() const override;
 

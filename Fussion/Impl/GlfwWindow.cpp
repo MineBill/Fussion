@@ -1,25 +1,26 @@
-#include "FussionPCH.h"
 #include "GlfwWindow.h"
+
 #include "Fussion/Core/Core.h"
 #include "Fussion/Events/ApplicationEvents.h"
-#include "Fussion/Events/MouseEvents.h"
 #include "Fussion/Events/KeyboardEvents.h"
-
+#include "Fussion/Events/MouseEvents.h"
+#include "FussionPCH.h"
 #include "GLFW/glfw3.h"
 #include "OS/System.h"
 
 #include <tracy/Tracy.hpp>
 
 #ifdef OS_WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include "Glfw/glfw3native.h"
-#include <dwmapi.h>
-#pragma comment(lib,"dwmapi.lib")
+#    define WIN32_LEAN_AND_MEAN
+#    define GLFW_EXPOSE_NATIVE_WIN32
+#    include "Glfw/glfw3native.h"
+
+#    include <dwmapi.h>
+#    pragma comment(lib, "dwmapi.lib")
 #endif
 
 namespace Fussion {
-    Keys GlfwKeyToFussion(int key);
+    Keys glfw_key_to_fussion(int key);
     MouseButton GlfwMouseButtonToFussion(int glfw_mouse_button);
 
     Window* Window::create(WindowOptions const& options)
@@ -51,10 +52,8 @@ namespace Fussion {
         if (options.flags.test(WindowFlag::Centered)) {
             auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            set_position({
-                CAST(f32, mode->width) / 2.0 - CAST(f32, options.initial_width) / 2.0,
-                CAST(f32, mode->height) / 2.0 - CAST(f32, options.initial_height) / 2.0
-            });
+            set_position({ CAST(f32, mode->width) / 2.0 - CAST(f32, options.initial_width) / 2.0,
+                CAST(f32, mode->height) / 2.0 - CAST(f32, options.initial_height) / 2.0 });
         }
 
 #if OS_WINDOWS
@@ -92,7 +91,7 @@ namespace Fussion {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
 
-            KeyMods key_mods{};
+            KeyMods key_mods {};
             if ((mods & GLFW_MOD_ALT) != 0) {
                 key_mods |= KeyMod::Alt;
             }
@@ -109,23 +108,20 @@ namespace Fussion {
                 key_mods |= KeyMod::CapsLock;
             }
 
-            auto key = GlfwKeyToFussion(glfw_key);
+            auto key = glfw_key_to_fussion(glfw_key);
             switch (action) {
             case GLFW_RELEASE: {
                 OnKeyReleased event(key, key_mods);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             case GLFW_PRESS: {
                 OnKeyPressed event(key, key_mods);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             case GLFW_REPEAT: {
                 OnKeyDown event(key, key_mods);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             default:
                 UNREACHABLE;
             }
@@ -153,18 +149,15 @@ namespace Fussion {
             case GLFW_RELEASE: {
                 MouseButtonReleased event(mouse_button);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             case GLFW_PRESS: {
                 MouseButtonPressed event(mouse_button);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             case GLFW_REPEAT: {
                 MouseButtonDown event(mouse_button);
                 me->m_event_callback(event);
-            }
-            break;
+            } break;
             default:
                 UNREACHABLE;
             }
@@ -235,16 +228,13 @@ namespace Fussion {
         switch (mode) {
         case MouseMode::Unlocked: {
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-        break;
+        } break;
         case MouseMode::Locked: {
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }
-        break;
+        } break;
         case MouseMode::Confined: {
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
-        }
-        break;
+        } break;
         }
     }
 
@@ -289,7 +279,12 @@ namespace Fussion {
         glfwSetWindowIcon(m_window, 1, &glfw_image);
     }
 
-    Keys GlfwKeyToFussion(int key)
+    void GlfwWindow::maximize()
+    {
+        glfwMaximizeWindow(m_window);
+    }
+
+    Keys glfw_key_to_fussion(int key)
     {
         switch (key) {
         case GLFW_KEY_SPACE:

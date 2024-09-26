@@ -55,6 +55,7 @@ namespace Fussion {
         virtual auto position() const -> Vector2 = 0;
 
         virtual void set_icon(Image const& image) = 0;
+        virtual void maximize() = 0;
 
         virtual u32 width() const = 0;
         virtual u32 height() const = 0;
