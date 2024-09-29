@@ -1,11 +1,11 @@
-﻿#include "FussionPCH.h"
-#include "Renderer.h"
+﻿#include "Renderer.h"
 
-#include "Fussion/Util/TextureImporter.h"
 #include "Fussion/Assets/AssetManager.h"
-#include "Fussion/Core/Application.h"
 #include "Fussion/Assets/PbrMaterial.h"
+#include "Fussion/Core/Application.h"
 #include "Fussion/GPU/Utils.h"
+#include "Fussion/Util/TextureImporter.h"
+#include "FussionPCH.h"
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
@@ -28,36 +28,31 @@ namespace Fussion {
 
         auto surface = instance.surface(&window);
         auto adapter = instance.adapter(surface, {
-            .power_preference = GPU::DevicePower::HighPerformance
-        });
+                                                     .power_preference = GPU::DevicePower::HighPerformance,
+                                                 });
 
-        GPU::DeviceSpec spec{
+        GPU::DeviceSpec spec {
             .label = String("Device"),
             .required_features = {
-                GPU::Features::Float32Filterable,
-                GPU::Features::TimestampQuery,
-                GPU::Features::PipelineStatistics,
+                GPU::Feature::Float32Filterable,
+                GPU::Feature::TimestampQuery,
             }
         };
+
+        if (adapter.has_feature(GPU::Feature::PipelineStatistics)) {
+            s_renderer->m_has_pipeline_statistics = true;
+            spec.required_features.push_back(GPU::Feature::PipelineStatistics);
+        }
         auto device = adapter.device(spec);
 
         s_renderer->m_window_size = window.size();
 
-        surface.configure(device, adapter, {
-            .present_mode = GPU::PresentMode::Immediate,
-            .size = s_renderer->m_window_size
-        });
+        surface.configure(device, adapter, { .present_mode = GPU::PresentMode::Fifo, .size = s_renderer->m_window_size });
 
         s_renderer->m_device = device;
         s_renderer->m_adapter = adapter;
         s_renderer->m_instance = instance;
         s_renderer->m_surface = surface;
-
-        // NOTE: Setting the callback on m_Device, rather than the device local variable, because
-        //       the GPU::Device will set up WGPU user data with its pointer.
-        // s_Renderer->m_Device.SetErrorCallback([&](GPU::ErrorType type, std::string_view message) {
-        //     LOG_ERRORF("!DEVICE ERROR!\n\tTYPE: {}\n\tMESSAGE: {}", magic_enum::enum_name(type), message);
-        // });
 
         GPU::Utils::RenderDoc::initialize();
     }
@@ -110,10 +105,7 @@ namespace Fussion {
         s_renderer->m_skip_render = false;
 
         s_renderer->m_window_size = new_size;
-        s_renderer->m_surface.configure(s_renderer->m_device, s_renderer->m_adapter, {
-            .present_mode = GPU::PresentMode::Immediate,
-            .size = new_size
-        });
+        s_renderer->m_surface.configure(s_renderer->m_device, s_renderer->m_adapter, { .present_mode = GPU::PresentMode::Immediate, .size = new_size });
     }
 
     auto Renderer::default_normal_map() -> AssetRef<Texture2D> { return s_renderer->m_normal_map; }
@@ -121,6 +113,11 @@ namespace Fussion {
     auto Renderer::white_texture() -> AssetRef<Texture2D> { return s_renderer->m_white_texture; }
 
     auto Renderer::black_texture() -> AssetRef<Texture2D> { return s_renderer->m_black_texture; }
+
+    auto Renderer::white_cube_texture() -> GPU::Texture
+    {
+        return s_renderer->m_white_cube_texture;
+    }
 
     static unsigned char g_white_texture_png[] = {
 #include "white_texture.png.h"
@@ -140,9 +137,38 @@ namespace Fussion {
         material->object_color = Color(1, 1, 1, 1);
         s_renderer->m_default_material = AssetManager::create_virtual_asset_ref<PbrMaterial>(material);
 
-        s_renderer->m_white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_white_texture_png).value(), "Default White Texture");
-        s_renderer->m_black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_black_texture_png).value(), "Default Black Texture");
-        s_renderer->m_normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_normal_map_png, true).value(), "Default Normal Map");
+        s_renderer->m_white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_white_texture_png).unwrap(), "Default White Texture");
+        s_renderer->m_black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_black_texture_png).unwrap(), "Default Black Texture");
+        s_renderer->m_normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureImporter::load_texture_from_memory(g_normal_map_png, true).unwrap(), "Default Normal Map");
 
+        GPU::TextureSpec texture_spec {
+            .label = "CubeTexGen::cube_texture",
+            .usage = GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopyDst,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { 512, 512, 6 },
+            .format = GPU::TextureFormat::RGBA16Float,
+            .sample_count = 1,
+            .aspect = GPU::TextureAspect::All,
+            .generate_mip_maps = false,
+            .initialize_view = false,
+        };
+
+        s_renderer->m_white_cube_texture = device().create_texture(texture_spec);
+        s_renderer->m_white_cube_texture.view = s_renderer->m_white_cube_texture.create_view({
+            .label = "View"sv,
+            .usage = texture_spec.usage,
+            .dimension = GPU::TextureViewDimension::Cube, // TODO: Make configurable
+            .format = texture_spec.format,
+            .base_mip_level = 0, // TODO: Make configurable
+            .mip_level_count = 1,
+            .base_array_layer = 0,        // TODO: Make configurable
+            .array_layer_count = 6,       // TODO: Make configurable
+            .aspect = texture_spec.aspect // TODO: Make configurable
+        });
+    }
+
+    bool Renderer::has_pipeline_statistics()
+    {
+        return s_renderer->m_has_pipeline_statistics;
     }
 }

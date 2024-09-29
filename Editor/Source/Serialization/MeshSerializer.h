@@ -3,6 +3,6 @@
 
 class MeshSerializer final : public AssetSerializer {
 public:
-    virtual auto Save(EditorAssetMetadata metadata, Ref<Fussion::Asset> const& asset) -> void override;
-    virtual auto Load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> override;
+    virtual auto save(EditorAssetMetadata metadata, Ref<Fussion::Asset> const& asset) -> void override;
+    virtual auto load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> override;
 };

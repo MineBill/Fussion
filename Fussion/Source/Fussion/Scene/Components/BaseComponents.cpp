@@ -1,20 +1,20 @@
 ﻿#include "BaseComponents.h"
 
-#include "MeshRenderer.h"
 #include "Assets/AssetManager.h"
 #include "Debug/Debug.h"
+#include "MeshRenderer.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void PointLight::on_update(f32) {}
+    void PointLight::on_update(f32) { }
 
     void PointLight::on_draw(RenderContext& context)
     {
         if (!context.render_flags.test(RenderState::LightCollection))
             return;
-        auto light = GPUPointLight{
+        auto light = GPUPointLight {
             .position = m_owner->transform.position,
             .color = Color::White,
             .radius = radius,
@@ -112,17 +112,20 @@ namespace Fussion {
             return;
 
         context.post_processing.use_ssao = ssao;
+        context.environment_map = environment_map.get();
     }
 
     void Environment::serialize(Serializer& ctx) const
     {
         Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(ssao);
+        FSN_SERIALIZE_MEMBER(environment_map);
     }
 
     void Environment::deserialize(Deserializer& ctx)
     {
         Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(ssao);
+        FSN_DESERIALIZE_MEMBER(environment_map);
     }
 }

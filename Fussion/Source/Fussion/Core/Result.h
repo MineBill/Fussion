@@ -18,12 +18,12 @@ namespace Fussion {
 
         ValueType& value()
         {
-            return m_value.value();
+            return m_value.unwrap();
         }
 
         ErrorType& error()
         {
-            return m_error.value();
+            return m_error.unwrap();
         }
 
         [[nodiscard]]
@@ -34,7 +34,7 @@ namespace Fussion {
 
         ValueType& operator*()
         {
-            return m_value.value();
+            return m_value.unwrap();
         }
 
     private:
@@ -54,7 +54,7 @@ namespace Fussion {
 
         constexpr ErrorType& error()
         {
-            return m_error.value();
+            return m_error.unwrap();
         }
 
         [[nodiscard]]

@@ -78,7 +78,7 @@ namespace Fussion {
 
         m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout, global_bg_spec);
 
-        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/HDR.wgsl").value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/HDR.wgsl").unwrap();
 
         GPU::ShaderModuleSpec shader_spec{
             .label = "HDR::Shader"sv,

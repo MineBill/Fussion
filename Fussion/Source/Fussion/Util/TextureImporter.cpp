@@ -87,4 +87,36 @@ namespace Fussion {
         // buffer->GetMappedData();
         // stbi_write_jpg(path.string().data(), CAST(s32, image_spec.Width), CAST(s32, image_spec.Height), 4, buffer->GetMappedData(), 100);
     }
+
+    auto TextureImporter::load_hdr_image_from_memory(std::span<u8> data) -> Maybe<FloatImage>
+    {
+        FloatImage image{};
+        int actual_channels_on_image, w, h;
+
+        stbi_hdr_to_ldr_gamma(2.2f);
+        stbi_hdr_to_ldr_scale(1.0f);
+        stbi_set_flip_vertically_on_load(true);
+        f32* image_data = stbi_loadf_from_memory(data.data(), CAST(int, data.size_bytes()), &w, &h, &actual_channels_on_image, 4);
+        LOG_INFOF("Actual channels: {}", actual_channels_on_image);
+        if (image_data == nullptr) {
+            LOG_ERRORF("Failed to load image: {}", stbi_failure_reason());
+            return None();
+        }
+
+        image.data.resize(w * h * 4);
+        std::copy_n(image_data, w * h * 4, image.data.data());
+
+        image.width = CAST(u32, w);
+        image.height = CAST(u32, h);
+
+        return image;
+    }
+
+    auto TextureImporter::load_hdr_image_from_file(std::filesystem::path const& path) -> Maybe<FloatImage>
+    {
+        auto data = FileSystem::read_entire_file_binary(path);
+        if (!data)
+            return None();
+        return load_hdr_image_from_memory(*data);
+    }
 }

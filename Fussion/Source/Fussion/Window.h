@@ -3,6 +3,7 @@
 #include "Core/Types.h"
 #include "Events/Event.h"
 #include "Fussion/Math/Vector2.h"
+
 #include <Fussion/Image.h>
 
 namespace Fussion {
@@ -17,10 +18,10 @@ namespace Fussion {
     DECLARE_OPERATORS_FOR_FLAGS(WindowFlags)
 
     struct WindowOptions {
-        std::string initial_title{ "Window" };
-        s32 initial_width{ 400 };
-        s32 initial_height{ 400 };
-        WindowFlags flags{};
+        std::string initial_title { "Window" };
+        s32 initial_width { 400 };
+        s32 initial_height { 400 };
+        WindowFlags flags {};
     };
 
     enum class MouseMode {
@@ -57,7 +58,8 @@ namespace Fussion {
         virtual void set_icon(Image const& image) = 0;
         virtual void maximize() = 0;
 
-        virtual u32 width() const = 0;
-        virtual u32 height() const = 0;
+        [[nodiscard]] virtual u32 width() const = 0;
+
+        [[nodiscard]] virtual u32 height() const = 0;
     };
 }

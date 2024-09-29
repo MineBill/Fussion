@@ -68,13 +68,13 @@ namespace Mikktspace {
     }
 }
 
-void MeshSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
+void MeshSerializer::save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {
     (void)metadata;
     (void)asset;
 }
 
-Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
+Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
 {
     auto path = Project::assets_folder() / metadata.path;
 

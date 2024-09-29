@@ -1,10 +1,12 @@
 ﻿#pragma once
+
 #include <Fussion/Core/Uuid.h>
 #include <Fussion/Math/Color.h>
-#include <Fussion/Serialization/json.hpp>
 #include <Fussion/Math/Vector2.h>
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
+#include <Fussion/Serialization/json.hpp>
+#include <Fussion/meta.hpp/meta_types/class_type.hpp>
 
 namespace Fussion {
     using json = nlohmann::json;
@@ -12,7 +14,7 @@ namespace Fussion {
 
     inline json to_json(Vector3 const& vec)
     {
-        return json{
+        return json {
             { "x", vec.x },
             { "y", vec.y },
             { "z", vec.z },
@@ -33,7 +35,7 @@ namespace Fussion {
 
     inline json to_json(Vector4 const& vec)
     {
-        return json{
+        return json {
             { "x", vec.x },
             { "y", vec.y },
             { "z", vec.z },
@@ -56,7 +58,7 @@ namespace Fussion {
 
     inline json to_json(Vector2 const& vec)
     {
-        return json{
+        return json {
             { "x", vec.x },
             { "y", vec.y },
         };
@@ -72,7 +74,7 @@ namespace Fussion {
 
     inline json to_json(Color const& col)
     {
-        return json{
+        return json {
             { "r", col.r },
             { "g", col.g },
             { "b", col.b },
@@ -102,7 +104,7 @@ namespace Fussion {
 
     inline void to_json(json& j, Color const& v)
     {
-        j = json{
+        j = json {
             { "r", v.r },
             { "g", v.g },
             { "b", v.b },
@@ -118,7 +120,7 @@ namespace Fussion {
     inline void from_json(json const& j, Vector2& v)
     {
         if (!j.contains("x") || !j.contains("y")) {
-            v = Vector2{};
+            v = Vector2 {};
             return;
         }
         v = Vector2(j.value("x", 0.0), j.value("y", 0.0));
@@ -127,7 +129,7 @@ namespace Fussion {
     inline void from_json(json const& j, Vector3& v)
     {
         if (!j.contains("x") || !j.contains("y") || !j.contains("z")) {
-            v = Vector3{};
+            v = Vector3 {};
             return;
         }
         v = Vector3(j.value("x", 0.0), j.value("y", 0.0), j.value("z", 0.0));
@@ -136,7 +138,7 @@ namespace Fussion {
     inline void from_json(json const& j, Vector4& v)
     {
         if (!j.contains("x") || !j.contains("y") || !j.contains("z") || !j.contains("w")) {
-            v = Vector4{};
+            v = Vector4 {};
             return;
         }
         v = Vector4(j.value("x", 0.0), j.value("y", 0.0), j.value("z", 0.0), j.value("w", 0.0));
@@ -144,7 +146,7 @@ namespace Fussion {
 
     inline void to_json(json& j, Vector2 const& v)
     {
-        j = json{
+        j = json {
             { "x", v.x },
             { "y", v.y },
         };
@@ -153,7 +155,7 @@ namespace Fussion {
     inline void to_json(json& j, Vector3 const& v)
     {
 
-        j = json{
+        j = json {
             { "x", v.x },
             { "y", v.y },
             { "z", v.z },
@@ -162,7 +164,7 @@ namespace Fussion {
 
     inline void to_json(json& j, Vector4 const& v)
     {
-        j = json{
+        j = json {
             { "x", v.x },
             { "y", v.y },
             { "z", v.z },

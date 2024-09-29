@@ -23,6 +23,9 @@ namespace Fussion {
         Mat4 matrix() const;
 
         [[nodiscard]]
+        Mat4 rotation() const;
+
+        [[nodiscard]]
         Mat4 camera_matrix() const;
 
         [[nodiscard]]

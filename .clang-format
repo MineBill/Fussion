@@ -3,6 +3,7 @@ AlignEscapedNewlines: Left
 AlignTrailingComments:
     Kind: Always
     OverEmptyLines: 0
+Cpp11BracedListStyle: false
 BasedOnStyle: WebKit
 BraceWrapping:
     AfterFunction: true
@@ -20,14 +21,3 @@ RequiresClausePosition: WithFollowing
 RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false
 IncludeBlocks: Regroup
-
----
-Language: ObjC
-BinPackParameters: false
-BraceWrapping:
-    AfterObjCDeclaration: true
-ObjCBinPackProtocolList: Never
-ObjCBlockIndentWidth: 4
-ObjCBreakBeforeNestedBlockParam: true
-ObjCSpaceAfterProperty: true
-ObjCSpaceBeforeProtocolList: true

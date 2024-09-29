@@ -130,7 +130,6 @@ target("AngelScript", function()
 
     if is_plat("windows") then
         add_files "Fussion/Vendor/angelscript/sdk/angelscript/source/as_callfunc_x64_msvc_asm.asm"
-        set_runtimes "MDd"
     end
 end)
 
@@ -150,7 +149,7 @@ target("TracyClient", function()
     add_sysincludedirs("Fussion/Vendor/tracy/public", {public = true})
 
     if is_plat("windows") then
-        set_runtimes "MDd"
+        -- set_runtimes "MDd"
     end
 
     add_defines("TRACY_ENABLE", {public = true})

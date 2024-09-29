@@ -1,12 +1,13 @@
-﻿#include "FussionPCH.h"
-#include "FileSink.h"
+﻿#include "FileSink.h"
 
 #include "Fussion/Core/Core.h"
+#include "FussionPCH.h"
 
 // @todo Remove this and stop using *_s functions.
 #if defined(OS_LINUX)
-#include <cerrno>
-int fopen_s(FILE **f, const char *name, const char *mode) {
+#    include <cerrno>
+int fopen_s(FILE** f, char const* name, char const* mode)
+{
     int ret = 0;
     assert(f);
     *f = fopen(name, mode);
@@ -16,7 +17,7 @@ int fopen_s(FILE **f, const char *name, const char *mode) {
 }
 
 template<typename... Args>
-int fprintf_s(FILE* stream, const char* fmt, Args... args)
+int fprintf_s(FILE* stream, char const* fmt, Args... args)
 {
     return fprintf(stream, fmt, args...);
 }
@@ -44,7 +45,7 @@ namespace Fussion {
 
     void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
     {
-        static const char* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
+        static char const* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
         if (level >= m_logger->get_priority()) {
             m_out_file << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;

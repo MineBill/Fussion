@@ -56,7 +56,7 @@ target("Fussion")
     if is_plat("windows") then
         add_defines("OS_WINDOWS", {public = true})
         add_links("gdi32", "user32", "shell32", "Comdlg32")
-        set_runtimes("MDd")
+        -- set_runtimes("MDd")
         add_cxxflags("cl::/bigobj")
         add_cxxflags("cl::/utf-8", {public = true})
     elseif is_plat("linux") then

@@ -20,14 +20,14 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto to_wgpu(Features feature) -> WGPUFeatureName
+    auto to_wgpu(Feature feature) -> WGPUFeatureName
     {
         switch (feature) {
-        case Features::TimestampQuery:
+        case Feature::TimestampQuery:
             return WGPUFeatureName_TimestampQuery;
-        case Features::Float32Filterable:
+        case Feature::Float32Filterable:
             return WGPUFeatureName_Float32Filterable;
-        case Features::PipelineStatistics:
+        case Feature::PipelineStatistics:
             return CAST(WGPUFeatureName, WGPUNativeFeature_PipelineStatisticsQuery);
         }
         UNREACHABLE;
@@ -314,8 +314,8 @@ namespace Fussion::GPU {
             result |= WGPUColorWriteMask_Red;
         if (flags.test(ColorWrite::Blue))
             result |= WGPUColorWriteMask_Blue;
-        if (flags.test(ColorWrite::Green))
-            result |= WGPUColorWriteMask_Green;
+        if (flags.test(ColorWrite::Alpha))
+            result |= WGPUColorWriteMask_Alpha;
         return result;
     }
 

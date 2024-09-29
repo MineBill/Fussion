@@ -79,7 +79,7 @@ namespace Fussion {
 
         m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout, global_bg_spec);
 
-        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/blur.wgsl").value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/blur.wgsl").unwrap();
 
         GPU::ShaderModuleSpec shader_spec{
             .label = "SSAOBlur::Shader"sv,

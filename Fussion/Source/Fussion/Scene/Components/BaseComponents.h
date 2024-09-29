@@ -1,9 +1,10 @@
 #pragma once
 #include "Fussion/Assets/AssetRef.h"
 #include "Fussion/Assets/Model.h"
+#include "Fussion/Assets/Texture2D.h"
 #include "Fussion/Core/Types.h"
-#include "Fussion/Scene/Component.h"
 #include "Fussion/Log/Log.h"
+#include "Fussion/Scene/Component.h"
 
 namespace Fussion {
     class [[API]] PointLight final : public Component {
@@ -15,9 +16,9 @@ namespace Fussion {
         virtual void on_draw(RenderContext& context) override;
 
         [[API, BackgroundColor(Color::Red)]]
-        f32 radius{ 10.0f };
+        f32 radius { 10.0f };
         [[API]]
-        Vector3 offset{};
+        Vector3 offset {};
 
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
@@ -37,9 +38,9 @@ namespace Fussion {
         virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
 
-        Type draw_type{ Type::Box };
+        Type draw_type { Type::Box };
 
-        f32 size{ 0.0f };
+        f32 size { 0.0f };
 
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;
@@ -53,7 +54,7 @@ namespace Fussion {
         virtual void on_update(f32 delta) override;
 
         [[API]]
-        f32 speed{ 0.1f };
+        f32 speed { 0.1f };
 
         [[API]]
         AssetRef<Model> model;
@@ -75,7 +76,10 @@ namespace Fussion {
         virtual void on_draw(RenderContext& context) override;
 
         [[API, EditorName("SSAO")]]
-        bool ssao{};
+        bool ssao {};
+
+        [[API, EditorName("Env Map")]]
+        AssetRef<Texture2D> environment_map;
 
         virtual void serialize(Serializer& ctx) const override;
         virtual void deserialize(Deserializer& ctx) override;

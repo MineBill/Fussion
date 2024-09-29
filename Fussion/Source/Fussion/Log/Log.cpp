@@ -1,4 +1,4 @@
-﻿#include "FussionPCH.h"
+#include "FussionPCH.h"
 #include "Log.h"
 
 #include "Fussion/Core/Types.h"

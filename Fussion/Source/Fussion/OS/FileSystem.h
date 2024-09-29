@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Core/Types.h"
-#include <Fussion/Core/Maybe.h>
 
+#include <Fussion/Core/Maybe.h>
 #include <filesystem>
 
 namespace Fussion {

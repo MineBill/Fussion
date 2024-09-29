@@ -1,6 +1,6 @@
-﻿#include "FussionPCH.h"
-#include "Texture2D.h"
+﻿#include "Texture2D.h"
 
+#include "FussionPCH.h"
 #include "Rendering/Renderer.h"
 #include "Serialization/Serializer.h"
 
@@ -34,7 +34,7 @@ namespace Fussion {
         Ref<Texture2D> texture = make_ref<Texture2D>();
 
         texture->m_metadata = metadata;
-        GPU::TextureSpec spec{
+        GPU::TextureSpec spec {
             .label = "Texture2D Texture"sv,
             .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
             .dimension = GPU::TextureDimension::D2,
@@ -49,6 +49,32 @@ namespace Fussion {
         texture->m_image = device.create_texture(spec);
 
         device.write_texture(texture->m_image, data.data(), data.size_bytes(), Vector2::Zero, { metadata.width, metadata.height });
+
+        texture->m_image.generate_mipmaps(device);
+
+        return texture;
+    }
+
+    Ref<Texture2D> Texture2D::create(std::span<f32> data, Texture2DMetadata const& metadata)
+    {
+        Ref<Texture2D> texture = make_ref<Texture2D>();
+
+        texture->m_metadata = metadata;
+        GPU::TextureSpec spec {
+            .label = "Texture2D Texture"sv,
+            .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { metadata.width, metadata.height, 1 },
+            .format = metadata.format,
+            .sample_count = 1,
+            .generate_mip_maps = metadata.generate_mipmaps,
+        };
+
+        auto& device = Renderer::device();
+
+        texture->m_image = device.create_texture(spec);
+
+        device.write_texture(texture->m_image, data.data(), data.size_bytes(), Vector2::Zero, { metadata.width, metadata.height }, 4 * sizeof(f32));
 
         texture->m_image.generate_mipmaps(device);
 

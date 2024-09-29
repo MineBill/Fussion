@@ -31,7 +31,10 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static auto default_material() -> AssetRef<PbrMaterial> { return s_renderer->m_default_material; }
+        static auto default_material() -> AssetRef<PbrMaterial>
+        {
+            return s_renderer->m_default_material;
+        }
 
         [[nodiscard]]
         static auto default_normal_map() -> AssetRef<Texture2D>;
@@ -42,20 +45,26 @@ namespace Fussion {
         [[nodiscard]]
         static auto black_texture() -> AssetRef<Texture2D>;
 
+        [[nodiscard]]
+        static auto white_cube_texture() -> GPU::Texture;
+
         void create_default_resources();
+        static bool has_pipeline_statistics();
 
     private:
         static Renderer* s_renderer;
 
         AssetRef<PbrMaterial> m_default_material;
         AssetRef<Texture2D> m_white_texture, m_black_texture, m_normal_map;
+        GPU::Texture m_white_cube_texture;
 
-        Vector2 m_window_size{};
-        bool m_skip_render{};
+        Vector2 m_window_size {};
+        bool m_skip_render {};
 
-        GPU::Instance m_instance{};
-        GPU::Device m_device{};
-        GPU::Adapter m_adapter{};
-        GPU::Surface m_surface{};
+        GPU::Instance m_instance {};
+        GPU::Device m_device {};
+        GPU::Adapter m_adapter {};
+        GPU::Surface m_surface {};
+        bool m_has_pipeline_statistics {};
     };
 }

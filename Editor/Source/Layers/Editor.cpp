@@ -1,29 +1,29 @@
-﻿#include "EditorPCH.h"
-#include "Editor.h"
+﻿#include "Editor.h"
+
+#include "EditorPCH.h"
 #include "EditorUI.h"
+#include "EditorWindows/AssetRegistryViewer.h"
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
-#include "EditorWindows/AssetRegistryViewer.h"
 #include "EditorWindows/RendererReport.h"
 
-#include <Fussion/Input/Input.h>
-#include <Fussion/Core/Application.h>
-#include <Fussion/Scene/Components/BaseComponents.h>
 #include <Fussion/Assets/AssetRef.h>
+#include <Fussion/Core/Application.h>
 #include <Fussion/Events/ApplicationEvents.h>
 #include <Fussion/Events/KeyboardEvents.h>
+#include <Fussion/Input/Input.h>
 #include <Fussion/OS/FileSystem.h>
-#include <Fussion/Scripting/ScriptingEngine.h>
+#include <Fussion/Scene/Components/BaseComponents.h>
 #include <Fussion/Scene/Components/Camera.h>
+#include <Fussion/Scripting/ScriptingEngine.h>
 #include <Fussion/Serialization/JsonSerializer.h>
-
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <tracy/Tracy.hpp>
 #include <ranges>
+#include <tracy/Tracy.hpp>
 
 Editor* Editor::s_editor_instance = nullptr;
-AssetPicker Editor::generic_asset_picker{};
+AssetPicker Editor::generic_asset_picker {};
 
 using namespace Fussion;
 
@@ -113,9 +113,9 @@ void Editor::on_start()
     };
 }
 
-void Editor::on_enable() {}
+void Editor::on_enable() { }
 
-void Editor::on_disable() {}
+void Editor::on_disable() { }
 
 void Editor::save() const
 {
@@ -175,8 +175,7 @@ void Editor::on_update(f32 delta)
             m_active_scene->tick();
             m_active_scene->on_debug_draw(debug_draw_context);
         }
-    }
-    break;
+    } break;
     case PlayState::Playing: {
         if (m_detached) {
             m_camera.set_focus(m_viewport_window->is_focused());
@@ -186,11 +185,11 @@ void Editor::on_update(f32 delta)
             m_play_scene->on_update(delta);
             m_play_scene->on_debug_draw(debug_draw_context);
         }
+    } break;
+    case PlayState::Paused: {
     }
-    break;
-    case PlayState::Paused: {}
-    case PlayState::Detached: {}
-    break;
+    case PlayState::Detached: {
+    } break;
     }
 
     ImGui::DockSpaceOverViewport();
@@ -220,7 +219,7 @@ void Editor::on_update(f32 delta)
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Quit")) {}
+            if (ImGui::MenuItem("Quit")) { }
 
             ImGui::EndMenu();
         }
@@ -254,12 +253,7 @@ void Editor::on_update(f32 delta)
     }
     ImGui::EndMainMenuBar();
 
-    auto flags =
-        ImGuiDockNodeFlags_NoTabBar |
-        ImGuiDockNodeFlags_HiddenTabBar |
-        ImGuiDockNodeFlags_NoDockingOverMe |
-        ImGuiDockNodeFlags_NoResize |
-        ImGuiDockNodeFlags_NoDockingOverOther;
+    auto flags = ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_HiddenTabBar | ImGuiDockNodeFlags_NoDockingOverMe | ImGuiDockNodeFlags_NoResize | ImGuiDockNodeFlags_NoDockingOverOther;
 
     ImGuiWindowClass klass;
     klass.DockNodeFlagsOverrideSet = flags;
@@ -272,7 +266,7 @@ void Editor::on_update(f32 delta)
     }
     EUI::window("##toolbar", [this] {
         constexpr auto y = 4;
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2{ 0, y });
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2 { 0, y });
         defer(ImGui::PopStyleVar());
         auto height = ImGui::GetWindowHeight() - y * 2;
         auto pos = ImGui::GetWindowContentRegionMax().x * 0.5f - 3.f * height * 0.5f;
@@ -286,7 +280,8 @@ void Editor::on_update(f32 delta)
         auto& style = EditorStyle::get_style();
         EUI::image_button(style.editor_icons[EditorIcon::Play], [this] {
             set_play_state(PlayState::Playing);
-        }, { .size = Vector2{ height, height }, .disabled = m_active_scene == nullptr || m_state == PlayState::Playing });
+        },
+            { .size = Vector2 { height, height }, .disabled = m_active_scene == nullptr || m_state == PlayState::Playing });
 
         auto min = ImGui::GetItemRectMin();
 
@@ -296,19 +291,22 @@ void Editor::on_update(f32 delta)
 
         EUI::image_button(style.editor_icons[EditorIcon::Stop], [this] {
             set_play_state(PlayState::Editing);
-        }, { .size = Vector2{ height, height }, .disabled = m_state != PlayState::Playing });
+        },
+            { .size = Vector2 { height, height }, .disabled = m_state != PlayState::Playing });
 
         ImGui::SameLine();
 
         EUI::image_button(style.editor_icons[EditorIcon::Pause], [this] {
             set_play_state(PlayState::Paused);
-        }, { .size = Vector2{ height, height }, .disabled = m_state != PlayState::Playing });
+        },
+            { .size = Vector2 { height, height }, .disabled = m_state != PlayState::Playing });
 
         ImGui::SameLine();
 
         EUI::image_button(style.editor_icons[EditorIcon::Dots], [] {
             ImGui::OpenPopup("Toolbar::Options");
-        }, { .size = Vector2{ height, height }, .disabled = m_state != PlayState::Playing });
+        },
+            { .size = Vector2 { height, height }, .disabled = m_state != PlayState::Playing });
 
         EUI::popup("Toolbar::Options", [&] {
             if (ImGui::MenuItem("Detach")) {
@@ -328,7 +326,8 @@ void Editor::on_update(f32 delta)
         list->AddRectFilled(min, max, color.to_abgr(), 3);
 
         list->ChannelsMerge();
-    }, { .flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .use_child = false });
+    },
+        { .flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .use_child = false });
     if (state == PlayState::Playing) {
         ImGui::PopStyleColor();
     }
@@ -401,7 +400,7 @@ void Editor::on_event(Event& event)
 
     dispatcher.dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
         if (m_active_scene != nullptr && m_active_scene->is_dirty()) {
-            Dialogs::MessageBox data{};
+            Dialogs::MessageBox data {};
             data.message = "The current scene has unsaved modifications. Are you sure you want to quit?";
             data.action = Dialogs::MessageAction::OkCancel;
             switch (Dialogs::show_message_box(data)) {
@@ -432,52 +431,55 @@ void Editor::on_event(Event& event)
 
 void Editor::on_draw(GPU::CommandEncoder& encoder)
 {
-    auto RenderEditorView = [&](Ref<Scene> const& scene) {
-        m_scene_renderer.render(encoder, {
-            .camera = RenderCamera{
-                .perspective = m_camera.perspective(),
-                .view = m_camera.view(),
-                .position = m_camera.position,
-                .near = m_camera.near,
-                .far = m_camera.far,
-                .direction = m_camera.direction(),
+    auto render_editor_view = [&](Ref<Scene> const& scene) {
+        m_scene_renderer.render(encoder,
+            {
+                .camera = RenderCamera {
+                    .perspective = m_camera.perspective(),
+                    .view = m_camera.view(),
+                    .rotation = m_camera.rotation(),
+                    .position = m_camera.position,
+                    .near = m_camera.near,
+                    .far = m_camera.far,
+                    .direction = m_camera.direction(),
+                },
+                .scene = scene.get(),
             },
-            .scene = scene.get(),
-        }, false);
+            false);
     };
-    auto RenderGameView = [&](Camera const& camera) {
+    auto render_game_view = [&](Camera const& camera) {
         auto entity = camera.owner();
-        m_scene_renderer.render(encoder, {
-            .camera = RenderCamera{
-                .perspective = camera.get_perspective(),
-                .view = inverse(entity->world_matrix()),
-                .position = entity->transform.position,
-                .near = camera.near,
-                .far = camera.far,
-                .direction = entity->transform.forward(),
+        m_scene_renderer.render(encoder,
+            {
+                .camera = RenderCamera {
+                    .perspective = camera.get_perspective(),
+                    .view = inverse(entity->world_matrix()),
+                    .rotation = entity->transform.rotation(),
+                    .position = entity->transform.position,
+                    .near = camera.near,
+                    .far = camera.far,
+                    .direction = entity->transform.forward(),
+                },
+                .scene = m_play_scene.get(),
             },
-            .scene = m_play_scene.get(),
-        }, true);
+            true);
     };
     switch (m_state) {
     case PlayState::Editing: {
-        RenderEditorView(m_active_scene);
-    }
-    break;
+        render_editor_view(m_active_scene);
+    } break;
     case PlayState::Detached:
     case PlayState::Playing:
     case PlayState::Paused: {
         auto camera = m_play_scene->find_first_component<Camera>();
 
         if (camera == nullptr || m_detached) {
-            RenderEditorView(m_play_scene);
+            render_editor_view(m_play_scene);
         } else {
-            RenderGameView(*camera.get());
+            render_game_view(*camera.get());
         }
+    } break;
     }
-    break;
-    }
-
 }
 
 void Editor::set_play_state(PlayState new_state)
@@ -545,7 +547,7 @@ void Editor::set_play_state(PlayState new_state)
 
 void Editor::on_log_received(LogLevel level, std::string_view message, std::source_location const& loc)
 {
-    m_log_entries.push_back(LogEntry{
+    m_log_entries.push_back(LogEntry {
         level,
         std::string(message),
         loc,
@@ -573,15 +575,16 @@ void Editor::change_scene(AssetRef<Scene> scene)
         }
     };
     if (s_editor_instance->m_active_scene != nullptr && s_editor_instance->m_active_scene->is_dirty()) {
-        Dialogs::MessageBox data{};
+        Dialogs::MessageBox data {};
         data.message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
         data.action = Dialogs::MessageAction::YesNoCancel;
         switch (Dialogs::show_message_box(data)) {
-        case Dialogs::MessageButton::No: { s_editor_instance->save(); }
+        case Dialogs::MessageButton::No: {
+            s_editor_instance->save();
+        }
         case Dialogs::MessageButton::Yes: {
             LoadScene();
-        }
-        break;
+        } break;
         case Dialogs::MessageButton::Cancel:
             break;
         default:

@@ -97,6 +97,7 @@ void ContentBrowser::on_start()
     m_file_types[".jpeg"] = AssetType::Texture2D;
     m_file_types[".glb"] = AssetType::Model;
     m_file_types[".gltf"] = AssetType::Model;
+    m_file_types[".hdr"] = AssetType::Texture2D;
 
     m_import_filter.name = "Supported Asset Files";
     for (auto const& file_type : m_file_types | std::views::keys) {

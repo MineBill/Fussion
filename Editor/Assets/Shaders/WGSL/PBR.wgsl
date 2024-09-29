@@ -46,6 +46,7 @@ struct VertexInput {
 struct ViewData {
     projection: mat4x4f,
     view: mat4x4f,
+    rotation: mat4x4f,
     position: vec4f,
     screen_size: vec2f,
 }
@@ -71,7 +72,8 @@ struct InstanceData {
 @group(0) @binding(2) var shadow_texture: texture_depth_2d_array;
 
 @group(1) @binding(0) var ssao_texture: texture_2d<f32>;
-@group(1) @binding(1) var ssao_sampler: sampler;
+@group(1) @binding(1) var environment_map: texture_cube<f32>;
+@group(1) @binding(2) var ssao_sampler: sampler;
 
 @group(2) @binding(0) var<storage, read> instance_data: InstanceData;
 
@@ -170,8 +172,8 @@ fn do_directional_shadow(in: VertexOutput, light: DirectionalLight, index: u32) 
     return shadow / f32(samples_squared);
 }
 
-fn frensel_schlick(cos_theta: f32, f0: vec3f) -> vec3f {
-    return f0 + (1.0 - f0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
+fn frensel_schlick(cos_theta: f32, f0: vec3f, roughness: f32) -> vec3f {
+    return f0 + (max(vec3f(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
 }
 
 fn distribution_ggx(n: vec3f, h: vec3f, roughness: f32) -> f32 {
@@ -233,16 +235,16 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let l = normalize(tangent_light_dir);
     let h = normalize(v + l);
 
-    let radiance = light.color.rgb * 1.0;
+    let radiance = light.color.rgb;
     let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv).rgb * material.albedo_color.rgb;
     let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).b * material.metallic;
     var f0 = mix(vec3f(0.04), albedo, metalness);
-    let f = frensel_schlick(max(dot(h, v), 0.0), f0);
 
     let roughness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).g * material.roughness;
     let ndf = distribution_ggx(n, h, roughness);
     let g = geometry_smith(n, v, l, roughness);
 
+    let f = frensel_schlick(max(dot(h, v), 0.0), f0, roughness);
     let numerator = ndf * g * f;
     let denominator = 4.0 * max(dot(n, v), 0.0) * max(dot(n, l), 0.0) + 0.0001;
     let specular = numerator / denominator;
@@ -269,10 +271,11 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv).r;
     let ssao_occlusion = textureSample(ssao_texture, linear_sampler, in.position.xy / view_data.screen_size).r;
 
-    var ambient = albedo * 0.03;
+    let irradiance = textureSample(environment_map, linear_sampler, n).rgb;
+    var ambient = albedo * irradiance * 0.03;
     ambient *= occlusion;
 
-    var ret = ambient + (kd * albedo / pi + specular) * radiance * ndotl * shadow;
+    var ret = ambient + (kd * albedo / pi * irradiance + specular) * radiance * ndotl * shadow;
     let gamma = 2.2;
     let exposure = 1.0;
     var mapped = vec3f(1.0) - exp(-ret.rgb * exposure);

@@ -7,8 +7,8 @@ namespace Fussion {
     void ScriptComponent::on_start()
     {
         if (auto klass = ScriptingEngine::inst().get_game_assembly()->get_class(class_name); klass) {
-            if (klass.value()->derives_from("Script")) {
-                m_instance = klass.value()->create_instance();
+            if (klass.unwrap()->derives_from("Script")) {
+                m_instance = klass.unwrap()->create_instance();
 
                 if (m_instance.is_valid()) {
                     m_instance.set_property("m_Owner", m_owner);
@@ -31,8 +31,8 @@ namespace Fussion {
     void ScriptComponent::test() const
     {
         if (auto klass = ScriptingEngine::inst().get_game_assembly()->get_class(class_name); klass) {
-            if (klass.value()->derives_from("Script")) {
-                if (auto inst = klass.value()->create_instance(); inst.is_valid()) {
+            if (klass.unwrap()->derives_from("Script")) {
+                if (auto inst = klass.unwrap()->create_instance(); inst.is_valid()) {
                     inst.set_property("m_Owner", m_owner);
                     inst.call_method("OnStart");
                 } else {

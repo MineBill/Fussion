@@ -165,7 +165,7 @@ TEST_CASE("String index_of", "[String]")
 
     auto maybe_index = test_str.index_of(String("needle"));
     REQUIRE(maybe_index.has_value());
-    REQUIRE(maybe_index.value() == 9);
+    REQUIRE(maybe_index.unwrap() == 9);
 
     auto not_found = test_str.index_of(String("missing"));
     REQUIRE(!not_found.has_value());
@@ -176,7 +176,7 @@ TEST_CASE("String replace", "[String]") {
     String test_str("foo bar baz");
     auto maybe_replaced_str = test_str.replace(String("bar"), String("qux"));
     REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.value() == String("foo qux baz"));
+    REQUIRE(maybe_replaced_str.unwrap() == String("foo qux baz"));
     REQUIRE(test_str == String("foo bar baz"));  // Original string should remain unchanged
 
     // Edge case: no replacement found
@@ -186,7 +186,7 @@ TEST_CASE("String replace", "[String]") {
     // Edge case: replacing with an empty string
     maybe_replaced_str = test_str.replace(String("bar"), String(""));
     REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.value() == String("foo  baz"));
+    REQUIRE(maybe_replaced_str.unwrap() == String("foo  baz"));
 
     // Edge case: replacing in an empty string
     String empty_str;
@@ -196,7 +196,7 @@ TEST_CASE("String replace", "[String]") {
     // Edge case: replacing entire string
     maybe_replaced_str = test_str.replace(String("foo bar baz"), String("new"));
     REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.value() == String("new"));
+    REQUIRE(maybe_replaced_str.unwrap() == String("new"));
 
     // Edge case: empty old_str
     maybe_replaced_str = test_str.replace(String(""), String("new"));

@@ -26,5 +26,6 @@ namespace Fussion {
         }
 
         post_processing.use_ssao = false;
+        environment_map = nullptr;
     }
 }

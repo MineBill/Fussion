@@ -7,7 +7,7 @@
 
 using namespace Fussion;
 
-Ref<Asset> ShaderSerializer::Load(EditorAssetMetadata metadata)
+Ref<Asset> ShaderSerializer::load(EditorAssetMetadata metadata)
 {
     return nullptr;
 }

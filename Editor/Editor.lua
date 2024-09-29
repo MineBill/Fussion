@@ -48,7 +48,7 @@ target "Editor"
     set_pcxxheader("Source/EditorPCH.h")
 
     if is_plat("windows") then
-        set_runtimes("MDd")
+        -- set_runtimes("MDd")
         add_ldflags("/WHOLEARCHIVE:Fussion", {force = true})
 
         add_options("LivePP")

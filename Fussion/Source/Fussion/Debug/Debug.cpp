@@ -47,7 +47,7 @@ namespace Fussion {
         }
         g_DebugData.Device = device;
 
-        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/DebugDraw.wgsl").value();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/DebugDraw.wgsl").unwrap();
 
         GPU::ShaderModuleSpec shader_spec{
             .label = "DebugDraw::Shader"sv,

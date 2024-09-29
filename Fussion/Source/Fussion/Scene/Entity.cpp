@@ -1,9 +1,9 @@
-﻿#include "FussionPCH.h"
-#include "Entity.h"
-#include "Fussion/Scene/Scene.h"
-#include "Serialization/Serializer.h"
+﻿#include "Entity.h"
 
 #include "Components/Camera.h"
+#include "Fussion/Scene/Scene.h"
+#include "FussionPCH.h"
+#include "Serialization/Serializer.h"
 
 #include <ranges>
 #include <tracy/Tracy.hpp>
@@ -12,22 +12,22 @@ namespace Fussion {
     Mat4 Transform::matrix() const
     {
         auto scale_mat = glm::scale(Mat4(1.0), CAST(glm::vec3, this->scale));
-        auto rotation_mat = glm::eulerAngleYXZ(
+        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
+        return translation_mat * rotation() * scale_mat;
+    }
+
+    Mat4 Transform::rotation() const
+    {
+        return glm::eulerAngleYXZ(
             glm::radians(euler_angles.y),
             glm::radians(euler_angles.x),
             glm::radians(euler_angles.z));
-        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
-        return translation_mat * rotation_mat * scale_mat;
     }
 
     Mat4 Transform::camera_matrix() const
     {
-        auto rotation_mat = glm::eulerAngleZXY(
-            glm::radians(euler_angles.z),
-            glm::radians(euler_angles.x),
-            glm::radians(euler_angles.y));
         auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
-        return rotation_mat * glm::inverse(translation_mat);
+        return rotation() * glm::inverse(translation_mat);
     }
 
     Vector3 Transform::forward() const
@@ -54,16 +54,17 @@ namespace Fussion {
         FSN_DESERIALIZE_MEMBER(scale);
     }
 
-    Entity::Entity(Entity const& other): transform(other.transform),
-                                         name(other.name),
-                                         m_parent(other.m_parent),
-                                         m_children(other.m_children),
-                                         m_components(std::move(other.m_components)),
-                                         m_removed_components(other.m_removed_components),
-                                         m_handle(other.m_handle),
-                                         m_scene(other.m_scene),
-                                         m_local_id(other.m_local_id),
-                                         m_enabled(other.m_enabled)
+    Entity::Entity(Entity const& other)
+        : transform(other.transform)
+        , name(other.name)
+        , m_parent(other.m_parent)
+        , m_children(other.m_children)
+        , m_components(std::move(other.m_components))
+        , m_removed_components(other.m_removed_components)
+        , m_handle(other.m_handle)
+        , m_scene(other.m_scene)
+        , m_local_id(other.m_local_id)
+        , m_enabled(other.m_enabled)
     {
 
         for (auto& [id, component] : other.m_components) {
@@ -72,15 +73,16 @@ namespace Fussion {
         }
     }
 
-    Entity::Entity(Entity&& other) noexcept: transform(std::move(other.transform)),
-                                             name(std::move(other.name)),
-                                             m_parent(other.m_parent),
-                                             m_children(std::move(other.m_children)),
-                                             m_components(std::move(other.m_components)),
-                                             m_removed_components(std::move(other.m_removed_components)),
-                                             m_handle(other.m_handle),
-                                             m_scene(other.m_scene),
-                                             m_enabled(other.m_enabled)
+    Entity::Entity(Entity&& other) noexcept
+        : transform(std::move(other.transform))
+        , name(std::move(other.name))
+        , m_parent(other.m_parent)
+        , m_children(std::move(other.m_children))
+        , m_components(std::move(other.m_components))
+        , m_removed_components(std::move(other.m_removed_components))
+        , m_handle(other.m_handle)
+        , m_scene(other.m_scene)
+        , m_enabled(other.m_enabled)
     {
         for (auto& [id, component] : m_components) {
             (void)id;

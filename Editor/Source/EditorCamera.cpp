@@ -2,20 +2,18 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorCamera.h"
-
-#include <imgui.h>
-
+#include "Fussion/Core/Application.h"
+#include "Fussion/Core/Time.h"
 #include "Fussion/Events/KeyboardEvents.h"
 #include "Fussion/Input/Input.h"
+#include "Fussion/Math/Math.h"
+#include "Fussion/Math/Vector4.h"
+
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-
-#include "Fussion/Core/Application.h"
-#include "Fussion/Core/Time.h"
-#include "Fussion/Math/Math.h"
-#include "Fussion/Math/Vector4.h"
+#include <imgui.h>
 
 using namespace Fussion;
 
@@ -45,7 +43,8 @@ void EditorCamera::on_update(f32 delta)
 
     m_perspective = glm::perspective(glm::radians(fov), m_screen_size.x / m_screen_size.y, near, far);
 
-    m_view = rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, position)));
+    m_view_rotation = rotation;
+    m_view = m_view_rotation * glm::inverse(glm::translate(Mat4(1.0), CAST(glm::vec3, position)));
 }
 
 void EditorCamera::handle_event(Event& event)
@@ -101,7 +100,7 @@ void EditorCamera::set_focus(bool focused)
 
 auto EditorCamera::to_render_camera() const -> RenderCamera
 {
-    return RenderCamera{
+    return RenderCamera {
         .perspective = m_perspective,
         .view = m_view,
         .position = position,

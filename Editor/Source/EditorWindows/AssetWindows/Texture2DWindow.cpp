@@ -1,6 +1,6 @@
-﻿#include "EditorPCH.h"
-#include "Texture2DWindow.h"
+﻿#include "Texture2DWindow.h"
 
+#include "EditorPCH.h"
 #include "EditorUI.h"
 #include "Fussion/Assets/AssetManager.h"
 
@@ -14,20 +14,20 @@ void Texture2DWindow::on_draw(f32 delta)
     auto settings = AssetManager::get_asset_metadata<Texture2DMetadata>(m_asset_handle);
     VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
 
-    ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
-    {
-        auto modified = EUI::property("Is Normal Map", &settings->is_normal_map);
-        // modified |= EUI::Property("Wrapping", &settings->Wrap);
-        // modified |= EUI::Property("Filter", &settings->Filter);
-        modified |= EUI::property("Format", &settings->format);
-        modified |= EUI::property("Generate Mipmaps", &settings->generate_mipmaps);
-        if (modified) {
-            Project::asset_manager()->refresh_asset(m_asset_handle);
+    if (!GPU::is_hdr(settings->format)) {
+        ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
+        {
+            auto modified = EUI::property("Is Normal Map", &settings->is_normal_map);
+            modified |= EUI::property("Format", &settings->format);
+            modified |= EUI::property("Generate Mipmaps", &settings->generate_mipmaps);
+            if (modified) {
+                Project::asset_manager()->refresh_asset(m_asset_handle);
+            }
         }
-    }
-    ImGui::EndChild();
+        ImGui::EndChild();
 
-    ImGui::SameLine();
+        ImGui::SameLine();
+    }
 
     ImGui::BeginChild("texture_preview", {}, ImGuiChildFlags_Border);
     {
@@ -46,4 +46,4 @@ void Texture2DWindow::on_draw(f32 delta)
     ImGui::EndChild();
 }
 
-void Texture2DWindow::on_save() {}
+void Texture2DWindow::on_save() { }

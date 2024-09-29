@@ -16,8 +16,9 @@ void ConsoleWindow::on_start() {}
 void ConsoleWindow::on_draw()
 {
     ZoneScoped;
-    auto const& entries = Editor::inst().log_entries();
-    std::ranges::copy(entries, std::back_inserter(m_log_entries));
+    // auto const& entries = Editor::inst().log_entries();
+    // std::vector<Fsn::LogEntry> {};
+    // std::ranges::copy(entries, std::back_inserter(m_log_entries));
 
     if (ImGui::Begin("Console")) {
         m_is_focused = ImGui::IsWindowFocused();

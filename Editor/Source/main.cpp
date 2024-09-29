@@ -1,8 +1,9 @@
-#include "EditorPCH.h"
 #include "EditorApplication.h"
+#include "EditorPCH.h"
+
 #include <Fussion/OS/Args.h>
 #if defined(FSN_LIVEPP_ENABLED)
-#include "LivePP/API/x64/LPP_API_x64_CPP.h"
+#    include "LivePP/API/x64/LPP_API_x64_CPP.h"
 #endif
 
 int main(int argc, char** argv)
@@ -16,7 +17,7 @@ int main(int argc, char** argv)
 #endif
 
     Fussion::Args::collect(argc, argv);
-    EditorApplication editor{};
+    EditorApplication editor {};
     editor.run();
 
 #if defined(FSN_LIVEPP_ENABLED)

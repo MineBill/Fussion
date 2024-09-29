@@ -1,6 +1,7 @@
 struct ViewData {
     projection: mat4x4f,
     view: mat4x4f,
+    rotation: mat4x4f,
     position: vec4f,
 }
 

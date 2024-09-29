@@ -1,12 +1,12 @@
 ﻿#pragma once
-#include "Log.h"
 #include "Fussion/Core/Types.h"
+#include "Log.h"
 
 #include <cstdio>
 #include <fstream>
 
 namespace Fussion {
-    class FileSink : public LogSink {
+    class FileSink final : public LogSink {
         explicit FileSink(std::string const& file_name);
 
     public:
@@ -17,6 +17,6 @@ namespace Fussion {
         virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     private:
-        std::ofstream m_out_file{};
+        std::ofstream m_out_file {};
     };
 }

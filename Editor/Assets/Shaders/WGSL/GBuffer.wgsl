@@ -22,6 +22,7 @@ struct WTF {
 struct ViewData {
     projection: mat4x4f,
     view: mat4x4f,
+    rotation: mat4x4f,
     position: vec4f,
     screen_size: vec2<f32>,
 }

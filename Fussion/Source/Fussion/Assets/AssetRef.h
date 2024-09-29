@@ -21,7 +21,7 @@ namespace Fussion {
         operator bool() const { return is_valid(); }
 
         [[nodiscard]]
-        bool is_valid() const { return m_is_valid; }
+        bool is_valid() const { return m_is_valid && m_handle != 0; }
 
         [[nodiscard]]
         bool is_loaded() const;

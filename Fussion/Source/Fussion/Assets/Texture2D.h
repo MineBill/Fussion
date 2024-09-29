@@ -6,7 +6,7 @@ namespace Fussion {
     class Texture2DMetadata final : public AssetMetadata {
         META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:
-        s32 width{}, height{};
+        u32 width{}, height{};
         GPU::TextureFormat format{ GPU::TextureFormat::RGBA8Unorm };
         // RHI::FilterMode Filter{ RHI::FilterMode::Linear };
         // RHI::ImageFormat Format{ RHI::ImageFormat::R8G8B8A8_UNORM };
@@ -24,6 +24,7 @@ namespace Fussion {
     class Texture2D final : public Asset {
     public:
         static Ref<Texture2D> create(std::span<u8> data, Texture2DMetadata const& metadata);
+        static Ref<Texture2D> create(std::span<f32> data, Texture2DMetadata const& metadata);
 
         GPU::Texture& image() { return m_image; }
 

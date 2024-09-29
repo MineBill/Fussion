@@ -94,7 +94,7 @@ namespace Fussion {
             return m_nullable_value;
         }
 
-        constexpr T& value() const
+        constexpr T& unwrap() const
         {
             VERIFY(m_nullable_value, "Tried to access empty Maybe");
             return *m_nullable_value;

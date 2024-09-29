@@ -10,7 +10,7 @@ namespace Fussion::GPU {
         OpenGL,
     };
 
-    enum class Features {
+    enum class Feature {
         TimestampQuery,
         PipelineStatistics,
         Float32Filterable,

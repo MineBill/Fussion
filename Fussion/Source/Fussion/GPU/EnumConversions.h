@@ -5,7 +5,7 @@
 namespace Fussion::GPU {
     auto to_wgpu(BackendRenderer backend) -> WGPUInstanceBackendFlags;
 
-    auto to_wgpu(Features feature) -> WGPUFeatureName;
+    auto to_wgpu(Feature feature) -> WGPUFeatureName;
 
     // auto to_wgpu(QueryType set) -> WGPUQueryType;
 

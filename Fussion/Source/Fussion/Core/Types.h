@@ -1,9 +1,8 @@
 ﻿#pragma once
-#include <memory>
-
-#include <glm/gtx/quaternion.hpp>
 #include <glm/ext/matrix_float3x3.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <memory>
 
 using s8 = int8_t;
 using s16 = int16_t;
@@ -56,4 +55,3 @@ Ref<T> make_ref(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
-

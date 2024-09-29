@@ -2,22 +2,20 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "EditorApplication.h"
-
-#include "Layers/ImGuiLayer.h"
-#include "Project/Project.h"
-#include "Layers/ProjectCreatorLayer.h"
 #include "Layers/Editor.h"
+#include "Layers/ImGuiLayer.h"
+#include "Layers/ProjectCreatorLayer.h"
+#include "Project/Project.h"
 
-#include <Fussion/Rendering/Renderer.h>
-#include <Fussion/Input/Input.h>
 #include <Fussion/Events/ApplicationEvents.h>
+#include <Fussion/Input/Input.h>
 #include <Fussion/Log/FileSink.h>
 #include <Fussion/OS/Args.h>
 #include <Fussion/OS/Dialog.h>
+#include <Fussion/Rendering/Renderer.h>
 #include <Fussion/Util/TextureImporter.h>
-
-#include <tracy/Tracy.hpp>
 #include <chrono>
+#include <tracy/Tracy.hpp>
 
 using namespace Fussion;
 
@@ -46,7 +44,7 @@ void EditorApplication::on_start()
 
     Project::initialize();
 
-    auto image = TextureImporter::load_image_from_memory({ LOGO32_DATA }).value();
+    auto image = TextureImporter::load_image_from_memory({ LOGO32_DATA }).unwrap();
     m_window->set_icon(image);
 
     g_imgui = make_ptr<ImGuiLayer>();
@@ -93,15 +91,15 @@ void EditorApplication::on_update(f32 delta)
 
     auto encoder = Renderer::device().create_command_encoder();
 
-    std::array color_attachments{
-        GPU::RenderPassColorAttachment{
+    std::array color_attachments {
+        GPU::RenderPassColorAttachment {
             .view = *view,
             .load_op = GPU::LoadOp::Clear,
             .store_op = GPU::StoreOp::Store,
             .clear_color = Color::Coral,
         }
     };
-    GPU::RenderPassSpec rp_spec{
+    GPU::RenderPassSpec rp_spec {
         .label = "Main RenderPass"sv,
         .color_attachments = color_attachments
     };
@@ -170,7 +168,6 @@ void EditorApplication::create_editor(Maybe<fs::path> path)
     auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
     Log::default_logger()->register_sink(FileSink::create(Project::logs_folder() / log_file));
-
 }
 
 void EditorApplication::create_editor_from_project_creator(fs::path path)

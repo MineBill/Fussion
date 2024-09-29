@@ -1,6 +1,7 @@
-﻿#include "FussionPCH.h"
-#include "FileSystem.h"
+﻿#include "FileSystem.h"
+
 #include "Fussion/Core/Core.h"
+#include "FussionPCH.h"
 
 #include <fstream>
 #include <iterator>
