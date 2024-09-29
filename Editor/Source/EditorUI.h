@@ -8,7 +8,6 @@
 #include <Fussion/Assets/Texture2D.h>
 #include <Fussion/Core/Concepts.h>
 #include <Fussion/Core/Maybe.h>
-
 #include <misc/cpp/imgui_stdlib.h>
 #include <string>
 
@@ -18,16 +17,16 @@ namespace EUI {
         WindowStyle& get_window_style(WindowStyles style);
     }
 
-    struct PropTypeGeneric {};
+    struct PropTypeGeneric { };
 
     struct PropTypeRange {
-        f32 min{}, max{};
+        f32 min {}, max {};
     };
 
     struct ImageButtonParams {
         ButtonStyles style_type = ButtonStyleImageButton;
-        Maybe<f32> alignment{};
-        Maybe<Vector2> size{};
+        Maybe<f32> alignment {};
+        Maybe<Vector2> size {};
         bool disabled = false;
     };
 
@@ -84,12 +83,8 @@ namespace EUI {
     template<typename T, typename TypeKind = PropTypeGeneric>
     bool property(std::string_view name, T* data, TypeKind kind = {})
     {
-        bool modified{ false };
-        constexpr auto table_flags =
-            ImGuiTableFlags_BordersInnerV |
-            ImGuiTableFlags_Resizable |
-            ImGuiTableFlags_NoSavedSettings |
-            ImGuiTableFlags_SizingStretchSame;
+        bool modified { false };
+        constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
         auto table_opened = ImGui::BeginTable(name.data(), 2, table_flags);
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(name.data());
@@ -134,6 +129,12 @@ namespace EUI {
         } else if constexpr (Fussion::IsInstanceOf<T, Fussion::AssetRef>) {
             auto class_type = meta_hpp::resolve_type<T>();
             asset_property(class_type, data);
+        } else if constexpr (std::is_same_v<T, Vector2>) {
+            modified |= ImGui::InputFloat2("", data->raw);
+        } else if constexpr (std::is_same_v<T, Vector3>) {
+            modified |= ImGui::InputFloat3("", data->raw);
+        } else if constexpr (std::is_same_v<T, Vector4>) {
+            modified |= ImGui::InputFloat4("", data->raw);
         } else {
             static_assert(false, "Not implemented!");
         }
@@ -147,11 +148,7 @@ namespace EUI {
 
     void property(std::string_view name, auto&& data)
     {
-        constexpr auto table_flags =
-            ImGuiTableFlags_BordersInnerV |
-            ImGuiTableFlags_Resizable |
-            ImGuiTableFlags_NoSavedSettings |
-            ImGuiTableFlags_SizingStretchSame;
+        constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
         auto table_opened = ImGui::BeginTable(name.data(), 2, table_flags);
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(name.data());
@@ -168,11 +165,11 @@ namespace EUI {
     }
 
     struct ButtonParams {
-        ButtonStyles style{ ButtonStyleGeneric };
-        f32 alignment{ 0.0f };
-        bool disabled{ false };
-        Maybe<Vector2> size{};
-        Maybe<ButtonStyle> override{};
+        ButtonStyles style { ButtonStyleGeneric };
+        f32 alignment { 0.0f };
+        bool disabled { false };
+        Maybe<Vector2> size {};
+        Maybe<ButtonStyle> override {};
     };
 
     /// Draws a button.
@@ -227,12 +224,11 @@ namespace EUI {
             }
         } else {
             if (opened) {
-                return std::optional<ResultType>{ func() };
+                return std::optional<ResultType> { func() };
             }
-            return std::optional<ResultType>{};
+            return std::optional<ResultType> {};
         }
     }
-
 
     void popup(std::string_view title, auto&& func)
     {
@@ -245,7 +241,7 @@ namespace EUI {
 
     struct ModalWindowParams {
         ImGuiWindowFlags flags = 0;
-        bool* opened{ nullptr };
+        bool* opened { nullptr };
     };
 
     template<typename Func>
@@ -263,21 +259,21 @@ namespace EUI {
             if (opened) {
                 auto&& ret = func();
                 ImGui::EndPopup();
-                return std::optional<ResultType>{ ret };
+                return std::optional<ResultType> { ret };
             }
-            return std::optional<ResultType>{};
+            return std::optional<ResultType> {};
         }
     }
 
     struct WindowParams {
-        WindowStyles style{ WindowStyleGeneric };
-        bool* opened{ nullptr };
-        ImGuiWindowFlags flags{ ImGuiWindowFlags_None };
-        Vector2 size{ 400, 400 };
-        bool dirty{ false };
-        bool centered{ false };
-        bool use_child{ true };
-        Maybe<WindowStyle> override{};
+        WindowStyles style { WindowStyleGeneric };
+        bool* opened { nullptr };
+        ImGuiWindowFlags flags { ImGuiWindowFlags_None };
+        Vector2 size { 400, 400 };
+        bool dirty { false };
+        bool centered { false };
+        bool use_child { true };
+        Maybe<WindowStyle> override {};
     };
 
     void window(std::string_view title, auto&& func, WindowParams params = {})

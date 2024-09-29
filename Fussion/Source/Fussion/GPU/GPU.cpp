@@ -268,7 +268,9 @@ namespace Fussion::GPU {
 
     void Sampler::release()
     {
-        wgpuSamplerRelease(as<WGPUSampler>());
+        if (handle != nullptr) {
+            wgpuSamplerRelease(as<WGPUSampler>());
+        }
     }
 
     Buffer::Buffer(HandleT handle, BufferSpec const& spec)

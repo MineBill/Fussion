@@ -1,5 +1,6 @@
-﻿#include "FussionPCH.h"
-#include "JsonSerializer.h"
+﻿#include "JsonSerializer.h"
+
+#include "FussionPCH.h"
 
 namespace Fussion {
     void JsonSerializer::initialize()
@@ -16,7 +17,6 @@ namespace Fussion {
             m_object_stack.top()[name] = value;
         }
     }
-
 
     void JsonSerializer::write(std::string_view name, s8 value)
     {
@@ -87,6 +87,10 @@ namespace Fussion {
     {
         begin_object(name, 0);
         object.serialize(*this);
+        if (false) {
+            pop_object();
+            return;
+        }
         end_object();
     }
 
@@ -143,6 +147,13 @@ namespace Fussion {
         }
     }
 
+    void JsonSerializer::pop_object()
+    {
+        m_object_stack.pop();
+        m_names.pop();
+        m_type_stack.pop();
+    }
+
     std::string JsonSerializer::to_string()
     {
         return m_object_stack.top().dump(2);
@@ -175,12 +186,12 @@ namespace Fussion {
 
     JsonDeserializer JsonDeserializer::from_json_object(nlohmann::json const& json)
     {
-        JsonDeserializer ds{};
+        JsonDeserializer ds {};
         ds.m_object_stack.emplace(nlohmann::ordered_json(json));
         return ds;
     }
 
-    void JsonDeserializer::initialize() {}
+    void JsonDeserializer::initialize() { }
 
     void JsonDeserializer::read(std::string_view name, s8& value)
     {
@@ -304,7 +315,7 @@ namespace Fussion {
         if (m_object_stack.top().is_null())
             return {};
         VERIFY(m_object_stack.top().is_object());
-        std::vector<std::string> keys{};
+        std::vector<std::string> keys {};
 
         for (auto [k, v] : m_object_stack.top().items()) {
             (void)v;

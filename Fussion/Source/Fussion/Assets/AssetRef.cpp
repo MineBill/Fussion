@@ -1,9 +1,11 @@
 ﻿#include "AssetRef.h"
+
 #include "AssetManager.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    AssetRefBase::AssetRefBase(AssetHandle handle): m_handle(handle)
+    AssetRefBase::AssetRefBase(AssetHandle handle)
+        : m_handle(handle)
     {
         if (!AssetManager::is_asset_handle_valid(m_handle)) {
             m_is_valid = false;
@@ -35,14 +37,12 @@ namespace Fussion {
         // Call once to trigger a load.
         (void)get_raw(type());
         // TODO: Fishy
-        while (!is_loaded()) {}
+        while (!is_loaded()) { }
     }
 
     void AssetRefBase::serialize(Serializer& ctx) const
     {
-        if (is_virtual())
-            return;
-        FSN_SERIALIZE_MEMBER(m_handle);
+        ctx.write("handle", is_virtual() ? 0_u64 : CAST(u64, this->m_handle));
     }
 
     void AssetRefBase::deserialize(Deserializer& ctx)

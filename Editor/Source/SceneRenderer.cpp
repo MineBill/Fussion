@@ -1628,10 +1628,7 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         buffer_count_offset = 0;
         for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
-            material->material_uniform_buffer.data.object_color = material->object_color;
-            material->material_uniform_buffer.data.metallic = material->metallic;
-            material->material_uniform_buffer.data.roughness = material->roughness;
-            material->material_uniform_buffer.flush();
+            material->update_buffer();
 
             auto albedo = material->albedo_map.get();
             if (!albedo) {

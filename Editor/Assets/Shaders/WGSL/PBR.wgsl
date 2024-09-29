@@ -211,6 +211,7 @@ struct Material {
     albedo_color: vec4f,
     metallic: f32,
     roughness: f32,
+    tiling: vec2<f32>,
 }
 
 @group(2) @binding(1) var<uniform> material: Material;
@@ -223,7 +224,7 @@ struct Material {
 @group(2) @binding(8) var shdadow_sampler: sampler;
 
 fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
-    var n = textureSample(normal_map, linear_sampler, in.frag_uv).rgb;
+    var n = textureSample(normal_map, linear_sampler, in.frag_uv * material.tiling).rgb;
     n = normalize(n * 2.0 - 1.0);
 
     let tbn = transpose(mat3x3f(in.tangent, in.bitangent, in.normal));
@@ -236,11 +237,11 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let h = normalize(v + l);
 
     let radiance = light.color.rgb;
-    let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv).rgb * material.albedo_color.rgb;
-    let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).b * material.metallic;
+    let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv * material.tiling).rgb * material.albedo_color.rgb;
+    let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv * material.tiling).b * material.metallic;
     var f0 = mix(vec3f(0.04), albedo, metalness);
 
-    let roughness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv).g * material.roughness;
+    let roughness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv * material.tiling).g * material.roughness;
     let ndf = distribution_ggx(n, h, roughness);
     let g = geometry_smith(n, v, l, roughness);
 
@@ -268,7 +269,7 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
 
     let shadow = do_directional_shadow(in, light, index);
 
-    let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv).r;
+    let occlusion = textureSample(occlusion_map, linear_sampler, in.frag_uv * material.tiling).r;
     let ssao_occlusion = textureSample(ssao_texture, linear_sampler, in.position.xy / view_data.screen_size).r;
 
     let irradiance = textureSample(environment_map, linear_sampler, n).rgb;
@@ -282,7 +283,7 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     mapped = pow(mapped, vec3f(1.0 / gamma));
     ret = mapped;
     ret *= ssao_occlusion;
-    ret += textureSample(emissive_map, linear_sampler, in.frag_uv).rgb;
+    ret += textureSample(emissive_map, linear_sampler, in.frag_uv * material.tiling).rgb;
 
     return ret;
 }

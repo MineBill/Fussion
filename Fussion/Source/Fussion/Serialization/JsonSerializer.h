@@ -30,6 +30,8 @@ namespace Fussion {
         virtual void begin_array(std::string_view name, size_t size) override;
         virtual void end_array() override;
 
+        void pop_object();
+
         std::string to_string();
 
     private:

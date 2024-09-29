@@ -1,6 +1,6 @@
-﻿#include "EditorPCH.h"
-#include "MaterialWindow.h"
+﻿#include "MaterialWindow.h"
 
+#include "EditorPCH.h"
 #include "EditorUI.h"
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"
@@ -17,9 +17,12 @@ void MaterialWindow::on_draw([[maybe_unused]] f32 delta)
         return;
     }
     EUI::property("Object Color", &material->object_color);
-    EUI::property("Metallic", &material->metallic, EUI::PropTypeRange{ .min = 0.0, .max = 1.0 });
-    EUI::property("Roughness", &material->roughness, EUI::PropTypeRange{ .min = 0.0, .max = 1.0 });
+    EUI::property("Metallic", &material->metallic, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
+    EUI::property("Roughness", &material->roughness, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
 
+    if (EUI::property("Tiling", &material->tiling)) {
+        // material->update_sampler();
+    }
     if (ImGui::CollapsingHeader("Maps", ImGuiTreeNodeFlags_DefaultOpen)) {
         EUI::property("Albedo Map", &material->albedo_map);
         EUI::property("Normal Map", &material->normal_map);
