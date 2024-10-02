@@ -371,6 +371,9 @@ namespace Fussion {
             for (auto& component : m_components | std::views::values) {
                 component->on_debug_draw(ctx);
             }
+
+            m_scene->m_box.include(m_box);
+            Debug::draw_box(m_box, 0.0f, Color::Coral);
         }
     }
 

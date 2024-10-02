@@ -15,8 +15,9 @@ namespace EUI {
         }
     }
 
-    void asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data)
+    bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data)
     {
+        bool modified {false};
         auto m_Handle = class_type.get_member("m_Handle");
         auto GetType = class_type.get_method("GetType");
         auto asset_type = GetType(data).as<Fussion::AssetType>();
@@ -39,6 +40,7 @@ namespace EUI {
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Clear")) {
                     m_Handle.set(data, Fussion::AssetHandle(0));
+                    modified = true;
                 }
                 ImGui::EndPopup();
             }
@@ -59,6 +61,7 @@ namespace EUI {
 
                 if (incoming_metadata.type == asset_type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
                     m_Handle.set(data, *incoming_handle);
+                    modified = true;
                 }
             }
 
@@ -74,5 +77,6 @@ namespace EUI {
         }, { .size = Vector2{ 16, 16 } });
         ImGui::PopStyleVar();
         ImGui::SetCursorPos(old_pos);
+        return modified;
     }
 }

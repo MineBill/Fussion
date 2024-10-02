@@ -1,20 +1,21 @@
 ﻿#pragma once
-#include <Fussion/Core/Concepts.h>
 #include "Fussion/Core/Core.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Math/Vector2.h"
 
+#include <Fussion/Core/Concepts.h>
+
 namespace Fussion {
     struct Vector3 final {
 #if USE_VECTOR_F64
-    using Real = f64;
+        using Real = f64;
 #else
         using Real = f32;
 #endif
 
 #if OS_WINDOWS
-#pragma warning(push)
-#pragma warning(disable: 4201)
+#    pragma warning(push)
+#    pragma warning(disable : 4201)
 #endif
         union {
             struct {
@@ -24,16 +25,46 @@ namespace Fussion {
             Real raw[3];
         };
 #if OS_WINDOWS
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
-        Vector3(): x(0), y(0), z(0) {}
-        explicit Vector3(ScalarType auto x): x(CAST(Real, x)), y(0), z(0) {}
-        Vector3(ScalarType auto x, ScalarType auto y): x(CAST(Real, x)), y(CAST(Real, y)), z(0) {}
-        Vector3(ScalarType auto x, ScalarType auto y, ScalarType auto z): x(CAST(Real, x)), y(CAST(Real, y)), z(CAST(Real, z)) {}
+        Vector3()
+            : x(0)
+            , y(0)
+            , z(0)
+        {
+        }
+        explicit Vector3(ScalarType auto x)
+            : x(CAST(Real, x))
+            , y(0)
+            , z(0)
+        {
+        }
+        Vector3(ScalarType auto x, ScalarType auto y)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+            , z(0)
+        {
+        }
+        Vector3(ScalarType auto x, ScalarType auto y, ScalarType auto z)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+            , z(CAST(Real, z))
+        {
+        }
 
-        explicit Vector3(Vector2 const& v): x(v.x), y(v.y), z(0) {}
-        explicit Vector3(Vector2 const& v, ScalarType auto z): x(v.x), y(v.y), z(CAST(Real, z)) {}
+        explicit Vector3(Vector2 const& v)
+            : x(v.x)
+            , y(v.y)
+            , z(0)
+        {
+        }
+        explicit Vector3(Vector2 const& v, ScalarType auto z)
+            : x(v.x)
+            , y(v.y)
+            , z(CAST(Real, z))
+        {
+        }
 
         operator Vector2() const
         {
@@ -117,7 +148,12 @@ namespace Fussion {
             return *this;
         }
 
-        Vector3(glm::vec3 v): x(v.x), y(v.y), z(v.z) {}
+        Vector3(glm::vec3 v)
+            : x(v.x)
+            , y(v.y)
+            , z(v.z)
+        {
+        }
 
         operator glm::vec3() const
         {

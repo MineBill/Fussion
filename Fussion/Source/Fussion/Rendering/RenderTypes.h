@@ -28,12 +28,14 @@ namespace Fussion {
             std::array<Mat4, 4> light_space_matrix {};
             Vector4 direction {};
             Color color {};
+            f32 brightness {};
+            f32 __padding[3] {};
         } shader_data;
 
         f32 split {};
     };
 
-    static_assert(sizeof(GPUDirectionalLight) == 292, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
+    static_assert(sizeof(GPUDirectionalLight) == 308, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
     static_assert(sizeof(GPUDirectionalLight::ShaderStruct) % 16 == 0, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
 
     enum class RenderState {
@@ -59,7 +61,23 @@ namespace Fussion {
     DECLARE_OPERATORS_FOR_FLAGS(DrawPassFlags)
 
     struct PostProcessing {
+        struct SSAO {
+            // Unused for now.
+            u32 kernel_size { 64 };
+            f32 radius { 0.125f };
+            f32 bias { 0.025f };
+            f32 noise_scale { 4.0f };
+        };
+
+        struct TonemappingSettings {
+            f32 gamma { 2.2f };
+            f32 exposure { 1.0f };
+            /// 0 nothing, 1 aces, 2 reinhard
+            u32 mode { 0 };
+        } tonemapping_settings {};
+
         bool use_ssao {};
+        SSAO ssao {};
     };
 
     // NOTE: Ideally this would hold an actual material, that defines

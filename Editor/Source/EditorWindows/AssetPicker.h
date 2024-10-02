@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <Fussion/Assets/Asset.h>
 
+/// Generic asset picker.
+/// Displays a window of all assignable types for an asset, of which one can be picked and assigned to a member.
 class AssetPicker final {
 public:
     void update();

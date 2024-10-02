@@ -15,5 +15,6 @@ namespace Fussion {
 
         static auto load_hdr_image_from_memory(std::span<u8> data) -> Maybe<FloatImage>;
         static auto load_hdr_image_from_file(std::filesystem::path const& path) -> Maybe<FloatImage>;
+        static auto load_hdr_texture_from_memory(std::span<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
     };
 }

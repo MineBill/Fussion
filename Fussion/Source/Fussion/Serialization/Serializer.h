@@ -133,7 +133,7 @@ namespace Fussion {
 
         template<typename E>
             requires std::is_enum_v<E>
-        void read(std::string_view name, E value)
+        void read(std::string_view name, E& value)
         {
             std::string v;
             read(name, v);

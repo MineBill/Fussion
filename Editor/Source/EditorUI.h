@@ -78,7 +78,7 @@ namespace EUI {
         image_button(texture->image().view, func, params);
     }
 
-    void asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data);
+    bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data);
 
     template<typename T, typename TypeKind = PropTypeGeneric>
     bool property(std::string_view name, T* data, TypeKind kind = {})

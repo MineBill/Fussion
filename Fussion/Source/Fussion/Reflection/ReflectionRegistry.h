@@ -5,6 +5,7 @@ namespace Fussion {
     public:
         ReflectionRegistry();
         static void Register();
+        static void RegisterGenerated();
     };
 }
 

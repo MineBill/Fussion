@@ -11,12 +11,10 @@
 #include "Scene/Scene.h"
 
 namespace Fussion {
-    void register_generated();
-
     ReflectionRegistry::ReflectionRegistry()
     {
         Register();
-        register_generated();
+        RegisterGenerated();
     }
 
     void ReflectionRegistry::Register()

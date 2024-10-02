@@ -2,20 +2,24 @@
 
 namespace Fussion::Attributes {
     struct [[Attribute]] RegionAttribute {
-        std::string name{};
+        std::string name {};
     };
 
     struct [[Attribute]] RangeAttribute {
-        f32 min{};
-        f32 max{};
-        f32 step{ 1.0f };
+        f32 min {};
+        f32 max {};
+        f32 step { 1.0f };
     };
 
     struct [[Attribute]] EditorNameAttribute {
-        std::string name{};
+        std::string name {};
     };
 
     struct [[Attribute]] EditorButtonAttribute {
-        std::string button_text{};
+        std::string button_text {};
+    };
+
+    struct [[Attribute]] NotifyForAttribute {
+        std::string member_name {};
     };
 }

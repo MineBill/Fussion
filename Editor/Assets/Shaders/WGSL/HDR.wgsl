@@ -15,12 +15,19 @@ struct FragmentOutput {
     @location(0) color: vec4<f32>,
 }
 
+struct TonemappingSettings {
+    gamma: f32,
+    exposure: f32,
+    mode: u32,
+}
+
 @group(0) @binding(0) var hdr_texture: texture_2d<f32>;
 @group(0) @binding(1) var hdr_sampler: sampler;
+@group(0) @binding(2) var<uniform> settings: TonemappingSettings;
 
 // Maps HDR values to linear values
 // Based on http://www.oscars.org/science-technology/sci-tech-projects/aces
-fn aces_tone_map(hdr: vec3<f32>) -> vec3<f32> {
+fn aces(hdr: vec3<f32>) -> vec3<f32> {
     let m1 = mat3x3(
         0.59719, 0.07600, 0.02840,
         0.35458, 0.90834, 0.13383,
@@ -45,13 +52,16 @@ fn reinhard(x: vec3<f32>) -> vec3<f32> {
 fn fs_main(in: VertexOutput) -> FragmentOutput {
     var out: FragmentOutput;
     let hdr = textureSample(hdr_texture, hdr_sampler, in.uv);
-    let sdr = aces_tone_map(hdr.rgb);
-//    let sdr = reinhard(hdr.rgb);
-    let gamma = 2.2;
-    let exposure = 1.0;
-    var mapped = vec3f(1.0) - exp(-sdr.rgb * exposure);
-    mapped = pow(mapped, vec3f(1.0 / gamma));
-    out.color = vec4f(mapped, 1.0);
-//    out.color = vec4f(sdr, hdr.a);
+    var sdr = hdr.rgb * settings.exposure;
+
+    if (settings.mode == 1) {
+        sdr = aces(sdr.rgb);
+    } else if (settings.mode == 2) {
+        sdr = reinhard(sdr.rgb);
+    }
+
+    sdr = pow(sdr, vec3f(1.0f / settings.gamma));
+
+    out.color = vec4f(sdr, 1.0);
     return out;
 }

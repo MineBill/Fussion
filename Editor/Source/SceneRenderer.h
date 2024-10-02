@@ -3,9 +3,9 @@
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 #include "Fussion/Rendering/Pipelines/CubeMapSkybox.h"
-#include "Fussion/Rendering/Pipelines/HDRPipeline.h"
 #include "Fussion/Rendering/Pipelines/IBLIrradiance.h"
 #include "Fussion/Rendering/Pipelines/SSAOBlur.h"
+#include "Fussion/Rendering/Pipelines/TonemappingPipeline.h"
 #include "Fussion/Rendering/UniformBuffer.h"
 #include "Fussion/Scene/Scene.h"
 
@@ -85,8 +85,12 @@ struct SSAO {
 
     Fussion::GPU::Buffer samples_buffer {};
 
+    Fussion::UniformBuffer<Fussion::PostProcessing::SSAO> Options {};
+
     void init(Vector2 const& size, GBuffer const& gbuffer, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
     void resize(Vector2 const& new_size, GBuffer const& gbuffer);
+
+    void UpdateBindGroup(GBuffer const& gbuffer);
 };
 
 class SceneRenderer {
@@ -157,7 +161,7 @@ private:
 
     void create_scene_render_target(Vector2 const& size);
 
-    Fussion::HDRPipeline m_hdr_pipeline {};
+    Fussion::TonemappingPipeline m_hdr_pipeline {};
     Fussion::CubeSkybox m_cube_skybox {};
     std::map<Fussion::AssetHandle, Fussion::GPU::Texture> m_environment_maps {};
 

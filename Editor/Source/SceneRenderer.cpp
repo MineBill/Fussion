@@ -279,6 +279,16 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
             },
             .count = 1,
         },
+        GPU::BindGroupLayoutEntry {
+            .binding = 6,
+            .visibility = GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Buffer {
+                .type = GPU::BufferBindingType::Uniform {},
+                .has_dynamic_offset = false,
+                .min_binding_size = None(),
+            },
+            .count = 1,
+        },
     };
 
     GPU::BindGroupLayoutSpec bgl_spec {
@@ -347,41 +357,9 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
         Vector2 { 4, 4 },
         sizeof(Vector4));
 
-    std::array bing_group_entries {
-        GPU::BindGroupEntry {
-            .binding = 0,
-            .resource = gbuffer.rt_position.view,
-        },
-        GPU::BindGroupEntry {
-            .binding = 1,
-            .resource = gbuffer.rt_normal.view,
-        },
-        GPU::BindGroupEntry {
-            .binding = 2,
-            .resource = noise_texture.view,
-        },
-        GPU::BindGroupEntry {
-            .binding = 3,
-            .resource = sampler,
-        },
-        GPU::BindGroupEntry {
-            .binding = 4,
-            .resource = noise_sampler,
-        },
-        GPU::BindGroupEntry {
-            .binding = 5,
-            .resource = GPU::BufferBinding {
-                .buffer = samples_buffer,
-                .offset = 0,
-                .size = buffer_spec.size,
-            },
-        },
-    };
-    GPU::BindGroupSpec bg_spec {
-        .label = "SSAO::bing_group"sv,
-        .entries = bing_group_entries
-    };
-    bind_group = Renderer::device().create_bind_group(bind_group_layout, bg_spec);
+    Options = UniformBuffer<PostProcessing::SSAO>::create(Renderer::device(), "SSAO Options"sv);
+
+    UpdateBindGroup(gbuffer);
 
     std::array bind_group_layouts {
         global_bind_group_layout,
@@ -426,6 +404,11 @@ void SSAO::resize(Vector2 const& new_size, GBuffer const& gbuffer)
     };
     render_target = Renderer::device().create_texture(spec);
 
+    UpdateBindGroup(gbuffer);
+}
+
+void SSAO::UpdateBindGroup(GBuffer const& gbuffer)
+{
     bind_group.release();
     std::array bing_group_entries {
         GPU::BindGroupEntry {
@@ -454,6 +437,14 @@ void SSAO::resize(Vector2 const& new_size, GBuffer const& gbuffer)
                 .buffer = samples_buffer,
                 .offset = 0,
                 .size = samples_buffer.size() },
+        },
+        GPU::BindGroupEntry {
+            .binding = 6,
+            .resource = GPU::BufferBinding {
+                .buffer = Options.buffer(),
+                .offset = 0,
+                .size = Options.buffer().size(),
+            },
         },
     };
     GPU::BindGroupSpec bg_spec {
@@ -724,7 +715,7 @@ void SceneRenderer::init()
                 .binding = 8,
                 .visibility = GPU::ShaderStage::Fragment,
                 .type = GPU::BindingType::Sampler {
-                    .type = GPU::SamplerBindingType::Filtering,
+                    .type = GPU::SamplerBindingType::Comparison,
                 },
                 .count = 1,
             },
@@ -816,7 +807,7 @@ void SceneRenderer::init()
             .fragment = GPU::FragmentStage {
                 .targets = {
                     GPU::ColorTargetState {
-                        .format = HDRPipeline::Format,
+                        .format = TonemappingPipeline::Format,
                         .blend = GPU::BlendState::get_default(),
                         .write_mask = GPU::ColorWrite::All,
                     } } },
@@ -863,7 +854,7 @@ void SceneRenderer::init()
             .fragment = GPU::FragmentStage {
                 .targets = {
                     GPU::ColorTargetState {
-                        .format = HDRPipeline::Format,
+                        .format = TonemappingPipeline::Format,
                         .blend = GPU::BlendState::get_default(),
                         .write_mask = GPU::ColorWrite::All,
                     },
@@ -900,7 +891,8 @@ void SceneRenderer::init()
     m_linear_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
     bilinear_sampler_spec.mag_filter = GPU::FilterMode::Linear;
     bilinear_sampler_spec.min_filter = GPU::FilterMode::Linear;
-    // bilinear_sampler_spec.anisotropy_clamp = 1_u16;
+    bilinear_sampler_spec.anisotropy_clamp = 1_u16;
+    bilinear_sampler_spec.compare = GPU::CompareFunction::LessEqual;
 
     m_shadow_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
 
@@ -977,7 +969,7 @@ void SceneRenderer::init()
             .fragment = GPU::FragmentStage {
                 .targets = {
                     GPU::ColorTargetState {
-                        .format = HDRPipeline::Format,
+                        .format = TonemappingPipeline::Format,
                         .blend = GPU::BlendState::get_default(),
                         .write_mask = GPU::ColorWrite::All,
                     },
@@ -1102,7 +1094,7 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     }
     pbr_pass(encoder, packet, game_view);
 
-    m_hdr_pipeline.process(encoder, m_scene_render_target.view);
+    m_hdr_pipeline.process(encoder, m_scene_render_target.view, m_render_context);
 
     for (auto& group : m_object_groups_to_release) {
         group.release();
@@ -1568,6 +1560,9 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         begin_pipeline_statistics_query(pass, m_statistics_query_set, 1);
 
         if (m_render_context.post_processing.use_ssao) {
+            ssao.Options.data = m_render_context.post_processing.ssao;
+            ssao.Options.flush();
+
             pass.set_pipeline(ssao.pipeline);
             pass.set_bind_group(m_global_bind_group, 0);
             pass.set_bind_group(ssao.bind_group, 1);
@@ -1818,7 +1813,7 @@ void SceneRenderer::create_scene_render_target(Vector2 const& size)
         .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
         .dimension = GPU::TextureDimension::D2,
         .size = Vector3 { size, 1 },
-        .format = GPU::TextureFormat::RGBA8Unorm,
+        .format = GPU::TextureFormat::RGBA8UnormSrgb,
         .sample_count = 1,
         .aspect = GPU::TextureAspect::All,
     };

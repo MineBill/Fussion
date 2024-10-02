@@ -11,7 +11,7 @@ namespace Fussion {
     {
         Image image{};
         int actual_channels_on_image, w, h;
-
+        stbi_set_flip_vertically_on_load(false);
         auto* d = stbi_load_from_memory(data.data(), CAST(int, data.size_bytes()), &w, &h, &actual_channels_on_image, 4);
         if (d == nullptr) {
             LOG_ERRORF("Failed to load image: {}", stbi_failure_reason());
@@ -44,6 +44,7 @@ namespace Fussion {
         Texture2DMetadata metadata{};
         metadata.width = image->width;
         metadata.height = image->height;
+        metadata.format = GPU::TextureFormat::RGBA8Unorm;
         return Texture2D::create(image->data, metadata);
     }
 
@@ -64,28 +65,7 @@ namespace Fussion {
     {
         (void)texture;
         (void)path;
-        auto encoder = Renderer::device().create_command_encoder("Image Download Encoder");
-        // ...
-        Renderer::device().submit_command_buffer(encoder.finish());
-        // auto& image_spec = image->GetSpec();
-        //
-        // auto buffer_spec = RHI::BufferSpecification{
-        //     .Label = "Save Image To File",
-        //     .Usage = RHI::BufferUsage::TransferDestination,
-        //     .Size = image_spec.Width * image_spec.Height * 4,
-        //     .Mapped = true
-        // };
-        // auto buffer = RHI::Device::Instance()->CreateBuffer(buffer_spec);
-        //
-        // auto old_layout = image->GetSpec().FinalLayout;
-        // image->TransitionLayout(RHI::ImageLayout::TransferSrcOptimal);
-        // auto cmd = RHI::Device::Instance()->BeginSingleTimeCommand();
-        // cmd->CopyImageToBuffer(image, buffer, Vector2(image_spec.Width, image_spec.Height));
-        // RHI::Device::Instance()->EndSingleTimeCommand(cmd);
-        // image->TransitionLayout(old_layout);
-        //
-        // buffer->GetMappedData();
-        // stbi_write_jpg(path.string().data(), CAST(s32, image_spec.Width), CAST(s32, image_spec.Height), 4, buffer->GetMappedData(), 100);
+        UNIMPLEMENTED;
     }
 
     auto TextureImporter::load_hdr_image_from_memory(std::span<u8> data) -> Maybe<FloatImage>
@@ -118,5 +98,19 @@ namespace Fussion {
         if (!data)
             return None();
         return load_hdr_image_from_memory(*data);
+    }
+
+    auto TextureImporter::load_hdr_texture_from_memory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    {
+        auto image = load_hdr_image_from_memory(data);
+        if (!image) {
+            return None();
+        }
+        Texture2DMetadata metadata{};
+        metadata.width = image->width;
+        metadata.height = image->height;
+        metadata.is_normal_map = is_normal_map;
+        metadata.format = GPU::TextureFormat::RGBA16Float;
+        return Texture2D::create(image->data, metadata);
     }
 }

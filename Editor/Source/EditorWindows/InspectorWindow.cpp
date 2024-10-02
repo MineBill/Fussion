@@ -1,20 +1,20 @@
-﻿#include "EditorPCH.h"
-#include "InspectorWindow.h"
-#include "Layers/Editor.h"
-#include "ImGuiHelpers.h"
+﻿#include "InspectorWindow.h"
+
+#include "EditorPCH.h"
 #include "EditorUI.h"
 #include "Fussion/Assets/Model.h"
 #include "Fussion/Math/Color.h"
 #include "Fussion/Reflection/Attributes.h"
+#include "Fussion/Scene/Component.h"
+#include "Fussion/Scene/Components/BaseComponents.h"
+#include "Fussion/Scene/Components/MeshRenderer.h"
+#include "Fussion/Scene/Components/ScriptComponent.h"
+#include "ImGuiHelpers.h"
+#include "Layers/Editor.h"
 
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <tracy/Tracy.hpp>
-
-#include "Fussion/Scene/Components/BaseComponents.h"
-#include "Fussion/Scene/Component.h"
-#include "Fussion/Scene/Components/MeshRenderer.h"
-#include "Fussion/Scene/Components/ScriptComponent.h"
 
 using namespace Fussion;
 
@@ -46,7 +46,21 @@ void InspectorWindow::on_draw()
 bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::class_type component_type, meta_hpp::uvalue ptr)
 {
     ZoneScoped;
-    bool modified{ false };
+    bool modified { false };
+
+    auto notify_change = [&component_type, &ptr](std::string_view member_name) {
+        for (auto const& method : component_type.get_methods()) {
+            if (method.get_metadata().contains("NotifyForAttribute")) {
+                auto& notify_attribute = method.get_metadata().at("NotifyForAttribute").as<Attributes::NotifyForAttribute>();
+                if (member_name == notify_attribute.member_name) {
+                    auto result = method.try_invoke(ptr);
+                    if (result.has_error()) {
+                        LOG_ERRORF("Could not invoke method: {}", meta_hpp::get_error_code_message(result.get_error()));
+                    }
+                }
+            }
+        }
+    };
 
     auto draw_props = [&] {
         for (auto const& member : component_type.get_members()) {
@@ -64,12 +78,16 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
                 (void)region;
                 // TODO: Support regions. Appending to the same collapsing header is not possible.
                 EUI::property(member_name, [&] {
-                    draw_property(std::move(value), member, ptr);
+                    if (draw_property(std::move(value), member, ptr)) {
+                        notify_change(member_name);
+                    }
                 });
             } else {
                 if (!metadata.contains("vector")) {
                     EUI::property(member_name, [&] {
-                        draw_property(std::move(value), member, ptr);
+                        if (draw_property(std::move(value), member, ptr)) {
+                            notify_change(member_name);
+                        }
                     });
                 }
             }
@@ -105,7 +123,8 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
     ImGui::PushID(CAST(s32, component_type.get_hash()));
     EUI::image_button(EditorStyle::get_style().editor_icons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
-    }, { .size = Vector2{ line_height, line_height } });
+    },
+        { .size = Vector2 { line_height, line_height } });
 
     if (ImGui::BeginPopupContextItem("ComponentSettings")) {
         if (ImGui::MenuItem("Remove Component")) {
@@ -143,7 +162,7 @@ bool InspectorWindow::draw_component([[maybe_unused]] Entity& entity, meta_hpp::
 bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::member const& member, meta_hpp::uvalue& ptr)
 {
     ZoneScoped;
-    bool modified{ false };
+    bool modified { false };
     auto const prop_type = prop_value.get_type().as_pointer().get_data_type();
     auto& metadata = member.get_metadata();
     if (prop_type.is_number() && !prop_value.is<bool*>()) {
@@ -172,7 +191,7 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
                 modified = true;
             }
         } else {
-            if (ImGui::InputScalar("", type, data_ptr)) {
+            if (ImGui::DragScalar("", type, data_ptr, 0.1f)) {
                 modified = true;
             }
         }
@@ -195,7 +214,7 @@ bool InspectorWindow::draw_property(meta_hpp::uvalue prop_value, meta_hpp::membe
     } else if (prop_type.is_class()) {
         auto class_type = prop_type.as_class();
         if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
-            EUI::asset_property(class_type, std::move(prop_value));
+            modified |= EUI::asset_property(class_type, std::move(prop_value));
         } else {
             ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
         }
@@ -224,7 +243,7 @@ constexpr auto MakeAddComponentButtonStyle() -> ButtonStyle
     auto style = ButtonStyle::make_default();
     // style.SetButtonColor(Color::FromHex(0x405070FF));
     style.border_shadow_color = Color::Transparent;
-    style.padding = Vector2{ 10, 5 };
+    style.padding = Vector2 { 10, 5 };
     style.rounding = 1;
     style.border = true;
     return style;
@@ -234,7 +253,7 @@ bool InspectorWindow::draw_entity(Entity& e)
 {
     ZoneScoped;
 
-    bool modified{ false };
+    bool modified { false };
     auto& style = EditorStyle::get_style();
 
     if (ImGui::TreeNode("Debug")) {
@@ -277,7 +296,8 @@ bool InspectorWindow::draw_entity(Entity& e)
 
     EUI::button("Add Component", [] {
         ImGui::OpenPopup("Popup::AddComponent");
-    }, { .alignment = 0.5f, .override = button_style });
+    },
+        { .alignment = 0.5f, .override = button_style });
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
         auto scope = meta_hpp::resolve_scope("Components");

@@ -7,7 +7,7 @@ namespace Fussion {
         META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:
         u32 width{}, height{};
-        GPU::TextureFormat format{ GPU::TextureFormat::RGBA8Unorm };
+        GPU::TextureFormat format{ GPU::TextureFormat::RGBA8UnormSrgb };
         // RHI::FilterMode Filter{ RHI::FilterMode::Linear };
         // RHI::ImageFormat Format{ RHI::ImageFormat::R8G8B8A8_UNORM };
         // RHI::WrapMode Wrap{ RHI::WrapMode::Repeat };

@@ -37,6 +37,7 @@ namespace Fussion {
             {
                 .direction = Vector4{ -m_owner->transform.forward() },
                 .color = light_color,
+                .brightness = brightness,
             },
             split_lambda,
         });
@@ -47,6 +48,7 @@ namespace Fussion {
         Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(light_color);
         FSN_SERIALIZE_MEMBER(split_lambda);
+        FSN_SERIALIZE_MEMBER(brightness);
     }
 
     void DirectionalLight::deserialize(Deserializer& ctx)
@@ -54,5 +56,6 @@ namespace Fussion {
         Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(light_color);
         FSN_DESERIALIZE_MEMBER(split_lambda);
+        FSN_DESERIALIZE_MEMBER(brightness);
     }
 }

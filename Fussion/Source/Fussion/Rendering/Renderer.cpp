@@ -27,9 +27,10 @@ namespace Fussion {
         });
 
         auto surface = instance.surface(&window);
-        auto adapter = instance.adapter(surface, {
-                                                     .power_preference = GPU::DevicePower::HighPerformance,
-                                                 });
+        auto adapter = instance.adapter(surface,
+            {
+                .power_preference = GPU::DevicePower::HighPerformance,
+            });
 
         GPU::DeviceSpec spec {
             .label = String("Device"),
@@ -123,6 +124,10 @@ namespace Fussion {
 #include "white_texture.png.h"
     };
 
+    static unsigned char g_white_texture_hdr[] = {
+#include "white_texture.hdr.h"
+    };
+
     static unsigned char g_black_texture_png[] = {
 #include "black_texture.png.h"
     };
@@ -165,6 +170,16 @@ namespace Fussion {
             .array_layer_count = 6,       // TODO: Make configurable
             .aspect = texture_spec.aspect // TODO: Make configurable
         });
+
+        auto data = TextureImporter::load_hdr_texture_from_memory(g_white_texture_hdr).unwrap();
+
+        auto encoder = m_device.create_command_encoder();
+
+        for (u32 i = 0; i < 6; ++i) {
+            encoder.copy_texture_to_texture(data.get()->image(), m_white_cube_texture, { 1, 1 }, 0, 0, 0, i);
+        }
+        m_device.submit_command_buffer(encoder.finish());
+        encoder.release();
     }
 
     bool Renderer::has_pipeline_statistics()

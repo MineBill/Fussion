@@ -17,9 +17,9 @@ namespace Fussion {
 
     Scene::Scene(Scene const& other)
         : Asset(other)
-          , m_name(other.m_name)
-          , m_entities(other.m_entities)
-          , m_dirty(other.m_dirty)
+        , m_name(other.m_name)
+        , m_entities(other.m_entities)
+        , m_dirty(other.m_dirty)
     {
         m_handle = other.m_handle;
         for (auto& entity : m_entities | std::views::values) {
@@ -33,9 +33,9 @@ namespace Fussion {
 
     Scene::Scene(Scene&& other) noexcept
         : Asset(std::move(other))
-          , m_name(std::move(other.m_name))
-          , m_entities(std::move(other.m_entities))
-          , m_dirty(other.m_dirty)
+        , m_name(std::move(other.m_name))
+        , m_entities(std::move(other.m_entities))
+        , m_dirty(other.m_dirty)
     {
         m_handle = other.m_handle;
         for (auto& entity : m_entities | std::views::values) {
@@ -110,10 +110,12 @@ namespace Fussion {
 
     void Scene::on_debug_draw(DebugDrawContext& ctx)
     {
+        m_box =  BoundingBox();
         for (auto& [id, entity] : m_entities) {
             (void)id;
             entity.on_debug_draw(ctx);
         }
+        Debug::draw_box(m_box, 0.0f, Color::Pink);
     }
 
     auto Scene::create_entity(std::string const& name, EntityHandle parent) -> Entity*
@@ -229,9 +231,9 @@ namespace Fussion {
         // the entity, we defer the parenting operations until all the
         // entities are loaded.
         struct ParentChildPair {
-            EntityHandle Parent{}, Child{};
+            EntityHandle Parent {}, Child {};
         };
-        std::vector<ParentChildPair> entities_to_resolve{};
+        std::vector<ParentChildPair> entities_to_resolve {};
 
         for (size_t i = 0; i < size; i++) {
             Entity e;

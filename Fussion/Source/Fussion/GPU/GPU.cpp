@@ -407,6 +407,8 @@ namespace Fussion::GPU {
 
     void Texture::release()
     {
+        if (!handle)
+            return;
         wgpuTextureRelease(CAST(WGPUTexture, handle));
         if (view != nullptr) {
             view.release();

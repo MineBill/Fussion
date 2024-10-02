@@ -1,54 +1,47 @@
 #include "FussionPCH.h"
-#include "HDRPipeline.h"
-
 #include "GPU/ShaderProcessor.h"
 #include "Rendering/Renderer.h"
+#include "TonemappingPipeline.h"
 
 namespace Fussion {
 
-    void HDRPipeline::init(Vector2 size, GPU::TextureFormat output_format)
+    void TonemappingPipeline::init(Vector2 size, GPU::TextureFormat output_format)
     {
-        std::array entries{
-            GPU::BindGroupLayoutEntry{
+        std::array entries {
+            GPU::BindGroupLayoutEntry {
                 .binding = 0,
                 .visibility = GPU::ShaderStage::Fragment,
-                .type = GPU::BindingType::Texture{
-                    .sample_type = GPU::TextureSampleType::Float{ true },
+                .type = GPU::BindingType::Texture {
+                    .sample_type = GPU::TextureSampleType::Float { true },
                     .view_dimension = GPU::TextureViewDimension::D2,
                     .multi_sampled = false,
                 },
                 .count = 1,
             },
-            GPU::BindGroupLayoutEntry{
+            GPU::BindGroupLayoutEntry {
                 .binding = 1,
                 .visibility = GPU::ShaderStage::Fragment,
-                .type = GPU::BindingType::Sampler{
+                .type = GPU::BindingType::Sampler {
                     .type = GPU::SamplerBindingType::Filtering,
                 },
+                .count = 1,
+            },
+            GPU::BindGroupLayoutEntry {
+                .binding = 2,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer {},
                 .count = 1,
             }
         };
 
-        GPU::BindGroupLayoutSpec spec{
+        GPU::BindGroupLayoutSpec spec {
             .label = "HDR::BGL"sv,
             .entries = entries,
         };
 
         m_bind_group_layout = Renderer::device().create_bind_group_layout(spec);
 
-        GPU::TextureSpec rt_spec{
-            .label = "HDR::RenderTarget"sv,
-            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .dimension = GPU::TextureDimension::D2,
-            .size = { size.x, size.y, 1 },
-            .format = Format,
-            .sample_count = 1,
-            .aspect = GPU::TextureAspect::All,
-        };
-        m_render_texture = Renderer::device().create_texture(rt_spec);
-        m_render_texture.initialize_view();
-
-        GPU::SamplerSpec sampler_spec{
+        GPU::SamplerSpec sampler_spec {
             .label = "HDR::Sampler"sv,
             .address_mode_u = GPU::AddressMode::Repeat,
             .address_mode_v = GPU::AddressMode::Repeat,
@@ -60,29 +53,14 @@ namespace Fussion {
 
         m_sampler = Renderer::device().create_sampler(sampler_spec);
 
-        std::array bind_group_entries{
-            GPU::BindGroupEntry{
-                .binding = 0,
-                .resource = m_render_texture.view,
-            },
-            GPU::BindGroupEntry{
-                .binding = 1,
-                .resource = m_sampler,
-            },
-        };
-
-        GPU::BindGroupSpec global_bg_spec{
-            .label = "HDR::BindGroup"sv,
-            .entries = bind_group_entries
-        };
-
-        m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout, global_bg_spec);
+        m_tonemapping_buffer = UniformBuffer<PostProcessing::TonemappingSettings>::create(Renderer::device(), "Tonemapping Settings Buffer"sv);
+        resize(size);
 
         auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/HDR.wgsl").unwrap();
 
-        GPU::ShaderModuleSpec shader_spec{
+        GPU::ShaderModuleSpec shader_spec {
             .label = "HDR::Shader"sv,
-            .type = GPU::WGSLShader{
+            .type = GPU::WGSLShader {
                 .source = shader_src,
             },
             .vertex_entry_point = "vs_main",
@@ -91,15 +69,15 @@ namespace Fussion {
 
         auto shader = Renderer::device().create_shader_module(shader_spec);
 
-        std::array bind_group_layouts{
+        std::array bind_group_layouts {
             m_bind_group_layout,
         };
-        GPU::PipelineLayoutSpec pl_spec{
+        GPU::PipelineLayoutSpec pl_spec {
             .bind_group_layouts = bind_group_layouts
         };
         auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
-        GPU::RenderPipelineSpec rp_spec{
+        GPU::RenderPipelineSpec rp_spec {
             .label = "HDR::RenderPipeline"sv,
             .layout = layout,
             .vertex = {},
@@ -113,23 +91,23 @@ namespace Fussion {
             .multi_sample = GPU::MultiSampleState::get_default(),
             .fragment = GPU::FragmentStage {
                 .targets = {
-                    GPU::ColorTargetState{
+                    GPU::ColorTargetState {
                         .format = output_format,
                         .blend = None(),
                         .write_mask = GPU::ColorWrite::All,
                     },
-                }
+                },
             },
         };
 
         m_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
-    void HDRPipeline::process(GPU::CommandEncoder& encoder, GPU::TextureView& output)
+    void TonemappingPipeline::process(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context)
     {
         using namespace GPU;
-        std::array color_attachments{
-            RenderPassColorAttachment{
+        std::array color_attachments {
+            RenderPassColorAttachment {
                 .view = output,
                 .load_op = LoadOp::Clear,
                 .store_op = StoreOp::Store,
@@ -137,12 +115,15 @@ namespace Fussion {
             },
         };
 
-        RenderPassSpec spec{
+        RenderPassSpec spec {
             .label = "HDR::RenderPass"sv,
             .color_attachments = color_attachments,
             .depth_stencil_attachment = None(),
         };
         auto rp = encoder.begin_rendering(spec);
+
+        m_tonemapping_buffer.data = render_context.post_processing.tonemapping_settings;
+        m_tonemapping_buffer.flush();
 
         rp.set_pipeline(m_pipeline);
         rp.set_bind_group(m_bind_group, 0);
@@ -152,10 +133,10 @@ namespace Fussion {
         rp.release();
     }
 
-    void HDRPipeline::resize(Vector2 size)
+    void TonemappingPipeline::resize(Vector2 size)
     {
         m_render_texture.release();
-        GPU::TextureSpec rt_spec{
+        GPU::TextureSpec rt_spec {
             .label = "HDR::RenderTarget"sv,
             .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
             .dimension = GPU::TextureDimension::D2,
@@ -167,18 +148,26 @@ namespace Fussion {
         m_render_texture = Renderer::device().create_texture(rt_spec);
 
         m_bind_group.release();
-        std::array bind_group_entries{
-            GPU::BindGroupEntry{
+        std::array bind_group_entries {
+            GPU::BindGroupEntry {
                 .binding = 0,
                 .resource = m_render_texture.view,
             },
-            GPU::BindGroupEntry{
+            GPU::BindGroupEntry {
                 .binding = 1,
                 .resource = m_sampler,
             },
+            GPU::BindGroupEntry {
+                .binding = 2,
+                // TODO: Make the UniformBuffer create the binding directly?
+                .resource = GPU::BufferBinding {
+                    .buffer = m_tonemapping_buffer.buffer(),
+                    .offset = 0,
+                    .size = m_tonemapping_buffer.buffer().size() },
+            },
         };
 
-        GPU::BindGroupSpec global_bg_spec{
+        GPU::BindGroupSpec global_bg_spec {
             .label = "HDR::BindGroup"sv,
             .entries = bind_group_entries
         };
@@ -186,7 +175,7 @@ namespace Fussion {
         m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout, global_bg_spec);
     }
 
-    auto HDRPipeline::view() -> GPU::TextureView&
+    auto TonemappingPipeline::view() -> GPU::TextureView&
     {
         return m_render_texture.view;
     }

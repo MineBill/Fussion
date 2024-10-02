@@ -121,6 +121,7 @@ namespace Fussion {
 
         Scene& scene() const { return *m_scene; }
 
+        BoundingBox& bounding_box() { return m_box; }
     private:
         void on_start();
         void on_update(f32 delta);
@@ -147,6 +148,7 @@ namespace Fussion {
         Scene* m_scene{};
         s32 m_local_id{};
 
+        BoundingBox m_box {};
         bool m_enabled{ true };
     };
 }

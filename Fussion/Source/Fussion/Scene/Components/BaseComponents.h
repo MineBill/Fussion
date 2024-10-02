@@ -73,10 +73,34 @@ namespace Fussion {
         COMPONENT_DEFAULT(Environment)
         COMPONENT_DEFAULT_COPY(Environment)
 
+        enum class [[API]] TonemapMode : u32 {
+            None = 0,
+            ACES = 1,
+            Reinhard = 2,
+        };
+
         virtual void on_draw(RenderContext& context) override;
 
-        [[API, EditorName("SSAO")]]
+        [[API, EditorRegion("SSAO"), EditorName("SSAO")]]
         bool ssao {};
+
+        [[API, EditorRegion("SSAO"), EditorName("SSAO Radius"), Range(0, 1, 0.1)]]
+        f32 ssao_radius {};
+
+        [[API, EditorRegion("SSAO"), EditorName("SSAO Bias"), Range(0, 0.05, 0.001)]]
+        f32 ssao_bias {};
+
+        [[API, EditorRegion("SSAO"), EditorName("SSAO Noise Scale"), Range(1, 16, 1)]]
+        f32 ssao_noise_scale {};
+
+        [[API, EditorRegion("ToneMapping"), EditorName("Gamma")]]
+        f32 gamma {};
+
+        [[API, EditorRegion("ToneMapping"), EditorName("Exposure")]]
+        f32 exposure {};
+
+        [[API, EditorRegion("ToneMapping"), EditorName("Tonemap Mode")]]
+        TonemapMode tonemap_mode {};
 
         [[API, EditorName("Env Map")]]
         AssetRef<Texture2D> environment_map;

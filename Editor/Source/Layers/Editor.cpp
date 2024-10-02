@@ -6,6 +6,7 @@
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "EditorWindows/RendererReport.h"
+#include "Fussion/Math/BoundingBox.h"
 
 #include <Fussion/Assets/AssetRef.h>
 #include <Fussion/Core/Application.h>

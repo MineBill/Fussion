@@ -44,6 +44,10 @@ namespace Fussion {
             .generate_mip_maps = metadata.generate_mipmaps,
         };
 
+        if (metadata.is_normal_map) {
+            spec.format = GPU::TextureFormat::RGBA8Unorm;
+        }
+
         auto& device = Renderer::device();
 
         texture->m_image = device.create_texture(spec);

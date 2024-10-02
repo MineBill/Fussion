@@ -1,38 +1,38 @@
-﻿#include "FussionPCH.h"
-#include "Debug.h"
+﻿#include "Debug.h"
 
 #include "Assets/AssetManager.h"
 #include "Assets/AssetRef.h"
 #include "Assets/ShaderAsset.h"
 #include "Core/Time.h"
-#include "OS/FileSystem.h"
 #include "Fussion/Math/Color.h"
+#include "FussionPCH.h"
 #include "GPU/ShaderProcessor.h"
+#include "OS/FileSystem.h"
 #include "Rendering/Renderer.h"
 
-#include <ranges>
 #include <glm/gtx/euler_angles.hpp>
+#include <ranges>
 
 namespace Fussion {
 
     struct Point {
-        Vector3 position{};
-        f32 thickness{};
-        Color color{};
+        Vector3 position {};
+        f32 thickness {};
+        Color color {};
     };
 
     struct DebugData {
-        AssetRef<ShaderAsset> DebugShader{};
-        GPU::Buffer VertexBuffer{};
-        GPU::RenderPipeline Pipeline{};
+        AssetRef<ShaderAsset> DebugShader {};
+        GPU::Buffer VertexBuffer {};
+        GPU::RenderPipeline Pipeline {};
 
-        bool Initialized{ false };
-        std::vector<Point> Points{};
+        bool Initialized { false };
+        std::vector<Point> Points {};
 
-        std::vector<Point> TimedPoints{};
-        std::vector<f32> Timers{};
+        std::vector<Point> TimedPoints {};
+        std::vector<f32> Timers {};
 
-        GPU::Device Device{};
+        GPU::Device Device {};
     };
 
     namespace {
@@ -49,9 +49,9 @@ namespace Fussion {
 
         auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/DebugDraw.wgsl").unwrap();
 
-        GPU::ShaderModuleSpec shader_spec{
+        GPU::ShaderModuleSpec shader_spec {
             .label = "DebugDraw::Shader"sv,
-            .type = GPU::WGSLShader{
+            .type = GPU::WGSLShader {
                 .source = shader_src,
             },
             .vertex_entry_point = "vs_main"sv,
@@ -60,10 +60,10 @@ namespace Fussion {
 
         auto shader = Renderer::device().create_shader_module(shader_spec);
 
-        std::array bind_group_layouts{
+        std::array bind_group_layouts {
             global_bind_group_layout
         };
-        GPU::PipelineLayoutSpec pl_spec{
+        GPU::PipelineLayoutSpec pl_spec {
             .bind_group_layouts = bind_group_layouts
         };
         auto layout = Renderer::device().create_pipeline_layout(pl_spec);
@@ -71,45 +71,40 @@ namespace Fussion {
         auto primitive = GPU::PrimitiveState::get_default();
         primitive.topology = GPU::PrimitiveTopology::LineList;
 
-        std::array attributes{
-            GPU::VertexAttribute{
+        std::array attributes {
+            GPU::VertexAttribute {
                 .type = GPU::ElementType::Float3,
                 .shader_location = 0,
             },
-            GPU::VertexAttribute{
+            GPU::VertexAttribute {
                 .type = GPU::ElementType::Float,
                 .shader_location = 1,
             },
-            GPU::VertexAttribute{
+            GPU::VertexAttribute {
                 .type = GPU::ElementType::Float4,
                 .shader_location = 2,
             },
         };
         auto attribute_layout = GPU::VertexBufferLayout::create(attributes);
 
-        GPU::RenderPipelineSpec rp_spec{
+        GPU::RenderPipelineSpec rp_spec {
             .label = "DebugDraw::RenderPipeline"sv,
             .layout = layout,
             .vertex = {
-                .attribute_layouts = { attribute_layout }
-            },
+                .attribute_layouts = { attribute_layout } },
             .primitive = primitive,
             .depth_stencil = GPU::DepthStencilState::get_default(),
             .multi_sample = GPU::MultiSampleState::get_default(),
-            .fragment = GPU::FragmentStage{
-                .targets = {
-                    GPU::ColorTargetState{
-                        .format = target_format,
-                        .blend = GPU::BlendState::get_default(),
-                        .write_mask = GPU::ColorWrite::All,
-                    }
-                }
-            },
+            .fragment = GPU::FragmentStage { .targets = { GPU::ColorTargetState {
+                                                 .format = target_format,
+                                                 .blend = GPU::BlendState::get_default(),
+                                                 .write_mask = GPU::ColorWrite::All,
+                                             } } },
         };
 
         g_DebugData.Pipeline = device.create_render_pipeline(shader, shader, rp_spec);
 
-        GPU::BufferSpec spec{
+        GPU::BufferSpec spec {
             .label = "Debug::VertexBuffer"sv,
             .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
             .size = 20'000 * sizeof(Point),
@@ -117,6 +112,41 @@ namespace Fussion {
         };
 
         g_DebugData.VertexBuffer = device.create_buffer(spec);
+    }
+
+    void Debug::draw_box(BoundingBox const& box, Vector3 euler_angles, Vector3 size, f32 time, Color color)
+    {
+        draw_cube(box.center(), euler_angles, size, time, color);
+    }
+
+    void Debug::draw_box(BoundingBox const& box, f32 time, Color color)
+    {
+        Vector3 v0 = Vector3(box.Min.x, box.Min.y, box.Min.z);
+        Vector3 v1 = Vector3(box.Max.x, box.Min.y, box.Min.z);
+        Vector3 v2 = Vector3(box.Max.x, box.Max.y, box.Min.z);
+        Vector3 v3 = Vector3(box.Min.x, box.Max.y, box.Min.z);
+        Vector3 v4 = Vector3(box.Min.x, box.Min.y, box.Max.z);
+        Vector3 v5 = Vector3(box.Max.x, box.Min.y, box.Max.z);
+        Vector3 v6 = Vector3(box.Max.x, box.Max.y, box.Max.z);
+        Vector3 v7 = Vector3(box.Min.x, box.Max.y, box.Max.z);
+
+        // Bottom face
+        draw_line(v0, v1, time, color);
+        draw_line(v1, v2, time, color);
+        draw_line(v2, v3, time, color);
+        draw_line(v3, v0, time, color);
+
+        // Top face
+        draw_line(v4, v5, time, color);
+        draw_line(v5, v6, time, color);
+        draw_line(v6, v7, time, color);
+        draw_line(v7, v4, time, color);
+
+        // Vertical edges
+        draw_line(v0, v4, time, color);
+        draw_line(v1, v5, time, color);
+        draw_line(v2, v6, time, color);
+        draw_line(v3, v7, time, color);
     }
 
     void Debug::draw_line(Vector3 start, Vector3 end, f32 time, Color color)
@@ -127,7 +157,7 @@ namespace Fussion {
 
             g_DebugData.Timers.push_back(time);
             g_DebugData.Timers.push_back(time);
-        } else {
+        } else [[likely]] {
             g_DebugData.Points.emplace_back(start, 0, color);
             g_DebugData.Points.emplace_back(end, 0, color);
         }
@@ -135,30 +165,29 @@ namespace Fussion {
 
     void Debug::draw_cube(Vector3 center, Vector3 euler_angles, Vector3 size, f32 time, Color color)
     {
-        auto half = size / 2;
+        auto half = size / 2.0f;
         auto rotation = glm::mat3(glm::eulerAngleZXY(
             glm::radians(euler_angles.z),
             glm::radians(euler_angles.x),
             glm::radians(euler_angles.y)));
 
-        draw_line(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ -1, 1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, -1, 1 } * half), center + rotation * (Vector3 { 1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, 1, 1 } * half), center + rotation * (Vector3 { 1, 1, 1 } * half), time, color);
 
-        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, -1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, -1, -1 } * half), center + rotation * (Vector3 { 1, -1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, 1, -1 } * half), center + rotation * (Vector3 { 1, 1, -1 } * half), time, color);
 
-        draw_line(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, -1, 1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ 1, 1, -1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { 1, -1, -1 } * half), center + rotation * (Vector3 { 1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { 1, 1, -1 } * half), center + rotation * (Vector3 { 1, 1, 1 } * half), time, color);
 
-        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, -1, 1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ -1, 1, -1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, -1, -1 } * half), center + rotation * (Vector3 { -1, -1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, 1, -1 } * half), center + rotation * (Vector3 { -1, 1, 1 } * half), time, color);
 
-        draw_line(center + rotation * (Vector3{ -1, -1, -1 } * half), center + rotation * (Vector3{ -1, 1, -1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ 1, -1, -1 } * half), center + rotation * (Vector3{ 1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { -1, -1, -1 } * half), center + rotation * (Vector3 { -1, 1, -1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { 1, -1, -1 } * half), center + rotation * (Vector3 { 1, 1, -1 } * half), time, color);
 
-        draw_line(center + rotation * (Vector3{ -1, -1, 1 } * half), center + rotation * (Vector3{ -1, 1, 1 } * half), time, color);
-        draw_line(center + rotation * (Vector3{ 1, -1, 1 } * half), center + rotation * (Vector3{ 1, 1, 1 } * half), time, color);
-
+        draw_line(center + rotation * (Vector3 { -1, -1, 1 } * half), center + rotation * (Vector3 { -1, 1, 1 } * half), time, color);
+        draw_line(center + rotation * (Vector3 { 1, -1, 1 } * half), center + rotation * (Vector3 { 1, 1, 1 } * half), time, color);
     }
 
     void Debug::draw_cube(Vector3 min_extents, Vector3 max_extents, f32 time, Color color)
@@ -205,10 +234,10 @@ namespace Fussion {
                 auto y3 = Math::sin(lon0) * r1;
 
                 // Draw the quad formed by these four points
-                draw_line(center + rotation * Vector3{ x0, y0, z0 }, center + rotation * Vector3{ x1, y1, z0 }, time, color);
-                draw_line(center + rotation * Vector3{ x1, y1, z0 }, center + rotation * Vector3{ x2, y2, z1 }, time, color);
-                draw_line(center + rotation * Vector3{ x2, y2, z1 }, center + rotation * Vector3{ x3, y3, z1 }, time, color);
-                draw_line(center + rotation * Vector3{ x3, y3, z1 }, center + rotation * Vector3{ x0, y0, z0 }, time, color);
+                draw_line(center + rotation * Vector3 { x0, y0, z0 }, center + rotation * Vector3 { x1, y1, z0 }, time, color);
+                draw_line(center + rotation * Vector3 { x1, y1, z0 }, center + rotation * Vector3 { x2, y2, z1 }, time, color);
+                draw_line(center + rotation * Vector3 { x2, y2, z1 }, center + rotation * Vector3 { x3, y3, z1 }, time, color);
+                draw_line(center + rotation * Vector3 { x3, y3, z1 }, center + rotation * Vector3 { x0, y0, z0 }, time, color);
             }
         }
     }

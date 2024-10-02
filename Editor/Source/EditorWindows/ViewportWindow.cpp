@@ -1,26 +1,27 @@
-﻿#include "EditorPCH.h"
-#include "ViewportWindow.h"
-#include "Layers/Editor.h"
-#include "EditorApplication.h"
-#include "SceneRenderer.h"
-#include "Layers/ImGuiLayer.h"
-#include "Fussion/Assets/AssetManager.h"
-#include "EditorUI.h"
-#include "ImGuiHelpers.h"
+﻿#include "ViewportWindow.h"
 
-#include <cmath>
-#include <imgui.h>
-#include "ImGuizmo.h"
+#include "EditorApplication.h"
+#include "EditorPCH.h"
+#include "EditorUI.h"
+#include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/Model.h"
 #include "Fussion/Core/Time.h"
 #include "Fussion/Events/KeyboardEvents.h"
 #include "Fussion/Input/Input.h"
 #include "Fussion/Math/Rect.h"
 #include "Fussion/Scene/Components/MeshRenderer.h"
+#include "ImGuiHelpers.h"
+#include "ImGuizmo.h"
+#include "Layers/Editor.h"
+#include "Layers/ImGuiLayer.h"
+#include "SceneRenderer.h"
 
-#include <tracy/Tracy.hpp>
+#include <cmath>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <imgui.h>
 #include <magic_enum/magic_enum.hpp>
+#include <tracy/Tracy.hpp>
 
 using namespace Fussion;
 
@@ -240,7 +241,7 @@ void ViewportWindow::on_draw()
                         auto model = AssetManager::get_asset<Model>(*handle);
                         auto entity = m_editor->active_scene()->create_entity(metadata.name);
                         auto mr = entity->add_component<MeshRenderer>();
-                        mr->model = model;
+                        mr->model_asset = model;
                     }
                 }
             }

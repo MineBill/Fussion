@@ -1,19 +1,19 @@
-﻿#include "EditorPCH.h"
-#include "MeshSerializer.h"
+﻿#include "MeshSerializer.h"
+
+#include "EditorPCH.h"
 #include "Project/Project.h"
+#include "meshoptimizer.h"
+#include "mikktspace.h"
+#include "tiny_gltf.h"
 
 #include <Fussion/Assets/Model.h>
-
-#include "tiny_gltf.h"
-#include "mikktspace.h"
-#include "meshoptimizer.h"
 
 using namespace Fussion;
 
 namespace Mikktspace {
     struct UserData {
-        std::vector<Vertex>* Vertices{};
-        std::vector<u32>* Indices{};
+        std::vector<Vertex>* Vertices {};
+        std::vector<u32>* Indices {};
     };
 
     int GetNumFaces(SMikkTSpaceContext const* ctx)
@@ -93,7 +93,7 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
         return nullptr;
     }
 
-    SMikkTSpaceInterface table{
+    SMikkTSpaceInterface table {
         .m_getNumFaces = Mikktspace::GetNumFaces,
         .m_getNumVerticesOfFace = Mikktspace::GetNumVerticesOfFace,
         .m_getPosition = Mikktspace::GetPosition,
@@ -132,23 +132,24 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
         auto& idx_view = model.bufferViews[idx_accessor.bufferView];
         auto& idx_buffer = model.buffers[idx_view.buffer];
 
-        auto pos_data = TRANSMUTE(const float*, &pos_buffer.data[pos_view.byteOffset + pos_accessor.byteOffset]);
-        auto norm_data = TRANSMUTE(const float*, &norm_buffer.data[norm_view.byteOffset + norm_accessor.byteOffset]);
-        auto uv_data = TRANSMUTE(const float*, &uv_buffer.data[uv_view.byteOffset + uv_accessor.byteOffset]);
+        auto pos_data = TRANSMUTE(float const*, &pos_buffer.data[pos_view.byteOffset + pos_accessor.byteOffset]);
+        auto norm_data = TRANSMUTE(float const*, &norm_buffer.data[norm_view.byteOffset + norm_accessor.byteOffset]);
+        auto uv_data = TRANSMUTE(float const*, &uv_buffer.data[uv_view.byteOffset + uv_accessor.byteOffset]);
 
         bool has_tangent = primitive.attributes.contains("TANGENT");
-        f32 const* tangent_data{ nullptr };
+        f32 const* tangent_data { nullptr };
         if (has_tangent) {
             auto& accessor = model.accessors[primitive.attributes.find("TANGENT")->second];
             VERIFY(accessor.type == TINYGLTF_TYPE_VEC4);
             auto& view = model.bufferViews[accessor.bufferView];
             auto& buffer = model.buffers[view.buffer];
-            tangent_data = TRANSMUTE(const f32*, &buffer.data[view.byteOffset + accessor.byteOffset]);
+            tangent_data = TRANSMUTE(f32 const*, &buffer.data[view.byteOffset + accessor.byteOffset]);
         }
 
         std::vector<Vertex> vertices;
+        BoundingBox box {};
         for (size_t i = 0; i < pos_accessor.count; i++) {
-            Vertex vertex{};
+            Vertex vertex {};
 
             std::copy_n(pos_data + i * 3, 3, &vertex.position.raw[0]);
             std::copy_n(norm_data + i * 3, 3, &vertex.normal.raw[0]);
@@ -157,22 +158,23 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
                 std::copy_n(tangent_data + i * 4, 4, &vertex.tangent.raw[0]);
             }
             vertices.push_back(vertex);
+            box.include_point(vertex.position);
         }
 
         std::vector<u32> indices;
         if (idx_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
-            auto idx_data = std::span(TRANSMUTE(const u16*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]), idx_accessor.count);
+            auto idx_data = std::span(TRANSMUTE(u16 const*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]), idx_accessor.count);
             std::ranges::transform(idx_data, std::back_inserter(indices), [](u16 index) {
                 return CAST(u32, index);
             });
         } else if (idx_accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
             indices.resize(idx_accessor.count);
 
-            auto idx_data = std::span(TRANSMUTE(const u32*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]), idx_accessor.count);
+            auto idx_data = std::span(TRANSMUTE(u32 const*, &idx_buffer.data[idx_view.byteOffset + idx_accessor.byteOffset]), idx_accessor.count);
             indices.assign(idx_data.begin(), idx_data.end());
         }
 
-        Mikktspace::UserData user_data{
+        Mikktspace::UserData user_data {
             .Vertices = &vertices,
             .Indices = &indices,
         };
@@ -201,11 +203,12 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
         meshopt_optimizeOverdraw(indices.data(), indices.data(), indices.size(), &vertices[0].position.x, vertices.size(), sizeof(Vertex), 1.05f);
         meshopt_optimizeVertexFetch(vertices.data(), indices.data(), indices.size(), vertices.data(), vertices.size(), sizeof(Vertex));
 
-        Vector3 offset{};
+        Vector3 offset {};
         if (node.translation.size() == 3) {
             offset = { node.translation[0], node.translation[1], node.translation[2] };
         }
-        meshes.emplace_back(vertices, indices, shadow_indices, primitive.material, offset);
+        auto& new_mesh = meshes.emplace_back(vertices, indices, shadow_indices, primitive.material, offset);
+        new_mesh.bounding_box = box;
     }
 
     auto the_model = Model::create(meshes);

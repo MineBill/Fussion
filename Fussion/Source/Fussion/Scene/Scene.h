@@ -100,6 +100,8 @@ namespace Fussion {
         // the object picking framebuffer is filled with 0s.
         s32 m_local_id_counter{ 1 };
 
+        BoundingBox m_box {};
+
         friend class Entity;
         friend SceneSerializer;
         friend SceneBinarySerializer;

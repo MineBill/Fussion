@@ -46,6 +46,7 @@ void AssetPicker::update()
 
             EUI::image_button(texture->image().view, [&] {
                 m_member.set(m_instance, handle);
+                // TODO: Call notify methods, if available.
                 m_opened = false;
             }, { .size = size });
 
