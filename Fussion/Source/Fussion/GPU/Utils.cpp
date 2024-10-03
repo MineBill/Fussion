@@ -11,7 +11,7 @@ namespace Fussion::GPU::Utils {
 #if OS_WINDOWS
     RENDERDOC_API_1_5_0* g_Rdoc_Api = nullptr;
 
-    void RenderDoc::initialize()
+    void RenderDoc::Initialize()
     {
         if (HMODULE mod = GetModuleHandleA("renderdoc.dll")) {
             auto renderdoc_get_api = TRANSMUTE(pRENDERDOC_GetAPI, GetProcAddress(mod, "RENDERDOC_GetAPI"));
@@ -24,14 +24,14 @@ namespace Fussion::GPU::Utils {
         }
     }
 
-    void RenderDoc::start_capture()
+    void RenderDoc::StartCapture()
     {
         if (g_Rdoc_Api) {
             g_Rdoc_Api->StartFrameCapture(nullptr, nullptr);
         }
     }
 
-    void RenderDoc::end_capture()
+    void RenderDoc::EndCapture()
     {
         if (g_Rdoc_Api) {
             g_Rdoc_Api->EndFrameCapture(nullptr, nullptr);

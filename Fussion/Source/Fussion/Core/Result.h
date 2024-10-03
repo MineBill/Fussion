@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include <Fussion/Core/Maybe.h>
 #include <Fussion/Core/Concepts.h>
+#include <Fussion/Core/Maybe.h>
 
 namespace Fussion {
     template<typename ValueT, typename ErrorT>
@@ -10,36 +10,50 @@ namespace Fussion {
         using ErrorType = ErrorT;
 
         Result() = default;
-        Result(ValueType const& value): m_value(value) {}
-        Result(ValueType&& value): m_value(std::move(value)) {}
+        Result(ValueType const& value)
+            : m_Value(value)
+        { }
+        Result(ValueType&& value)
+            : m_Value(std::move(value))
+        { }
 
-        Result(ErrorT const& error): m_error(error) {}
-        Result(ErrorT&& error): m_error(std::move(error)) {}
+        Result(ErrorT const& error)
+            : m_Error(error)
+        { }
+        Result(ErrorT&& error)
+            : m_Error(std::move(error))
+        { }
 
-        ValueType& value()
+        ValueType& Unwrap()
         {
-            return m_value.unwrap();
+            return m_Value.Unwrap();
         }
 
-        ErrorType& error()
+        ErrorType& Error()
         {
-            return m_error.unwrap();
+            return m_Error.Unwrap();
         }
 
         [[nodiscard]]
-        bool is_value() const { return m_value.has_value(); }
+        bool HasValue() const
+        {
+            return m_Value.HasValue();
+        }
 
         [[nodiscard]]
-        bool is_error() const { return m_error.has_value(); }
+        bool HasError() const
+        {
+            return m_Error.HasValue();
+        }
 
         ValueType& operator*()
         {
-            return m_value.unwrap();
+            return m_Value.Unwrap();
         }
 
     private:
-        Maybe<ValueType> m_value{};
-        Maybe<ErrorType> m_error{};
+        Maybe<ValueType> m_Value {};
+        Maybe<ErrorType> m_Error {};
     };
 
     template<typename ErrorT>
@@ -49,21 +63,31 @@ namespace Fussion {
         using ErrorType = ErrorT;
 
         constexpr Result() = default;
-        constexpr Result(ErrorT const& error): m_error(error) {}
-        constexpr Result(ErrorT&& error): m_error(std::move(error)) {}
+        constexpr Result(ErrorT const& error)
+            : m_Error(error)
+        { }
+        constexpr Result(ErrorT&& error)
+            : m_Error(std::move(error))
+        { }
 
-        constexpr ErrorType& error()
+        constexpr ErrorType& Error()
         {
-            return m_error.unwrap();
+            return m_Error.Unwrap();
         }
 
         [[nodiscard]]
-        constexpr bool is_error() const { return m_error.has_value(); }
+        constexpr bool HasError() const
+        {
+            return m_Error.HasValue();
+        }
 
         [[nodiscard]]
-        constexpr bool is_value() const { return !m_error.has_value(); }
+        constexpr bool IsValue() const
+        {
+            return !m_Error.HasValue();
+        }
 
     private:
-        Maybe<ErrorType> m_error{};
+        Maybe<ErrorType> m_Error {};
     };
 }

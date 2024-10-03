@@ -1,16 +1,13 @@
 ﻿#pragma once
 
 namespace Fussion {
+    class Args {
+    public:
+        static void Collect(int argc, char** argv);
 
-class Args {
-public:
-    static void collect(int argc, char** argv);
+        static int Argc();
+        static char** Argv();
 
-    static int argc();
-    static char** argv();
-
-    static std::string const& as_single_line();
-    // static std::vector<std::string> const& AsVector();
-};
-
+        static std::string const& AsSingleLine();
+    };
 }

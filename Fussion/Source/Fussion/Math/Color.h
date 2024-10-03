@@ -7,15 +7,15 @@
 namespace Fussion {
     struct Color {
         struct HSL {
-            f32 h{}, s{}, l{}, a{};
+            f32 h {}, s {}, l {}, a {};
 
             [[nodiscard]]
-            static constexpr HSL from_rgb(Color color)
+            static constexpr HSL FromRGB(Color color)
             {
                 HSL hsl;
                 hsl.a = color.a;
-                auto max = Math::max(color.r, color.g, color.b);
-                auto min = Math::min(color.r, color.g, color.b);
+                auto max = Math::Max(color.r, color.g, color.b);
+                auto min = Math::Min(color.r, color.g, color.b);
 
                 hsl.l = (min + max) / 2.0f;
 
@@ -41,26 +41,41 @@ namespace Fussion {
         };
 
 #if OS_WINDOWS
-#pragma warning(push)
-#pragma warning(disable: 4201)
+#    pragma warning(push)
+#    pragma warning(disable : 4201)
 #endif
         union {
             struct {
                 f32 r, g, b, a;
             };
 
-            f32 raw[4]{};
+            f32 raw[4] {};
         };
 #if OS_WINDOWS
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
-        constexpr Color(): r(0), g(0), b(0), a(1) {}
-        constexpr Color(f32 r, f32 g, f32 b, f32 a): r(r), g(g), b(b), a(a) {}
-        Color(Vector4 v): r(v.x), g(v.y), b(v.z), a(v.w) {}
+        constexpr Color()
+            : r(0)
+            , g(0)
+            , b(0)
+            , a(1)
+        { }
+        constexpr Color(f32 r, f32 g, f32 b, f32 a)
+            : r(r)
+            , g(g)
+            , b(b)
+            , a(a)
+        { }
+        Color(Vector4 v)
+            : r(v.x)
+            , g(v.y)
+            , b(v.z)
+            , a(v.w)
+        { }
 
         [[nodiscard]]
-        static constexpr Color from_hex(u32 hex)
+        static constexpr Color FromHex(u32 hex)
         {
             return {
                 CAST(f32, hex >> 24) / 256.f,
@@ -71,7 +86,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color from_rgba(u8 r, u8 g, u8 b, u8 a = 255)
+        static constexpr Color FromRGBA(u8 r, u8 g, u8 b, u8 a = 255)
         {
             return {
                 CAST(f32, r) / 255.f,
@@ -82,7 +97,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color from_hsl(HSL hsl)
+        static constexpr Color FromHSL(HSL hsl)
         {
             Color color;
 
@@ -119,28 +134,28 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        constexpr Color lighten(f32 percent) const
+        constexpr Color Lighten(f32 percent) const
         {
-            auto hsl = to_hsl();
+            auto hsl = ToHSL();
             hsl.l += percent;
-            return from_hsl(hsl);
+            return FromHSL(hsl);
         }
 
         [[nodiscard]]
-        constexpr Color darken(f32 percent) const
+        constexpr Color Darken(f32 percent) const
         {
-            auto hsl = to_hsl();
+            auto hsl = ToHSL();
             hsl.l -= percent;
-            return from_hsl(hsl);
+            return FromHSL(hsl);
         }
 
         [[nodiscard]]
-        constexpr HSL to_hsl() const
+        constexpr HSL ToHSL() const
         {
-            return HSL::from_rgb(*this);
+            return HSL::FromRGB(*this);
         }
 
-        u32 to_abgr() const;
+        u32 ToABGR() const;
 
         static Color const White;
         static Color const Red;
@@ -168,37 +183,35 @@ namespace Fussion {
         static Color const DarkGoldenRod;
         static Color const Indigo;
         static Color const Transparent;
-
     };
 
-    inline constexpr Color Color::White{ 1, 1, 1, 1 };
-    inline constexpr Color Color::Red{ 1, 0, 0, 1 };
-    inline constexpr Color Color::Green{ 0, 1, 0, 1 };
-    inline constexpr Color Color::Blue{ 0, 0, 1, 1 };
-    inline constexpr Color Color::Yellow{ 1, 1, 0, 1 };
-    inline constexpr Color Color::Magenta{ 1, 0, 1, 1 };
-    inline constexpr Color Color::Cyan{ 0, 1, 1, 1 };
-    inline constexpr Color Color::Black{ 0, 0, 0, 1 };
-    inline constexpr Color Color::Purple{ 0.5f, 0, 0.5f, 1 };
-    inline constexpr Color Color::Orange{ 1, 0.5f, 0, 1 };
-    inline constexpr Color Color::Pink{ 1, 0.75f, 0.8f, 1 };
-    inline constexpr Color Color::Turquoise{ 0, 0.8f, 0.8f, 1 };
-    inline constexpr Color Color::Lime{ 0.75f, 1, 0, 1 };
-    inline constexpr Color Color::Gray{ 0.5f, 0.5f, 0.5f, 1 };
-    inline constexpr Color Color::Brown{ 0.6f, 0.4f, 0.2f, 1 };
-    inline constexpr Color Color::Maroon{ 0.5f, 0, 0, 1 };
-    inline constexpr Color Color::Teal{ 0, 0.5f, 0.5f, 1 };
-    inline constexpr Color Color::Olive{ 0.5f, 0.5f, 0, 1 };
-    inline constexpr Color Color::Navy{ 0, 0, 0.5f, 1 };
-    inline constexpr Color Color::Coral{ 1, 0.5f, 0.3f, 1 };
-    inline constexpr Color Color::Rose{ 1, 0.2f, 0.5f, 1 };
-    inline constexpr Color Color::SkyBlue{ 0.5, 0.75, 1, 1 };
-    inline constexpr Color Color::ForestGreen{ 0.2f, 0.5, 0.2f, 1 };
-    inline constexpr Color Color::DarkGoldenRod{ 0.72f, 0.52f, 0.04f, 1 };
-    inline constexpr Color Color::Indigo{ 0.29f, 0, 0.51f, 1 };
-    inline constexpr Color Color::Transparent{ 0, 0, 0, 0 };
+    inline constexpr Color Color::White { 1, 1, 1, 1 };
+    inline constexpr Color Color::Red { 1, 0, 0, 1 };
+    inline constexpr Color Color::Green { 0, 1, 0, 1 };
+    inline constexpr Color Color::Blue { 0, 0, 1, 1 };
+    inline constexpr Color Color::Yellow { 1, 1, 0, 1 };
+    inline constexpr Color Color::Magenta { 1, 0, 1, 1 };
+    inline constexpr Color Color::Cyan { 0, 1, 1, 1 };
+    inline constexpr Color Color::Black { 0, 0, 0, 1 };
+    inline constexpr Color Color::Purple { 0.5f, 0, 0.5f, 1 };
+    inline constexpr Color Color::Orange { 1, 0.5f, 0, 1 };
+    inline constexpr Color Color::Pink { 1, 0.75f, 0.8f, 1 };
+    inline constexpr Color Color::Turquoise { 0, 0.8f, 0.8f, 1 };
+    inline constexpr Color Color::Lime { 0.75f, 1, 0, 1 };
+    inline constexpr Color Color::Gray { 0.5f, 0.5f, 0.5f, 1 };
+    inline constexpr Color Color::Brown { 0.6f, 0.4f, 0.2f, 1 };
+    inline constexpr Color Color::Maroon { 0.5f, 0, 0, 1 };
+    inline constexpr Color Color::Teal { 0, 0.5f, 0.5f, 1 };
+    inline constexpr Color Color::Olive { 0.5f, 0.5f, 0, 1 };
+    inline constexpr Color Color::Navy { 0, 0, 0.5f, 1 };
+    inline constexpr Color Color::Coral { 1, 0.5f, 0.3f, 1 };
+    inline constexpr Color Color::Rose { 1, 0.2f, 0.5f, 1 };
+    inline constexpr Color Color::SkyBlue { 0.5, 0.75, 1, 1 };
+    inline constexpr Color Color::ForestGreen { 0.2f, 0.5, 0.2f, 1 };
+    inline constexpr Color Color::DarkGoldenRod { 0.72f, 0.52f, 0.04f, 1 };
+    inline constexpr Color Color::Indigo { 0.29f, 0, 0.51f, 1 };
+    inline constexpr Color Color::Transparent { 0, 0, 0, 0 };
 }
-
 
 #if FSN_MATH_USE_GLOBALLY
 using Fussion::Color;

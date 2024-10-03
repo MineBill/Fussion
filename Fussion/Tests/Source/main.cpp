@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[])
 {
-    Fussion::Log::default_logger()->set_log_level(Fussion::LogLevel::Debug);
+    Fussion::Log::DefaultLogger()->SetLogLevel(Fussion::LogLevel::Debug);
     int result = Catch::Session().run(argc, argv);
     return result;
 }

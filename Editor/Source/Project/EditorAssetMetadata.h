@@ -13,21 +13,20 @@ enum class AssetLoadState {
 };
 
 struct EditorAssetMetadata final {
-
-    Fsn::AssetType type = Fsn::AssetType::Invalid;
-    std::filesystem::path path;
-    std::string name;
-    bool is_virtual = false;
-    bool dont_serialize = false;
+    Fsn::AssetType Type = Fsn::AssetType::Invalid;
+    std::filesystem::path Path;
+    std::string Name;
+    bool IsVirtual = false;
+    bool DontSerialize = false;
 
     /// Runtime-only flag to detect if the asset has been modified.
-    bool dirty = false;
+    bool Dirty = false;
 
-    AssetLoadState load_state{ AssetLoadState::Unloaded };
+    AssetLoadState LoadState { AssetLoadState::Unloaded };
 
-    Fussion::AssetHandle handle;
+    Fussion::AssetHandle Handle;
 
     // TODO: Investigate if using Ref is a good idea.
-    Ref<Fussion::AssetMetadata> custom_metadata{ nullptr };
-    bool is_valid() const { return type != Fsn::AssetType::Invalid; }
+    Ref<Fussion::AssetMetadata> CustomMetadata { nullptr };
+    bool IsValid() const { return Type != Fsn::AssetType::Invalid; }
 };

@@ -1,32 +1,32 @@
 ﻿#pragma once
-#include <vector>
 #include <functional>
+#include <vector>
 
 namespace Fussion {
-template<typename Signature = void()>
-class Delegate {
-public:
-    using Function = std::function<Signature>;
+    template<typename Signature = void()>
+    class Delegate {
+    public:
+        using Function = std::function<Signature>;
 
-    void subscribe(Function const& function)
-    {
-        m_subscribers.push_back(function);
-    }
-
-    template<typename... Args>
-    void fire(Args&&... args)
-    {
-        for (auto const& sub : m_subscribers) {
-            sub(std::forward<Args>(args)...);
+        void Subscribe(Function const& function)
+        {
+            m_Subscribers.push_back(function);
         }
-    }
 
-    friend void operator+=(Delegate& lhs, Function const& func)
-    {
-        lhs.m_subscribers.push_back(func);
-    }
+        template<typename... Args>
+        void Fire(Args&&... args)
+        {
+            for (auto const& sub : m_Subscribers) {
+                sub(std::forward<Args>(args)...);
+            }
+        }
 
-private:
-    std::vector<Function> m_subscribers{};
-};
+        friend void operator+=(Delegate& lhs, Function const& func)
+        {
+            lhs.m_Subscribers.push_back(func);
+        }
+
+    private:
+        std::vector<Function> m_Subscribers {};
+    };
 }

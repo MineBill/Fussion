@@ -3,8 +3,8 @@
 namespace Fussion::Scripting {
     class Attribute {
     public:
-        virtual ~Attribute() {}
+        virtual ~Attribute() { }
 
-        virtual std::string to_string() = 0;
+        virtual std::string ToString() = 0;
     };
 }

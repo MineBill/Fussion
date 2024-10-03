@@ -6,12 +6,12 @@ namespace EUI {
     namespace Detail {
         ButtonStyle& get_button_style(ButtonStyles style)
         {
-            return EditorStyle::get_style().button_styles[style];
+            return EditorStyle::Style().ButtonStyles[style];
         }
 
         WindowStyle& get_window_style(WindowStyles style)
         {
-            return EditorStyle::get_style().window_styles[style];
+            return EditorStyle::Style().WindowStyles[style];
         }
     }
 
@@ -27,14 +27,14 @@ namespace EUI {
         Vector2 pos = ImGui::GetCursorPos();
 
         auto handle = m_Handle.get(data).as<Fussion::AssetHandle>();
-        auto asset_metadata = Project::asset_manager()->get_metadata(handle);
+        auto asset_metadata = Project::AssetManager()->GetMetadata(handle);
 
-        ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::BoldSmall]);
-        if (asset_metadata.is_valid()) {
-            ImGui::Button(std::format("{}", asset_metadata.name.data()).data(), Vector2(64, 64));
+        ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::BoldSmall]);
+        if (asset_metadata.IsValid()) {
+            ImGui::Button(std::format("{}", asset_metadata.Name.data()).data(), Vector2(64, 64));
 
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                Editor::inst().open_asset(asset_metadata.handle);
+                Editor::Self().OpenAsset(asset_metadata.Handle);
             }
 
             if (ImGui::BeginPopupContextItem()) {
@@ -57,9 +57,9 @@ namespace EUI {
             auto* payload = ImGui::GetDragDropPayload();
             if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
                 auto incoming_handle = CAST(Fussion::AssetHandle*, payload->Data);
-                auto incoming_metadata = Project::asset_manager()->get_metadata(*incoming_handle);
+                auto incoming_metadata = Project::AssetManager()->GetMetadata(*incoming_handle);
 
-                if (incoming_metadata.type == asset_type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
+                if (incoming_metadata.Type == asset_type && ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
                     m_Handle.set(data, *incoming_handle);
                     modified = true;
                 }
@@ -71,9 +71,9 @@ namespace EUI {
         auto old_pos = ImGui::GetCursorPos();
         ImGui::SetCursorPos(pos + Vector2(2, 2));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-        image_button(EditorStyle::get_style().editor_icons[EditorIcon::Search], [&] {
+        image_button(EditorStyle::Style().EditorIcons[EditorIcon::Search], [&] {
             auto asset_type = class_type.get_method("GetType").invoke(data).as<Fussion::AssetType>();
-            Editor::generic_asset_picker.show(m_Handle, data, asset_type);
+            Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
         }, { .size = Vector2{ 16, 16 } });
         ImGui::PopStyleVar();
         ImGui::SetCursorPos(old_pos);

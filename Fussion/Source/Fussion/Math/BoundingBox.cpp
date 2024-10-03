@@ -7,29 +7,29 @@ namespace Fussion {
     {
     }
 
-    void BoundingBox::include_point(Vector3 const& point)
+    void BoundingBox::IncludePoint(Vector3 const& point)
     {
-        Max.x = Math::max(Max.x, point.x);
-        Max.y = Math::max(Max.y, point.y);
-        Max.z = Math::max(Max.z, point.z);
+        Max.x = Math::Max(Max.x, point.x);
+        Max.y = Math::Max(Max.y, point.y);
+        Max.z = Math::Max(Max.z, point.z);
 
-        Min.x = Math::min(Min.x, point.x);
-        Min.y = Math::min(Min.y, point.y);
-        Min.z = Math::min(Min.z, point.z);
+        Min.x = Math::Min(Min.x, point.x);
+        Min.y = Math::Min(Min.y, point.y);
+        Min.z = Math::Min(Min.z, point.z);
     }
 
-    void BoundingBox::include(BoundingBox const& box)
+    void BoundingBox::Include(BoundingBox const& box)
     {
-        include_point(box.Min);
-        include_point(box.Max);
+        IncludePoint(box.Min);
+        IncludePoint(box.Max);
     }
 
-    Vector3 BoundingBox::center() const
+    Vector3 BoundingBox::Center() const
     {
         return (Min + Max) / 2.0f;
     }
 
-    BoundingBox BoundingBox::translated(Vector3 const& point) const
+    BoundingBox BoundingBox::Translated(Vector3 const& point) const
     {
         BoundingBox box = *this;
         box.Min += point;
@@ -37,7 +37,7 @@ namespace Fussion {
         return box;
     }
 
-    BoundingBox BoundingBox::transformed(Mat4 const& matrix) const
+    BoundingBox BoundingBox::Transformed(Mat4 const& matrix) const
     {
         BoundingBox box = *this;
         box.Min = Vector3(matrix * Vector4(box.Min, 1.0f));
@@ -45,7 +45,7 @@ namespace Fussion {
         return box;
     }
 
-    auto BoundingBox::get_corners() const -> std::array<Vector3, 8>
+    auto BoundingBox::GetCorners() const -> std::array<Vector3, 8>
     {
         return {
             Min,

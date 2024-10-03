@@ -3,27 +3,27 @@
 #include "Fussion/Core/Layer.h"
 
 struct EditorProject {
-    std::string name{};
-    std::filesystem::path location{};
+    std::string Name {};
+    std::filesystem::path Location {};
 };
 
 class ProjectCreatorLayer final : public Fussion::Layer {
 public:
-    virtual void on_start() override;
-    virtual void on_update(f32 delta) override;
-    virtual void on_event(Fussion::Event& event) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32 delta) override;
+    virtual void OnEvent(Fussion::Event& event) override;
 
-    void serialize(Fussion::Serializer& s) const;
-    void deserialize(Fussion::Deserializer& ds);
+    void Serialize(Fussion::Serializer& s) const;
+    void Deserialize(Fussion::Deserializer& ds);
 
-    void add_project(std::filesystem::path const& path);
-    void save_projects() const;
-    void load_projects();
+    void AddProject(std::filesystem::path const& path);
+    void SaveProjects() const;
+    void LoadProjects();
 
 private:
-    bool m_open_new_project_popup{};
-    bool m_open_import_project_popup{};
-    bool m_project_name_validated{ false };
+    bool m_OpenNewProjectPopup {};
+    bool m_OpenImportProjectPopup {};
+    bool m_ProjectNameValidated { false };
 
-    std::vector<EditorProject> m_projects{};
+    std::vector<EditorProject> m_Projects {};
 };

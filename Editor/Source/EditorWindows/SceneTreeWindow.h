@@ -8,16 +8,19 @@ public:
 
     EDITOR_WINDOW(SceneTreeWindow)
 
-    virtual void on_draw() override;
+    virtual void OnDraw() override;
 
     [[nodiscard]]
-    auto selection() const -> SelectionList const& { return m_selection; }
+    auto GetSelection() const -> SelectionList const&
+    {
+        return m_Selection;
+    }
 
-    void clear_selection() { m_selection.clear(); }
-    void select_entity(Fussion::Uuid entity, bool clear = true);
+    void ClearSelection() { m_Selection.clear(); }
+    void SelectEntity(Fussion::Uuid entity, bool clear = true);
 
 private:
-    void draw_entity_hierarchy(Fsn::Uuid handle);
+    void DrawEntityHierarchy(Fsn::Uuid handle);
 
-    SelectionList m_selection{};
+    SelectionList m_Selection {};
 };

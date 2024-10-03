@@ -1,7 +1,7 @@
 #pragma once
-#include <array>
 #include <Fussion/Core/Types.h>
 #include <Fussion/Log/Log.h>
+#include <array>
 
 std::array<u8, 16> uuidv7();
 
@@ -43,5 +43,5 @@ struct DebugObject {
         return *this;
     }
 
-    bool Moved{ false };
+    bool Moved { false };
 };

@@ -5,6 +5,6 @@ class MaterialWindow : public AssetWindow {
 public:
     ASSET_WINDOW_DEFAULT(MaterialWindow)
 
-    virtual void on_draw(f32 delta) override;
-    virtual void on_save() override;
+    virtual void OnDraw(f32 delta) override;
+    virtual void OnSave() override;
 };

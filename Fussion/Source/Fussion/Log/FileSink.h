@@ -12,11 +12,11 @@ namespace Fussion {
     public:
         FileSink() = default;
         virtual ~FileSink() override;
-        static Ref<FileSink> create(std::filesystem::path const& file_name);
+        static Ref<FileSink> Create(std::filesystem::path const& file_name);
 
-        virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override;
+        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override;
 
     private:
-        std::ofstream m_out_file {};
+        std::ofstream m_OutStream {};
     };
 }

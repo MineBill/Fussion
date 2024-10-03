@@ -1,11 +1,13 @@
-﻿#include "Core/Core.h"
-#include "Core/Delegate.h"
-#include "Log/Log.h"
+﻿#include "FussionPCH.h"
 
-#include <Fussion/OS/FileWatcher.h>
-#include <Fussion/Core/Types.h>
-#include <thread>
+#include "Core/Core.h"
+#include "Core/Delegate.h"
+#include "Core/Types.h"
+#include "Log/Log.h"
+#include "OS/FileWatcher.h"
+
 #include <mutex>
+#include <thread>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -38,7 +40,10 @@ namespace Fussion {
 
     class WindowsFileWatcher final : public FileWatcher {
     public:
-        explicit WindowsFileWatcher(std::filesystem::path const& path): m_Update{ true }, m_Root(path) {}
+        explicit WindowsFileWatcher(std::filesystem::path const& path)
+            : m_Update { true }
+            , m_Root(path)
+        { }
 
         virtual ~WindowsFileWatcher() override
         {
@@ -47,12 +52,12 @@ namespace Fussion {
             FindCloseChangeNotification(m_WatchHandle);
         }
 
-        virtual void register_listener(std::function<CallbackType> cb) override
+        virtual void AddListener(std::function<CallbackType> cb) override
         {
             m_Listeners += cb;
         }
 
-        virtual void start() override
+        virtual void Start() override
         {
             m_Thread = std::thread(&WindowsFileWatcher::Work, this);
         }
@@ -75,19 +80,18 @@ namespace Fussion {
 
                     auto file_info = TRANSMUTE(FILE_NOTIFY_INFORMATION*, buffer);
                     // file_info->Action
-                    std::wstring name{ file_info->FileName, file_info->FileNameLength / sizeof(WCHAR) };
+                    std::wstring name { file_info->FileName, file_info->FileNameLength / sizeof(WCHAR) };
                     name.shrink_to_fit();
-                    std::filesystem::path path{ name };
+                    std::filesystem::path path { name };
 
                     {
                         std::scoped_lock lock(m_Mutex);
 
-                        m_Listeners.fire(path, WindowsFileActionToEventType(file_info->Action));
+                        m_Listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
                     }
 
                     FindNextChangeNotification(m_WatchHandle);
-                }
-                break;
+                } break;
                 case WAIT_TIMEOUT:
 
                     break;
@@ -99,16 +103,16 @@ namespace Fussion {
         }
 
         std::atomic<bool> m_Update;
-        HANDLE m_WatchHandle{};
+        HANDLE m_WatchHandle {};
         std::thread m_Thread;
-        std::filesystem::path m_Root{};
+        std::filesystem::path m_Root {};
         Delegate<CallbackType> m_Listeners;
-        std::mutex m_Mutex{};
+        std::mutex m_Mutex {};
     };
 
-    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root)
+    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root)
     {
-        return make_ptr<WindowsFileWatcher>(root);
+        return MakePtr<WindowsFileWatcher>(root);
     }
 
 }

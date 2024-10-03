@@ -6,11 +6,11 @@
 
 Fussion::PbrMaterial::PbrMaterial()
 {
-    material_uniform_buffer = UniformBuffer<MaterialBlock>::create(Renderer::device(), "Material"sv);
-    update_sampler();
+    material_uniform_buffer = UniformBuffer<MaterialBlock>::Create(Renderer::Device(), "Material"sv);
+    UpdateSampler();
 }
 
-void Fussion::PbrMaterial::serialize(Serializer& ctx) const
+void Fussion::PbrMaterial::Serialize(Serializer& ctx) const
 {
     FSN_SERIALIZE_MEMBER(metallic);
     FSN_SERIALIZE_MEMBER(roughness);
@@ -24,7 +24,7 @@ void Fussion::PbrMaterial::serialize(Serializer& ctx) const
     FSN_SERIALIZE_MEMBER(ambient_occlusion_map);
 }
 
-void Fussion::PbrMaterial::deserialize(Deserializer& ctx)
+void Fussion::PbrMaterial::Deserialize(Deserializer& ctx)
 {
     FSN_DESERIALIZE_MEMBER(metallic);
     FSN_DESERIALIZE_MEMBER(roughness);
@@ -38,30 +38,30 @@ void Fussion::PbrMaterial::deserialize(Deserializer& ctx)
     FSN_DESERIALIZE_MEMBER(ambient_occlusion_map);
 }
 
-void Fussion::PbrMaterial::update_buffer()
+void Fussion::PbrMaterial::UpdateBuffer()
 {
-    material_uniform_buffer.data.metallic = metallic;
-    material_uniform_buffer.data.roughness = roughness;
-    material_uniform_buffer.data.object_color = object_color;
-    material_uniform_buffer.data.tilling = tiling;
+    material_uniform_buffer.Data.metallic = metallic;
+    material_uniform_buffer.Data.roughness = roughness;
+    material_uniform_buffer.Data.object_color = object_color;
+    material_uniform_buffer.Data.tilling = tiling;
     material_uniform_buffer.flush();
 }
 
-void Fussion::PbrMaterial::update_sampler()
+void Fussion::PbrMaterial::UpdateSampler()
 {
-    sampler.release();
+    sampler.Release();
     GPU::SamplerSpec bilinear_sampler_spec {
         .label = "Material Sampler"sv,
-        .address_mode_u = GPU::AddressMode::Repeat,
-        .address_mode_v = GPU::AddressMode::Repeat,
-        .address_mode_w = GPU::AddressMode::Repeat,
-        .mag_filter = GPU::FilterMode::Linear,
-        .min_filter = GPU::FilterMode::Linear,
-        .mip_map_filter = GPU::FilterMode::Linear,
-        .lod_min_clamp = 0.f,
-        .lod_max_clamp = 32.f,
-        .anisotropy_clamp = 16
+        .AddressModeU = GPU::AddressMode::Repeat,
+        .AddressModeV = GPU::AddressMode::Repeat,
+        .AddressModeW = GPU::AddressMode::Repeat,
+        .MagFilter = GPU::FilterMode::Linear,
+        .MinFilter = GPU::FilterMode::Linear,
+        .MipMapFilter = GPU::FilterMode::Linear,
+        .LodMinClamp = 0.f,
+        .LodMaxClamp = 32.f,
+        .AnisotropyClamp = 16
     };
 
-    sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
+    sampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
 }

@@ -3,60 +3,60 @@
 #include <webgpu/wgpu.h>
 
 namespace Fussion::GPU {
-    auto to_wgpu(BackendRenderer backend) -> WGPUInstanceBackendFlags;
+    auto ToWGPU(BackendRenderer backend) -> WGPUInstanceBackendFlags;
 
-    auto to_wgpu(Feature feature) -> WGPUFeatureName;
+    auto ToWGPU(Feature feature) -> WGPUFeatureName;
 
     // auto to_wgpu(QueryType set) -> WGPUQueryType;
 
-    auto to_wgpu(DevicePower power) -> WGPUPowerPreference;
+    auto ToWGPU(DevicePower power) -> WGPUPowerPreference;
 
-    auto to_wgpu(PresentMode mode) -> WGPUPresentMode;
+    auto ToWGPU(PresentMode mode) -> WGPUPresentMode;
 
-    auto to_wgpu(BufferUsageFlags usage) -> WGPUBufferUsageFlags;
+    auto ToWGPU(BufferUsageFlags usage) -> WGPUBufferUsageFlags;
 
-    auto to_wgpu(MapModeFlags mode) -> WGPUMapModeFlags;
+    auto ToWGPU(MapModeFlags mode) -> WGPUMapModeFlags;
 
-    auto to_wgpu(TextureDimension dim) -> WGPUTextureDimension;
+    auto ToWGPU(TextureDimension dim) -> WGPUTextureDimension;
 
-    auto to_wgpu(TextureViewDimension dim) -> WGPUTextureViewDimension;
+    auto ToWGPU(TextureViewDimension dim) -> WGPUTextureViewDimension;
 
-    auto to_wgpu(TextureAspect aspect) -> WGPUTextureAspect;
+    auto ToWGPU(TextureAspect aspect) -> WGPUTextureAspect;
 
-    auto to_wgpu(LoadOp load) -> WGPULoadOp;
-    auto to_wgpu(StoreOp store) -> WGPUStoreOp;
+    auto ToWGPU(LoadOp load) -> WGPULoadOp;
+    auto ToWGPU(StoreOp store) -> WGPUStoreOp;
 
-    auto to_wgpu(VertexStepMode mode) -> WGPUVertexStepMode;
-    auto to_wgpu(PrimitiveTopology topology) -> WGPUPrimitiveTopology;
-    auto to_wgpu(IndexFormat format) -> WGPUIndexFormat;
+    auto ToWGPU(VertexStepMode mode) -> WGPUVertexStepMode;
+    auto ToWGPU(PrimitiveTopology topology) -> WGPUPrimitiveTopology;
+    auto ToWGPU(IndexFormat format) -> WGPUIndexFormat;
 
-    auto to_wgpu(AddressMode mode) -> WGPUAddressMode;
-    auto to_wgpu(FilterMode mode) -> WGPUFilterMode;
+    auto ToWGPU(AddressMode mode) -> WGPUAddressMode;
+    auto ToWGPU(FilterMode mode) -> WGPUFilterMode;
 
-    auto to_wgpu(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags;
+    auto ToWGPU(ColorWriteFlags flags) -> WGPUColorWriteMaskFlags;
 
-    auto to_wgpu(ElementType type) -> WGPUVertexFormat;
+    auto ToWGPU(ElementType type) -> WGPUVertexFormat;
 
-    auto to_wgpu(FrontFace face) -> WGPUFrontFace;
-    auto to_wgpu(Face face) -> WGPUCullMode;
-    auto to_wgpu(PolygonMode mode) -> void;
+    auto ToWGPU(FrontFace face) -> WGPUFrontFace;
+    auto ToWGPU(Face face) -> WGPUCullMode;
+    auto ToWGPU(PolygonMode mode) -> void;
 
-    auto to_wgpu(CompareFunction compare) -> WGPUCompareFunction;
-    auto to_wgpu(BlendOperation op) -> WGPUBlendOperation;
-    auto to_wgpu(BlendFactor factor) -> WGPUBlendFactor;
+    auto ToWGPU(CompareFunction compare) -> WGPUCompareFunction;
+    auto ToWGPU(BlendOperation op) -> WGPUBlendOperation;
+    auto ToWGPU(BlendFactor factor) -> WGPUBlendFactor;
 
-    auto to_wgpu(TextureUsageFlags usage) -> WGPUTextureUsageFlags;
+    auto ToWGPU(TextureUsageFlags usage) -> WGPUTextureUsageFlags;
 
-    auto to_wgpu(StencilOperation op) -> WGPUStencilOperation;
+    auto ToWGPU(StencilOperation op) -> WGPUStencilOperation;
 
-    auto to_wgpu(SamplerBindingType type) -> WGPUSamplerBindingType;
-    auto to_wgpu(StorageAccess access) -> WGPUStorageTextureAccess;
+    auto ToWGPU(SamplerBindingType type) -> WGPUSamplerBindingType;
+    auto ToWGPU(StorageAccess access) -> WGPUStorageTextureAccess;
 
-    auto to_wgpu(ShaderStageFlags flags) -> WGPUShaderStageFlags;
+    auto ToWGPU(ShaderStageFlags flags) -> WGPUShaderStageFlags;
 
     auto from_wgpu(WGPUErrorType type) -> ErrorType;
 
-    auto to_wgpu(TextureFormat format) -> WGPUTextureFormat;
+    auto ToWGPU(TextureFormat format) -> WGPUTextureFormat;
 
     auto from_wgpu(WGPUTextureFormat format) -> TextureFormat;
 

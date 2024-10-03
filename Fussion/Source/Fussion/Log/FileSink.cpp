@@ -1,7 +1,7 @@
 ﻿#include "FileSink.h"
 
-#include "Fussion/Core/Core.h"
 #include "FussionPCH.h"
+#include "Fussion/Core/Core.h"
 
 // @todo Remove this and stop using *_s functions.
 #if defined(OS_LINUX)
@@ -27,10 +27,10 @@ int fprintf_s(FILE* stream, char const* fmt, Args... args)
 namespace Fussion {
     FileSink::~FileSink()
     {
-        m_out_file.close();
+        m_OutStream.close();
     }
 
-    Ref<FileSink> FileSink::create(std::filesystem::path const& file_name)
+    Ref<FileSink> FileSink::Create(std::filesystem::path const& file_name)
     {
         Ref<FileSink> sink;
         sink.reset(new FileSink(file_name.string()));
@@ -39,16 +39,16 @@ namespace Fussion {
 
     FileSink::FileSink(std::string const& file_name)
     {
-        m_out_file.open(file_name);
-        VERIFY(m_out_file.is_open());
+        m_OutStream.open(file_name);
+        VERIFY(m_OutStream.is_open());
     }
 
-    void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
+    void FileSink::Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
     {
         static char const* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
-        if (level >= m_logger->get_priority()) {
-            m_out_file << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;
+        if (level >= m_logger->GetPriority()) {
+            m_OutStream << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;
         }
     }
 }

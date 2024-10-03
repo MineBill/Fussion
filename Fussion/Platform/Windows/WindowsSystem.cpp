@@ -1,21 +1,24 @@
-﻿#include "Log/Log.h"
+﻿#include "FussionPCH.h"
+
+#include "Log/Log.h"
 #include "OS/System.h"
 
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-#include <dwmapi.h>
+
 #include <ShlObj_core.h>
+#include <dwmapi.h>
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "Advapi32.lib")
 
 namespace Fussion::System {
-    bool prefers_dark()
+    bool PrefersDark()
     {
-        return !prefers_light();
+        return !PrefersLight();
     }
 
-    bool prefers_light()
+    bool PrefersLight()
     {
         // based on https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 
@@ -37,15 +40,12 @@ namespace Fussion::System {
         }
 
         // convert bytes written to our buffer to an int, assuming little-endian
-        auto i = buffer[3] << 24 |
-            buffer[2] << 16 |
-            buffer[1] << 8 |
-            buffer[0];
+        auto i = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
 
         return i == 1;
     }
 
-    auto get_known_folder(KnownFolders folder) -> std::filesystem::path
+    auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path
     {
         GUID folder_id;
         switch (folder) {
@@ -57,7 +57,7 @@ namespace Fussion::System {
 
         PWSTR path;
         if (SUCCEEDED(SHGetKnownFolderPath(folder_id, 0, nullptr, &path))) {
-            std::wstring wpath{ path };
+            std::wstring wpath { path };
             return wpath;
         }
 
@@ -65,8 +65,9 @@ namespace Fussion::System {
 
         return {};
     }
-    
-    bool console_supports_color() {
+
+    bool ConsoleSupportsColor()
+    {
         auto console = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD mode;
         GetConsoleMode(console, &mode);

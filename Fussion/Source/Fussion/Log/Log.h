@@ -3,69 +3,71 @@
 
 #include <fmt/format.h>
 
-#include <source_location>
 #include <mutex>
+#include <source_location>
 #include <vector>
 
 namespace Fussion {
-enum class LogLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
-    Fatal,
-};
+    class Log;
 
-struct LogEntry {
-    LogLevel level;
-    std::string message;
-    std::source_location location;
-};
+    enum class LogLevel {
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Fatal,
+    };
 
-class LogSink {
-    friend class Log;
+    struct LogEntry {
+        LogLevel Level;
+        std::string Message;
+        std::source_location SrcLoc;
+    };
 
-public:
-    virtual ~LogSink() = default;
-    virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
+    class LogSink {
+        friend Log;
 
-protected:
-    class Log* m_logger;
-};
+    public:
+        virtual ~LogSink() = default;
+        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) = 0;
 
-class Log {
-    LogLevel m_priority{};
+    protected:
+        Log* m_logger;
+    };
 
-public:
-    explicit Log(LogLevel default_level = LogLevel::Info);
-    ~Log();
+    class Log {
+        LogLevel m_Priority {};
 
-    void set_log_level(LogLevel level);
-    void write(LogLevel level, std::string_view message,
-        std::source_location const& loc = std::source_location::current());
+    public:
+        explicit Log(LogLevel default_level = LogLevel::Info);
+        ~Log();
 
-    void register_sink(Ref<LogSink> const& sink);
+        void SetLogLevel(LogLevel level);
+        void Write(LogLevel level, std::string_view message,
+            std::source_location const& loc = std::source_location::current());
 
-    LogLevel get_priority() const { return m_priority; }
+        void RegisterSink(Ref<LogSink> const& sink);
 
-    static Log* default_logger();
+        LogLevel GetPriority() const { return m_Priority; }
 
-private:
-    std::mutex m_mutex{};
-    std::vector<Ref<LogSink>> m_sinks{};
-};
+        static Log* DefaultLogger();
+
+    private:
+        std::mutex m_Mutex {};
+        std::vector<Ref<LogSink>> m_Sinks {};
+    };
 }
 
 namespace Fsn = Fussion;
 
-#define LOG_FATAL(message) Fsn::Log::default_logger()->write(Fsn::LogLevel::Fatal, message)
-#define LOG_ERROR(message) Fsn::Log::default_logger()->write(Fsn::LogLevel::Error, message)
-#define LOG_WARN(message)  Fsn::Log::default_logger()->write(Fsn::LogLevel::Warning, message)
-#define LOG_INFO(message)  Fsn::Log::default_logger()->write(Fsn::LogLevel::Info, message)
-#define LOG_DEBUG(message) Fsn::Log::default_logger()->write(Fsn::LogLevel::Debug, message)
+#define LOG_FATAL(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Fatal, message)
+#define LOG_ERROR(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Error, message)
+#define LOG_WARN(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Warning, message)
+#define LOG_INFO(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Info, message)
+#define LOG_DEBUG(message) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Debug, message)
 
-#define LOG_FATALF(fmt_str, ...) Fsn::Log::default_logger()->write(Fsn::LogLevel::Fatal, fmt::format(fmt_str, ##__VA_ARGS__))
-#define LOG_ERRORF(fmt_str, ...) Fsn::Log::default_logger()->write(Fsn::LogLevel::Error, fmt::format(fmt_str, ##__VA_ARGS__))
-#define LOG_WARNF(fmt_str, ...)  Fsn::Log::default_logger()->write(Fsn::LogLevel::Warning, fmt::format(fmt_str, ##__VA_ARGS__))
-#define LOG_INFOF(fmt_str, ...)  Fsn::Log::default_logger()->write(Fsn::LogLevel::Info, fmt::format(fmt_str, ##__VA_ARGS__))
-#define LOG_DEBUGF(fmt_str, ...) Fsn::Log::default_logger()->write(Fsn::LogLevel::Debug, fmt::format(fmt_str, ##__VA_ARGS__))
+#define LOG_FATALF(fmt_str, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Fatal, fmt::format(fmt_str, ##__VA_ARGS__))
+#define LOG_ERRORF(fmt_str, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Error, fmt::format(fmt_str, ##__VA_ARGS__))
+#define LOG_WARNF(fmt_str, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Warning, fmt::format(fmt_str, ##__VA_ARGS__))
+#define LOG_INFOF(fmt_str, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Info, fmt::format(fmt_str, ##__VA_ARGS__))
+#define LOG_DEBUGF(fmt_str, ...) Fsn::Log::DefaultLogger()->Write(Fsn::LogLevel::Debug, fmt::format(fmt_str, ##__VA_ARGS__))

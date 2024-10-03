@@ -3,9 +3,9 @@
 #include "Fussion/Core/Core.h"
 
 #if defined(OS_WINDOWS)
-#include <Windows.h>
+#    include <Windows.h>
 #elif defined(OS_LINUX)
-#include <time.h>
+#    include <time.h>
 #endif
 
 Clock::Clock()
@@ -13,37 +13,36 @@ Clock::Clock()
 #if defined(OS_WINDOWS)
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
-    m_clock_frequency = frequency.QuadPart;
+    m_ClockFrequency = frequency.QuadPart;
 
     LARGE_INTEGER integer;
     QueryPerformanceCounter(&integer);
-    m_tick_count = integer.QuadPart;
-    // m_tick_count = GetTickCount64();
+    m_TickCount = integer.QuadPart;
 #elif defined(OS_LINUX)
-    timespec now{};
+    timespec now {};
     clock_gettime(CLOCK_BOOTTIME, &now);
 
-    m_tick_count = CAST(u64, now.tv_sec) * 1000000000LL + CAST(u64, now.tv_nsec);
+    m_TickCount = CAST(u64, now.tv_sec) * 1000000000LL + CAST(u64, now.tv_nsec);
 #endif
 }
 
-f64 Clock::reset()
+f64 Clock::Reset()
 {
 #if defined(OS_WINDOWS)
     LARGE_INTEGER integer;
     QueryPerformanceCounter(&integer);
 
-    auto diff = integer.QuadPart - m_tick_count;
-    m_tick_count = integer.QuadPart;
+    auto diff = integer.QuadPart - m_TickCount;
+    m_TickCount = integer.QuadPart;
 
-    return CAST(f64, diff) / CAST(f64, m_clock_frequency);
+    return CAST(f64, diff) / CAST(f64, m_ClockFrequency);
 #elif defined(OS_LINUX)
-    timespec ts{};
+    timespec ts {};
     clock_gettime(CLOCK_BOOTTIME, &ts);
 
-    const u64 now = CAST(u64, ts.tv_sec) * 1000000000LL + CAST(u64, ts.tv_nsec);
-    u64 diff = (now - m_tick_count) / 1000; // to ms
-    m_tick_count = now;
+    u64 const now = CAST(u64, ts.tv_sec) * 1000000000LL + CAST(u64, ts.tv_nsec);
+    u64 diff = (now - m_TickCount) / 1000; // to ms
+    m_TickCount = now;
 
     return CAST(f64, diff) / 1000.0f / 1000.0f;
 #endif

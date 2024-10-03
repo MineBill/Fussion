@@ -2,7 +2,6 @@
 #include <Fussion/Core/BitFlags.h>
 #include <Fussion/GPU/GPU.h>
 #include <Fussion/Math/Color.h>
-#include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
     class Texture2D;
@@ -16,23 +15,23 @@ namespace Fussion {
     static_assert(sizeof(GPUSpotLight) == 1, "GPUSpotLight needs to be kept in sync with the shader equivalent");
 
     struct GPUPointLight {
-        Vector3 position;
-        Color color;
-        f32 radius;
+        Vector3 Position;
+        Color LightColor;
+        f32 Radius;
     };
 
     static_assert(sizeof(GPUPointLight) == 32, "GPUPointLight needs to be kept in sync with the shader equivalent");
 
     struct GPUDirectionalLight {
         struct ShaderStruct {
-            std::array<Mat4, 4> light_space_matrix {};
-            Vector4 direction {};
-            Color color {};
-            f32 brightness {};
+            std::array<Mat4, 4> LightSpaceMatrix {};
+            Vector4 Direction {};
+            Color LightColor {};
+            f32 Brightness {};
             f32 __padding[3] {};
-        } shader_data;
+        } ShaderData;
 
-        f32 split {};
+        f32 Split {};
     };
 
     static_assert(sizeof(GPUDirectionalLight) == 308, "GPUDirectionalLight needs to be kept in sync with the shader equivalent");
@@ -63,54 +62,54 @@ namespace Fussion {
     struct PostProcessing {
         struct SSAO {
             // Unused for now.
-            u32 kernel_size { 64 };
-            f32 radius { 0.125f };
-            f32 bias { 0.025f };
-            f32 noise_scale { 4.0f };
+            u32 KernelSize { 64 };
+            f32 Radius { 0.125f };
+            f32 Bias { 0.025f };
+            f32 NoiseScale { 4.0f };
         };
 
-        struct TonemappingSettings {
-            f32 gamma { 2.2f };
-            f32 exposure { 1.0f };
+        struct Tonemapping {
+            f32 Gamma { 2.2f };
+            f32 Exposure { 1.0f };
             /// 0 nothing, 1 aces, 2 reinhard
-            u32 mode { 0 };
-        } tonemapping_settings {};
+            u32 Mode { 0 };
+        } TonemappingSettings {};
 
-        bool use_ssao {};
-        SSAO ssao {};
+        bool UseSSAO {};
+        SSAO SSAOData {};
     };
 
     // NOTE: Ideally this would hold an actual material, that defines
     //       a shader to use. For now, we assume that all render objects
     //       are for the PBR pass.
     struct RenderObject {
-        Vector3 position {};
-        Mat4 world_matrix {};
+        Vector3 Position {};
+        Mat4 WorldMatrix {};
 
-        DrawPassFlags pass;
-        PbrMaterial* material {};
-        GPU::Buffer vertex_buffer {};
-        GPU::Buffer index_buffer {};
-        GPU::Buffer instance_buffer {};
-        u32 index_count {};
+        DrawPassFlags Pass;
+        PbrMaterial* Material {};
+        GPU::Buffer VertexBuffer {};
+        GPU::Buffer IndexBuffer {};
+        GPU::Buffer InstanceBuffer {};
+        u32 IndexCount {};
     };
 
     using MeshBatchMap = std::unordered_map<GPU::HandleT, std::vector<size_t>>;
 
     struct RenderContext {
-        RenderStateFlags render_flags;
-        PostProcessing post_processing {};
-        Texture2D* environment_map { nullptr };
+        RenderStateFlags RenderFlags;
+        PostProcessing PostProcessingSettings {};
+        Texture2D* EnvironmentMap { nullptr };
 
-        std::vector<GPUPointLight> point_lights {};
-        std::vector<GPUDirectionalLight> directional_lights {};
-        Mat4 current_light_space;
+        std::vector<GPUPointLight> PointLights {};
+        std::vector<GPUDirectionalLight> DirectionalLights {};
+        Mat4 CurrentLightSpace;
 
-        std::vector<RenderObject> render_objects {};
+        std::vector<RenderObject> RenderObjects {};
 
-        std::unordered_map<PbrMaterial*, MeshBatchMap> mesh_render_lists {};
+        std::unordered_map<PbrMaterial*, MeshBatchMap> MeshRenderLists {};
 
-        void add_render_object(RenderObject const& obj);
-        void reset();
+        void AddRenderObject(RenderObject const& obj);
+        void Reset();
     };
 }

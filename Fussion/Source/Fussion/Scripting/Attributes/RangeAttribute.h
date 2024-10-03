@@ -17,7 +17,7 @@ namespace Fussion::Scripting {
         [[nodiscard]]
         auto step() const -> f32 { return m_step; }
 
-        virtual std::string to_string() override
+        virtual std::string ToString() override
         {
             return std::format("RangeAttribute({}, {}, {})", m_min, m_max, m_step);
         }

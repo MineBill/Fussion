@@ -6,137 +6,146 @@
 #include <magic_enum/magic_enum.hpp>
 
 namespace Fussion {
-    Token::Token(TokenType type, Cursor cursor): m_cursor(cursor), m_type(type) {}
+    Token::Token(TokenType type, Cursor cursor)
+        : m_Cursor(cursor)
+        , m_Type(type)
+    { }
 
-    Token::Token(TokenType type, Value const& value, Cursor cursor): m_cursor(cursor), m_type(type), m_value(value) {}
+    Token::Token(TokenType type, ValueType const& value, Cursor cursor)
+        : m_Cursor(cursor)
+        , m_Type(type)
+        , m_Value(value)
+    { }
 
-    std::string Token::to_string() const
+    std::string Token::ToString() const
     {
-        return std::format("{}", magic_enum::enum_name(m_type));
+        return std::format("{}", magic_enum::enum_name(m_Type));
     }
 
-    SimpleLexer::SimpleLexer(std::string const& source): m_Source(source) {}
+    SimpleLexer::SimpleLexer(std::string const& source)
+        : m_Source(source)
+    { }
 
-    std::vector<Token> SimpleLexer::scan()
+    std::vector<Token> SimpleLexer::Scan()
     {
-        while (!is_at_end()) {
-            scan_token();
+        while (!IsAtEnd()) {
+            ScanToken();
         }
 
         m_Tokens.emplace_back(TokenType::Eof);
         return std::move(m_Tokens);
     }
 
-    u8 SimpleLexer::advance()
+    u8 SimpleLexer::Advance()
     {
         return m_Source.at(m_Index++);
     }
 
-    bool SimpleLexer::match(u8 ch)
+    bool SimpleLexer::Match(u8 ch)
     {
-        if (is_at_end())
+        if (IsAtEnd())
             return false;
         if (m_Source.at(m_Index) != ch)
             return false;
-        advance();
+        Advance();
         return true;
     }
 
-    u8 SimpleLexer::peek() const
+    u8 SimpleLexer::Peek() const
     {
-        if (is_at_end())
+        if (IsAtEnd())
             return '\0';
         return m_Source.at(m_Index);
     }
 
-    u8 SimpleLexer::peek_next() const
+    u8 SimpleLexer::PeekNext() const
     {
         if (m_Index + 1 > m_Source.size())
             return '\0';
         return m_Source.at(m_Index + 1);
     }
 
-    void SimpleLexer::push_token(TokenType type)
+    void SimpleLexer::PushToken(TokenType type)
     {
         m_Tokens.emplace_back(type, m_Cursor);
     }
 
-    void SimpleLexer::push_token(TokenType type, Value value)
+    void SimpleLexer::PushToken(TokenType type, ValueType value)
     {
         m_Tokens.emplace_back(type, value, m_Cursor);
     }
 
-    void SimpleLexer::scan_token()
+    void SimpleLexer::ScanToken()
     {
-        auto ch = advance();
+        auto ch = Advance();
         switch (ch) {
         case '(':
-            push_token(TokenType::LParen);
+            PushToken(TokenType::LParen);
             break;
         case ')':
-            push_token(TokenType::RParen);
+            PushToken(TokenType::RParen);
             break;
         case '{':
-            push_token(TokenType::LBrace);
+            PushToken(TokenType::LBrace);
             break;
         case '}':
-            push_token(TokenType::RBrace);
+            PushToken(TokenType::RBrace);
             break;
         case '[':
-            push_token(TokenType::LSquareBracket);
+            PushToken(TokenType::LSquareBracket);
             break;
         case ']':
-            push_token(TokenType::RSquareBracket);
+            PushToken(TokenType::RSquareBracket);
             break;
         case ',':
-            push_token(TokenType::Comma);
+            PushToken(TokenType::Comma);
             break;
         case '.':
-            push_token(TokenType::Dot);
+            PushToken(TokenType::Dot);
             break;
         case '-':
-            push_token(TokenType::Minus);
+            PushToken(TokenType::Minus);
             break;
         case '+':
-            push_token(TokenType::Plus);
+            PushToken(TokenType::Plus);
             break;
         case ';':
-            push_token(TokenType::Semicolon);
+            PushToken(TokenType::Semicolon);
             break;
         case '*':
-            push_token(TokenType::Star);
+            PushToken(TokenType::Star);
             break;
         case '?':
-            push_token(TokenType::Question);
+            PushToken(TokenType::Question);
             break;
         case ':':
-            push_token(TokenType::Colon);
+            PushToken(TokenType::Colon);
             break;
         case '!':
-            push_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
+            PushToken(Match('=') ? TokenType::BangEqual : TokenType::Bang);
             break;
         case '>':
-            push_token(match('=') ? TokenType::GreaterEqual : TokenType::Greater);
+            PushToken(Match('=') ? TokenType::GreaterEqual : TokenType::Greater);
             break;
         case '<':
-            push_token(match('=') ? TokenType::LessEqual : TokenType::Less);
+            PushToken(Match('=') ? TokenType::LessEqual : TokenType::Less);
             break;
         case '=':
-            push_token(match('=') ? TokenType::EqualEqual : TokenType::Equal);
+            PushToken(Match('=') ? TokenType::EqualEqual : TokenType::Equal);
             break;
         case '/':
-            if (match('/')) {
-                while (!is_at_end() && peek() != '\n')
-                    advance();
+            if (Match('/')) {
+                while (!IsAtEnd() && Peek() != '\n')
+                    Advance();
             } else {
-                push_token(TokenType::Slash);
+                PushToken(TokenType::Slash);
             }
             break;
         case '\\':
-            push_token(TokenType::BackSlash);
+            PushToken(TokenType::BackSlash);
             break;
         case '"':
-            parse_string();
+            ParseString();
             break;
         case '\n':
             m_Cursor.Line++;
@@ -148,9 +157,9 @@ namespace Fussion {
             break;
         default:
             if (std::isdigit(ch) != 0) {
-                parse_number();
+                ParseNumber();
             } else if (ch == '_' || std::isalnum(ch) != 0) {
-                parse_identifier();
+                ParseIdentifier();
             } else {
                 LOG_ERRORF("Lexer error at {}:{} : Unexpected character '{:c}'", m_Cursor.Line, m_Cursor.LineOffset, ch);
             }
@@ -159,58 +168,58 @@ namespace Fussion {
         m_Cursor.LineOffset++;
     }
 
-    bool SimpleLexer::is_at_end() const
+    bool SimpleLexer::IsAtEnd() const
     {
         return m_Index >= m_Source.size();
     }
 
-    void SimpleLexer::parse_string()
+    void SimpleLexer::ParseString()
     {
-        std::string str{};
-        while (!is_at_end() && peek() != '"') {
-            if (peek() == '\n') {
+        std::string str {};
+        while (!IsAtEnd() && Peek() != '"') {
+            if (Peek() == '\n') {
                 m_Cursor.Line++;
                 m_Cursor.LineOffset = 0;
             }
-            u8 ch = advance();
+            u8 ch = Advance();
             str += static_cast<s8>(ch);
             m_Cursor.LineOffset++;
         }
-        advance();
-        push_token(TokenType::String, std::string(str));
+        Advance();
+        PushToken(TokenType::String, std::string(str));
     }
 
-    void SimpleLexer::parse_number()
+    void SimpleLexer::ParseNumber()
     {
-        std::string str{ m_Source.at(m_Index - 1) };
-        while (!is_at_end() && std::isdigit(peek()) != 0) {
-            u8 ch = advance();
+        std::string str { m_Source.at(m_Index - 1) };
+        while (!IsAtEnd() && std::isdigit(Peek()) != 0) {
+            u8 ch = Advance();
             str += static_cast<s8>(ch);
             m_Cursor.LineOffset++;
         }
 
-        if (peek() == '.' && std::isdigit(peek_next()) != 0) {
-            u8 ch = advance();
+        if (Peek() == '.' && std::isdigit(PeekNext()) != 0) {
+            u8 ch = Advance();
             str += static_cast<s8>(ch);
-            while (std::isdigit(peek()) != 0) {
-                u8 chn = advance();
+            while (std::isdigit(Peek()) != 0) {
+                u8 chn = Advance();
                 str += static_cast<s8>(chn);
                 m_Cursor.LineOffset++;
             }
         }
 
-        push_token(TokenType::Number, static_cast<f32>(std::stod(str)));
+        PushToken(TokenType::Number, static_cast<f32>(std::stod(str)));
     }
 
-    void SimpleLexer::parse_identifier()
+    void SimpleLexer::ParseIdentifier()
     {
-        std::string str{ m_Source.at(m_Index - 1) };
-        while (!is_at_end() && (std::isalnum(peek()) != 0 || peek() == '_')) {
-            u8 ch = advance();
+        std::string str { m_Source.at(m_Index - 1) };
+        while (!IsAtEnd() && (std::isalnum(Peek()) != 0 || Peek() == '_')) {
+            u8 ch = Advance();
             str += static_cast<s8>(ch);
             m_Cursor.LineOffset++;
         }
 
-        push_token(TokenType::Identifier, std::string(str));
+        PushToken(TokenType::Identifier, std::string(str));
     }
 }

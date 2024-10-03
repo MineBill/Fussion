@@ -30,6 +30,6 @@ namespace Fussion {
         GPU::Texture m_render_texture {};
         GPU::Sampler m_sampler {};
 
-        UniformBuffer<PostProcessing::TonemappingSettings> m_tonemapping_buffer {};
+        UniformBuffer<PostProcessing::Tonemapping> m_tonemapping_buffer {};
     };
 }

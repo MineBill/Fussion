@@ -1,15 +1,15 @@
 ﻿#include "TextureImporter.h"
 
-#include "stb_image_write.h"
-#include "Rendering/Renderer.h"
+#include "Fussion/OS/FileSystem.h"
+#include "Fussion/Rendering/Renderer.h"
 
-#include <Fussion/OS/FileSystem.h>
-#include <Fussion/Util/stb_image.h>
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 namespace Fussion {
-    auto TextureImporter::load_image_from_memory(std::span<u8> data) -> Maybe<Image>
+    auto TextureImporter::LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>
     {
-        Image image{};
+        Image image {};
         int actual_channels_on_image, w, h;
         stbi_set_flip_vertically_on_load(false);
         auto* d = stbi_load_from_memory(data.data(), CAST(int, data.size_bytes()), &w, &h, &actual_channels_on_image, 4);
@@ -18,59 +18,59 @@ namespace Fussion {
             return None();
         }
 
-        image.data.resize(w * h * 4);
-        std::copy_n(d, w * h * 4, image.data.data());
+        image.Data.resize(w * h * 4);
+        std::copy_n(d, w * h * 4, image.Data.data());
 
-        image.width = CAST(u32, w);
-        image.height = CAST(u32, h);
+        image.Width = CAST(u32, w);
+        image.Height = CAST(u32, h);
 
         return image;
     }
 
-    auto TextureImporter::load_image_from_file(std::filesystem::path const& path) -> Maybe<Image>
+    auto TextureImporter::LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>
     {
-        auto data = FileSystem::read_entire_file_binary(path);
+        auto data = FileSystem::ReadEntireFileBinary(path);
         if (!data)
             return None();
-        return load_image_from_memory(*data);
+        return LoadImageFromMemory(*data);
     }
 
-    auto TextureImporter::load_texture_from_file(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
+    auto TextureImporter::LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
     {
-        auto image = load_image_from_file(path);
+        auto image = LoadImageFromFile(path);
         if (!image) {
             return None();
         }
-        Texture2DMetadata metadata{};
-        metadata.width = image->width;
-        metadata.height = image->height;
-        metadata.format = GPU::TextureFormat::RGBA8Unorm;
-        return Texture2D::create(image->data, metadata);
+        Texture2DMetadata metadata {};
+        metadata.Width = image->Width;
+        metadata.Height = image->Height;
+        metadata.Format = GPU::TextureFormat::RGBA8Unorm;
+        return Texture2D::Create(image->Data, metadata);
     }
 
-    auto TextureImporter::load_texture_from_memory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureImporter::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
-        auto image = load_image_from_memory(data);
+        auto image = LoadImageFromMemory(data);
         if (!image) {
             return None();
         }
-        Texture2DMetadata metadata{};
-        metadata.width = image->width;
-        metadata.height = image->height;
-        metadata.is_normal_map = is_normal_map;
-        return Texture2D::create(image->data, metadata);
+        Texture2DMetadata metadata {};
+        metadata.Width = image->Width;
+        metadata.Height = image->Height;
+        metadata.IsNormalMap = is_normal_map;
+        return Texture2D::Create(image->Data, metadata);
     }
 
-    void TextureImporter::save_image_to_file(GPU::Texture const& texture, std::filesystem::path const& path)
+    void TextureImporter::SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path)
     {
         (void)texture;
         (void)path;
         UNIMPLEMENTED;
     }
 
-    auto TextureImporter::load_hdr_image_from_memory(std::span<u8> data) -> Maybe<FloatImage>
+    auto TextureImporter::LoadHDRImageFromMemory(std::span<u8> data) -> Maybe<FloatImage>
     {
-        FloatImage image{};
+        FloatImage image {};
         int actual_channels_on_image, w, h;
 
         stbi_hdr_to_ldr_gamma(2.2f);
@@ -83,34 +83,34 @@ namespace Fussion {
             return None();
         }
 
-        image.data.resize(w * h * 4);
-        std::copy_n(image_data, w * h * 4, image.data.data());
+        image.Data.resize(w * h * 4);
+        std::copy_n(image_data, w * h * 4, image.Data.data());
 
-        image.width = CAST(u32, w);
-        image.height = CAST(u32, h);
+        image.Width = CAST(u32, w);
+        image.Height = CAST(u32, h);
 
         return image;
     }
 
-    auto TextureImporter::load_hdr_image_from_file(std::filesystem::path const& path) -> Maybe<FloatImage>
+    auto TextureImporter::LoadHDRImageFromFile(std::filesystem::path const& path) -> Maybe<FloatImage>
     {
-        auto data = FileSystem::read_entire_file_binary(path);
+        auto data = FileSystem::ReadEntireFileBinary(path);
         if (!data)
             return None();
-        return load_hdr_image_from_memory(*data);
+        return LoadHDRImageFromMemory(*data);
     }
 
-    auto TextureImporter::load_hdr_texture_from_memory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureImporter::LoadHDRTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
-        auto image = load_hdr_image_from_memory(data);
+        auto image = LoadHDRImageFromMemory(data);
         if (!image) {
             return None();
         }
-        Texture2DMetadata metadata{};
-        metadata.width = image->width;
-        metadata.height = image->height;
-        metadata.is_normal_map = is_normal_map;
-        metadata.format = GPU::TextureFormat::RGBA16Float;
-        return Texture2D::create(image->data, metadata);
+        Texture2DMetadata metadata {};
+        metadata.Width = image->Width;
+        metadata.Height = image->Height;
+        metadata.IsNormalMap = is_normal_map;
+        metadata.Format = GPU::TextureFormat::RGBA16Float;
+        return Texture2D::Create(image->Data, metadata);
     }
 }

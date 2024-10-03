@@ -10,17 +10,17 @@ namespace Fussion {
     class DynamicArray {
     public:
         DynamicArray() = default;
-        explicit DynamicArray(mem::Allocator const& allocator): m_allocator(allocator) {}
+        explicit DynamicArray(Mem::Allocator const& allocator): m_allocator(allocator) {}
 
         ~DynamicArray()
         {
             if (m_leaked) {
                 return;
             }
-            mem::free(m_buffer, m_allocator);
+            Mem::Free(m_buffer, m_allocator);
         }
 
-        void init(mem::Allocator const& allocator)
+        void init(Mem::Allocator const& allocator)
         {
             m_allocator = allocator;
         }
@@ -44,13 +44,13 @@ namespace Fussion {
             if (m_capacity == 0) {
                 m_capacity = 10;
             } else {
-                m_capacity = Math::max(m_capacity + m_capacity / 2, size);
+                m_capacity = Math::Max(m_capacity + m_capacity / 2, size);
             }
 
-            auto new_buffer = mem::alloc<T>(m_capacity, m_allocator);
-            mem::copy(new_buffer, m_buffer);
+            auto new_buffer = Mem::Alloc<T>(m_capacity, m_allocator);
+            Mem::Copy(new_buffer, m_buffer);
 
-            mem::free(m_buffer, m_allocator);
+            Mem::Free(m_buffer, m_allocator);
             m_buffer = new_buffer;
         }
 
@@ -64,7 +64,7 @@ namespace Fussion {
                 return;
             }
             m_buffer[index].~T();
-            mem::copy(m_buffer.ptr + index, m_buffer.ptr + index + 1, m_length * sizeof(T));
+            Mem::Copy(m_buffer.ptr + index, m_buffer.ptr + index + 1, m_length * sizeof(T));
             m_length--;
         }
 
@@ -151,7 +151,7 @@ namespace Fussion {
         }
 
     private:
-        mem::Allocator m_allocator{};
+        Mem::Allocator m_allocator{};
         Slice<T> m_buffer{};
         usz m_length{ 0 };
         usz m_capacity{ 0 };

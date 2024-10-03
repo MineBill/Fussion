@@ -6,35 +6,35 @@ namespace Fussion {
     class Texture2DMetadata final : public AssetMetadata {
         META_HPP_ENABLE_POLY_INFO(AssetMetadata)
     public:
-        u32 width{}, height{};
-        GPU::TextureFormat format{ GPU::TextureFormat::RGBA8UnormSrgb };
+        u32 Width{}, Height{};
+        GPU::TextureFormat Format{ GPU::TextureFormat::RGBA8UnormSrgb };
         // RHI::FilterMode Filter{ RHI::FilterMode::Linear };
         // RHI::ImageFormat Format{ RHI::ImageFormat::R8G8B8A8_UNORM };
         // RHI::WrapMode Wrap{ RHI::WrapMode::Repeat };
-        bool is_normal_map{ false };
-        bool generate_mipmaps{ true };
+        bool IsNormalMap{ false };
+        bool GenerateMipmaps{ true };
 
         [[nodiscard]]
-        f32 aspect() const { return CAST(f32, width) / CAST(f32, height); }
+        f32 Aspect() const { return CAST(f32, Width) / CAST(f32, Height); }
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class Texture2D final : public Asset {
     public:
-        static Ref<Texture2D> create(std::span<u8> data, Texture2DMetadata const& metadata);
-        static Ref<Texture2D> create(std::span<f32> data, Texture2DMetadata const& metadata);
+        static Ref<Texture2D> Create(std::span<u8> data, Texture2DMetadata const& metadata);
+        static Ref<Texture2D> Create(std::span<f32> data, Texture2DMetadata const& metadata);
 
-        GPU::Texture& image() { return m_image; }
+        GPU::Texture& GetTexture() { return m_Texture; }
 
-        Texture2DMetadata const& metadata() const { return m_metadata; }
+        Texture2DMetadata const& GetMetadata() const { return m_Metadata; }
 
-        static AssetType static_type() { return AssetType::Texture2D; }
-        virtual AssetType type() const override { return static_type(); }
+        static AssetType StaticType() { return AssetType::Texture2D; }
+        virtual AssetType Type() const override { return StaticType(); }
 
     private:
-        GPU::Texture m_image{};
-        Texture2DMetadata m_metadata{};
+        GPU::Texture m_Texture{};
+        Texture2DMetadata m_Metadata{};
     };
 }

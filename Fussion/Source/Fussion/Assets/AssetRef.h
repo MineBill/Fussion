@@ -1,11 +1,11 @@
 ﻿#pragma once
-#include "AssetManagerBase.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
+#include "Fussion/Assets/AssetManagerBase.h"
 #include "Fussion/Reflection/ReflectionRegistry.h"
+#include "Fussion/meta.hpp/meta_all.hpp"
 
 namespace Fussion {
     namespace Detail {
-        struct AssetRefMarker {};
+        struct AssetRefMarker { };
     }
 
     class AssetRefBase : public ISerializable {
@@ -18,63 +18,75 @@ namespace Fussion {
 
         explicit AssetRefBase(AssetHandle handle);
 
-        operator bool() const { return is_valid(); }
+        operator bool() const { return IsValid(); }
 
         [[nodiscard]]
-        bool is_valid() const { return m_is_valid && m_handle != 0; }
+        bool IsValid() const
+        {
+            return m_IsValid && m_Handle != 0;
+        }
 
         [[nodiscard]]
-        bool is_loaded() const;
+        bool IsLoaded() const;
 
         [[nodiscard]]
-        AssetHandle handle() const { return m_handle; }
+        AssetHandle GetHandle() const
+        {
+            return m_Handle;
+        }
 
         [[nodiscard]]
-        bool is_virtual() const;
+        bool IsVirtual() const;
 
-        void set_handle(AssetHandle handle);
+        void SetHandle(AssetHandle handle);
 
-        virtual AssetType type() const = 0;
+        virtual AssetType GetType() const = 0;
 
         /// Blocks the current thread until the asset has completed loading.
         /// This is useful in situations during one-shot actions where you get
         /// an asset and want it before continuing with your code.
-        void wait_until_loaded() const;
+        void WaitUntilLoaded() const;
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
     protected:
-        [[nodiscard]] Asset* get_raw(AssetType type) const;
+        [[nodiscard]] Asset* GetRaw(AssetType type) const;
 
-        AssetHandle m_handle{ 0 };
-        bool m_is_valid{ true };
-        bool m_loaded{ false };
+        AssetHandle m_Handle { 0 };
+        bool m_IsValid { true };
+        bool m_Loaded { false };
     };
 
     template<class T, typename M = Detail::AssetRefMarker>
     class AssetRef final : public AssetRefBase {
         META_HPP_ENABLE_POLY_INFO(AssetRefBase)
     public:
-        AssetRef() : AssetRefBase() {}
-
-        explicit AssetRef(AssetHandle handle): AssetRefBase(handle) {}
-
-        T* get()
+        AssetRef()
+            : AssetRefBase()
         {
-            if (!is_valid())
-                return nullptr;
-            return CAST(T*, get_raw(T::static_type()));
         }
 
-        T* get() const
+        explicit AssetRef(AssetHandle handle)
+            : AssetRefBase(handle)
         {
-            if (!is_valid())
-                return nullptr;
-            return CAST(T*, get_raw(T::static_type()));
         }
 
-        virtual AssetType type() const override { return T::static_type(); }
+        T* Get()
+        {
+            if (!IsValid())
+                return nullptr;
+            return CAST(T*, GetRaw(T::StaticType()));
+        }
+
+        T* Get() const
+        {
+            if (!IsValid())
+                return nullptr;
+            return CAST(T*, GetRaw(T::StaticType()));
+        }
+
+        virtual AssetType GetType() const override { return T::StaticType(); }
     };
 }
 

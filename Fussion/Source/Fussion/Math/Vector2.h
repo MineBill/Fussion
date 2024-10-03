@@ -1,21 +1,21 @@
 ﻿#pragma once
 #include <Fussion/Core/Concepts.h>
-#include "Fussion/Core/Core.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/Log/Formatters.h"
+#include <Fussion/Core/Core.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Log/Formatters.h>
 
 namespace Fussion {
     struct Vector2 {
 
 #if USE_VECTOR_F64
-    using Real = f64;
+        using Real = f64;
 #else
         using Real = f32;
 #endif
 
 #if OS_WINDOWS
-#pragma warning(push)
-#pragma warning(disable: 4201)
+#    pragma warning(push)
+#    pragma warning(disable : 4201)
 #endif
         union {
             struct {
@@ -25,32 +25,44 @@ namespace Fussion {
             Real raw[2];
         };
 #if OS_WINDOWS
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
         Vector2() = default;
-        constexpr Vector2(f32 x, f32 y): x(x), y(y) {}
-        constexpr Vector2(f64 x, f64 y): x(CAST(Real, x)), y(CAST(Real, y)) {}
-        constexpr Vector2(ScalarType auto x, ScalarType auto y): x(CAST(Real, x)), y(CAST(Real, y)) {}
-        constexpr Vector2(Vector2 const& other): x(other.x), y(other.y) {}
+        constexpr Vector2(f32 x, f32 y)
+            : x(x)
+            , y(y)
+        { }
+        constexpr Vector2(f64 x, f64 y)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+        { }
+        constexpr Vector2(ScalarType auto x, ScalarType auto y)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+        { }
+        constexpr Vector2(Vector2 const& other)
+            : x(other.x)
+            , y(other.y)
+        { }
 
         [[nodiscard]]
-        Real length() const;
+        Real Length() const;
 
         [[nodiscard]]
-        Real length_squared() const;
+        Real LengthSquared() const;
 
         [[nodiscard]]
-        Real distance_to(Vector2 const& other) const;
+        Real DistanceTo(Vector2 const& other) const;
 
         [[nodiscard]]
-        Real distance_to_squared(Vector2 const& other) const;
+        Real DistanceToSquared(Vector2 const& other) const;
 
         [[nodiscard]]
-        bool is_zero() const;
+        bool IsZero() const;
 
         [[nodiscard]]
-        f32 aspect() const;
+        f32 Aspect() const;
 
         constexpr Real& operator[](std::size_t i)
         {
@@ -125,7 +137,10 @@ namespace Fussion {
             return *this;
         }
 
-        Vector2(glm::vec2 v): x(v.x), y(v.y) {}
+        Vector2(glm::vec2 v)
+            : x(v.x)
+            , y(v.y)
+        { }
 
         operator glm::vec2() const
         {
@@ -143,12 +158,12 @@ namespace Fussion {
     bool operator==(Vector2 const& lhs, Vector2 const& rhs);
     bool operator!=(Vector2 const& lhs, Vector2 const& rhs);
 
-    inline constexpr Vector2 Vector2::Zero{ 0, 0 };
-    inline constexpr Vector2 Vector2::One{ 1, 1 };
-    inline constexpr Vector2 Vector2::Up{ 0, 1 };
-    inline constexpr Vector2 Vector2::Down{ 0, -1 };
-    inline constexpr Vector2 Vector2::Left{ 1, 0 };
-    inline constexpr Vector2 Vector2::Right{ -1, 0 };
+    inline constexpr Vector2 Vector2::Zero { 0, 0 };
+    inline constexpr Vector2 Vector2::One { 1, 1 };
+    inline constexpr Vector2 Vector2::Up { 0, 1 };
+    inline constexpr Vector2 Vector2::Down { 0, -1 };
+    inline constexpr Vector2 Vector2::Left { 1, 0 };
+    inline constexpr Vector2 Vector2::Right { -1, 0 };
 }
 
 #if defined(FSN_MATH_USE_GLOBALLY)

@@ -11,13 +11,9 @@
 
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
-void ImGuiHelpers::BeginProperty(const char* label)
+void ImGuiHelpers::BeginProperty(char const* label)
 {
-    constexpr auto table_flags =
-        ImGuiTableFlags_BordersInnerV |
-        ImGuiTableFlags_Resizable |
-        ImGuiTableFlags_NoSavedSettings |
-        ImGuiTableFlags_SizingStretchSame;
+    constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
     ImGui::BeginTable(label, 2, table_flags);
 }
 
@@ -26,7 +22,7 @@ void ImGuiHelpers::EndProperty()
     ImGui::EndTable();
 }
 
-void ImGuiHelpers::BeginGroupPanel(const char* name, const ImVec2& size, ImFont* font)
+void ImGuiHelpers::BeginGroupPanel(char const* name, ImVec2 const& size, ImFont* font)
 {
     ImGui::PushFont(font);
     defer(ImGui::PopFont());
@@ -151,9 +147,9 @@ void ImGuiHelpers::EndGroupPanel()
     ImGui::EndGroup();
 }
 
-bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, f32 max, const char* format, ImFont* font, ImFont* font2)
+bool ImGuiHelpers::DragVec3(char const* id, Vector3* value, f32 speed, f32 min, f32 max, char const* format, ImFont* font, ImFont* font2)
 {
-    bool modified{ false };
+    bool modified { false };
     ImGui::PushID(id);
     constexpr auto x_color = ImVec4(0.92f, 0.24f, 0.27f, 1.0);
     constexpr auto x_color_hover = ImVec4(0.76f, 0.20f, 0.22f, 1.0);
@@ -166,12 +162,11 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
     auto spacing = ImGui::GetStyle().ItemSpacing.x;
-    auto width =
-        (ImGui::GetContentRegionAvail().x - spacing * space_count - ImGui::CalcTextSize("X").x * 3) / item_count;
+    auto width = (ImGui::GetContentRegionAvail().x - spacing * space_count - ImGui::CalcTextSize("X").x * 3) / item_count;
 
     ImGui::AlignTextToFramePadding();
 
-    auto DrawLabel = [font](const char* label, ImVec4 color) {
+    auto DrawLabel = [font](char const* label, ImVec4 color) {
         ImGui::PushStyleColor(ImGuiCol_Text, color);
         ImGui::PushFont(font);
         ImGui::Text("%s", label);
@@ -221,7 +216,7 @@ bool ImGuiHelpers::DragVec3(const char* id, Vector3* value, f32 speed, f32 min, 
     return modified;
 }
 
-bool ImGuiHelpers::ButtonCenteredOnLine(const char* label, float alignment)
+bool ImGuiHelpers::ButtonCenteredOnLine(char const* label, float alignment)
 {
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -244,7 +239,7 @@ void ImGuiHelpers::RenderSimpleRect(ImDrawList* draw_list, Vector2 const& positi
         0.0f);
 }
 
-void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTextFlags flags)
+void ImGuiHelpers::InputText(char const* label, std::string& value, ImGuiInputTextFlags flags)
 {
     BeginProperty(label);
     defer(EndProperty());
@@ -261,14 +256,14 @@ void ImGuiHelpers::InputText(const char* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(const char* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size)
+bool ImGuiHelpers::ImageToggleButton(char const* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size)
 {
     auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
 
     if (toggled) {
         ImGui::PushStyleColor(ImGuiCol_Button, button);
     }
-    const auto pressed = ImGui::ImageButton(id, texture, size);
+    auto const pressed = ImGui::ImageButton(id, texture, size);
     if (toggled) {
         ImGui::PopStyleColor();
     }
@@ -292,7 +287,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // bool selected = flags & ImGuiTreeNodeFlags_Selected;
 
     float button_sz = g.FontSize + g.Style.FramePadding.y * 2;
-    auto arrow_rect = Fussion::Rect::from_start_end(pos, Vector2(pos.x + button_sz, bb.Max.y));
+    auto arrow_rect = Fussion::Rect::FromStartEnd(pos, Vector2(pos.x + button_sz, bb.Max.y));
     //
     // if (flags & ImGuiTreeNodeFlags_OpenOnArrow) {
     //     if (ImGui::ButtonBehavior(ImRect(pos, ImVec2(pos.x + button_sz, bb.Max.y)), id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
@@ -310,7 +305,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
 
     auto text_pos = Vector2(pos.x + g.Style.ItemInnerSpacing.x, pos.y + g.Style.FramePadding.y);
 
-    const bool is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0;
+    bool const is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0;
     ImGuiButtonFlags button_flags = ImGuiTreeNodeFlags_None;
     if ((flags & ImGuiTreeNodeFlags_AllowOverlap) || (g.LastItemData.InFlags & ImGuiItemFlags_AllowOverlap))
         button_flags |= ImGuiButtonFlags_AllowOverlap;
@@ -329,7 +324,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // - Double-click on arrow = Toggle on MouseDoubleClick (when _OpenOnDoubleClick=1 and _OpenOnArrow=0)
     // It is rather standard that arrow click react on Down rather than Up.
     // We set ImGuiButtonFlags_PressedOnClickRelease on OpenOnDoubleClick because we want the item to be active on the initial MouseDown in order for drag and drop to work.
-    auto is_mouse_x_over_arrow = arrow_rect.contains(g.IO.MousePos);
+    auto is_mouse_x_over_arrow = arrow_rect.Contains(g.IO.MousePos);
     if (is_mouse_x_over_arrow)
         button_flags |= ImGuiButtonFlags_PressedOnClick;
     else if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)
@@ -338,7 +333,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
         button_flags |= ImGuiButtonFlags_PressedOnClickRelease;
 
     bool selected = (flags & ImGuiTreeNodeFlags_Selected) != 0;
-    const bool was_selected = selected;
+    bool const was_selected = selected;
 
     bool is_open = ImGui::TreeNodeUpdateNextOpen(id, flags);
 
@@ -383,7 +378,8 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
         g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
 
     if (hovered || selected) {
-        ImU32 const bg_col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        ImU32 const bg_col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered
+                                                                                                    : ImGuiCol_Header);
         window->DrawList->AddRectFilled(bb.Min, bb.Max, bg_col, false);
     }
 

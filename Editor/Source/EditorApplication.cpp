@@ -25,167 +25,167 @@ namespace {
     };
 }
 
-EditorApplication* EditorApplication::s_editor_instance;
+EditorApplication* EditorApplication::s_EditorInstance;
 
-Ptr<ProjectCreatorLayer> g_project_creator;
-Ptr<Editor> g_editor;
-Ptr<ImGuiLayer> g_imgui;
+Ptr<ProjectCreatorLayer> g_ProjectCreator;
+Ptr<Editor> g_Editor;
+Ptr<ImGuiLayer> g_Imgui;
 
 EditorApplication::EditorApplication()
 {
-    m_args = argparse::parse<EditorCLI>(Args::argc(), Args::argv());
+    m_Args = argparse::parse<EditorCLI>(Args::Argc(), Args::Argv());
 }
 
-void EditorApplication::on_start()
+void EditorApplication::OnStart()
 {
     ZoneScoped;
 
-    s_editor_instance = this;
+    s_EditorInstance = this;
 
-    Project::initialize();
+    Project::Initialize();
 
-    auto image = TextureImporter::load_image_from_memory({ LOGO32_DATA }).unwrap();
-    m_window->set_icon(image);
+    auto image = TextureImporter::LoadImageFromMemory({ LOGO32_DATA }).Unwrap();
+    m_Window->SetIcon(image);
 
-    g_imgui = make_ptr<ImGuiLayer>();
-    g_imgui->init();
+    g_Imgui = MakePtr<ImGuiLayer>();
+    g_Imgui->Initialize();
 
-    EditorStyle::get_style().initialize();
+    EditorStyle::Style().Initialize();
 
-    if (m_args.create_project) {
-        if (auto project = m_args.project_path) {
-            auto path = create_project(std::filesystem::path(*project), "EmptyProject");
-            create_editor(path);
+    if (m_Args.CreateProject) {
+        if (auto project = m_Args.ProjectPath) {
+            auto path = CreateProject(std::filesystem::path(*project), "EmptyProject");
+            CreateEditor(path);
         } else {
             PANIC("Must provide path with the create option");
         }
     } else {
-        if (auto project = m_args.project_path) {
-            create_editor(std::filesystem::path(*project));
+        if (auto project = m_Args.ProjectPath) {
+            CreateEditor(std::filesystem::path(*project));
         } else {
-            g_project_creator = make_ptr<ProjectCreatorLayer>();
-            g_project_creator->on_start();
+            g_ProjectCreator = MakePtr<ProjectCreatorLayer>();
+            g_ProjectCreator->OnStart();
         }
     }
 
-    Application::on_start();
+    Application::OnStart();
 }
 
-void EditorApplication::on_update(f32 delta)
+void EditorApplication::OnUpdate(f32 delta)
 {
     ZoneScoped;
     using namespace Fussion;
 
-    g_imgui->begin();
+    g_Imgui->Begin();
 
-    if (g_project_creator)
-        g_project_creator->on_update(delta);
-    if (g_editor)
-        g_editor->on_update(delta);
+    if (g_ProjectCreator)
+        g_ProjectCreator->OnUpdate(delta);
+    if (g_Editor)
+        g_Editor->OnUpdate(delta);
 
-    auto view = Renderer::begin_rendering();
+    auto view = Renderer::BeginRendering();
     if (!view) {
-        g_imgui->end(None());
+        g_Imgui->End(None());
         return;
     }
 
-    auto encoder = Renderer::device().create_command_encoder();
+    auto encoder = Renderer::Device().CreateCommandEncoder();
 
-    std::array color_attachments {
+    std::array colorAttachments {
         GPU::RenderPassColorAttachment {
-            .view = *view,
-            .load_op = GPU::LoadOp::Clear,
-            .store_op = GPU::StoreOp::Store,
-            .clear_color = Color::Coral,
+            .View = *view,
+            .LoadOp = GPU::LoadOp::Clear,
+            .StoreOp = GPU::StoreOp::Store,
+            .ClearColor = Color::Coral,
         }
     };
     GPU::RenderPassSpec rp_spec {
-        .label = "Main RenderPass"sv,
-        .color_attachments = color_attachments
+        .Label = "Main RenderPass"sv,
+        .ColorAttachments = colorAttachments
     };
 
-    if (g_project_creator)
-        g_project_creator->on_draw(encoder);
-    if (g_editor)
-        g_editor->on_draw(encoder);
+    if (g_ProjectCreator)
+        g_ProjectCreator->OnDraw(encoder);
+    if (g_Editor)
+        g_Editor->OnDraw(encoder);
 
-    auto main_rp = encoder.begin_rendering(rp_spec);
+    auto main_rp = encoder.BeginRendering(rp_spec);
 
-    g_imgui->end(main_rp);
+    g_Imgui->End(main_rp);
 
-    main_rp.end();
-    main_rp.release();
+    main_rp.End();
+    main_rp.Release();
 
-    auto cmd = encoder.finish();
-    encoder.release();
-    Renderer::end_rendering(cmd);
-    view->release();
+    auto cmd = encoder.Finish();
+    encoder.Release();
+    Renderer::EndRendering(cmd);
+    view->Release();
 }
 
-void EditorApplication::on_event(Event& event)
+void EditorApplication::OnEvent(Event& event)
 {
-    if (g_project_creator)
-        g_project_creator->on_event(event);
-    if (g_editor)
-        g_editor->on_event(event);
+    if (g_ProjectCreator)
+        g_ProjectCreator->OnEvent(event);
+    if (g_Editor)
+        g_Editor->OnEvent(event);
 
     EventDispatcher dispatcher(event);
-    dispatcher.dispatch<WindowResized>([](WindowResized const& e) {
-        Renderer::resize({ e.Width, e.Height });
+    dispatcher.Dispatch<WindowResized>([](WindowResized const& e) {
+        Renderer::Resize({ e.Width, e.Height });
         return false;
     });
 }
 
-void EditorApplication::on_log_received(LogLevel level, std::string_view message, std::source_location const& loc)
+void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
 {
-    if (g_project_creator)
-        g_project_creator->on_log_received(level, message, loc);
-    if (g_editor)
-        g_editor->on_log_received(level, message, loc);
+    if (g_ProjectCreator)
+        g_ProjectCreator->OnLogReceived(level, message, loc);
+    if (g_Editor)
+        g_Editor->OnLogReceived(level, message, loc);
 }
 
-auto EditorApplication::create_project(Maybe<fs::path> path, std::string_view name) -> fs::path
+auto EditorApplication::CreateProject(Maybe<fs::path> path, std::string_view name) -> fs::path
 {
-    if (path.is_empty() || !is_directory(*path)) {
-        path = Dialogs::show_directory_picker();
+    if (path.IsEmpty() || !is_directory(*path)) {
+        path = Dialogs::ShowDirectoryPicker();
     }
 
-    return Project::generate_project(*path, name);
+    return Project::GenerateProject(*path, name);
 }
 
-void EditorApplication::create_editor(Maybe<fs::path> path)
+void EditorApplication::CreateEditor(Maybe<fs::path> path)
 {
-    if (path.is_empty() || !exists(*path)) {
-        path = Dialogs::show_file_picker("Fussion Project", { "*.fsnproj" })[0];
+    if (path.IsEmpty() || !exists(*path)) {
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
     }
 
-    bool loaded = Project::load(*path);
+    bool loaded = Project::Load(*path);
     VERIFY(loaded, "Project loading must not fail, for now.");
 
-    g_editor = make_ptr<Editor>();
+    g_Editor = MakePtr<Editor>();
 
     auto now = std::chrono::system_clock::now();
     auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::default_logger()->register_sink(FileSink::create(Project::logs_folder() / log_file));
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::LogsFolderPath() / log_file));
 }
 
-void EditorApplication::create_editor_from_project_creator(fs::path path)
+void EditorApplication::CreateEditorFromProjectCreator(fs::path path)
 {
-    (void)g_project_creator.release();
+    (void)g_ProjectCreator.release();
 
     if (!exists(path)) {
-        path = Dialogs::show_file_picker("Fussion Project", { "*.fsnproj" })[0];
+        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
     }
 
-    bool loaded = Project::load(path);
+    bool loaded = Project::Load(path);
     VERIFY(loaded, "Project loading must not fail, for now.");
 
-    g_editor = make_ptr<Editor>();
-    g_editor->on_start();
+    g_Editor = MakePtr<Editor>();
+    g_Editor->OnStart();
 
     auto now = std::chrono::system_clock::now();
-    auto log_file = std::format("{:%y-%m-%d_%H-%M}.log", now);
+    auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::default_logger()->register_sink(FileSink::create(Project::logs_folder() / log_file));
+    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::LogsFolderPath() / log_file));
 }

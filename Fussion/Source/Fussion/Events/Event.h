@@ -1,15 +1,15 @@
 #pragma once
 #include <functional>
 
-#define EVENT(name)                 \
-    static EventType static_type()  \
-    {                               \
-        return EventType::name;     \
-    }                               \
-                                    \
-    EventType type() const override \
-    {                               \
-        return static_type();       \
+#define EVENT(name)                    \
+    static EventType StaticType()      \
+    {                                  \
+        return EventType::name;        \
+    }                                  \
+                                       \
+    EventType GetType() const override \
+    {                                  \
+        return StaticType();           \
     }
 
 namespace Fussion {
@@ -35,32 +35,35 @@ namespace Fussion {
         friend class EventDispatcher;
 
     public:
-        bool handled{ false };
+        bool Handled { false };
 
         virtual ~Event() = default;
 
         [[nodiscard]]
-        virtual EventType type() const = 0;
+        virtual EventType GetType() const
+            = 0;
     };
 
     using EventFnType = std::function<bool(Event&)>;
 
     class EventDispatcher {
-        Event* m_event;
+        Event* m_Event;
 
     public:
         template<std::derived_from<Event> T>
-        using EventFn = std::function<bool (T&)>;
+        using EventFn = std::function<bool(T&)>;
 
-        explicit EventDispatcher(Event& e) : m_event(&e) {}
+        explicit EventDispatcher(Event& e)
+            : m_Event(&e)
+        { }
 
         template<std::derived_from<Event> T>
-        void dispatch(EventFn<T> fn)
+        void Dispatch(EventFn<T> fn)
         {
-            if (m_event->handled || m_event->type() != T::static_type())
+            if (m_Event->Handled || m_Event->GetType() != T::StaticType())
                 return;
 
-            m_event->handled = fn(dynamic_cast<T&>(*m_event));
+            m_Event->Handled = fn(dynamic_cast<T&>(*m_Event));
         }
     };
 } // namespace Fussion

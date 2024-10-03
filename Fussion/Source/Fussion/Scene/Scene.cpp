@@ -1,48 +1,48 @@
-﻿#include "Scene.h"
+﻿#include "FussionPCH.h"
+#include "Scene.h"
 
 #include "Components/BaseComponents.h"
 #include "Entity.h"
 #include "Fussion/Input/Keys.h"
-#include "FussionPCH.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
     Scene::Scene()
     {
-        m_name = "Cool Scene";
-        m_entities[EntityHandle(0)] = Entity(EntityHandle(0), this);
-        auto& root = m_entities[EntityHandle(0)];
-        root.name = "Root";
+        m_Name = "Cool Scene";
+        m_Entities[EntityHandle(0)] = Entity(EntityHandle(0), this);
+        auto& root = m_Entities[EntityHandle(0)];
+        root.Name = "Root";
     }
 
     Scene::Scene(Scene const& other)
         : Asset(other)
-        , m_name(other.m_name)
-        , m_entities(other.m_entities)
-        , m_dirty(other.m_dirty)
+        , m_Name(other.m_Name)
+        , m_Entities(other.m_Entities)
+        , m_Dirty(other.m_Dirty)
     {
-        m_handle = other.m_handle;
-        for (auto& entity : m_entities | std::views::values) {
-            entity.m_scene = this;
+        m_Handle = other.m_Handle;
+        for (auto& entity : m_Entities | std::views::values) {
+            entity.m_Scene = this;
 
-            for (auto& comp : entity.m_components | std::views::values) {
-                comp->m_owner = &entity;
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
             }
         }
     }
 
     Scene::Scene(Scene&& other) noexcept
         : Asset(std::move(other))
-        , m_name(std::move(other.m_name))
-        , m_entities(std::move(other.m_entities))
-        , m_dirty(other.m_dirty)
+        , m_Name(std::move(other.m_Name))
+        , m_Entities(std::move(other.m_Entities))
+        , m_Dirty(other.m_Dirty)
     {
-        m_handle = other.m_handle;
-        for (auto& entity : m_entities | std::views::values) {
-            entity.m_scene = this;
+        m_Handle = other.m_Handle;
+        for (auto& entity : m_Entities | std::views::values) {
+            entity.m_Scene = this;
 
-            for (auto& comp : entity.m_components | std::views::values) {
-                comp->m_owner = &entity;
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
             }
         }
     }
@@ -51,16 +51,16 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        m_handle = other.m_handle;
-        m_name = other.m_name;
-        m_entities = other.m_entities;
-        m_dirty = other.m_dirty;
+        m_Handle = other.m_Handle;
+        m_Name = other.m_Name;
+        m_Entities = other.m_Entities;
+        m_Dirty = other.m_Dirty;
 
-        for (auto& entity : m_entities | std::views::values) {
-            entity.m_scene = this;
+        for (auto& entity : m_Entities | std::views::values) {
+            entity.m_Scene = this;
 
-            for (auto& comp : entity.m_components | std::views::values) {
-                comp->m_owner = &entity;
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
             }
         }
         return *this;
@@ -70,128 +70,128 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        m_handle = other.m_handle;
-        m_name = std::move(other.m_name);
-        m_entities = std::move(other.m_entities);
-        m_dirty = other.m_dirty;
+        m_Handle = other.m_Handle;
+        m_Name = std::move(other.m_Name);
+        m_Entities = std::move(other.m_Entities);
+        m_Dirty = other.m_Dirty;
 
-        for (auto& entity : m_entities | std::views::values) {
-            entity.m_scene = this;
+        for (auto& entity : m_Entities | std::views::values) {
+            entity.m_Scene = this;
 
-            for (auto& comp : entity.m_components | std::views::values) {
-                comp->m_owner = &entity;
+            for (auto& comp : entity.m_Components | std::views::values) {
+                comp->m_Owner = &entity;
             }
         }
         return *this;
     }
 
-    void Scene::on_start()
+    void Scene::OnStart()
     {
-        for (auto& [id, entity] : m_entities) {
-            entity.on_start();
+        for (auto& [id, entity] : m_Entities) {
+            entity.OnStart();
         }
     }
 
-    void Scene::on_update(f32 delta)
+    void Scene::OnUpdate(f32 delta)
     {
-        for (auto& [id, entity] : m_entities) {
+        for (auto& [id, entity] : m_Entities) {
             (void)id;
-            entity.on_update(delta);
+            entity.OnUpdate(delta);
         }
     }
 
-    void Scene::tick()
+    void Scene::Tick()
     {
-        for (auto& [id, entity] : m_entities) {
+        for (auto& [id, entity] : m_Entities) {
             (void)id;
-            entity.tick();
+            entity.Tick();
         }
     }
 
-    void Scene::on_debug_draw(DebugDrawContext& ctx)
+    void Scene::OnDebugDraw(DebugDrawContext& ctx)
     {
-        m_box =  BoundingBox();
-        for (auto& [id, entity] : m_entities) {
+        m_Box = BoundingBox();
+        for (auto& [id, entity] : m_Entities) {
             (void)id;
-            entity.on_debug_draw(ctx);
+            entity.OnDebugDraw(ctx);
         }
-        Debug::draw_box(m_box, 0.0f, Color::Pink);
+        Debug::DrawBox(m_Box, 0.0f, Color::Pink);
     }
 
-    auto Scene::create_entity(std::string const& name, EntityHandle parent) -> Entity*
+    auto Scene::CreateEntity(std::string const& name, EntityHandle parent) -> Entity*
     {
-        return create_entity_with_id(EntityHandle(), name, parent);
+        return CreateEntityWithID(EntityHandle(), name, parent);
     }
 
-    auto Scene::create_entity_with_id(EntityHandle id, std::string const& name, EntityHandle parent) -> Entity*
+    auto Scene::CreateEntityWithID(EntityHandle id, std::string const& name, EntityHandle parent) -> Entity*
     {
-        VERIFY(m_entities.contains(parent), "Parent {} is not a valid entity within the scene", parent);
+        VERIFY(m_Entities.contains(parent), "Parent {} is not a valid entity within the scene", parent);
         LOG_INFOF("Creating entity {} with parent {}", CAST(u64, id), CAST(u64, parent));
 
-        m_entities[id] = Entity(id, this);
-        auto& entity = m_entities[id];
-        entity.name = name;
+        m_Entities[id] = Entity(id, this);
+        auto& entity = m_Entities[id];
+        entity.Name = name;
 
-        auto local_id = m_local_id_counter++;
-        entity.m_local_id = local_id;
-        m_local_id_to_entity[local_id] = id;
+        auto local_id = m_LocalIDCounter++;
+        entity.m_LocalID = local_id;
+        m_LocalIDToEntity[local_id] = id;
 
-        entity.set_parent(m_entities[parent]);
+        entity.SetParent(m_Entities[parent]);
         return &entity;
     }
 
-    auto Scene::get_entity(EntityHandle const handle) -> Entity*
+    auto Scene::GetEntity(EntityHandle const handle) -> Entity*
     {
-        if (!has_entity(handle))
+        if (!HasEntity(handle))
             return nullptr;
-        return &m_entities[handle];
+        return &m_Entities[handle];
     }
 
-    auto Scene::get_entity_from_local_id(s32 local_id) -> Entity*
+    auto Scene::GetEntityFromLocalID(s32 local_id) -> Entity*
     {
-        if (!m_local_id_to_entity.contains(local_id))
+        if (!m_LocalIDToEntity.contains(local_id))
             return nullptr;
-        return get_entity(m_local_id_to_entity[local_id]);
+        return GetEntity(m_LocalIDToEntity[local_id]);
     }
 
-    bool Scene::has_entity(EntityHandle handle) const
+    bool Scene::HasEntity(EntityHandle handle) const
     {
-        return m_entities.contains(handle);
+        return m_Entities.contains(handle);
     }
 
-    void Scene::destroy(EntityHandle handle)
+    void Scene::DestroyEntity(EntityHandle handle)
     {
-        if (!has_entity(handle))
+        if (!HasEntity(handle))
             return;
 
-        for (auto child : m_entities[handle].m_children) {
-            destroy(child);
+        for (auto child : m_Entities[handle].m_Children) {
+            DestroyEntity(child);
         }
 
-        m_entities[handle].on_destroy();
-        m_entities.erase(handle);
+        m_Entities[handle].OnDestroy();
+        m_Entities.erase(handle);
     }
 
-    void Scene::destroy(Entity const& entity)
+    void Scene::DestroyEntity(Entity const& entity)
     {
-        destroy(entity.handle());
+        DestroyEntity(entity.GetHandle());
     }
 
-    EntityHandle Scene::clone_entity(EntityHandle handle)
+    EntityHandle Scene::CloneEntity(EntityHandle handle)
     {
-        if (!m_entities.contains(handle)) {
+        if (!m_Entities.contains(handle)) {
             return EntityHandle::Invalid;
         }
 
-        auto const& entity = m_entities[handle];
+        auto const& entity = m_Entities[handle];
 
-        auto new_entity = create_entity(entity.name, entity.m_parent);
-        new_entity->transform = entity.transform;
-        new_entity->m_enabled = entity.m_enabled;
+        auto new_entity = CreateEntity(entity.Name, entity.m_Parent);
+        new_entity->Transform = entity.Transform;
+        new_entity->m_Enabled = entity.m_Enabled;
 
-        for (auto const& [component_id, component] : entity.get_components()) {
+        for (auto const& [component_id, component] : entity.GetComponents()) {
             (void)component_id;
-            new_entity->add_component(component->clone());
+            new_entity->AddComponent(component->Clone());
         }
 
         // Transform = std::move(other.Transform);
@@ -205,27 +205,27 @@ namespace Fussion {
         // m_Enabled = other.m_Enabled;
         // m_LocalID = other.m_LocalID;
 
-        return new_entity->m_handle;
+        return new_entity->m_Handle;
     }
 
-    void Scene::serialize(Serializer& ctx) const
+    void Scene::Serialize(Serializer& ctx) const
     {
-        FSN_SERIALIZE_MEMBER(m_name);
-        ctx.begin_array("Entities", m_entities.size());
-        for (auto const& [id, entity] : m_entities) {
+        FSN_SERIALIZE_MEMBER(m_Name);
+        ctx.BeginArray("Entities", m_Entities.size());
+        for (auto const& [id, entity] : m_Entities) {
             if (id == 0)
                 continue;
-            ctx.write("", entity);
+            ctx.Write("", entity);
         }
-        ctx.end_array();
+        ctx.EndArray();
     }
 
-    void Scene::deserialize(Deserializer& ctx)
+    void Scene::Deserialize(Deserializer& ctx)
     {
-        FSN_DESERIALIZE_MEMBER(m_name);
+        FSN_DESERIALIZE_MEMBER(m_Name);
         size_t size;
-        ctx.begin_array("Entities", size);
-        m_entities.reserve(size);
+        ctx.BeginArray("Entities", size);
+        m_Entities.reserve(size);
 
         // Because an entity's parent might not exist when deserializing
         // the entity, we defer the parenting operations until all the
@@ -237,30 +237,30 @@ namespace Fussion {
 
         for (size_t i = 0; i < size; i++) {
             Entity e;
-            e.m_scene = this;
-            ctx.read("", e);
+            e.m_Scene = this;
+            ctx.Read("", e);
 
-            if (!has_entity(e.m_parent)) {
-                entities_to_resolve.emplace_back(e.m_parent, e.m_handle);
+            if (!HasEntity(e.m_Parent)) {
+                entities_to_resolve.emplace_back(e.m_Parent, e.m_Handle);
             } else {
-                e.set_parent(m_entities[e.m_parent]);
+                e.SetParent(m_Entities[e.m_Parent]);
             }
-            auto local_id = m_local_id_counter++;
-            e.m_local_id = local_id;
-            m_local_id_to_entity[local_id] = e.m_handle;
+            auto local_id = m_LocalIDCounter++;
+            e.m_LocalID = local_id;
+            m_LocalIDToEntity[local_id] = e.m_Handle;
 
-            m_entities[e.m_handle] = std::move(e);
+            m_Entities[e.m_Handle] = std::move(e);
         }
 
         // Resolve all parent/child relationships.
         for (auto const& [parent, child] : entities_to_resolve) {
-            get_entity(child)->set_parent(*get_entity(parent));
+            GetEntity(child)->SetParent(*GetEntity(parent));
         }
-        ctx.end_array();
+        ctx.EndArray();
     }
 
-    auto Scene::root() -> Entity&
+    auto Scene::GetRoot() -> Entity&
     {
-        return m_entities[EntityHandle(0)];
+        return m_Entities[EntityHandle(0)];
     }
 }

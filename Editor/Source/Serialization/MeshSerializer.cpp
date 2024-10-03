@@ -35,7 +35,7 @@ namespace Mikktspace {
         auto index = data->Indices->at(face * 3 + vert);
         auto& vertex = data->Vertices->at(index);
         for (auto i = 0; i < 3; i++)
-            pos_out[i] = vertex.position[i];
+            pos_out[i] = vertex.Position[i];
     }
 
     void GetNormal(SMikkTSpaceContext const* ctx, float normal_out[], int face, int vert)
@@ -44,7 +44,7 @@ namespace Mikktspace {
         auto index = data->Indices->at(face * 3 + vert);
         auto& vertex = data->Vertices->at(index);
         for (auto i = 0; i < 3; i++)
-            normal_out[i] = vertex.normal[i];
+            normal_out[i] = vertex.Normal[i];
     }
 
     void GetTexCoord(SMikkTSpaceContext const* ctx, float uv_out[], int face, int vert)
@@ -53,7 +53,7 @@ namespace Mikktspace {
         auto index = data->Indices->at(face * 3 + vert);
         auto& vertex = data->Vertices->at(index);
         for (auto i = 0; i < 2; i++)
-            uv_out[i] = vertex.texture_coords[i];
+            uv_out[i] = vertex.TextureCoords[i];
     }
 
     void SetTSpaceBasic(SMikkTSpaceContext const* ctx, float const tangent[], float sign, int face, int vert)
@@ -63,20 +63,20 @@ namespace Mikktspace {
         auto& vertex = data->Vertices->at(index);
 
         for (auto i = 0; i < 3; i++)
-            vertex.tangent[i] = tangent[i];
-        vertex.tangent[3] = sign;
+            vertex.Tangent[i] = tangent[i];
+        vertex.Tangent[3] = sign;
     }
 }
 
-void MeshSerializer::save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
+void MeshSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
 {
     (void)metadata;
     (void)asset;
 }
 
-Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
+Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
 {
-    auto path = Project::assets_folder() / metadata.path;
+    auto path = Project::AssetsFolderPath() / metadata.Path;
 
     tinygltf::TinyGLTF loader;
     tinygltf::Model model;
@@ -151,14 +151,14 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
         for (size_t i = 0; i < pos_accessor.count; i++) {
             Vertex vertex {};
 
-            std::copy_n(pos_data + i * 3, 3, &vertex.position.raw[0]);
-            std::copy_n(norm_data + i * 3, 3, &vertex.normal.raw[0]);
-            std::copy_n(uv_data + i * 2, 2, &vertex.texture_coords.raw[0]);
+            std::copy_n(pos_data + i * 3, 3, &vertex.Position.raw[0]);
+            std::copy_n(norm_data + i * 3, 3, &vertex.Normal.raw[0]);
+            std::copy_n(uv_data + i * 2, 2, &vertex.TextureCoords.raw[0]);
             if (has_tangent) {
-                std::copy_n(tangent_data + i * 4, 4, &vertex.tangent.raw[0]);
+                std::copy_n(tangent_data + i * 4, 4, &vertex.Tangent.raw[0]);
             }
             vertices.push_back(vertex);
-            box.include_point(vertex.position);
+            box.IncludePoint(vertex.Position);
         }
 
         std::vector<u32> indices;
@@ -200,7 +200,7 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
         std::vector<u32> shadow_indices(index_count);
         meshopt_generateShadowIndexBuffer(shadow_indices.data(), indices.data(), index_count, vertices.data(), vertex_count, sizeof(Vector3), sizeof(Vertex));
         meshopt_optimizeVertexCache(indices.data(), indices.data(), indices.size(), vertices.size());
-        meshopt_optimizeOverdraw(indices.data(), indices.data(), indices.size(), &vertices[0].position.x, vertices.size(), sizeof(Vertex), 1.05f);
+        meshopt_optimizeOverdraw(indices.data(), indices.data(), indices.size(), &vertices[0].Position.x, vertices.size(), sizeof(Vertex), 1.05f);
         meshopt_optimizeVertexFetch(vertices.data(), indices.data(), indices.size(), vertices.data(), vertices.size(), sizeof(Vertex));
 
         Vector3 offset {};
@@ -208,10 +208,10 @@ Ref<Asset> MeshSerializer::load(EditorAssetMetadata metadata)
             offset = { node.translation[0], node.translation[1], node.translation[2] };
         }
         auto& new_mesh = meshes.emplace_back(vertices, indices, shadow_indices, primitive.material, offset);
-        new_mesh.bounding_box = box;
+        new_mesh.Box = box;
     }
 
-    auto the_model = Model::create(meshes);
+    auto the_model = Model::Create(meshes);
     the_model->unique_materials = CAST(u32, model.materials.size());
     return the_model;
 }

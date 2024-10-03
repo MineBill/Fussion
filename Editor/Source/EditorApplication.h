@@ -9,13 +9,13 @@ namespace fs = std::filesystem;
 struct EditorCLI final : argparse::Args {
     EditorCLI& operator=(EditorCLI const& other)
     {
-        project_path = other.project_path;
-        create_project = other.create_project;
+        ProjectPath = other.ProjectPath;
+        CreateProject = other.CreateProject;
         return *this;
     }
 
-    std::optional<std::string>& project_path = kwarg("p,project", "Path to the project");
-    bool& create_project = flag("c,create", "Create a new project at <ProjectPath>").set_default(false);
+    std::optional<std::string>& ProjectPath = kwarg("p,project", "Path to the project");
+    bool& CreateProject = flag("c,create", "Create a new project at <ProjectPath>").set_default(false);
 };
 
 static_assert(std::is_move_assignable_v<EditorCLI>);
@@ -26,20 +26,20 @@ class EditorApplication final : public Fussion::Application {
 public:
     EditorApplication();
 
-    virtual void on_start() override;
-    virtual void on_update(f32 delta) override;
-    virtual void on_event(Fussion::Event&) override;
-    virtual void on_log_received(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
+    virtual void OnStart() override;
+    virtual void OnUpdate(f32 delta) override;
+    virtual void OnEvent(Fussion::Event&) override;
+    virtual void OnLogReceived(Fsn::LogLevel level, std::string_view message, std::source_location const& loc) override;
 
-    static auto create_project(Maybe<fs::path> path, std::string_view name) -> fs::path;
+    static auto CreateProject(Maybe<fs::path> path, std::string_view name) -> fs::path;
 
-    static EditorApplication* inst() { return s_editor_instance; }
+    static EditorApplication* Self() { return s_EditorInstance; }
 
-    static void create_editor(Maybe<fs::path> path);
-    static void create_editor_from_project_creator(fs::path path);
+    static void CreateEditor(Maybe<fs::path> path);
+    static void CreateEditorFromProjectCreator(fs::path path);
 
 private:
-    static EditorApplication* s_editor_instance;
+    static EditorApplication* s_EditorInstance;
 
-    EditorCLI m_args;
+    EditorCLI m_Args;
 };

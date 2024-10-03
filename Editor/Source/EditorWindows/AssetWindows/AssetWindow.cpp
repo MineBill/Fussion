@@ -10,26 +10,26 @@ using namespace Fussion;
 
 void AssetWindow::draw(f32 delta)
 {
-    ImGui::PushID(CAST(s32, m_asset_handle));
+    ImGui::PushID(CAST(s32, m_AssetHandle));
     defer(ImGui::PopID());
-    auto window_name = fmt::format("Asset Window##{}", m_asset_handle);
+    auto window_name = fmt::format("Asset Window##{}", m_AssetHandle);
     EUI::window(window_name, [&] {
-        draw_menu_bar();
+        DrawMenuBar();
 
         ImGui::BeginChild("inner_child", {}, ImGuiChildFlags_Border);
         defer(ImGui::EndChild());
 
-        on_draw(delta);
+        OnDraw(delta);
 
-    }, { .style = WindowStyleAssetPreview, .opened = &m_opened, .flags = ImGuiWindowFlags_MenuBar, .use_child = false });
+    }, { .style = WindowStyleAssetPreview, .opened = &m_Opened, .flags = ImGuiWindowFlags_MenuBar, .use_child = false });
 }
 
-void AssetWindow::draw_menu_bar()
+void AssetWindow::DrawMenuBar()
 {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Asset")) {
             if (ImGui::MenuItem("Save...", "Ctrl+S")) {
-                on_save();
+                OnSave();
             }
             ImGui::EndMenu();
         }

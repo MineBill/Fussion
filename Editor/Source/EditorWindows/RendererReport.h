@@ -8,5 +8,5 @@ class RendererReport final : public EditorWindow {
 public:
     EDITOR_WINDOW(RendererReport)
 
-    virtual void on_draw() override;
+    virtual void OnDraw() override;
 };

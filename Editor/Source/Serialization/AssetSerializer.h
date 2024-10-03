@@ -12,9 +12,9 @@ public:
     virtual ~AssetSerializer() = default;
 
     /// Save an asset file to disk. Usually in KDL.
-    virtual auto save([[maybe_unused]] EditorAssetMetadata metadata, [[maybe_unused]] Ref<Fussion::Asset> const& asset) -> void {}
+    virtual auto Save([[maybe_unused]] EditorAssetMetadata metadata, [[maybe_unused]] Ref<Fussion::Asset> const& asset) -> void { }
 
     /// Load a file from disk.
     /// @return The asset if load was successful, nullptr otherwise.
-    virtual auto load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> = 0;
+    virtual auto Load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> = 0;
 };

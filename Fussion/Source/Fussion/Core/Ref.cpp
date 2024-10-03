@@ -2,13 +2,13 @@
 #include "Ref.h"
 
 namespace Fussion {
-    void RefCounted::add_ref() { ++m_ref_count; }
+    void RefCounted::AddRef() { ++m_ref_count; }
 
-    void RefCounted::release()
+    void RefCounted::Release()
     {
         if (--m_ref_count == 0)
             delete this;
     }
 
-    u32 RefCounted::ref_count() const { return m_ref_count; }
+    u32 RefCounted::RefCount() const { return m_ref_count; }
 }

@@ -3,6 +3,6 @@
 #include <string_view>
 
 namespace Fussion::StringUtils {
-    auto remove(std::string const& str, std::string_view what) -> std::string_view;
-    auto is_whitespace(std::string_view str) -> bool;
+    auto Remove(std::string const& str, std::string_view what) -> std::string_view;
+    auto IsWhitespace(std::string_view str) -> bool;
 }

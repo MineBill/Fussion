@@ -22,24 +22,25 @@ public:
     explicit WorkerPool();
     ~WorkerPool();
 
-    void load(EditorAssetMetadata const& metadata);
+    void Load(EditorAssetMetadata const& metadata);
 
-    Fussion::ThreadProtected<std::queue<Ref<Fussion::Asset>>> loaded_assets{};
+    Fussion::ThreadProtected<std::queue<Ref<Fussion::Asset>>> LoadedAssets {};
 
 private:
-    void work(s32 index);
+    void Work(s32 index);
 
-    std::queue<EditorAssetMetadata> m_tasks{};
+    std::queue<EditorAssetMetadata> m_Tasks {};
 
-    std::mutex m_mutex{};
-    std::vector<std::thread> m_workers{};
-    std::condition_variable m_condition_variable{};
-    std::atomic_bool m_quit{};
+    std::mutex m_Mutex {};
+    std::vector<std::thread> m_Workers {};
+    std::condition_variable m_ConditionVariable {};
+    std::atomic_bool m_Quit {};
 };
 
 class AssetSerializer;
 
-class EditorAssetManager final : public Fussion::AssetManagerBase, Fussion::ISerializable {
+class EditorAssetManager final : public Fussion::AssetManagerBase
+    , Fussion::ISerializable {
     // NOTE: Is there a better way/abstraction to expose internals to the worker pool?
     friend WorkerPool;
 
@@ -49,42 +50,42 @@ public:
     EditorAssetManager();
     virtual ~EditorAssetManager() override;
 
-    virtual auto get_asset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
-    virtual auto get_asset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
+    virtual auto GetAsset(Fsn::AssetHandle handle, Fsn::AssetType type) -> Fussion::Asset* override;
+    virtual auto GetAsset(std::string const& path, Fussion::AssetType type) -> Fussion::Asset* override;
 
-    virtual bool is_asset_loaded(Fsn::AssetHandle handle) override;
-    virtual bool is_asset_handle_valid(Fsn::AssetHandle handle) const override;
-    virtual bool is_asset_virtual(Fussion::AssetHandle handle) override;
-    virtual auto create_virtual_asset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
-    virtual auto get_asset_metadata(Fussion::AssetHandle handle) -> Fussion::AssetMetadata* override;
+    virtual bool IsAssetLoaded(Fsn::AssetHandle handle) override;
+    virtual bool IsAssetHandleValid(Fsn::AssetHandle handle) const override;
+    virtual bool IsAssetVirtual(Fussion::AssetHandle handle) override;
+    virtual auto CreateVirtualAsset(Ref<Fussion::Asset> const& asset, std::string_view name, std::filesystem::path const& path) -> Fussion::AssetHandle override;
+    virtual auto GetAssetMetadata(Fussion::AssetHandle handle) -> Fussion::AssetMetadata* override;
 
-    bool is_asset_loading(Fussion::AssetHandle handle);
+    bool IsAssetLoading(Fussion::AssetHandle handle);
 
-    bool is_path_an_asset(std::filesystem::path const& path, bool include_virtual = false) const;
-    auto get_metadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
-    auto get_metadata(Fsn::AssetHandle handle) const -> EditorAssetMetadata;
-    void register_asset(std::filesystem::path const& path, Fussion::AssetType type);
+    bool IsPathAnAsset(std::filesystem::path const& path, bool include_virtual = false) const;
+    auto GetMetadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
+    auto GetMetadata(Fsn::AssetHandle handle) const -> EditorAssetMetadata;
+    void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
 
-    auto registry() -> Fussion::ThreadProtected<Registry>& { return m_registry; }
+    auto GetRegistry() -> Fussion::ThreadProtected<Registry>& { return m_Registry; }
 
     template<std::derived_from<Fsn::Asset> T>
-    auto create_asset(std::filesystem::path const& path) -> Fsn::AssetRef<T>
+    auto CreateAsset(std::filesystem::path const& path) -> Fsn::AssetRef<T>
     {
         auto normal_path = path.lexically_normal();
         Fussion::AssetHandle handle;
 
-        m_registry.access([&](auto& registry) {
-            registry[handle] = EditorAssetMetadata{
-                .type = T::static_type(),
-                .path = normal_path,
-                .name = path.filename().string(),
-                .is_virtual = false,
-                .dont_serialize = false,
-                .handle = handle,
+        m_Registry.Access([&](auto& registry) {
+            registry[handle] = EditorAssetMetadata {
+                .Type = T::StaticType(),
+                .Path = normal_path,
+                .Name = path.filename().string(),
+                .IsVirtual = false,
+                .DontSerialize = false,
+                .Handle = handle,
             };
         });
 
-        m_loaded_assets[handle] = make_ref<T>();
+        m_LoadedAssets[handle] = MakeRef<T>();
 
         // Create the necessary directories, recursively.
         auto base_path = normal_path;
@@ -97,39 +98,39 @@ public:
             }
         }
 
-        save_asset(handle);
+        SaveAsset(handle);
 
-        save_to_file();
+        SaveToFile();
 
         return Fsn::AssetRef<T>(handle);
     }
 
-    void save_asset(Fussion::AssetHandle handle);
-    void save_asset(Ref<Fussion::Asset> const& asset);
+    void SaveAsset(Fussion::AssetHandle handle);
+    void SaveAsset(Ref<Fussion::Asset> const& asset);
 
-    void rename_asset(Fussion::AssetHandle handle, std::string_view new_name);
-    void move_asset(Fussion::AssetHandle handle, std::filesystem::path const& path);
+    void RenameAsset(Fussion::AssetHandle handle, std::string_view new_name);
+    void MoveAsset(Fussion::AssetHandle handle, std::filesystem::path const& path);
 
-    void save_to_file();
-    void load_from_file();
-    void refresh_asset(Fussion::AssetHandle handle);
+    void SaveToFile();
+    void LoadFromFile();
+    void RefreshAsset(Fussion::AssetHandle handle);
 
     // NOTE: I'm not sure if this is a good way to go about it. Could some kind of callback
     // be used instead?
-    void check_for_loaded_assets();
+    void CheckForLoadedAssets();
 
 private:
-    virtual void serialize(Fussion::Serializer& ctx) const override;
-    virtual void deserialize(Fussion::Deserializer& ctx) override;
+    virtual void Serialize(Fussion::Serializer& ctx) const override;
+    virtual void Deserialize(Fussion::Deserializer& ctx) override;
 
-    void load_asset(Fussion::AssetHandle handle, Fussion::AssetType type);
+    void LoadAsset(Fussion::AssetHandle handle, Fussion::AssetType type);
 
-    Fussion::ThreadProtected<Registry> m_registry{};
-    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_loaded_assets{};
+    Fussion::ThreadProtected<Registry> m_Registry {};
+    std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets {};
 
-    std::unordered_map<Fsn::AssetType, Ptr<AssetSerializer>> m_asset_importers{};
+    std::unordered_map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetImporters {};
 
-    Ptr<Fussion::FileWatcher> m_editor_watcher{};
+    Ptr<Fussion::FileWatcher> m_EditorWatcher {};
 
-    WorkerPool m_worker_pool{};
+    WorkerPool m_WorkerPool {};
 };

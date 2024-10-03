@@ -8,60 +8,60 @@
 
 namespace Fussion {
 #if FSN_DEBUG_DRAW
-    void Camera::on_debug_draw(DebugDrawContext& ctx)
+    void Camera::OnDebugDraw(DebugDrawContext& ctx)
     {
         (void)ctx;
-        auto aspect = Application::inst()->window().size().aspect();
-        m_perspective = glm::perspective(glm::radians(fov), aspect, near, far);
-        auto corners = Math::get_frustum_corners_world_space(m_perspective, m_owner->transform.camera_matrix());
+        auto aspect = Application::Self()->GetWindow().Size().Aspect();
+        m_Perspective = glm::perspective(glm::radians(fov), aspect, near, far);
+        auto corners = Math::GetFrustumCornersWorldSpace(m_Perspective, m_Owner->Transform.AsCameraMatrix());
 
         constexpr auto color = Color::SkyBlue;
 
-        Debug::draw_line(corners[0], corners[1], 0.0, color);
-        Debug::draw_line(corners[2], corners[3], 0.0, color);
-        Debug::draw_line(corners[4], corners[5], 0.0, color);
-        Debug::draw_line(corners[6], corners[7], 0.0, color);
+        Debug::DrawLine(corners[0], corners[1], 0.0, color);
+        Debug::DrawLine(corners[2], corners[3], 0.0, color);
+        Debug::DrawLine(corners[4], corners[5], 0.0, color);
+        Debug::DrawLine(corners[6], corners[7], 0.0, color);
 
-        Debug::draw_line(corners[0], corners[2], 0.0, color);
-        Debug::draw_line(corners[2], corners[6], 0.0, color);
-        Debug::draw_line(corners[6], corners[4], 0.0, color);
-        Debug::draw_line(corners[4], corners[0], 0.0, color);
+        Debug::DrawLine(corners[0], corners[2], 0.0, color);
+        Debug::DrawLine(corners[2], corners[6], 0.0, color);
+        Debug::DrawLine(corners[6], corners[4], 0.0, color);
+        Debug::DrawLine(corners[4], corners[0], 0.0, color);
 
-        Debug::draw_line(corners[1], corners[3], 0.0, color);
-        Debug::draw_line(corners[3], corners[7], 0.0, color);
-        Debug::draw_line(corners[7], corners[5], 0.0, color);
-        Debug::draw_line(corners[5], corners[1], 0.0, color);
+        Debug::DrawLine(corners[1], corners[3], 0.0, color);
+        Debug::DrawLine(corners[3], corners[7], 0.0, color);
+        Debug::DrawLine(corners[7], corners[5], 0.0, color);
+        Debug::DrawLine(corners[5], corners[1], 0.0, color);
     }
 #endif
 
-    void Camera::on_update(f32 delta)
+    void Camera::OnUpdate(f32 delta)
     {
         (void)delta;
 
-        auto aspect = Application::inst()->window().size().aspect();
-        m_perspective = glm::perspective(glm::radians(fov), aspect, near, far);
+        auto aspect = Application::Self()->GetWindow().Size().Aspect();
+        m_Perspective = glm::perspective(glm::radians(fov), aspect, near, far);
     }
 
-    Ref<Component> Camera::clone()
+    Ref<Component> Camera::Clone()
     {
-        auto camera = make_ref<Camera>();
+        auto camera = MakeRef<Camera>();
         camera->far = far;
         camera->near = near;
         camera->fov = fov;
         return camera;
     }
 
-    void Camera::serialize(Serializer& ctx) const
+    void Camera::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
         FSN_SERIALIZE_MEMBER(far);
         FSN_SERIALIZE_MEMBER(near);
         FSN_SERIALIZE_MEMBER(fov);
     }
 
-    void Camera::deserialize(Deserializer& ctx)
+    void Camera::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(far);
         FSN_DESERIALIZE_MEMBER(near);
         FSN_DESERIALIZE_MEMBER(fov);

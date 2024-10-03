@@ -10,105 +10,105 @@ namespace Fussion {
     CubeSkybox::~CubeSkybox()
     {
         ZoneScoped;
-        m_shader.release();
-        m_pipeline.release();
+        m_shader.Release();
+        m_pipeline.Release();
     }
 
     void CubeSkybox::init(std::vector<GPU::BindGroupLayout> layouts)
     {
         ZoneScoped;
         using namespace GPU;
-        auto shader_src = ShaderProcessor::process_file(
+        auto shader_src = ShaderProcessor::ProcessFile(
             "Assets/Shaders/WGSL/CubeSkybox.wgsl")
-                              .unwrap();
+                              .Unwrap();
 
         ShaderModuleSpec shader_spec {
-            .label = "CubeSkybox::Shader",
-            .type = WGSLShader {
-                .source = shader_src,
+            .Label = "CubeSkybox::Shader",
+            .Type = WGSLShader {
+                .Source = shader_src,
             },
-            .vertex_entry_point = "vs_main",
-            .fragment_entry_point = "fs_main",
+            .VertexEntryPoint = "vs_main",
+            .FragmentEntryPoint = "fs_main",
         };
 
-        m_shader = Renderer::device().create_shader_module(shader_spec);
+        m_shader = Renderer::Device().CreateShaderModule(shader_spec);
 
         std::vector bgl_entries {
             BindGroupLayoutEntry {
-                .binding = 0,
-                .visibility = ShaderStage::Fragment,
-                .type = BindingType::Texture {
-                    .sample_type = TextureSampleType::Float {},
-                    .view_dimension = TextureViewDimension::Cube,
-                    .multi_sampled = false,
+                .Binding = 0,
+                .Visibility = ShaderStage::Fragment,
+                .Type = BindingType::Texture {
+                    .SampleType = TextureSampleType::Float {},
+                    .ViewDimension = TextureViewDimension::Cube,
+                    .MultiSampled = false,
                 },
-                .count = 1,
+                .Count = 1,
             },
             BindGroupLayoutEntry {
-                .binding = 1,
-                .visibility = ShaderStage::Fragment,
-                .type = BindingType::Sampler {
-                    .type = SamplerBindingType::Filtering,
+                .Binding = 1,
+                .Visibility = ShaderStage::Fragment,
+                .Type = BindingType::Sampler {
+                    .Type = SamplerBindingType::Filtering,
                 },
-                .count = 1,
+                .Count = 1,
             },
         };
         BindGroupLayoutSpec bgl_spec {
-            .label = "poop",
-            .entries = bgl_entries
+            .Label = "poop",
+            .Entries = bgl_entries
         };
-        m_bind_group_layout = Renderer::device().create_bind_group_layout(bgl_spec);
+        m_bind_group_layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
 
         layouts.push_back(m_bind_group_layout);
 
         PipelineLayoutSpec layout_spec {
-            .label = "asdasd",
-            .bind_group_layouts = layouts,
+            .Label = "asdasd",
+            .BindGroupLayouts = layouts,
         };
-        auto layout = Renderer::device().create_pipeline_layout(layout_spec);
+        auto layout = Renderer::Device().CreatePipelineLayout(layout_spec);
 
         std::array attributes {
             VertexAttribute {
-                .type = ElementType::Float3,
-                .shader_location = 0,
+                .Type = ElementType::Float3,
+                .ShaderLocation = 0,
             },
         };
-        auto attribute_layout = VertexBufferLayout::create(attributes);
+        auto attribute_layout = VertexBufferLayout::Create(attributes);
 
-        auto depth = DepthStencilState::get_default();
-        depth.depth_write_enabled = false;
-        depth.depth_compare = CompareFunction::Always;
+        auto depth = DepthStencilState::Default();
+        depth.DepthWriteEnabled = false;
+        depth.DepthCompare = CompareFunction::Always;
 
         RenderPipelineSpec spec {
-            .label = "CubeSkybox::Pipeline",
-            .layout = layout,
-            .vertex = VertexState {
-                .attribute_layouts = {
+            .Label = "CubeSkybox::Pipeline",
+            .Layout = layout,
+            .Vertex = VertexState {
+                .AttributeLayouts = {
                     { attribute_layout },
                 },
             },
-            .primitive = {
-                .topology = PrimitiveTopology::TriangleList,
-                .strip_index_format = None(),
-                .front_face = FrontFace::Ccw,
-                .cull = Face::None,
+            .Primitive = {
+                .Topology = PrimitiveTopology::TriangleList,
+                .StripIndexFormat = None(),
+                .FrontFace = FrontFace::Ccw,
+                .Cull = Face::None,
             },
-            .depth_stencil = depth,
-            .multi_sample = MultiSampleState::get_default(),
-            .fragment = FragmentStage {
-                .targets = {
+            .DepthStencil = depth,
+            .MultiSample = MultiSampleState::Default(),
+            .Fragment = FragmentStage {
+                .Targets = {
                     ColorTargetState {
-                        .format = TextureFormat::RGBA16Float,
-                        .blend = BlendState::get_default(),
-                        .write_mask = ColorWrite::All,
+                        .Format = TextureFormat::RGBA16Float,
+                        .Blend = BlendState::Default(),
+                        .WriteMask = ColorWrite::All,
                     },
                 },
             },
         };
 
-        m_pipeline = Renderer::device().create_render_pipeline(m_shader, m_shader, spec);
+        m_pipeline = Renderer::Device().CreateRenderPipeline(m_shader, m_shader, spec);
 
-        m_sampler = Renderer::device().create_sampler({
+        m_sampler = Renderer::Device().CreateSampler({
             .label = "sampler",
         });
 
@@ -157,20 +157,20 @@ namespace Fussion {
             Vector3(-0.5f, -0.5f, 0.5f),  // Top-left
         };
 
-        m_cube_vertices = Renderer::device().create_buffer({
-            .label = "Cube Verts",
-            .usage = BufferUsage::Vertex | BufferUsage::CopyDst,
-            .size = 36 * sizeof(Vector3),
-            .mapped = false,
+        m_cube_vertices = Renderer::Device().CreateBuffer({
+            .Label = "Cube Verts",
+            .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
+            .Size = 36 * sizeof(Vector3),
+            .Mapped = false,
         });
 
-        Renderer::device().write_buffer<Vector3>(m_cube_vertices, 0, vertices);
+        Renderer::Device().WriteBuffer<Vector3>(m_cube_vertices, 0, vertices);
     }
 
     void CubeSkybox::execute(GPU::RenderPassEncoder& pass)
     {
         ZoneScoped;
-        if (m_bind_group.handle == nullptr) {
+        if (m_bind_group.Handle == nullptr) {
             return;
         }
         using namespace GPU;
@@ -194,33 +194,33 @@ namespace Fussion {
         //     pass.release();
         // });
 
-        pass.set_pipeline(m_pipeline);
-        pass.set_vertex_buffer(0, m_cube_vertices);
-        pass.set_bind_group(m_bind_group, 2);
-        pass.draw({ 0, 36 }, { 0, 1 });
+        pass.SetPipeline(m_pipeline);
+        pass.SetVertexBuffer(0, m_cube_vertices);
+        pass.SetBindGroup(m_bind_group, 2);
+        pass.Draw({ 0, 36 }, { 0, 1 });
     }
 
     void CubeSkybox::set_map(GPU::Texture const& map)
     {
         ZoneScoped;
         using namespace GPU;
-        m_bind_group.release();
+        m_bind_group.Release();
 
         std::vector entries {
             BindGroupEntry {
-                .binding = 0,
-                .resource = map.view,
+                .Binding = 0,
+                .Resource = map.View,
             },
             BindGroupEntry {
-                .binding = 1,
-                .resource = m_sampler,
+                .Binding = 1,
+                .Resource = m_sampler,
             }
         };
 
-        m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout,
+        m_bind_group = Renderer::Device().CreateBindGroup(m_bind_group_layout,
             {
-                .label = "asdasd",
-                .entries = entries,
+                .Label = "asdasd",
+                .Entries = entries,
             });
     }
 } // namespace Fussion

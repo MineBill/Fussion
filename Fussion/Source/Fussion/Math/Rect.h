@@ -6,26 +6,26 @@
 
 namespace Fussion {
     struct Rect {
-        Vector2 position{};
-        Vector2 size{};
+        Vector2 position {};
+        Vector2 size {};
 
         Rect(f32 x, f32 y, f32 width, f32 height);
         Rect(Vector2 const& position, Vector2 const& size);
 
         /// Create a Rect only from size. The position is set to (0, 0).
         /// @return The rect.
-        static Rect from_size(Vector2 const& size);
+        static Rect FromSize(Vector2 const& size);
 
         /// Create a Rect only from size. The position is set to (0, 0).
         /// @return The rect.
-        static auto from_size(f32 width, f32 height) -> Rect;
+        static auto FromSize(f32 width, f32 height) -> Rect;
 
         /// Create a rect from two positions. The size is calculated automatically.
         /// @return The rect.
-        static Rect from_start_end(Vector2 const& start, Vector2 const& end);
+        static Rect FromStartEnd(Vector2 const& start, Vector2 const& end);
 
         /// Checks whether @p point is contained within this rect.
-        auto contains(Vector2 const& point) const -> bool;
+        auto Contains(Vector2 const& point) const -> bool;
     };
 }
 

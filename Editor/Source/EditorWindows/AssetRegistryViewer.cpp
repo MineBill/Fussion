@@ -5,10 +5,10 @@
 
 #include <fmt/format.h>
 
-void AssetRegistryViewer::on_draw()
+void AssetRegistryViewer::OnDraw()
 {
     EUI::window("Asset Registry Viewer", [&] {
-        auto registry = Project::asset_manager()->registry().unsafe_ptr();
+        auto registry = Project::AssetManager()->GetRegistry().UnsafePtr();
 
         ImGui::BeginTable("registry_table", 6);
         ImGui::TableSetupColumn("Handle");
@@ -24,23 +24,24 @@ void AssetRegistryViewer::on_draw()
             ImGui::TextWrapped("%s", fmt::format("{}", id).c_str());
 
             ImGui::TableNextColumn();
-            ImGui::TextWrapped("%s", metadata.name.c_str());
+            ImGui::TextWrapped("%s", metadata.Name.c_str());
 
             ImGui::TableNextColumn();
-            ImGui::TextWrapped("%s", magic_enum::enum_name(metadata.type).data());
+            ImGui::TextWrapped("%s", magic_enum::enum_name(metadata.Type).data());
 
             ImGui::TableNextColumn();
-            bool value = metadata.is_virtual;
+            bool value = metadata.IsVirtual;
             ImGui::BeginDisabled();
             ImGui::Checkbox("", &value);
             ImGui::EndDisabled();
 
             ImGui::TableNextColumn();
-            ImGui::TextWrapped("%s", magic_enum::enum_name(metadata.load_state).data());
+            ImGui::TextWrapped("%s", magic_enum::enum_name(metadata.LoadState).data());
 
             ImGui::TableNextColumn();
-            ImGui::TextWrapped("%s", metadata.path.string().c_str());
+            ImGui::TextWrapped("%s", metadata.Path.string().c_str());
         }
         ImGui::EndTable();
-    }, { .opened = &m_is_visible });
+    },
+        { .opened = &m_IsVisible });
 }

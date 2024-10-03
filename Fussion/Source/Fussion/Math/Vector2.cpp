@@ -1,26 +1,27 @@
 ﻿#include "FussionPCH.h"
 #include "Vector2.h"
-#include "Math/Math.h"
+
+#include "Math.h"
 
 namespace Fussion {
-    Vector2::Real Vector2::length() const
+    Vector2::Real Vector2::Length() const
     {
-        return Math::abs(Math::sqrt(x * x + y * y));
+        return Math::Abs(Math::Sqrt(x * x + y * y));
     }
 
-    Vector2::Real Vector2::length_squared() const
+    Vector2::Real Vector2::LengthSquared() const
     {
         return x * x + y * y;
     }
 
-    Vector2::Real Vector2::distance_to(Vector2 const& other) const
+    Vector2::Real Vector2::DistanceTo(Vector2 const& other) const
     {
-        return (*this - other).length();
+        return (*this - other).Length();
     }
 
-    Vector2::Real Vector2::distance_to_squared(Vector2 const& other) const
+    Vector2::Real Vector2::DistanceToSquared(Vector2 const& other) const
     {
-        return (*this - other).length_squared();
+        return (*this - other).LengthSquared();
     }
 
     Vector2 Vector2::operator+(Vector2 const& right) const
@@ -45,7 +46,7 @@ namespace Fussion {
 
     bool operator==(Vector2 const& lhs, Vector2 const& rhs)
     {
-        return Math::is_zero(Math::abs(lhs.x - rhs.x)) && Math::is_zero(Math::abs(lhs.y - rhs.y));
+        return Math::IsZero(Math::Abs(lhs.x - rhs.x)) && Math::IsZero(Math::Abs(lhs.y - rhs.y));
     }
 
     bool operator!=(Vector2 const& lhs, Vector2 const& rhs)
@@ -53,12 +54,12 @@ namespace Fussion {
         return !(lhs == rhs);
     }
 
-    bool Vector2::is_zero() const
+    bool Vector2::IsZero() const
     {
-        return Math::is_zero(x) && Math::is_zero(y);
+        return Math::IsZero(x) && Math::IsZero(y);
     }
 
-    f32 Vector2::aspect() const
+    f32 Vector2::Aspect() const
     {
         return x / y;
     }

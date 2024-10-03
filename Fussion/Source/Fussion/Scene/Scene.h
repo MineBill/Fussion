@@ -19,34 +19,34 @@ namespace Fussion {
         Scene& operator=(Scene const& other);
         Scene& operator=(Scene&& other) noexcept;
 
-        void on_start();
-        void on_update(f32 delta);
+        void OnStart();
+        void OnUpdate(f32 delta);
 
-        void tick();
+        void Tick();
 #if FSN_DEBUG_DRAW
-        void on_debug_draw(DebugDrawContext& ctx);
+        void OnDebugDraw(DebugDrawContext& ctx);
 #endif
 
         // TODO: Why return pointers?
         [[nodiscard]]
-        auto create_entity(std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
+        auto CreateEntity(std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
         [[nodiscard]]
-        auto create_entity_with_id(EntityHandle id, std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
+        auto CreateEntityWithID(EntityHandle id, std::string const& name = "Entity", EntityHandle parent = EntityHandle(0)) -> Entity*;
 
         [[nodiscard]]
-        auto get_entity(EntityHandle handle) -> Entity*;
+        auto GetEntity(EntityHandle handle) -> Entity*;
         [[nodiscard]]
-        auto get_entity_from_local_id(s32 local_id) -> Entity*;
+        auto GetEntityFromLocalID(s32 local_id) -> Entity*;
 
         /// Returns the invisible root entity. All other entities in the scene
         /// are children of this root entity.
         [[nodiscard]]
-        auto root() -> Entity&;
+        auto GetRoot() -> Entity&;
 
         template<typename Callback>
-        void for_each_entity(Callback callback)
+        void ForEachEntity(Callback callback)
         {
-            for (auto&& [id, entity] : m_entities) {
+            for (auto&& [id, entity] : m_Entities) {
                 (void)id;
                 callback(&entity);
             }
@@ -56,12 +56,12 @@ namespace Fussion {
         /// @returns The component if it exists, nullptr otherwise.
         template<std::derived_from<Component> C>
         [[nodiscard]]
-        auto find_first_component() -> Ref<C>
+        auto FindFirstComponent() -> Ref<C>
         {
-            for (auto& [id, entity] : m_entities) {
+            for (auto& [id, entity] : m_Entities) {
                 (void)id;
-                if (entity.has_component<C>()) {
-                    return entity.get_component<C>();
+                if (entity.HasComponent<C>()) {
+                    return entity.GetComponent<C>();
                 }
             }
             return nullptr;
@@ -69,38 +69,38 @@ namespace Fussion {
 
         /// Returns if the entity exists in the scene.
         [[nodiscard]]
-        bool has_entity(EntityHandle handle) const;
+        bool HasEntity(EntityHandle handle) const;
 
         /// Marks the scene as modified.
         /// Mainly used by the editor.
-        void set_dirty(bool dirty = true) { m_dirty = dirty; }
-        bool is_dirty() const { return m_dirty; }
+        void SetDirty(bool dirty = true) { m_Dirty = dirty; }
+        bool IsDirty() const { return m_Dirty; }
 
-        void destroy(EntityHandle handle);
-        void destroy(Entity const& entity);
+        void DestroyEntity(EntityHandle handle);
+        void DestroyEntity(Entity const& entity);
 
-        EntityHandle clone_entity(EntityHandle handle);
+        EntityHandle CloneEntity(EntityHandle handle);
 
-        auto name() const -> std::string const& { return m_name; }
+        auto GetName() const -> std::string const& { return m_Name; }
 
-        virtual auto type() const -> AssetType override { return static_type(); }
+        virtual auto Type() const -> AssetType override { return StaticType(); }
 
-        static auto static_type() -> AssetType { return AssetType::Scene; }
+        static auto StaticType() -> AssetType { return AssetType::Scene; }
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
     private:
-        std::string m_name{};
-        std::unordered_map<EntityHandle, Entity> m_entities{};
-        bool m_dirty{};
+        std::string m_Name {};
+        std::unordered_map<EntityHandle, Entity> m_Entities {};
+        bool m_Dirty {};
 
-        std::unordered_map<s32, EntityHandle> m_local_id_to_entity{};
+        std::unordered_map<s32, EntityHandle> m_LocalIDToEntity {};
         // We set this to 1 so that the first has an id of 1 because
         // the object picking framebuffer is filled with 0s.
-        s32 m_local_id_counter{ 1 };
+        s32 m_LocalIDCounter { 1 };
 
-        BoundingBox m_box {};
+        BoundingBox m_Box {};
 
         friend class Entity;
         friend SceneSerializer;

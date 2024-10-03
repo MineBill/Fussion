@@ -12,34 +12,34 @@ struct TestingAllocator {
         void* ptr;
     };
 
-    mem::Allocator backing_allocator{};
+    Mem::Allocator backing_allocator{};
 
     std::unordered_map<uintptr_t, TrackingAllocation> allocations{};
 
     TestingAllocator()
     {
-        backing_allocator = mem::heap_allocator();
+        backing_allocator = Mem::GetHeapAllocator();
     }
 
-    auto allocator() -> mem::Allocator
+    auto allocator() -> Mem::Allocator
     {
         return {
-            .alloc_proc = [](usz size, void* data, std::source_location const& loc) {
+            .AllocProc = [](usz size, void* data, std::source_location const& loc) {
                 auto self = CAST(TestingAllocator*, data);
-                auto ptr = self->backing_allocator.alloc_proc(size, self->backing_allocator.data, loc);
+                auto ptr = self->backing_allocator.AllocProc(size, self->backing_allocator.data, loc);
                 self->allocations[TRANSMUTE(uintptr_t, ptr)] = {
                     .location = loc,
                     .ptr = ptr,
                 };
                 return ptr;
             },
-            .dealloc_proc = [](void* ptr, void* data, std::source_location const& loc) {
+            .DeallocProc = [](void* ptr, void* data, std::source_location const& loc) {
                 auto self = CAST(TestingAllocator*, data);
 
                 if (self->allocations.contains(TRANSMUTE(uintptr_t, ptr))) {
                     self->allocations.erase(TRANSMUTE(uintptr_t, ptr));
                 }
-                self->backing_allocator.dealloc_proc(ptr, self->backing_allocator.data, loc);
+                self->backing_allocator.DeallocProc(ptr, self->backing_allocator.data, loc);
             },
             .data = this
         };
@@ -193,7 +193,7 @@ TEST_CASE("DynamicArray: Leak functionality", "[DynamicArray]")
         REQUIRE(leaked_buffer[1] == 20);
         REQUIRE(array.len() == 2);
 
-        mem::free(leaked_buffer, allocator);
+        Mem::Free(leaked_buffer, allocator);
         // Since leak prevents destruction, the array should not free memory on destruction
         // We can't directly test memory leaks in Catch2, but ensuring no crashes happen is sufficient
     }

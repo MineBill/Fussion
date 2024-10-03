@@ -1,63 +1,64 @@
 ﻿#pragma once
+#include <Fussion/Core/Mem.h>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <cstring>
+#include <vector>
 
 class UndoRedo {
-    struct Item {
-        void* ptr{};
-        size_t size{};
-        char data[512]{};
-        std::string tag{};
-    };
-
-    std::vector<Item> m_undo_items;
-    std::vector<Item> m_redo_items;
-    std::vector<Item> m_temp_items;
-
-    std::unordered_map<std::string, Item> m_single_items;
-
 public:
     template<typename T>
-    void push(T* data, std::string const& tag = "", size_t size = sizeof(T))
+    void Push(T* data, std::string const& tag = "", size_t size = sizeof(T))
     {
-        for (auto const& item : m_temp_items) {
-            if (item.ptr == data) {
+        for (auto const& item : m_TempItems) {
+            if (item.Ptr == data) {
                 return;
             }
         }
 
         Item item = {
-            .ptr = data,
+            .Ptr = data,
             .size = size,
-            .tag = tag,
+            .Tag = tag,
         };
-        std::memcpy(item.data, data, size);
-        m_temp_items.push_back(item);
+        Fussion::Mem::Copy(item.Data, data, size);
+        m_TempItems.push_back(item);
     }
 
     template<typename T>
-    void push_single(T* data, std::string const& tag, size_t size = sizeof(T))
+    void PushSingle(T* data, std::string const& tag, size_t size = sizeof(T))
     {
-        for (auto const& item : m_temp_items) {
-            if (item.ptr == data) {
+        for (auto const& item : m_TempItems) {
+            if (item.Ptr == data) {
                 return;
             }
         }
 
         Item item = {
-            .ptr = data,
+            .Ptr = data,
             .size = size,
-            .tag = tag,
+            .Tag = tag,
         };
-        std::memcpy(item.data, data, size);
-        m_single_items[tag] = std::move(item);
+        Fussion::Mem::Copy(item.Data, data, size);
+        m_SingleItems[tag] = std::move(item);
     }
 
-    void undo();
-    void redo();
+    void Undo();
+    void Redo();
 
-    void commit_tag(std::string const& tag);
-    void commit();
+    void CommitTag(std::string const& tag);
+    void Commit();
+
+private:
+    struct Item {
+        void* Ptr {};
+        size_t size {};
+        char Data[512] {};
+        std::string Tag {};
+    };
+
+    std::vector<Item> m_UndoItems;
+    std::vector<Item> m_RedoItems;
+    std::vector<Item> m_TempItems;
+
+    std::unordered_map<std::string, Item> m_SingleItems;
 };

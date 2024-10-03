@@ -1,86 +1,87 @@
-﻿#include "Texture2D.h"
+﻿#include "FussionPCH.h"
 
-#include "FussionPCH.h"
+#include "Texture2D.h"
+
 #include "Rendering/Renderer.h"
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void Texture2DMetadata::serialize(Serializer& ctx) const
+    void Texture2DMetadata::Serialize(Serializer& ctx) const
     {
-        AssetMetadata::serialize(ctx);
-        FSN_SERIALIZE_MEMBER(width);
-        FSN_SERIALIZE_MEMBER(height);
+        AssetMetadata::Serialize(ctx);
+        FSN_SERIALIZE_MEMBER(Width);
+        FSN_SERIALIZE_MEMBER(Height);
         // FSN_SERIALIZE_MEMBER(Filter);
-        FSN_SERIALIZE_MEMBER(format);
+        FSN_SERIALIZE_MEMBER(Format);
         // FSN_SERIALIZE_MEMBER(Wrap);
-        FSN_SERIALIZE_MEMBER(is_normal_map);
-        FSN_SERIALIZE_MEMBER(generate_mipmaps);
+        FSN_SERIALIZE_MEMBER(IsNormalMap);
+        FSN_SERIALIZE_MEMBER(GenerateMipmaps);
     }
 
-    void Texture2DMetadata::deserialize(Deserializer& ctx)
+    void Texture2DMetadata::Deserialize(Deserializer& ctx)
     {
-        AssetMetadata::deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(width);
-        FSN_DESERIALIZE_MEMBER(height);
+        AssetMetadata::Deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(Width);
+        FSN_DESERIALIZE_MEMBER(Height);
         // FSN_DESERIALIZE_MEMBER(Filter);
-        FSN_DESERIALIZE_MEMBER(format);
+        FSN_DESERIALIZE_MEMBER(Format);
         // FSN_DESERIALIZE_MEMBER(Wrap);
-        FSN_DESERIALIZE_MEMBER(is_normal_map);
-        FSN_DESERIALIZE_MEMBER(generate_mipmaps);
+        FSN_DESERIALIZE_MEMBER(IsNormalMap);
+        FSN_DESERIALIZE_MEMBER(GenerateMipmaps);
     }
 
-    Ref<Texture2D> Texture2D::create(std::span<u8> data, Texture2DMetadata const& metadata)
+    Ref<Texture2D> Texture2D::Create(std::span<u8> data, Texture2DMetadata const& metadata)
     {
-        Ref<Texture2D> texture = make_ref<Texture2D>();
+        Ref<Texture2D> texture = MakeRef<Texture2D>();
 
-        texture->m_metadata = metadata;
+        texture->m_Metadata = metadata;
         GPU::TextureSpec spec {
-            .label = "Texture2D Texture"sv,
-            .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
-            .dimension = GPU::TextureDimension::D2,
-            .size = { metadata.width, metadata.height, 1 },
-            .format = metadata.format,
-            .sample_count = 1,
-            .generate_mip_maps = metadata.generate_mipmaps,
+            .Label = "Texture2D Texture"sv,
+            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
+            .Dimension = GPU::TextureDimension::D2,
+            .Size = { metadata.Width, metadata.Height, 1 },
+            .Format = metadata.Format,
+            .SampleCount = 1,
+            .GenerateMipMaps = metadata.GenerateMipmaps,
         };
 
-        if (metadata.is_normal_map) {
-            spec.format = GPU::TextureFormat::RGBA8Unorm;
+        if (metadata.IsNormalMap) {
+            spec.Format = GPU::TextureFormat::RGBA8Unorm;
         }
 
-        auto& device = Renderer::device();
+        auto& device = Renderer::Device();
 
-        texture->m_image = device.create_texture(spec);
+        texture->m_Texture = device.CreateTexture(spec);
 
-        device.write_texture(texture->m_image, data.data(), data.size_bytes(), Vector2::Zero, { metadata.width, metadata.height });
+        device.WriteTexture(texture->m_Texture, data.data(), data.size_bytes(), Vector2::Zero, { metadata.Width, metadata.Height });
 
-        texture->m_image.generate_mipmaps(device);
+        texture->m_Texture.GenerateMipmaps(device);
 
         return texture;
     }
 
-    Ref<Texture2D> Texture2D::create(std::span<f32> data, Texture2DMetadata const& metadata)
+    Ref<Texture2D> Texture2D::Create(std::span<f32> data, Texture2DMetadata const& metadata)
     {
-        Ref<Texture2D> texture = make_ref<Texture2D>();
+        Ref<Texture2D> texture = MakeRef<Texture2D>();
 
-        texture->m_metadata = metadata;
+        texture->m_Metadata = metadata;
         GPU::TextureSpec spec {
-            .label = "Texture2D Texture"sv,
-            .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
-            .dimension = GPU::TextureDimension::D2,
-            .size = { metadata.width, metadata.height, 1 },
-            .format = metadata.format,
-            .sample_count = 1,
-            .generate_mip_maps = metadata.generate_mipmaps,
+            .Label = "Texture2D Texture"sv,
+            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
+            .Dimension = GPU::TextureDimension::D2,
+            .Size = { metadata.Width, metadata.Height, 1 },
+            .Format = metadata.Format,
+            .SampleCount = 1,
+            .GenerateMipMaps = metadata.GenerateMipmaps,
         };
 
-        auto& device = Renderer::device();
+        auto& device = Renderer::Device();
 
-        texture->m_image = device.create_texture(spec);
+        texture->m_Texture = device.CreateTexture(spec);
 
-        device.write_texture(texture->m_image, data.data(), data.size_bytes(), Vector2::Zero, { metadata.width, metadata.height }, 4 * sizeof(f32));
+        device.WriteTexture(texture->m_Texture, data.data(), data.size_bytes(), Vector2::Zero, { metadata.Width, metadata.Height }, 4 * sizeof(f32));
 
-        texture->m_image.generate_mipmaps(device);
+        texture->m_Texture.GenerateMipmaps(device);
 
         return texture;
     }

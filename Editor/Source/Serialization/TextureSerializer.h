@@ -3,5 +3,5 @@
 
 class TextureSerializer final : public AssetSerializer {
 public:
-    virtual auto load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> override;
+    virtual auto Load(EditorAssetMetadata metadata) -> Ref<Fussion::Asset> override;
 };

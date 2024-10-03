@@ -8,13 +8,13 @@ namespace Fussion {
         BoundingBox() = default;
         explicit BoundingBox(Vector3 const& center);
 
-        void include_point(Vector3 const& point);
-        void include(BoundingBox const& box);
-        Vector3 center() const;
+        void IncludePoint(Vector3 const& point);
+        void Include(BoundingBox const& box);
+        Vector3 Center() const;
 
-        BoundingBox translated(Vector3 const& point) const;
-        BoundingBox transformed(Mat4 const& matrix) const;
+        BoundingBox Translated(Vector3 const& point) const;
+        BoundingBox Transformed(Mat4 const& matrix) const;
 
-        auto get_corners() const -> std::array<Vector3, 8>;
+        auto GetCorners() const -> std::array<Vector3, 8>;
     };
 }

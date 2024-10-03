@@ -1,10 +1,9 @@
 #pragma once
-#include "Fussion/Assets/AssetRef.h"
-#include "Fussion/Assets/Model.h"
-#include "Fussion/Assets/Texture2D.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/Log/Log.h"
-#include "Fussion/Scene/Component.h"
+#include <Fussion/Assets/AssetRef.h>
+#include <Fussion/Assets/Model.h>
+#include <Fussion/Assets/Texture2D.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Scene/Component.h>
 
 namespace Fussion {
     class [[API]] PointLight final : public Component {
@@ -12,16 +11,16 @@ namespace Fussion {
         COMPONENT_DEFAULT(PointLight)
         COMPONENT_DEFAULT_COPY(PointLight)
 
-        virtual void on_update(f32 delta) override;
-        virtual void on_draw(RenderContext& context) override;
+        virtual void OnUpdate(f32 delta) override;
+        virtual void OnDraw(RenderContext& context) override;
 
         [[API, BackgroundColor(Color::Red)]]
         f32 radius { 10.0f };
         [[API]]
         Vector3 offset {};
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] DebugDrawer final : public Component {
@@ -35,15 +34,15 @@ namespace Fussion {
         COMPONENT_DEFAULT_COPY(DebugDrawer)
 
 #if FSN_DEBUG_DRAW
-        virtual void on_debug_draw(DebugDrawContext& ctx) override;
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
         Type draw_type { Type::Box };
 
         f32 size { 0.0f };
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] BallSpawner final : public Component {
@@ -51,7 +50,7 @@ namespace Fussion {
         COMPONENT_DEFAULT(BallSpawner)
         COMPONENT_DEFAULT_COPY(BallSpawner)
 
-        virtual void on_update(f32 delta) override;
+        virtual void OnUpdate(f32 delta) override;
 
         [[API]]
         f32 speed { 0.1f };
@@ -64,8 +63,8 @@ namespace Fussion {
         [[API, EditorButton("Clear")]]
         void clear();
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] Environment final : public Component {
@@ -79,7 +78,7 @@ namespace Fussion {
             Reinhard = 2,
         };
 
-        virtual void on_draw(RenderContext& context) override;
+        virtual void OnDraw(RenderContext& context) override;
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO")]]
         bool ssao {};
@@ -105,8 +104,8 @@ namespace Fussion {
         [[API, EditorName("Env Map")]]
         AssetRef<Texture2D> environment_map;
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 }
 

@@ -2,10 +2,10 @@
 
 namespace Fussion::System {
     /// Returns if the OS is currently in dark mode.
-    bool prefers_dark();
+    bool PrefersDark();
 
     /// Returns if the OS is currently in light mode.
-    bool prefers_light();
+    bool PrefersLight();
 
     enum class KnownFolders {
         Downloads,
@@ -16,7 +16,7 @@ namespace Fussion::System {
     };
 
     /// Returns the location of the specified known folder for the current OS.
-    auto get_known_folder(KnownFolders folder) -> std::filesystem::path;
-    
-    bool console_supports_color();
+    auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path;
+
+    bool ConsoleSupportsColor();
 }

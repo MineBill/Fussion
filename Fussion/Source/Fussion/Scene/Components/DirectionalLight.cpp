@@ -6,56 +6,56 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void DirectionalLight::on_enabled()
+    void DirectionalLight::OnEnabled()
     {
-        Component::on_enabled();
+        Component::OnEnabled();
     }
 
-    void DirectionalLight::on_disabled()
+    void DirectionalLight::OnDisabled()
     {
-        Component::on_disabled();
+        Component::OnDisabled();
     }
 
-    void DirectionalLight::on_update([[maybe_unused]] f32 delta) {}
+    void DirectionalLight::OnUpdate([[maybe_unused]] f32 delta) { }
 
-    void DirectionalLight::on_debug_draw(DebugDrawContext& ctx)
+    void DirectionalLight::OnDebugDraw(DebugDrawContext& ctx)
     {
         (void)ctx;
 
-        auto start = m_owner->transform.position;
-        auto end = start + m_owner->transform.forward();
-        Debug::draw_line(start, end, 0.0f, Color::Green);
-        Debug::draw_cube(end, m_owner->transform.euler_angles, Vector3::One * 0.1f);
+        auto start = m_Owner->Transform.Position;
+        auto end = start + m_Owner->Transform.Forward();
+        Debug::DrawLine(start, end, 0.0f, Color::Green);
+        Debug::DrawCube(end, m_Owner->Transform.EulerAngles, Vector3::One * 0.1f);
     }
 
-    void DirectionalLight::on_draw(RenderContext& context)
+    void DirectionalLight::OnDraw(RenderContext& context)
     {
-        if (!context.render_flags.test(RenderState::LightCollection))
+        if (!context.RenderFlags.test(RenderState::LightCollection))
             return;
 
-        context.directional_lights.push_back(GPUDirectionalLight{
+        context.DirectionalLights.push_back(GPUDirectionalLight {
             {
-                .direction = Vector4{ -m_owner->transform.forward() },
-                .color = light_color,
-                .brightness = brightness,
+                .Direction = Vector4 { -m_Owner->Transform.Forward() },
+                .LightColor = LightColor,
+                .Brightness = Brightness,
             },
-            split_lambda,
+            SplitLambda,
         });
     }
 
-    void DirectionalLight::serialize(Serializer& ctx) const
+    void DirectionalLight::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
-        FSN_SERIALIZE_MEMBER(light_color);
-        FSN_SERIALIZE_MEMBER(split_lambda);
-        FSN_SERIALIZE_MEMBER(brightness);
+        Component::Serialize(ctx);
+        FSN_SERIALIZE_MEMBER(LightColor);
+        FSN_SERIALIZE_MEMBER(SplitLambda);
+        FSN_SERIALIZE_MEMBER(Brightness);
     }
 
-    void DirectionalLight::deserialize(Deserializer& ctx)
+    void DirectionalLight::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(light_color);
-        FSN_DESERIALIZE_MEMBER(split_lambda);
-        FSN_DESERIALIZE_MEMBER(brightness);
+        Component::Deserialize(ctx);
+        FSN_DESERIALIZE_MEMBER(LightColor);
+        FSN_DESERIALIZE_MEMBER(SplitLambda);
+        FSN_DESERIALIZE_MEMBER(Brightness);
     }
 }

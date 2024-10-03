@@ -1,37 +1,37 @@
 ﻿#pragma once
-#include "Types.h"
-#include "Fussion/Window.h"
 #include "Fussion/Events/Event.h"
+#include "Fussion/Window.h"
+#include "Types.h"
 
 namespace Fussion {
     class Application {
     public:
         virtual ~Application();
 
-        virtual void on_start() {}
+        virtual void OnStart() { }
 
-        virtual void on_update([[maybe_unused]] f32 delta) {}
+        virtual void OnUpdate([[maybe_unused]] f32 delta) { }
 
-        virtual void on_event([[maybe_unused]] Event& event) {}
+        virtual void OnEvent([[maybe_unused]] Event& event) { }
 
-        virtual void on_log_received(
+        virtual void OnLogReceived(
             [[maybe_unused]] LogLevel level,
             [[maybe_unused]] std::string_view message,
-            [[maybe_unused]] std::source_location const& loc) {}
+            [[maybe_unused]] std::source_location const& loc) { }
 
-        Window& window() const { return *m_window.get(); }
-        static Application* inst() { return s_instance; }
+        Window& GetWindow() const { return *m_Window.get(); }
+        static Application* Self() { return s_Instance; }
 
-        void run();
+        void Run();
 
-        void quit();
+        void Quit();
 
     protected:
-        Ptr<Window> m_window{};
-        bool m_quit{ false };
+        Ptr<Window> m_Window {};
+        bool m_QuitRequested { false };
 
     private:
-        static Application* s_instance;
+        static Application* s_Instance;
     };
 }
 

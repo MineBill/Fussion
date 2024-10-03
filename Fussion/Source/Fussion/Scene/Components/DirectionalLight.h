@@ -7,26 +7,26 @@ namespace Fussion {
         COMPONENT_DEFAULT(DirectionalLight)
         COMPONENT_DEFAULT_COPY(DirectionalLight)
 
-        virtual void on_enabled() override;
-        virtual void on_disabled() override;
-        virtual void on_update(f32 delta) override;
+        virtual void OnEnabled() override;
+        virtual void OnDisabled() override;
+        virtual void OnUpdate(f32 delta) override;
 
 #if FSN_DEBUG_DRAW
-        virtual void on_debug_draw(DebugDrawContext& ctx) override;
+        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
 #endif
 
-        virtual void on_draw(RenderContext& context) override;
+        virtual void OnDraw(RenderContext& context) override;
 
         [[API, EditorName("Color")]]
-        Color light_color { Color::White };
+        Color LightColor { Color::White };
 
         [[API, EditorName("Brightness"), Range(0, 20, 0.1)]]
-        f32 brightness { 1.0f };
+        f32 Brightness { 1.0f };
 
         [[API, Region("Shadow"), EditorName("Split Lambda"), Range(0.1, 1.0, 0.05)]]
-        f32 split_lambda { 0.95f };
+        f32 SplitLambda { 0.95f };
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
     };
 }

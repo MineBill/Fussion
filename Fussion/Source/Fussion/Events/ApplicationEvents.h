@@ -11,25 +11,30 @@ namespace Fussion {
     public:
         EVENT(WindowClose)
         WindowCloseRequest() = default;
-
     };
 
     class WindowResized final : public Event {
     public:
         EVENT(WindowResized)
 
-        explicit WindowResized(int w, int h) : Width(w), Height(h) {}
+        explicit WindowResized(int w, int h)
+            : Width(w)
+            , Height(h)
+        { }
 
-        s32 Width{ 0 };
-        s32 Height{ 0 };
+        s32 Width { 0 };
+        s32 Height { 0 };
     };
 
     class WindowMoved final : public Event {
     public:
         EVENT(WindowMoved)
-        explicit WindowMoved(unsigned new_x, unsigned new_y) : X(new_x), Y(new_y) {}
+        explicit WindowMoved(unsigned new_x, unsigned new_y)
+            : X(new_x)
+            , Y(new_y)
+        { }
 
-        u32 X{ 0 }, Y{ 0 };
+        u32 X { 0 }, Y { 0 };
     };
 
     class WindowMinimized final : public Event {

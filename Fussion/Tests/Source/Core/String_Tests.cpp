@@ -1,5 +1,5 @@
-#include <iostream>
 #include <Fussion/Core/String.h>
+#include <iostream>
 
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -10,7 +10,7 @@ namespace Catch {
     struct StringMaker<String> {
         static std::string convert(String const& value)
         {
-            return std::string(value.data.ptr, value.len());
+            return std::string(value.data.ptr, value.Len());
         }
     };
 }
@@ -126,10 +126,10 @@ namespace Catch {
 TEST_CASE("String constructor and basic functionality", "[String]")
 {
     String empty_str;
-    REQUIRE(empty_str.len() == 0);
+    REQUIRE(empty_str.Len() == 0);
 
     String hello_str("Hello");
-    REQUIRE(hello_str.len() == 5);
+    REQUIRE(hello_str.Len() == 5);
     REQUIRE(hello_str[0] == 'H');
     REQUIRE(hello_str[4] == 'o');
     REQUIRE(hello_str == String("Hello"));
@@ -138,20 +138,20 @@ TEST_CASE("String constructor and basic functionality", "[String]")
 TEST_CASE("String clone and free", "[String]")
 {
     String hello_str("Hello");
-    auto cloned_str = hello_str.clone(mem::heap_allocator());
+    auto cloned_str = hello_str.Clone(Mem::GetHeapAllocator());
 
     REQUIRE(cloned_str == hello_str);
-    REQUIRE(cloned_str.len() == hello_str.len());
+    REQUIRE(cloned_str.Len() == hello_str.Len());
 
     // Freeing resources for cloned string
-    cloned_str.free(mem::heap_allocator());
-    REQUIRE(cloned_str.len() == 0);
+    cloned_str.Free(Mem::GetHeapAllocator());
+    REQUIRE(cloned_str.Len() == 0);
 }
 
 TEST_CASE("String split", "[String]")
 {
     String csv_str("A,B,C");
-    auto parts = csv_str.split(String(","), mem::heap_allocator());
+    auto parts = csv_str.Split(String(","), Mem::GetHeapAllocator());
 
     REQUIRE(parts.len() == 3);
     REQUIRE(parts[0] == String("A"));
@@ -163,66 +163,67 @@ TEST_CASE("String index_of", "[String]")
 {
     String test_str("Find the needle in the haystack");
 
-    auto maybe_index = test_str.index_of(String("needle"));
-    REQUIRE(maybe_index.has_value());
-    REQUIRE(maybe_index.unwrap() == 9);
+    auto maybe_index = test_str.IndexOf(String("needle"));
+    REQUIRE(maybe_index.HasValue());
+    REQUIRE(maybe_index.Unwrap() == 9);
 
-    auto not_found = test_str.index_of(String("missing"));
-    REQUIRE(!not_found.has_value());
+    auto not_found = test_str.IndexOf(String("missing"));
+    REQUIRE(!not_found.HasValue());
 }
 
-TEST_CASE("String replace", "[String]") {
+TEST_CASE("String replace", "[String]")
+{
     // Normal case
     String test_str("foo bar baz");
-    auto maybe_replaced_str = test_str.replace(String("bar"), String("qux"));
-    REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.unwrap() == String("foo qux baz"));
-    REQUIRE(test_str == String("foo bar baz"));  // Original string should remain unchanged
+    auto maybe_replaced_str = test_str.Replace(String("bar"), String("qux"));
+    REQUIRE(maybe_replaced_str.HasValue());
+    REQUIRE(maybe_replaced_str.Unwrap() == String("foo qux baz"));
+    REQUIRE(test_str == String("foo bar baz")); // Original string should remain unchanged
 
     // Edge case: no replacement found
-    maybe_replaced_str = test_str.replace(String("xyz"), String("abc"));
-    REQUIRE(!maybe_replaced_str.has_value());  // No replacement, should return empty Maybe
+    maybe_replaced_str = test_str.Replace(String("xyz"), String("abc"));
+    REQUIRE(!maybe_replaced_str.HasValue()); // No replacement, should return empty Maybe
 
     // Edge case: replacing with an empty string
-    maybe_replaced_str = test_str.replace(String("bar"), String(""));
-    REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.unwrap() == String("foo  baz"));
+    maybe_replaced_str = test_str.Replace(String("bar"), String(""));
+    REQUIRE(maybe_replaced_str.HasValue());
+    REQUIRE(maybe_replaced_str.Unwrap() == String("foo  baz"));
 
     // Edge case: replacing in an empty string
     String empty_str;
-    maybe_replaced_str = empty_str.replace(String("bar"), String("foo"));
-    REQUIRE(!maybe_replaced_str.has_value());  // Empty string, should return empty Maybe
+    maybe_replaced_str = empty_str.Replace(String("bar"), String("foo"));
+    REQUIRE(!maybe_replaced_str.HasValue()); // Empty string, should return empty Maybe
 
     // Edge case: replacing entire string
-    maybe_replaced_str = test_str.replace(String("foo bar baz"), String("new"));
-    REQUIRE(maybe_replaced_str.has_value());
-    REQUIRE(maybe_replaced_str.unwrap() == String("new"));
+    maybe_replaced_str = test_str.Replace(String("foo bar baz"), String("new"));
+    REQUIRE(maybe_replaced_str.HasValue());
+    REQUIRE(maybe_replaced_str.Unwrap() == String("new"));
 
     // Edge case: empty old_str
-    maybe_replaced_str = test_str.replace(String(""), String("new"));
-    REQUIRE(!maybe_replaced_str.has_value());  // Empty old_str, no replacement should occur
+    maybe_replaced_str = test_str.Replace(String(""), String("new"));
+    REQUIRE(!maybe_replaced_str.HasValue()); // Empty old_str, no replacement should occur
 }
 
 TEST_CASE("String trim", "[String]")
 {
     String padded_str("   hello   ");
 
-    padded_str.trim();
+    padded_str.Trim();
     REQUIRE(padded_str == String("hello"));
 
     String left_padded_str("   hello");
-    left_padded_str.trim_left();
+    left_padded_str.TrimLeft();
     REQUIRE(left_padded_str == String("hello"));
 
     String right_padded_str("hello   ");
-    right_padded_str.trim_right();
+    right_padded_str.TrimRight();
     REQUIRE(right_padded_str == String("hello"));
 }
 
 TEST_CASE("String view", "[String]")
 {
     String test_str("substring");
-    String sub_view = test_str.view(3, 6); // should return "str"
+    String sub_view = test_str.View(3, 6); // should return "str"
 
     REQUIRE(sub_view == String("str"));
 }
@@ -236,10 +237,10 @@ TEST_CASE("String view", "[String]")
 
 TEST_CASE("String alloc", "[String]")
 {
-    String allocated_str = String::alloc("heap allocated string", mem::heap_allocator());
+    String allocated_str = String::Alloc("heap allocated string", Mem::GetHeapAllocator());
 
     REQUIRE(allocated_str == String("heap allocated string"));
-    allocated_str.free(mem::heap_allocator());
+    allocated_str.Free(Mem::GetHeapAllocator());
 }
 
 TEST_CASE("String equality operator", "[String]")

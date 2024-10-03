@@ -1,22 +1,22 @@
 ﻿#pragma once
-#include "tracy/Tracy.hpp"
-
 #include <Fussion/GPU/GPU.h>
+
+#include "tracy/Tracy.hpp"
 
 namespace Fussion {
     template<typename T>
     class UniformBuffer {
         explicit UniformBuffer(GPU::Device const& device, Maybe<std::string_view> const& label)
-            : m_device(device)
+            : m_Device(device)
         {
             auto buffer_spec = GPU::BufferSpec {
-                .label = label.value_or("Uniform Buffer<T>"),
-                .usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
-                .size = sizeof(T),
-                .mapped = false,
+                .Label = label.ValueOr("Uniform Buffer<T>"),
+                .Usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
+                .Size = sizeof(T),
+                .Mapped = false,
             };
 
-            m_buffer = m_device.create_buffer(buffer_spec);
+            m_Buffer = m_Device.CreateBuffer(buffer_spec);
         }
 
     public:
@@ -24,7 +24,7 @@ namespace Fussion {
 
         UniformBuffer() = default;
 
-        static UniformBuffer create(GPU::Device const& device, Maybe<std::string_view> label = None())
+        static UniformBuffer Create(GPU::Device const& device, Maybe<std::string_view> label = None())
         {
             return UniformBuffer(device, label);
         }
@@ -32,24 +32,24 @@ namespace Fussion {
         void flush()
         {
             ZoneScopedN("Uniform Buffer Flush");
-            VERIFY(m_buffer.handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
 
-            m_device.write_buffer(m_buffer, 0, &data, sizeof(T));
+            m_Device.WriteBuffer(m_Buffer, 0, &Data, sizeof(T));
         }
 
-        static size_t size() { return TypeSize; }
+        static size_t Size() { return TypeSize; }
 
-        GPU::Buffer const& buffer() const
+        GPU::Buffer const& Buffer() const
         {
-            VERIFY(m_buffer.handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
-            return m_buffer;
+            VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            return m_Buffer;
         }
 
-        T data {};
+        T Data {};
 
     private:
-        GPU::Buffer m_buffer {};
+        GPU::Buffer m_Buffer {};
 
-        GPU::Device m_device {};
+        GPU::Device m_Device {};
     };
 }

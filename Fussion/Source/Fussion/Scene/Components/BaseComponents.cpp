@@ -8,124 +8,124 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void PointLight::on_update(f32) { }
+    void PointLight::OnUpdate(f32) { }
 
-    void PointLight::on_draw(RenderContext& context)
+    void PointLight::OnDraw(RenderContext& context)
     {
-        if (!context.render_flags.test(RenderState::LightCollection))
+        if (!context.RenderFlags.test(RenderState::LightCollection))
             return;
         auto light = GPUPointLight {
-            .position = m_owner->transform.position,
-            .color = Color::White,
-            .radius = radius,
+            .Position = m_Owner->Transform.Position,
+            .LightColor = Color::White,
+            .Radius = radius,
         };
-        context.point_lights.push_back(light);
+        context.PointLights.push_back(light);
     }
 
-    void PointLight::serialize(Serializer& ctx) const
+    void PointLight::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
         FSN_SERIALIZE_MEMBER(offset);
         FSN_SERIALIZE_MEMBER(radius);
     }
 
-    void PointLight::deserialize(Deserializer& ctx)
+    void PointLight::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(offset);
         FSN_DESERIALIZE_MEMBER(radius);
     }
 
-    void DebugDrawer::on_debug_draw(DebugDrawContext& ctx)
+    void DebugDrawer::OnDebugDraw(DebugDrawContext& ctx)
     {
         (void)ctx;
 
         if (draw_type == Type::Box) {
-            Debug::draw_cube(m_owner->transform.position, m_owner->transform.euler_angles, Vector3::One * size);
+            Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3::One * size);
         } else if (draw_type == Type::Sphere) {
-            Debug::draw_sphere(m_owner->transform.position, m_owner->transform.euler_angles, size);
+            Debug::DrawSphere(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, size);
         }
     }
 
-    void DebugDrawer::serialize(Serializer& ctx) const
+    void DebugDrawer::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
         FSN_SERIALIZE_MEMBER(size);
         FSN_SERIALIZE_MEMBER(draw_type);
     }
 
-    void DebugDrawer::deserialize(Deserializer& ctx)
+    void DebugDrawer::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(size);
         FSN_DESERIALIZE_MEMBER(draw_type);
     }
 
-    void BallSpawner::on_update(f32 delta)
+    void BallSpawner::OnUpdate(f32 delta)
     {
-        m_owner->transform.position.x += delta * speed;
+        m_Owner->Transform.Position.x += delta * speed;
     }
 
     void BallSpawner::spawn()
     {
         for (u32 x = 0; x < 10; ++x) {
             for (u32 y = 0; y < 10; ++y) {
-                auto new_entity = m_owner->scene().create_entity("Test", m_owner->handle());
-                auto mr = new_entity->add_component<MeshRenderer>();
-                mr->model_asset = model;
-                new_entity->transform.position = Vector3(x, Math::sin((x + y) / 50.0f), y);
+                auto new_entity = m_Owner->GetScene().CreateEntity("Test", m_Owner->GetHandle());
+                auto mr = new_entity->AddComponent<MeshRenderer>();
+                mr->ModelAsset = model;
+                new_entity->Transform.Position = Vector3(x, Math::Sin((x + y) / 50.0f), y);
 
-                auto mat = make_ref<PbrMaterial>();
+                auto mat = MakeRef<PbrMaterial>();
                 mat->object_color = Color::Red;
                 mat->roughness = CAST(f32, x) / 10.0f;
                 mat->metallic = CAST(f32, y) / 10.0f;
-                auto mat_ref = AssetManager::create_virtual_asset_ref<PbrMaterial>(mat);
+                auto mat_ref = AssetManager::CreateVirtualAssetRef<PbrMaterial>(mat);
 
-                mr->materials.push_back(mat_ref);
+                mr->Materials.push_back(mat_ref);
             }
         }
     }
 
     void BallSpawner::clear()
     {
-        auto children = m_owner->children();
+        auto children = m_Owner->GetChildren();
         for (auto child : children) {
-            m_owner->scene().destroy(child);
+            m_Owner->GetScene().DestroyEntity(child);
         }
     }
 
-    void BallSpawner::serialize(Serializer& ctx) const
+    void BallSpawner::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
         FSN_SERIALIZE_MEMBER(speed);
     }
 
-    void BallSpawner::deserialize(Deserializer& ctx)
+    void BallSpawner::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(speed);
     }
 
-    void Environment::on_draw(RenderContext& context)
+    void Environment::OnDraw(RenderContext& context)
     {
-        if (!context.render_flags.test(RenderState::LightCollection))
+        if (!context.RenderFlags.test(RenderState::LightCollection))
             return;
 
-        context.post_processing.use_ssao = ssao;
-        context.post_processing.ssao.radius = ssao_radius;
-        context.post_processing.ssao.bias = ssao_bias;
-        context.post_processing.ssao.noise_scale = ssao_noise_scale;
+        context.PostProcessingSettings.UseSSAO = ssao;
+        context.PostProcessingSettings.SSAOData.Radius = ssao_radius;
+        context.PostProcessingSettings.SSAOData.Bias = ssao_bias;
+        context.PostProcessingSettings.SSAOData.NoiseScale = ssao_noise_scale;
 
-        context.post_processing.tonemapping_settings.gamma = gamma;
-        context.post_processing.tonemapping_settings.exposure = exposure;
-        context.post_processing.tonemapping_settings.mode = CAST(u32, tonemap_mode);
+        context.PostProcessingSettings.TonemappingSettings.Gamma = gamma;
+        context.PostProcessingSettings.TonemappingSettings.Exposure = exposure;
+        context.PostProcessingSettings.TonemappingSettings.Mode = CAST(u32, tonemap_mode);
 
-        context.environment_map = environment_map.get();
+        context.EnvironmentMap = environment_map.Get();
     }
 
-    void Environment::serialize(Serializer& ctx) const
+    void Environment::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
         FSN_SERIALIZE_MEMBER(ssao);
         FSN_SERIALIZE_MEMBER(ssao_bias);
         FSN_SERIALIZE_MEMBER(ssao_noise_scale);
@@ -137,9 +137,9 @@ namespace Fussion {
         FSN_SERIALIZE_MEMBER(environment_map);
     }
 
-    void Environment::deserialize(Deserializer& ctx)
+    void Environment::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(ssao);
         FSN_DESERIALIZE_MEMBER(ssao_bias);
         FSN_DESERIALIZE_MEMBER(ssao_noise_scale);

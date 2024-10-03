@@ -10,7 +10,8 @@ namespace {
 
 namespace Fussion {
     Uuid::Uuid()
-        : m_id(g_Engine()) {}
+        : m_ID(g_Engine())
+    { }
 
-    Uuid Uuid::Invalid{ CAST(u64, -1) };
+    Uuid Uuid::Invalid { CAST(u64, -1) };
 }

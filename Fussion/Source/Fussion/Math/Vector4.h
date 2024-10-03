@@ -1,21 +1,21 @@
 ﻿#pragma once
 #include <Fussion/Core/Concepts.h>
-#include "Fussion/Core/Types.h"
-#include "Fussion/Core/Core.h"
-#include "Fussion/Math/Vector2.h"
-#include "Fussion/Math/Vector3.h"
+#include <Fussion/Core/Core.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Math/Vector2.h>
+#include <Fussion/Math/Vector3.h>
 
 namespace Fussion {
     struct Vector4 final {
 #if USE_VECTOR_F64
-    using Real = f64;
+        using Real = f64;
 #else
         using Real = f32;
 #endif
 
 #if OS_WINDOWS
-#pragma warning(push)
-#pragma warning(disable: 4201)
+#    pragma warning(push)
+#    pragma warning(disable : 4201)
 #endif
         union {
             struct {
@@ -25,20 +25,65 @@ namespace Fussion {
             Real raw[4];
         };
 #if OS_WINDOWS
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
-        Vector4(): x(0), y(0), z(0), w(0) {}
-        explicit Vector4(ScalarType auto x): x(CAST(Real, x)), y(0), z(0), w(0) {}
-        Vector4(ScalarType auto x, ScalarType auto y): x(CAST(Real, x)), y(CAST(Real, y)), z(0), w(0) {}
-        Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z): x(CAST(Real, x)), y(CAST(Real, y)), z(CAST(Real, z)), w(0) {}
-        Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z, ScalarType auto w): x(CAST(Real, x)), y(CAST(Real, y)), z(CAST(Real, z)), w(CAST(Real, w)) {}
+        Vector4()
+            : x(0)
+            , y(0)
+            , z(0)
+            , w(0)
+        { }
+        explicit Vector4(ScalarType auto x)
+            : x(CAST(Real, x))
+            , y(0)
+            , z(0)
+            , w(0)
+        { }
+        Vector4(ScalarType auto x, ScalarType auto y)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+            , z(0)
+            , w(0)
+        { }
+        Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+            , z(CAST(Real, z))
+            , w(0)
+        { }
+        Vector4(ScalarType auto x, ScalarType auto y, ScalarType auto z, ScalarType auto w)
+            : x(CAST(Real, x))
+            , y(CAST(Real, y))
+            , z(CAST(Real, z))
+            , w(CAST(Real, w))
+        { }
 
-        explicit Vector4(Vector2 const& v): x(v.x), y(v.y), z(0), w(0) {}
-        Vector4(Vector2 v, ScalarType auto z, ScalarType auto w): x(v.x), y(v.y), z(z), w(w) {}
+        explicit Vector4(Vector2 const& v)
+            : x(v.x)
+            , y(v.y)
+            , z(0)
+            , w(0)
+        { }
+        Vector4(Vector2 v, ScalarType auto z, ScalarType auto w)
+            : x(v.x)
+            , y(v.y)
+            , z(z)
+            , w(w)
+        { }
 
-        explicit Vector4(Vector3 const& v): x(v.x), y(v.y), z(v.z), w(0) {}
-        Vector4(Vector3 const& v, ScalarType auto w): x(v.x), y(v.y), z(v.z), w(w) {}
+        explicit Vector4(Vector3 const& v)
+            : x(v.x)
+            , y(v.y)
+            , z(v.z)
+            , w(0)
+        { }
+        Vector4(Vector3 const& v, ScalarType auto w)
+            : x(v.x)
+            , y(v.y)
+            , z(v.z)
+            , w(w)
+        { }
 
         // Vector4(Vector4 const& v): X(v.X), Y(v.Y), Z(v.Z), W(v.W) {}
 
@@ -113,7 +158,12 @@ namespace Fussion {
             return *this;
         }
 
-        Vector4(glm::vec4 v): x(v.x), y(v.y), z(v.z), w(v.w) {}
+        Vector4(glm::vec4 v)
+            : x(v.x)
+            , y(v.y)
+            , z(v.z)
+            , w(v.w)
+        { }
 
         operator glm::vec4() const
         {

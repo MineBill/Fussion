@@ -15,19 +15,19 @@ namespace Fussion {
         return JPH::RVec3(v.x, v.y, v.z);
     }
 
-    void RigidBody::on_start()
+    void RigidBody::OnStart()
     {
         JPH::Ref<JPH::Shape> shape;
-        if (m_owner->has_component<SphereCollider>()) {
-            auto sphere = m_owner->get_component<SphereCollider>();
+        if (m_Owner->HasComponent<SphereCollider>()) {
+            auto sphere = m_Owner->GetComponent<SphereCollider>();
 
             JPH::SphereShapeSettings settings(sphere->radius);
             auto result = settings.Create();
             VERIFY(result.IsValid());
 
             shape = result.Get();
-        } else if (m_owner->has_component<BoxCollider>()) {
-            auto box = m_owner->get_component<BoxCollider>();
+        } else if (m_Owner->HasComponent<BoxCollider>()) {
+            auto box = m_Owner->GetComponent<BoxCollider>();
 
             JPH::BoxShapeSettings settings(v(box->half_extent));
             auto result = settings.Create();
@@ -59,18 +59,18 @@ namespace Fussion {
         // }
     }
 
-    void RigidBody::on_update(f32 delta)
+    void RigidBody::OnUpdate(f32 delta)
     {
         (void)delta;
     }
 
-    void RigidBody::serialize(Serializer& ctx) const
+    void RigidBody::Serialize(Serializer& ctx) const
     {
-        Component::serialize(ctx);
+        Component::Serialize(ctx);
     }
 
-    void RigidBody::deserialize(Deserializer& ctx)
+    void RigidBody::Deserialize(Deserializer& ctx)
     {
-        Component::deserialize(ctx);
+        Component::Deserialize(ctx);
     }
 }

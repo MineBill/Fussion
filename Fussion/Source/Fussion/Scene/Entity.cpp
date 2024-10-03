@@ -1,92 +1,92 @@
-﻿#include "Entity.h"
+﻿#include "FussionPCH.h"
+#include "Entity.h"
 
 #include "Components/Camera.h"
 #include "Fussion/Scene/Scene.h"
-#include "FussionPCH.h"
 #include "Serialization/Serializer.h"
 
 #include <ranges>
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    Mat4 Transform::matrix() const
+    Mat4 Transform::Matrix() const
     {
-        auto scale_mat = glm::scale(Mat4(1.0), CAST(glm::vec3, this->scale));
-        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
-        return translation_mat * rotation() * scale_mat;
+        auto scale_mat = glm::scale(Mat4(1.0), CAST(glm::vec3, this->Scale));
+        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        return translation_mat * RotationMatrix() * scale_mat;
     }
 
-    Mat4 Transform::rotation() const
+    Mat4 Transform::RotationMatrix() const
     {
         return glm::eulerAngleYXZ(
-            glm::radians(euler_angles.y),
-            glm::radians(euler_angles.x),
-            glm::radians(euler_angles.z));
+            glm::radians(EulerAngles.y),
+            glm::radians(EulerAngles.x),
+            glm::radians(EulerAngles.z));
     }
 
-    Mat4 Transform::camera_matrix() const
+    Mat4 Transform::AsCameraMatrix() const
     {
-        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
-        return rotation() * glm::inverse(translation_mat);
+        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        return RotationMatrix() * glm::inverse(translation_mat);
     }
 
-    Vector3 Transform::forward() const
+    Vector3 Transform::Forward() const
     {
         auto rotation_mat = glm::mat3(glm::eulerAngleYXZ(
-            glm::radians(euler_angles.y),
-            glm::radians(euler_angles.x),
-            glm::radians(euler_angles.z)));
+            glm::radians(EulerAngles.y),
+            glm::radians(EulerAngles.x),
+            glm::radians(EulerAngles.z)));
 
         return rotation_mat * Vector3::Forward;
     }
 
-    void Transform::serialize(Serializer& ctx) const
+    void Transform::Serialize(Serializer& ctx) const
     {
-        FSN_SERIALIZE_MEMBER(position);
-        FSN_SERIALIZE_MEMBER(euler_angles);
-        FSN_SERIALIZE_MEMBER(scale);
+        FSN_SERIALIZE_MEMBER(Position);
+        FSN_SERIALIZE_MEMBER(EulerAngles);
+        FSN_SERIALIZE_MEMBER(Scale);
     }
 
-    void Transform::deserialize(Deserializer& ctx)
+    void Transform::Deserialize(Deserializer& ctx)
     {
-        FSN_DESERIALIZE_MEMBER(position);
-        FSN_DESERIALIZE_MEMBER(euler_angles);
-        FSN_DESERIALIZE_MEMBER(scale);
+        FSN_DESERIALIZE_MEMBER(Position);
+        FSN_DESERIALIZE_MEMBER(EulerAngles);
+        FSN_DESERIALIZE_MEMBER(Scale);
     }
 
     Entity::Entity(Entity const& other)
-        : transform(other.transform)
-        , name(other.name)
-        , m_parent(other.m_parent)
-        , m_children(other.m_children)
-        , m_components(std::move(other.m_components))
-        , m_removed_components(other.m_removed_components)
-        , m_handle(other.m_handle)
-        , m_scene(other.m_scene)
-        , m_local_id(other.m_local_id)
-        , m_enabled(other.m_enabled)
+        : Transform(other.Transform)
+        , Name(other.Name)
+        , m_Parent(other.m_Parent)
+        , m_Children(other.m_Children)
+        , m_Components(std::move(other.m_Components))
+        , m_RemovedComponents(other.m_RemovedComponents)
+        , m_Handle(other.m_Handle)
+        , m_Scene(other.m_Scene)
+        , m_LocalID(other.m_LocalID)
+        , m_Enabled(other.m_Enabled)
     {
 
-        for (auto& [id, component] : other.m_components) {
+        for (auto& [id, component] : other.m_Components) {
             (void)id;
-            component->m_owner = this;
+            component->m_Owner = this;
         }
     }
 
     Entity::Entity(Entity&& other) noexcept
-        : transform(std::move(other.transform))
-        , name(std::move(other.name))
-        , m_parent(other.m_parent)
-        , m_children(std::move(other.m_children))
-        , m_components(std::move(other.m_components))
-        , m_removed_components(std::move(other.m_removed_components))
-        , m_handle(other.m_handle)
-        , m_scene(other.m_scene)
-        , m_enabled(other.m_enabled)
+        : Transform(std::move(other.Transform))
+        , Name(std::move(other.Name))
+        , m_Parent(other.m_Parent)
+        , m_Children(std::move(other.m_Children))
+        , m_Components(std::move(other.m_Components))
+        , m_RemovedComponents(std::move(other.m_RemovedComponents))
+        , m_Handle(other.m_Handle)
+        , m_Scene(other.m_Scene)
+        , m_Enabled(other.m_Enabled)
     {
-        for (auto& [id, component] : m_components) {
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->m_owner = this;
+            component->m_Owner = this;
         }
     }
 
@@ -94,23 +94,23 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        transform = other.transform;
-        name = other.name;
-        m_parent = other.m_parent;
+        Transform = other.Transform;
+        Name = other.Name;
+        m_Parent = other.m_Parent;
         // Since Entity only has a handle to it's parent,
         // and we copy that handle here, we don't have to
         // "update" the children to point to us, because they
         // already do.
-        m_children = other.m_children;
-        m_components = other.m_components;
-        m_removed_components = other.m_removed_components;
-        m_handle = other.m_handle;
-        m_scene = other.m_scene;
-        m_enabled = other.m_enabled;
+        m_Children = other.m_Children;
+        m_Components = other.m_Components;
+        m_RemovedComponents = other.m_RemovedComponents;
+        m_Handle = other.m_Handle;
+        m_Scene = other.m_Scene;
+        m_Enabled = other.m_Enabled;
 
-        for (auto& [id, component] : m_components) {
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->m_owner = this;
+            component->m_Owner = this;
         }
         return *this;
     }
@@ -119,123 +119,123 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        transform = std::move(other.transform);
-        name = std::move(other.name);
-        m_parent = other.m_parent;
-        m_children = std::move(other.m_children);
-        m_components = std::move(other.m_components);
-        m_removed_components = std::move(other.m_removed_components);
-        m_handle = other.m_handle;
-        m_scene = other.m_scene;
-        m_enabled = other.m_enabled;
-        m_local_id = other.m_local_id;
+        Transform = std::move(other.Transform);
+        Name = std::move(other.Name);
+        m_Parent = other.m_Parent;
+        m_Children = std::move(other.m_Children);
+        m_Components = std::move(other.m_Components);
+        m_RemovedComponents = std::move(other.m_RemovedComponents);
+        m_Handle = other.m_Handle;
+        m_Scene = other.m_Scene;
+        m_Enabled = other.m_Enabled;
+        m_LocalID = other.m_LocalID;
 
-        for (auto& [id, component] : m_components) {
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->m_owner = this;
+            component->m_Owner = this;
         }
         return *this;
     }
 
-    void Entity::set_parent(Entity const& new_parent)
+    void Entity::SetParent(Entity const& new_parent)
     {
-        if (is_grandchild(new_parent.m_handle))
+        if (IsGrandchild(new_parent.m_Handle))
             return;
 
-        if (auto p = m_scene->get_entity(m_parent)) {
-            p->remove_child_internal(*this);
+        if (auto p = m_Scene->GetEntity(m_Parent)) {
+            p->RemoveChildInternal(*this);
         }
-        m_scene->get_entity(new_parent.m_handle)->add_child_internal(*this);
-        m_parent = new_parent.m_handle;
+        m_Scene->GetEntity(new_parent.m_Handle)->AddChildInternal(*this);
+        m_Parent = new_parent.m_Handle;
     }
 
-    auto Entity::parent() const -> Entity*
+    auto Entity::GetParent() const -> Entity*
     {
-        return m_scene->get_entity(m_parent);
+        return m_Scene->GetEntity(m_Parent);
     }
 
-    void Entity::add_child(Entity& other)
+    void Entity::AddChild(Entity& other)
     {
-        other.set_parent(*this);
+        other.SetParent(*this);
     }
 
-    auto Entity::world_matrix() const -> Mat4
+    auto Entity::WorldMatrix() const -> Mat4
     {
-        if (auto parent = m_scene->get_entity(m_parent)) {
-            return parent->world_matrix() * local_matrix();
+        if (auto parent = m_Scene->GetEntity(m_Parent)) {
+            return parent->WorldMatrix() * LocalMatrix();
         }
-        return local_matrix();
+        return LocalMatrix();
     }
 
-    auto Entity::local_matrix() const -> Mat4
+    auto Entity::LocalMatrix() const -> Mat4
     {
-        return transform.matrix();
+        return Transform.Matrix();
     }
 
-    void Entity::add_child_internal(Entity const& child)
+    void Entity::AddChildInternal(Entity const& child)
     {
-        m_children.push_back(child.m_handle);
+        m_Children.push_back(child.m_Handle);
     }
 
-    void Entity::remove_child_internal(Entity const& child)
+    void Entity::RemoveChildInternal(Entity const& child)
     {
         ZoneScoped;
 
-        if (auto const pos = std::ranges::find(m_children, child.m_handle); pos != std::end(m_children)) {
-            std::erase(m_children, *pos);
+        if (auto const pos = std::ranges::find(m_Children, child.m_Handle); pos != std::end(m_Children)) {
+            std::erase(m_Children, *pos);
         }
     }
 
-    void Entity::set_enabled(bool enabled)
+    void Entity::SetEnabled(bool enabled)
     {
-        m_enabled = enabled;
+        m_Enabled = enabled;
         if (enabled) {
-            for (auto& [id, component] : m_components) {
+            for (auto& [id, component] : m_Components) {
                 (void)id;
-                component->on_enabled();
+                component->OnEnabled();
             }
         } else {
-            for (auto& [id, component] : m_components) {
+            for (auto& [id, component] : m_Components) {
                 (void)id;
-                component->on_disabled();
+                component->OnDisabled();
             }
         }
     }
 
-    bool Entity::is_enabled() const
+    bool Entity::IsEnabled() const
     {
-        if (!m_enabled)
+        if (!m_Enabled)
             return false;
-        if (auto parent = m_scene->get_entity(m_parent)) {
-            return parent->is_enabled();
+        if (auto parent = m_Scene->GetEntity(m_Parent)) {
+            return parent->IsEnabled();
         }
         // If the parent cannot be found in the scene then we are the root entity, which is always enabled.
         return true;
     }
 
-    auto Entity::add_component(Ref<Component> const& component) -> Ref<Component>
+    auto Entity::AddComponent(Ref<Component> const& component) -> Ref<Component>
     {
         ZoneScoped;
         auto const& meta = component->meta_poly_ptr();
         auto id = EntityHandle(meta.get_type().get_hash());
-        if (m_components.contains(id)) {
+        if (m_Components.contains(id)) {
             LOG_WARN("Component already exists on this entity");
             return nullptr;
         }
-        component->m_owner = this;
-        component->on_create();
-        m_components[id] = component;
+        component->m_Owner = this;
+        component->OnCreate();
+        m_Components[id] = component;
         return component;
     }
 
-    auto Entity::add_component(meta_hpp::class_type type) -> Ref<Component>
+    auto Entity::AddComponent(meta_hpp::class_type type) -> Ref<Component>
     {
         ZoneScoped;
 
         VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
             "Attempted to add a component that doesn't derive from Component, weird.");
 
-        auto component = make_ref<Component>();
+        auto component = MakeRef<Component>();
 
         auto data = type.create(this);
 
@@ -243,154 +243,154 @@ namespace Fussion {
         Ref<Component> comp;
         comp.reset(ptr);
 
-        comp->on_create();
-        m_components[EntityHandle(type.get_hash())] = comp;
+        comp->OnCreate();
+        m_Components[EntityHandle(type.get_hash())] = comp;
         return comp;
     }
 
-    auto Entity::has_component(meta_hpp::class_type type) const -> bool
+    auto Entity::HasComponent(meta_hpp::class_type type) const -> bool
     {
         ZoneScoped;
 
-        return m_components.contains(EntityHandle(type.get_hash()));
+        return m_Components.contains(EntityHandle(type.get_hash()));
     }
 
-    auto Entity::get_component(meta_hpp::class_type type) -> Ref<Component>
+    auto Entity::GetComponent(meta_hpp::class_type type) -> Ref<Component>
     {
         ZoneScoped;
 
-        if (!has_component(type))
+        if (!HasComponent(type))
             return nullptr;
-        auto component = m_components[EntityHandle(type.get_hash())];
+        auto component = m_Components[EntityHandle(type.get_hash())];
         return component;
     }
 
-    void Entity::remove_component(meta_hpp::class_type type)
+    void Entity::RemoveComponent(meta_hpp::class_type type)
     {
         VERIFY(type.is_derived_from(meta_hpp::resolve_type<Component>()),
             "Attempted to remove a component that doesn't derive from Component, weird.");
 
-        m_removed_components.push_back(EntityHandle(type.get_hash()));
+        m_RemovedComponents.push_back(EntityHandle(type.get_hash()));
     }
 
-    void Entity::on_draw(RenderContext& context)
+    void Entity::OnDraw(RenderContext& context)
     {
         ZoneScoped;
-        for (auto& [id, component] : m_components) {
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->on_draw(context);
+            component->OnDraw(context);
         }
     }
 
-    void Entity::serialize(Serializer& ctx) const
+    void Entity::Serialize(Serializer& ctx) const
     {
-        FSN_SERIALIZE_MEMBER(name);
-        FSN_SERIALIZE_MEMBER(m_enabled);
-        FSN_SERIALIZE_MEMBER(m_handle);
-        FSN_SERIALIZE_MEMBER(m_parent);
-        FSN_SERIALIZE_MEMBER(transform);
+        FSN_SERIALIZE_MEMBER(Name);
+        FSN_SERIALIZE_MEMBER(m_Enabled);
+        FSN_SERIALIZE_MEMBER(m_Handle);
+        FSN_SERIALIZE_MEMBER(m_Parent);
+        FSN_SERIALIZE_MEMBER(Transform);
 
-        ctx.begin_object("Components", m_components.size());
-        for (auto const& [id, component] : m_components) {
+        ctx.BeginObject("Components", m_Components.size());
+        for (auto const& [id, component] : m_Components) {
             (void)id;
             auto component_name = component->meta_poly_ptr().get_type().as_pointer().get_data_type().get_metadata().at("Name").as<std::string>();
-            ctx.write(component_name, *component);
+            ctx.Write(component_name, *component);
         }
-        ctx.end_object();
+        ctx.EndObject();
     }
 
-    void Entity::deserialize(Deserializer& ctx)
+    void Entity::Deserialize(Deserializer& ctx)
     {
-        FSN_DESERIALIZE_MEMBER(name);
-        FSN_DESERIALIZE_MEMBER(m_enabled);
-        FSN_DESERIALIZE_MEMBER(m_handle);
-        FSN_DESERIALIZE_MEMBER(m_parent);
-        FSN_DESERIALIZE_MEMBER(transform);
+        FSN_DESERIALIZE_MEMBER(Name);
+        FSN_DESERIALIZE_MEMBER(m_Enabled);
+        FSN_DESERIALIZE_MEMBER(m_Handle);
+        FSN_DESERIALIZE_MEMBER(m_Parent);
+        FSN_DESERIALIZE_MEMBER(Transform);
 
         size_t size;
-        ctx.begin_object("Components", size);
+        ctx.BeginObject("Components", size);
 
         auto registry = meta_hpp::resolve_scope("Components");
-        for (auto const& key : ctx.read_keys()) {
+        for (auto const& key : ctx.ReadKeys()) {
             if (auto klass = registry.get_typedef(key); klass.is_valid()) {
-                auto component = add_component(klass.as_class());
-                ctx.read(key, *component);
+                auto component = AddComponent(klass.as_class());
+                ctx.Read(key, *component);
             }
         }
-        ctx.end_object();
+        ctx.EndObject();
     }
 
-    void Entity::on_start()
+    void Entity::OnStart()
     {
         ZoneScoped;
-        for (auto& [id, component] : m_components) {
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->on_start();
+            component->OnStart();
         }
     }
 
-    void Entity::on_destroy()
+    void Entity::OnDestroy()
     {
         ZoneScoped;
 
-        LOG_DEBUGF("Destroying entity '{}'", name);
-        for (auto& [id, component] : m_components) {
+        LOG_DEBUGF("Destroying entity '{}'", Name);
+        for (auto& [id, component] : m_Components) {
             (void)id;
-            component->on_destroy();
+            component->OnDestroy();
         }
 
-        if (auto parent = m_scene->get_entity(m_parent)) {
-            parent->remove_child_internal(*this);
+        if (auto parent = m_Scene->GetEntity(m_Parent)) {
+            parent->RemoveChildInternal(*this);
         }
     }
 
-    void Entity::on_update(f32 const delta)
+    void Entity::OnUpdate(f32 const delta)
     {
         ZoneScoped;
 
-        if (m_enabled) {
-            for (auto& component : m_components | std::views::values) {
-                component->on_update(delta);
+        if (m_Enabled) {
+            for (auto& component : m_Components | std::views::values) {
+                component->OnUpdate(delta);
             }
         }
     }
 
-    void Entity::tick()
+    void Entity::Tick()
     {
         ZoneScoped;
 
-        for (auto const& id : m_removed_components) {
-            m_components.erase(id);
+        for (auto const& id : m_RemovedComponents) {
+            m_Components.erase(id);
         }
-        m_removed_components.clear();
+        m_RemovedComponents.clear();
     }
 
-    void Entity::on_debug_draw(DebugDrawContext& ctx)
+    void Entity::OnDebugDraw(DebugDrawContext& ctx)
     {
-        if (m_enabled) {
-            for (auto& component : m_components | std::views::values) {
-                component->on_debug_draw(ctx);
+        if (m_Enabled) {
+            for (auto& component : m_Components | std::views::values) {
+                component->OnDebugDraw(ctx);
             }
 
-            m_scene->m_box.include(m_box);
-            Debug::draw_box(m_box, 0.0f, Color::Coral);
+            m_Scene->m_Box.Include(m_Box);
+            Debug::DrawBox(m_Box, 0.0f, Color::Coral);
         }
     }
 
-    bool Entity::is_grandchild(EntityHandle handle) const
+    bool Entity::IsGrandchild(EntityHandle handle) const
     {
         ZoneScoped;
 
-        if (m_children.empty()) {
+        if (m_Children.empty()) {
             return false;
         }
 
-        for (auto const& child : m_children) {
+        for (auto const& child : m_Children) {
             if (child == handle) {
                 return true;
             }
 
-            if (auto en = m_scene->get_entity(child); en->is_grandchild(handle)) {
+            if (auto en = m_Scene->GetEntity(child); en->IsGrandchild(handle)) {
                 return true;
             }
         }

@@ -2,7 +2,7 @@
 #include "Color.h"
 
 namespace Fussion {
-    u32 Color::to_abgr() const
+    u32 Color::ToABGR() const
     {
         auto r8 = CAST(u8, r * 255);
         auto g8 = CAST(u8, g * 255);

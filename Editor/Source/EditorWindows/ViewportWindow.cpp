@@ -1,7 +1,7 @@
 ﻿#include "ViewportWindow.h"
 
-#include "EditorApplication.h"
 #include "EditorPCH.h"
+#include "EditorApplication.h"
 #include "EditorUI.h"
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/Model.h"
@@ -24,8 +24,6 @@
 #include <tracy/Tracy.hpp>
 
 using namespace Fussion;
-
-
 
 ImGuizmo::MODE GizmoSpaceToImGuizmo(ViewportWindow::GizmoSpace space)
 {
@@ -58,8 +56,8 @@ void ViewportWindow::render_stats() const
     if (location >= 0) {
         float const PAD = 10.0f;
         ImGuiViewport const* viewport = ImGui::GetMainViewport();
-        ImVec2 work_pos = m_content_origin_screen;
-        ImVec2 work_size = m_size;
+        ImVec2 work_pos = m_ContentOriginScreen;
+        ImVec2 work_size = m_Size;
         ImVec2 window_pos, window_pos_pivot;
         window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
         window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
@@ -78,12 +76,12 @@ void ViewportWindow::render_stats() const
     if (ImGui::Begin("Stats Overlay", nullptr, window_flags)) {
         ImGui::BeginTabBar("huh");
         {
-            auto& renderer = m_editor->scene_renderer();
+            auto& renderer = m_Editor->GetSceneRenderer();
             if (ImGui::BeginTabItem("Timings")) {
                 ImGuiH::BeginGroupPanel("Timings");
                 {
                     EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
-                        ImGui::Text("CPU Time    : %4.2fms", Time::smooth_delta_time() * 1000.0f);
+                        ImGui::Text("CPU Time    : %4.2fms", Time::SmoothDeltaTime() * 1000.0f);
                         ImGui::Text("Shadow Pass : %4.2fms", renderer.timings.depth);
                         ImGui::Text("G-Buffer    : %4.2fms", renderer.timings.gbuffer);
                         ImGui::Text("SSAO Pass   : %4.2fms", renderer.timings.ssao);
@@ -138,7 +136,7 @@ void ViewportWindow::render_stats() const
     ImGui::End();
 }
 
-void ViewportWindow::on_draw()
+void ViewportWindow::OnDraw()
 {
     ZoneScoped;
 
@@ -151,14 +149,14 @@ void ViewportWindow::on_draw()
     if (opened) {
         static auto draw_gizmo = false;
 
-        m_is_focused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
-        m_content_origin_screen = ImGui::GetCursorScreenPos();
+        m_IsFocused = ImGui::IsWindowHovered() || ImGui::IsWindowFocused();
+        m_ContentOriginScreen = ImGui::GetCursorScreenPos();
 
-        if (m_editor->play_state() == Editor::PlayState::Editing) {
+        if (m_Editor->GetPlayState() == Editor::PlayState::Editing) {
             // TODO: If the ImGui viewports feature is disabled (like in linux), then the mouse position reported is wrong.
-            if (m_is_focused && Input::is_mouse_button_pressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
-                auto mouse = Input::mouse_position() - (m_content_origin_screen - Application::inst()->window().position());
-                if (Rect::from_size(m_size).contains(mouse)) {
+            if (m_IsFocused && Input::IsMouseButtonPressed(MouseButton::Left) && !(draw_gizmo && ImGuizmo::IsOver())) {
+                auto mouse = Input::MousePosition() - (m_ContentOriginScreen - Application::Self()->GetWindow().GetPosition());
+                if (Rect::FromSize(m_Size).Contains(mouse)) {
                     // if (auto color = m_Editor->GetSceneRenderer().GetObjectPickingFrameBuffer()->ReadPixel(mouse); color.IsValue()) {
                     //     if (auto id = color.Value()[0]; id != 0) {
                     //         auto entity = Editor::GetActiveScene()->GetEntityFromLocalID(id);
@@ -171,9 +169,9 @@ void ViewportWindow::on_draw()
             }
         }
 
-        if (auto size = ImGui::GetContentRegionAvail(); m_size != Vector2(size)) {
-            Editor::on_viewport_resized(size);
-            m_size = size;
+        if (auto size = ImGui::GetContentRegionAvail(); m_Size != Vector2(size)) {
+            Editor::OnViewportResized(size);
+            m_Size = size;
         }
 
         Vector2 origin = ImGui::GetCursorPos();
@@ -181,41 +179,35 @@ void ViewportWindow::on_draw()
         {
             ZoneScopedN("Get image from set");
             GPU::Texture image;
-            switch (m_texture_view_mode) {
+            switch (m_TextureViewMode) {
             case TEXTURE_SCENE:
-                image = Editor::inst().scene_renderer().render_target();
+                image = Editor::Self().GetSceneRenderer().render_target();
                 break;
             case TEXTURE_GBUFFER_POSITION:
-                image = Editor::inst().scene_renderer().gbuffer.rt_position;
+                image = Editor::Self().GetSceneRenderer().gbuffer.rt_position;
                 break;
             case TEXTURE_GBUFFER_NORMAL:
-                image = Editor::inst().scene_renderer().gbuffer.rt_normal;
+                image = Editor::Self().GetSceneRenderer().gbuffer.rt_normal;
                 break;
             case TEXTURE_SSAO:
-                image = Editor::inst().scene_renderer().ssao_blur.render_target();
+                image = Editor::Self().GetSceneRenderer().ssao_blur.render_target();
                 break;
             }
 
-            ImGui::Image(image.view, m_size);
+            ImGui::Image(image.View, m_Size);
         }
 
-        if (Editor::active_scene() == nullptr) {
+        if (Editor::ActiveScene() == nullptr) {
             ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-            constexpr ImGuiWindowFlags window_flags =
-                ImGuiWindowFlags_NoDecoration |
-                ImGuiWindowFlags_NoDocking |
-                ImGuiWindowFlags_AlwaysAutoResize |
-                ImGuiWindowFlags_NoSavedSettings |
-                ImGuiWindowFlags_NoFocusOnAppearing |
-                ImGuiWindowFlags_NoNav;
+            constexpr ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
-            ImGui::SetNextWindowPos(m_content_origin_screen + m_size / 2.f + Vector2(0, m_size.y * 0.2f), 0, Vector2(0.5, 0.5));
+            ImGui::SetNextWindowPos(m_ContentOriginScreen + m_Size / 2.f + Vector2(0, m_Size.y * 0.2f), 0, Vector2(0.5, 0.5));
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(20, 20));
             defer(ImGui::PopStyleVar());
 
             ImGui::SetNextWindowBgAlpha(0.35f);
             if (ImGui::Begin("No Scene Warning", nullptr, window_flags)) {
-                ImGui::PushFont(EditorStyle::get_style().fonts[EditorFont::RegularHuge]);
+                ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::RegularHuge]);
                 defer(ImGui::PopFont());
 
                 ImGui::TextUnformatted("No scene loaded!");
@@ -228,20 +220,20 @@ void ViewportWindow::on_draw()
             if (strcmp(payload->DataType, "CONTENT_BROWSER_ASSET") == 0) {
                 auto handle = CAST(AssetHandle*, payload->Data);
 
-                auto metadata = Project::asset_manager()->get_metadata(*handle);
-                if (metadata.type == AssetType::Scene) {
+                auto metadata = Project::AssetManager()->GetMetadata(*handle);
+                if (metadata.Type == AssetType::Scene) {
                     if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET")) {
-                        auto scene = AssetManager::get_asset<Scene>(*handle);
-                        scene.wait_until_loaded();
+                        auto scene = AssetManager::GetAsset<Scene>(*handle);
+                        scene.WaitUntilLoaded();
 
-                        Editor::change_scene(scene);
+                        Editor::ChangeScene(scene);
                     }
-                } else if (metadata.type == AssetType::Model) {
-                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET") && m_editor->active_scene() != nullptr) {
-                        auto model = AssetManager::get_asset<Model>(*handle);
-                        auto entity = m_editor->active_scene()->create_entity(metadata.name);
-                        auto mr = entity->add_component<MeshRenderer>();
-                        mr->model_asset = model;
+                } else if (metadata.Type == AssetType::Model) {
+                    if (ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET") && m_Editor->ActiveScene() != nullptr) {
+                        auto model = AssetManager::GetAsset<Model>(*handle);
+                        auto entity = m_Editor->ActiveScene()->CreateEntity(metadata.Name);
+                        auto mr = entity->AddComponent<MeshRenderer>();
+                        mr->ModelAsset = model;
                     }
                 }
             }
@@ -255,15 +247,15 @@ void ViewportWindow::on_draw()
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);
 
         EUI::button("Settings", [&] {
-
             ImGui::OpenPopup("EditorCameraSettings");
-        }, { .style = ButtonStyleViewportButton });
+        },
+            { .style = ButtonStyleViewportButton });
 
         EUI::popup("EditorCameraSettings", [&] {
             if (ImGui::BeginMenu("Camera")) {
-                EUI::property("Speed", &Editor::camera().speed);
-                EUI::property("Near", &Editor::camera().near, EUI::PropTypeRange{ .min = 0.0f, .max = 100.0f });
-                EUI::property("Far", &Editor::camera().far, EUI::PropTypeRange{ .min = 0.0f, .max = 1000.0f });
+                EUI::property("Speed", &Editor::GetCamera().Speed);
+                EUI::property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange { .min = 0.0f, .max = 100.0f });
+                EUI::property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange { .min = 0.0f, .max = 1000.0f });
                 ImGui::EndMenu();
             }
 
@@ -271,10 +263,10 @@ void ViewportWindow::on_draw()
                 if (ImGui::BeginMenu("Views")) {
                     constexpr auto flags = ImGuiSelectableFlags_DontClosePopups;
                     if (ImGui::BeginMenu("Scene")) {
-                        if (ImGui::Selectable("Default", m_texture_view_mode == TEXTURE_SCENE, flags)) {
-                            m_texture_view_mode = TEXTURE_SCENE;
+                        if (ImGui::Selectable("Default", m_TextureViewMode == TEXTURE_SCENE, flags)) {
+                            m_TextureViewMode = TEXTURE_SCENE;
                         }
-                        auto& scene_debug_options = m_editor->scene_renderer().scene_debug_options.data;
+                        auto& scene_debug_options = m_Editor->GetSceneRenderer().scene_debug_options.Data;
                         if (ImGui::Selectable("Show Cascade Boxes", scene_debug_options.show_cascade_boxes, flags)) {
                             scene_debug_options.show_cascade_boxes = !scene_debug_options.show_cascade_boxes;
                         }
@@ -284,122 +276,123 @@ void ViewportWindow::on_draw()
                         ImGui::EndMenu();
                     }
                     if (ImGui::BeginMenu("G-Buffer")) {
-                        if (ImGui::Selectable("Position", m_texture_view_mode == TEXTURE_GBUFFER_POSITION, flags)) {
-                            m_texture_view_mode = TEXTURE_GBUFFER_POSITION;
+                        if (ImGui::Selectable("Position", m_TextureViewMode == TEXTURE_GBUFFER_POSITION, flags)) {
+                            m_TextureViewMode = TEXTURE_GBUFFER_POSITION;
                         }
-                        if (ImGui::Selectable("Normal", m_texture_view_mode == TEXTURE_GBUFFER_NORMAL, flags)) {
-                            m_texture_view_mode = TEXTURE_GBUFFER_NORMAL;
+                        if (ImGui::Selectable("Normal", m_TextureViewMode == TEXTURE_GBUFFER_NORMAL, flags)) {
+                            m_TextureViewMode = TEXTURE_GBUFFER_NORMAL;
                         }
                         ImGui::EndMenu();
                     }
-                    if (ImGui::Selectable("SSAO", m_texture_view_mode == TEXTURE_SSAO, flags)) {
-                        m_texture_view_mode = TEXTURE_SSAO;
+                    if (ImGui::Selectable("SSAO", m_TextureViewMode == TEXTURE_SSAO, flags)) {
+                        m_TextureViewMode = TEXTURE_SSAO;
                     }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Drawing")) {
-                    auto& ctx = Editor::inst().debug_draw_context;
+                    auto& ctx = Editor::Self().DebugDrawContext;
                     auto flags = ImGuiSelectableFlags_DontClosePopups;
                     for (auto const& [value, name] : magic_enum::enum_entries<DebugDrawFlag>()) {
-                        if (ImGui::Selectable(name.data(), ctx.flags.test(value), flags)) {
-                            ctx.flags.toggle(value);
-                            LOG_DEBUGF("Flags: {}", ctx.flags.value);
+                        if (ImGui::Selectable(name.data(), ctx.Flags.test(value), flags)) {
+                            ctx.Flags.toggle(value);
+                            LOG_DEBUGF("Flags: {}", ctx.Flags.value);
                         }
                     }
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenu();
             }
-
         });
 
         ImGui::SameLine();
         ImGui::Dummy({ 10, 0 });
         ImGui::SameLine();
 
-        fmt::memory_buffer out{};
-        std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_gizmo_mode));
-        std::string_view fuck{ out.data(), out.size() };
+        fmt::memory_buffer out {};
+        std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode));
+        std::string_view fuck { out.data(), out.size() };
 
         EUI::button(fuck.data(), [&] {
             ImGui::OpenPopup("GizmoSelection");
-        }, { .style = ButtonStyleViewportButton });
+        },
+            { .style = ButtonStyleViewportButton });
 
         EUI::popup("GizmoSelection", [&] {
-            if (ImGui::MenuItem("Translation", "1", m_gizmo_mode == GizmoMode::Translation)) {
-                m_gizmo_mode = GizmoMode::Translation;
+            if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
+                m_GizmoMode = GizmoMode::Translation;
             }
-            if (ImGui::MenuItem("Rotation", "2", m_gizmo_mode == GizmoMode::Rotation)) {
-                m_gizmo_mode = GizmoMode::Rotation;
+            if (ImGui::MenuItem("Rotation", "2", m_GizmoMode == GizmoMode::Rotation)) {
+                m_GizmoMode = GizmoMode::Rotation;
             }
-            if (ImGui::MenuItem("Scale", "3", m_gizmo_mode == GizmoMode::Scale)) {
-                m_gizmo_mode = GizmoMode::Scale;
+            if (ImGui::MenuItem("Scale", "3", m_GizmoMode == GizmoMode::Scale)) {
+                m_GizmoMode = GizmoMode::Scale;
             }
         });
 
         ImGui::SameLine();
 
         out.clear();
-        std::format_to(std::back_inserter(out), "Gizmo Space: {}", magic_enum::enum_name(m_gizmo_space));
+        std::format_to(std::back_inserter(out), "Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace));
         fuck = { out.data(), out.size() };
 
         EUI::button(fuck.data(), [&] {
-            if (m_gizmo_space == GizmoSpace::Local) {
-                m_gizmo_space = GizmoSpace::World;
-            } else if (m_gizmo_space == GizmoSpace::World) {
-                m_gizmo_space = GizmoSpace::Local;
+            if (m_GizmoSpace == GizmoSpace::Local) {
+                m_GizmoSpace = GizmoSpace::World;
+            } else if (m_GizmoSpace == GizmoSpace::World) {
+                m_GizmoSpace = GizmoSpace::Local;
             }
-        }, { .style = ButtonStyleViewportButton });
+        },
+            { .style = ButtonStyleViewportButton });
 
         ImGui::PopStyleVar();
 
         ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-        ImGuizmo::SetRect(m_content_origin_screen.x, m_content_origin_screen.y, m_size.x, m_size.y);
+        ImGuizmo::SetRect(m_ContentOriginScreen.x, m_ContentOriginScreen.y, m_Size.x, m_Size.y);
 
         draw_gizmo = false;
-        if (auto& selection = Editor::scene_tree().selection(); selection.size() == 1 && m_editor->play_state() == Editor::PlayState::Editing) {
+        if (auto& selection = Editor::SceneTree().GetSelection(); selection.size() == 1 && m_Editor->GetPlayState() == Editor::PlayState::Editing) {
             static bool gizmo_activated = false;
             draw_gizmo = true;
             for (auto const& id : selection | std::views::keys) {
-                auto const& entity = Editor::active_scene()->get_entity(id);
+                auto const& entity = Editor::ActiveScene()->GetEntity(id);
 
-                Vector3 snap{ 0.5, 0.5, 0.5 };
+                Vector3 snap { 0.5, 0.5, 0.5 };
 
-                auto m = entity->world_matrix();
+                auto m = entity->WorldMatrix();
                 if (ImGuizmo::Manipulate(
-                    glm::value_ptr(Editor::camera().view()),
-                    glm::value_ptr(Editor::camera().perspective()),
-                    GizmoModeToImGuizmo(m_gizmo_mode),
-                    GizmoSpaceToImGuizmo(m_gizmo_space),
-                    glm::value_ptr(m), nullptr, Input::is_key_down(Keys::LeftControl) ? snap.raw : nullptr)) {
+                        glm::value_ptr(Editor::GetCamera().View()),
+                        glm::value_ptr(Editor::GetCamera().Perspective()),
+                        GizmoModeToImGuizmo(m_GizmoMode),
+                        GizmoSpaceToImGuizmo(m_GizmoSpace),
+                        glm::value_ptr(m), nullptr, Input::IsKeyDown(Keys::LeftControl) ? snap.raw : nullptr)) {
                     ImGuizmo::DecomposeMatrixToComponents(
                         glm::value_ptr(m),
-                        entity->transform.position.raw,
-                        entity->transform.euler_angles.raw,
-                        entity->transform.scale.raw);
+                        entity->Transform.Position.raw,
+                        entity->Transform.EulerAngles.raw,
+                        entity->Transform.Scale.raw);
                     if (!gizmo_activated) {
                         gizmo_activated = true;
-                        switch (m_gizmo_mode) {
+                        switch (m_GizmoMode) {
                         case GizmoMode::Translation:
-                            m_editor->undo.push_single(&entity->transform.position, "Gizmo LocalPosition");
+                            m_Editor->Undo.PushSingle(&entity->Transform.Position, "Gizmo LocalPosition");
                         case GizmoMode::Rotation:
-                            m_editor->undo.push_single(&entity->transform.euler_angles, "Gizmo LocalEulerAngles");
+                            m_Editor->Undo.PushSingle(&entity->Transform.EulerAngles, "Gizmo LocalEulerAngles");
                         case GizmoMode::Scale:
-                            m_editor->undo.push_single(&entity->transform.scale, "Gizmo LocalScale");
+                            m_Editor->Undo.PushSingle(&entity->Transform.Scale, "Gizmo LocalScale");
                         }
                     }
 
-                    Editor::active_scene()->set_dirty();
+                    Editor::ActiveScene()->SetDirty();
                 } else {
                     if (gizmo_activated && !ImGuizmo::IsUsingAny()) {
                         gizmo_activated = false;
-                        switch (m_gizmo_mode) {
+                        switch (m_GizmoMode) {
                         case GizmoMode::Translation:
-                            m_editor->undo.commit_tag("Gizmo LocalPosition");
+                            m_Editor->Undo.CommitTag("Gizmo LocalPosition");
                         case GizmoMode::Rotation:
-                            m_editor->undo.commit_tag("Gizmo LocalEulerAngles");
+                            m_Editor->Undo.CommitTag("Gizmo LocalEulerAngles");
                         case GizmoMode::Scale:
-                            m_editor->undo.commit_tag("Gizmo LocalScale");
+                            m_Editor->Undo.CommitTag("Gizmo LocalScale");
                         }
                     }
                 }
@@ -409,22 +402,22 @@ void ViewportWindow::on_draw()
     ImGui::End();
 }
 
-void ViewportWindow::on_event(Event& event)
+void ViewportWindow::OnEvent(Event& event)
 {
     EventDispatcher dispatcher(event);
 
-    dispatcher.dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
-        if (m_is_focused) {
-            if (e.key == Keys::One) {
-                m_gizmo_mode = GizmoMode::Translation;
+    dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
+        if (m_IsFocused) {
+            if (e.Key == Keys::One) {
+                m_GizmoMode = GizmoMode::Translation;
             }
-            if (e.key == Keys::Two) {
-                m_gizmo_mode = GizmoMode::Rotation;
+            if (e.Key == Keys::Two) {
+                m_GizmoMode = GizmoMode::Rotation;
             }
-            if (e.key == Keys::Three) {
-                m_gizmo_mode = GizmoMode::Scale;
+            if (e.Key == Keys::Three) {
+                m_GizmoMode = GizmoMode::Scale;
             }
-            if (e.key == Keys::T) {}
+            if (e.Key == Keys::T) { }
         }
         return false;
     });

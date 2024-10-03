@@ -2,6 +2,6 @@
 #include "ISerializable.h"
 
 namespace Fussion {
-    void ISerializable::serialize([[maybe_unused]] Serializer& ctx) const {}
-    void ISerializable::deserialize([[maybe_unused]] Deserializer& ctx) {}
+    void ISerializable::Serialize([[maybe_unused]] Serializer& ctx) const {}
+    void ISerializable::Deserialize([[maybe_unused]] Deserializer& ctx) {}
 }

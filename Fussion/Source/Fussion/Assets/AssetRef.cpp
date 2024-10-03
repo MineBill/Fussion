@@ -5,58 +5,58 @@
 
 namespace Fussion {
     AssetRefBase::AssetRefBase(AssetHandle handle)
-        : m_handle(handle)
+        : m_Handle(handle)
     {
-        if (!AssetManager::is_asset_handle_valid(m_handle)) {
-            m_is_valid = false;
+        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
+            m_IsValid = false;
         }
     }
 
-    bool AssetRefBase::is_loaded() const
+    bool AssetRefBase::IsLoaded() const
     {
-        if (!is_valid())
+        if (!IsValid())
             return false;
-        return AssetManager::is_asset_loaded(m_handle);
+        return AssetManager::IsAssetLoaded(m_Handle);
     }
 
-    bool AssetRefBase::is_virtual() const
+    bool AssetRefBase::IsVirtual() const
     {
-        return AssetManager::is_asset_virtual(m_handle);
+        return AssetManager::IsAssetVirtual(m_Handle);
     }
 
-    void AssetRefBase::set_handle(AssetHandle handle)
+    void AssetRefBase::SetHandle(AssetHandle handle)
     {
-        m_handle = handle;
-        if (!AssetManager::is_asset_handle_valid(m_handle)) {
-            m_is_valid = false;
+        m_Handle = handle;
+        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
+            m_IsValid = false;
         }
     }
 
-    void AssetRefBase::wait_until_loaded() const
+    void AssetRefBase::WaitUntilLoaded() const
     {
         // Call once to trigger a load.
-        (void)get_raw(type());
+        (void)GetRaw(GetType());
         // TODO: Fishy
-        while (!is_loaded()) { }
+        while (!IsLoaded()) { }
     }
 
-    void AssetRefBase::serialize(Serializer& ctx) const
+    void AssetRefBase::Serialize(Serializer& ctx) const
     {
-        ctx.write("handle", is_virtual() ? 0_u64 : CAST(u64, this->m_handle));
+        ctx.Write("handle", IsVirtual() ? 0_u64 : CAST(u64, this->m_Handle));
     }
 
-    void AssetRefBase::deserialize(Deserializer& ctx)
+    void AssetRefBase::Deserialize(Deserializer& ctx)
     {
-        if (is_virtual())
+        if (IsVirtual())
             return;
-        FSN_DESERIALIZE_MEMBER(m_handle);
+        FSN_DESERIALIZE_MEMBER(m_Handle);
     }
 
-    Asset* AssetRefBase::get_raw(AssetType type) const
+    Asset* AssetRefBase::GetRaw(AssetType type) const
     {
-        if (!AssetManager::is_asset_handle_valid(m_handle)) {
+        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
             return nullptr;
         }
-        return AssetManager::get_asset(m_handle, type);
+        return AssetManager::GetAsset(m_Handle, type);
     }
 }

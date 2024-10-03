@@ -1,10 +1,10 @@
 #include "GlfwWindow.h"
 
+#include "FussionPCH.h"
 #include "Fussion/Core/Core.h"
 #include "Fussion/Events/ApplicationEvents.h"
 #include "Fussion/Events/KeyboardEvents.h"
 #include "Fussion/Events/MouseEvents.h"
-#include "FussionPCH.h"
 #include "GLFW/glfw3.h"
 #include "OS/System.h"
 
@@ -23,23 +23,23 @@ namespace Fussion {
     Keys glfw_key_to_fussion(int key);
     MouseButton GlfwMouseButtonToFussion(int glfw_mouse_button);
 
-    Window* Window::create(WindowOptions const& options)
+    Window* Window::Create(WindowOptions const& options)
     {
         return new GlfwWindow(options);
     }
 
     GlfwWindow::GlfwWindow(WindowOptions const& options)
-        : m_options(options)
+        : m_Options(options)
     {
         if (glfwInit() != GLFW_TRUE) {
             exit(1);
         }
 
-        if (options.flags.test(WindowFlag::Resizable)) {
+        if (options.Flags.test(WindowFlag::Resizable)) {
             glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         }
 
-        if (options.flags.test(WindowFlag::Decorated)) {
+        if (options.Flags.test(WindowFlag::Decorated)) {
             glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
         } else {
             glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -47,47 +47,47 @@ namespace Fussion {
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_window = glfwCreateWindow(options.initial_width, options.initial_height, options.initial_title.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(options.InitialWidth, options.InitialHeight, options.InitialTitle.c_str(), nullptr, nullptr);
 
-        if (options.flags.test(WindowFlag::Centered)) {
+        if (options.Flags.test(WindowFlag::Centered)) {
             auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            set_position({ CAST(f32, mode->width) / 2.0 - CAST(f32, options.initial_width) / 2.0,
-                CAST(f32, mode->height) / 2.0 - CAST(f32, options.initial_height) / 2.0 });
+            GlfwWindow::SetPosition({ CAST(f32, mode->width) / 2.0 - CAST(f32, options.InitialWidth) / 2.0,
+                CAST(f32, mode->height) / 2.0 - CAST(f32, options.InitialHeight) / 2.0 });
         }
 
 #if OS_WINDOWS
-        if (System::prefers_dark()) {
+        if (System::PrefersDark()) {
             constexpr auto dwmwa_use_immersive_dark_mode = 20;
             BOOL value = TRUE;
-            (void)DwmSetWindowAttribute(glfwGetWin32Window(m_window), dwmwa_use_immersive_dark_mode, &value, sizeof(value));
+            (void)DwmSetWindowAttribute(glfwGetWin32Window(m_Window), dwmwa_use_immersive_dark_mode, &value, sizeof(value));
         }
 #endif
 
         if (glfwRawMouseMotionSupported()) {
             LOG_INFO("Enabling raw mouse motion");
-            glfwSetInputMode(m_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
         }
 
-        glfwSetWindowUserPointer(m_window, this);
+        glfwSetWindowUserPointer(m_Window, this);
 
-        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
+        glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
             auto event = WindowCloseRequest();
-            me->m_event_callback(event);
+            me->m_EventCallback(event);
         });
 
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
-            me->m_width = CAST(u32, width);
-            me->m_height = CAST(u32, height);
+            me->m_Width = CAST(u32, width);
+            me->m_Height = CAST(u32, height);
             auto event = WindowResized(width, height);
-            me->m_event_callback(event);
+            me->m_EventCallback(event);
         });
 
-        glfwSetKeyCallback(m_window, [](GLFWwindow* window, int glfw_key, int, int action, int mods) {
+        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int glfw_key, int, int action, int mods) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
 
@@ -112,35 +112,35 @@ namespace Fussion {
             switch (action) {
             case GLFW_RELEASE: {
                 OnKeyReleased event(key, key_mods);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             case GLFW_PRESS: {
                 OnKeyPressed event(key, key_mods);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             case GLFW_REPEAT: {
                 OnKeyDown event(key, key_mods);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             default:
                 UNREACHABLE;
             }
         });
 
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, f64 x, f64 y) {
+        glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "")
 
-            auto rel_x = x - me->m_old_x;
-            auto rel_y = y - me->m_old_y;
-            me->m_old_x = CAST(f32, x);
-            me->m_old_y = CAST(f32, y);
+            auto rel_x = x - me->m_OldX;
+            auto rel_y = y - me->m_OldY;
+            me->m_OldX = CAST(f32, x);
+            me->m_OldY = CAST(f32, y);
 
             auto event = MouseMoved(x, y, rel_x, rel_y);
-            me->m_event_callback(event);
+            me->m_EventCallback(event);
         });
 
-        glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int) {
+        glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "")
 
@@ -148,140 +148,140 @@ namespace Fussion {
             switch (action) {
             case GLFW_RELEASE: {
                 MouseButtonReleased event(mouse_button);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             case GLFW_PRESS: {
                 MouseButtonPressed event(mouse_button);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             case GLFW_REPEAT: {
                 MouseButtonDown event(mouse_button);
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             } break;
             default:
                 UNREACHABLE;
             }
         });
 
-        glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow* window, int maximized) {
+        glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* window, int maximized) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (maximized == 1) {
-                me->m_is_minimized = false;
+                me->m_IsMinimized = false;
                 WindowMaximized event;
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             }
         });
 
-        glfwSetWindowIconifyCallback(m_window, [](GLFWwindow* window, int minimized) {
+        glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int minimized) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (minimized == 1) {
-                me->m_is_minimized = true;
+                me->m_IsMinimized = true;
                 WindowMinimized event;
-                me->m_event_callback(event);
+                me->m_EventCallback(event);
             }
         });
 
-        glfwSetScrollCallback(m_window, [](GLFWwindow* window, f64 x, f64 y) {
+        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             MouseWheelMoved event(CAST(f32, x), CAST(f32, y));
-            me->m_event_callback(event);
+            me->m_EventCallback(event);
         });
     }
 
     GlfwWindow::~GlfwWindow()
     {
-        glfwDestroyWindow(m_window);
+        glfwDestroyWindow(m_Window);
         glfwTerminate();
     }
 
-    void GlfwWindow::update()
+    void GlfwWindow::Update()
     {
         ZoneScopedN("Window Update");
         glfwPollEvents();
     }
 
-    bool GlfwWindow::should_close()
+    bool GlfwWindow::ShouldClose()
     {
-        return glfwWindowShouldClose(m_window);
+        return glfwWindowShouldClose(m_Window);
     }
 
-    void GlfwWindow::set_title(std::string const& title)
+    void GlfwWindow::SetTitle(std::string const& title)
     {
-        if (m_is_minimized)
+        if (m_IsMinimized)
             return;
-        glfwSetWindowTitle(m_window, title.c_str());
+        glfwSetWindowTitle(m_Window, title.c_str());
     }
 
-    void GlfwWindow::on_event(EventFnType const callback)
+    void GlfwWindow::SetEventCallback(EventFnType const callback)
     {
-        m_event_callback = callback;
+        m_EventCallback = callback;
     }
 
-    void GlfwWindow::set_mouse_mode(MouseMode mode) const
+    void GlfwWindow::SetMouseMode(MouseMode mode) const
     {
         switch (mode) {
         case MouseMode::Unlocked: {
-            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         } break;
         case MouseMode::Locked: {
-            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         } break;
         case MouseMode::Confined: {
-            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
         } break;
         }
     }
 
-    u32 GlfwWindow::height() const
+    u32 GlfwWindow::Height() const
     {
         s32 height;
-        glfwGetFramebufferSize(m_window, nullptr, &height);
+        glfwGetFramebufferSize(m_Window, nullptr, &height);
         return CAST(u32, height);
     }
 
-    u32 GlfwWindow::width() const
+    u32 GlfwWindow::Width() const
     {
         s32 width;
-        glfwGetFramebufferSize(m_window, &width, nullptr);
+        glfwGetFramebufferSize(m_Window, &width, nullptr);
         return CAST(u32, width);
     }
 
-    void* GlfwWindow::native_handle() const
+    void* GlfwWindow::NativeHandle() const
     {
-        return m_window;
+        return m_Window;
     }
 
-    void GlfwWindow::set_position(Vector2 position) const
+    void GlfwWindow::SetPosition(Vector2 position) const
     {
-        glfwSetWindowPos(m_window, CAST(s32, position.x), CAST(s32, position.y));
+        glfwSetWindowPos(m_Window, CAST(s32, position.x), CAST(s32, position.y));
     }
 
-    auto GlfwWindow::position() const -> Vector2
+    auto GlfwWindow::GetPosition() const -> Vector2
     {
         s32 x, y;
-        glfwGetWindowPos(m_window, &x, &y);
+        glfwGetWindowPos(m_Window, &x, &y);
         return { x, y };
     }
 
-    void GlfwWindow::set_icon(Image const& image)
+    void GlfwWindow::SetIcon(Image const& image)
     {
         GLFWimage glfw_image;
-        glfw_image.pixels = const_cast<Image&>(image).data.data();
-        glfw_image.height = image.height;
-        glfw_image.width = image.width;
+        glfw_image.pixels = const_cast<Image&>(image).Data.data();
+        glfw_image.height = image.Height;
+        glfw_image.width = image.Width;
 
-        glfwSetWindowIcon(m_window, 1, &glfw_image);
+        glfwSetWindowIcon(m_Window, 1, &glfw_image);
     }
 
-    void GlfwWindow::maximize()
+    void GlfwWindow::Maximize()
     {
-        glfwMaximizeWindow(m_window);
+        glfwMaximizeWindow(m_Window);
     }
 
     Keys glfw_key_to_fussion(int key)

@@ -12,16 +12,16 @@ namespace Fussion {
         Layer() = default;
         virtual ~Layer() = default;
 
-        virtual void on_start() {}
-        virtual void on_enable() {}
-        virtual void on_disable() {}
+        virtual void OnStart() {}
+        virtual void OnEnable() {}
+        virtual void OnDisable() {}
 
-        virtual void on_update([[maybe_unused]] f32 delta) {}
-        virtual void on_event([[maybe_unused]] Event& event) {}
+        virtual void OnUpdate([[maybe_unused]] f32 delta) {}
+        virtual void OnEvent([[maybe_unused]] Event& event) {}
 
-        virtual void on_draw([[maybe_unused]] GPU::CommandEncoder& encoder) {}
+        virtual void OnDraw([[maybe_unused]] GPU::CommandEncoder& encoder) {}
 
-        virtual void on_log_received(
+        virtual void OnLogReceived(
             [[maybe_unused]] LogLevel level,
             [[maybe_unused]] std::string_view message,
             [[maybe_unused]] std::source_location const& loc) {}

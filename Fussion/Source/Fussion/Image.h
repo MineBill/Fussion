@@ -4,35 +4,35 @@
 namespace Fussion {
     struct Image {
         /// Data owns pixels in an RGBA format.
-        std::vector<u8> data{};
-        u32 width{}, height{};
+        std::vector<u8> Data {};
+        u32 Width {}, Height {};
 
-        bool is_valid() const
+        bool IsValid() const
         {
-            return !data.empty();
+            return !Data.empty();
         }
 
-        u32 size() const
+        u32 Size() const
         {
             constexpr u32 channels = 4;
-            return width * height * channels;
+            return Width * Height * channels;
         }
     };
 
     struct FloatImage {
         /// Data owns pixels in an RGBA format.
-        std::vector<f32> data{};
-        u32 width{}, height{};
+        std::vector<f32> Data {};
+        u32 Width {}, Height {};
 
-        bool is_valid() const
+        bool IsValid() const
         {
-            return !data.empty();
+            return !Data.empty();
         }
 
-        u32 size() const
+        u32 Size() const
         {
             constexpr u32 channels = 4;
-            return width * height * channels;
+            return Width * Height * channels;
         }
     };
 }

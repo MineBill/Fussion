@@ -5,13 +5,13 @@
 #include <iso646.h>
 
 namespace Fussion {
-    std::stringstream& AngelDumper::print_enum_list(std::stringstream& out) const
+    std::stringstream& AngelDumper::PrintEnumList(std::stringstream& out) const
     {
-        for (u32 i = 0; i < m_script_engine->GetEnumCount(); i++) {
-            auto e = m_script_engine->GetEnumByIndex(i);
+        for (u32 i = 0; i < m_ScriptEngine->GetEnumCount(); i++) {
+            auto e = m_ScriptEngine->GetEnumByIndex(i);
             if (not e)
                 continue;
-            const std::string_view ns = e->GetNamespace();
+            std::string_view const ns = e->GetNamespace();
             if (not ns.empty())
                 out << std::format("namespace {} {{\n", ns);
             out << std::format("enum {} {{\n", e->GetName());
@@ -28,10 +28,10 @@ namespace Fussion {
         return out;
     }
 
-    std::stringstream& AngelDumper::print_class_type_list(std::stringstream& out) const
+    std::stringstream& AngelDumper::PrintClassTypeList(std::stringstream& out) const
     {
-        for (u32 i = 0; i < m_script_engine->GetObjectTypeCount(); i++) {
-            const auto t = m_script_engine->GetObjectTypeByIndex(i);
+        for (u32 i = 0; i < m_ScriptEngine->GetObjectTypeCount(); i++) {
+            auto const t = m_ScriptEngine->GetObjectTypeByIndex(i);
             if (not t)
                 continue;
 
@@ -51,7 +51,7 @@ namespace Fussion {
                 for (u32 sub = 0; sub < t->GetSubTypeCount(); ++sub) {
                     if (sub < t->GetSubTypeCount() - 1)
                         out << ", ";
-                    const auto st = t->GetSubType(sub);
+                    auto const st = t->GetSubType(sub);
                     out << st->GetName();
                 }
 
@@ -61,14 +61,14 @@ namespace Fussion {
             out << " {\n";
             for (u32 j = 0; j < t->GetBehaviourCount(); ++j) {
                 asEBehaviours behaviours;
-                const auto f = t->GetBehaviourByIndex(j, &behaviours);
+                auto const f = t->GetBehaviourByIndex(j, &behaviours);
                 if (behaviours == asBEHAVE_CONSTRUCT
                     || behaviours == asBEHAVE_DESTRUCT || behaviours == asBEHAVE_FACTORY) {
                     out << std::format("\t{};\n", f->GetDeclaration(false, true, true));
                 }
             }
             for (u32 j = 0; j < t->GetMethodCount(); ++j) {
-                const auto m = t->GetMethodByIndex(j);
+                auto const m = t->GetMethodByIndex(j);
                 out << std::format("\t{};\n", m->GetDeclaration(false, true, true));
             }
             for (u32 j = 0; j < t->GetPropertyCount(); ++j) {
@@ -84,12 +84,12 @@ namespace Fussion {
         return out;
     }
 
-    std::stringstream& AngelDumper::print_global_function_list(std::stringstream& out) const
+    std::stringstream& AngelDumper::PrintGlobalFunctionList(std::stringstream& out) const
     {
         std::unordered_map<std::string, std::vector<asIScriptFunction*>> namespaced_global_functions;
 
-        for (u32 i = 0; i < m_script_engine->GetGlobalFunctionCount(); i++) {
-            auto decl = m_script_engine->GetGlobalFunctionByIndex(i);
+        for (u32 i = 0; i < m_ScriptEngine->GetGlobalFunctionCount(); i++) {
+            auto decl = m_ScriptEngine->GetGlobalFunctionByIndex(i);
             if (!decl)
                 continue;
 
@@ -114,7 +114,7 @@ namespace Fussion {
         return out;
     }
 
-    std::stringstream& AngelDumper::print_global_property_list(std::stringstream& out) const
+    std::stringstream& AngelDumper::PrintGlobalPropertyList(std::stringstream& out) const
     {
         struct Prop {
             std::string Name;
@@ -122,13 +122,13 @@ namespace Fussion {
         };
         std::unordered_map<std::string, std::vector<Prop>> namespaced_global_props;
 
-        for (u32 i = 0; i < m_script_engine->GetGlobalPropertyCount(); i++) {
-            const char* name;
-            const char* ns0;
+        for (u32 i = 0; i < m_ScriptEngine->GetGlobalPropertyCount(); i++) {
+            char const* name;
+            char const* ns0;
             int type;
-            m_script_engine->GetGlobalPropertyByIndex(i, &name, &ns0, &type, nullptr, nullptr, nullptr, nullptr);
+            m_ScriptEngine->GetGlobalPropertyByIndex(i, &name, &ns0, &type, nullptr, nullptr, nullptr, nullptr);
 
-            std::string t = m_script_engine->GetTypeDeclaration(type, true);
+            std::string t = m_ScriptEngine->GetTypeDeclaration(type, true);
             if (t.empty())
                 continue;
 
@@ -152,31 +152,31 @@ namespace Fussion {
         return out;
     }
 
-    std::stringstream& AngelDumper::print_global_typedef(std::stringstream& out) const
+    std::stringstream& AngelDumper::PrintGlobalTypedef(std::stringstream& out) const
     {
-        for (u32 i = 0; i < m_script_engine->GetTypedefCount(); ++i) {
-            const auto type = m_script_engine->GetTypedefByIndex(i);
+        for (u32 i = 0; i < m_ScriptEngine->GetTypedefCount(); ++i) {
+            auto const type = m_ScriptEngine->GetTypedefByIndex(i);
             if (not type)
                 continue;
-            const std::string_view ns = type->GetNamespace();
+            std::string_view const ns = type->GetNamespace();
             if (not ns.empty())
                 out << std::format("namespace {} {{\n", ns);
             out << std::format(
-                "typedef {} {};\n", m_script_engine->GetTypeDeclaration(type->GetTypedefTypeId()), type->GetName());
+                "typedef {} {};\n", m_ScriptEngine->GetTypeDeclaration(type->GetTypedefTypeId()), type->GetName());
             if (not ns.empty())
                 out << "}\n";
         }
         return out;
     }
 
-    std::stringstream AngelDumper::dump() const
+    std::stringstream AngelDumper::DumpTypes() const
     {
         std::stringstream stream;
-        print_enum_list(stream);
-        print_class_type_list(stream);
-        print_global_function_list(stream);
-        print_global_property_list(stream);
-        print_global_typedef(stream);
+        PrintEnumList(stream);
+        PrintClassTypeList(stream);
+        PrintGlobalFunctionList(stream);
+        PrintGlobalPropertyList(stream);
+        PrintGlobalTypedef(stream);
         return stream;
     }
 }

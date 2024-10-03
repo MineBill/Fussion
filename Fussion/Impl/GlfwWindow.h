@@ -1,6 +1,6 @@
 #pragma once
-#include "Fussion/Window.h"
 #include "Fussion/Core/Types.h"
+#include "Fussion/Window.h"
 #include "GLFW/glfw3.h"
 
 namespace Fussion {
@@ -9,32 +9,32 @@ namespace Fussion {
         explicit GlfwWindow(WindowOptions const& options);
         virtual ~GlfwWindow() override;
 
-        virtual void update() override;
-        virtual bool should_close() override;
-        virtual void set_title(std::string const& title) override;
-        virtual void on_event(EventFnType callback) override;
+        virtual void Update() override;
+        virtual bool ShouldClose() override;
+        virtual void SetTitle(std::string const& title) override;
+        virtual void SetEventCallback(EventFnType callback) override;
 
-        virtual void set_mouse_mode(MouseMode mode) const override;
+        virtual void SetMouseMode(MouseMode mode) const override;
 
-        virtual u32 height() const override;
-        virtual u32 width() const override;
+        virtual u32 Height() const override;
+        virtual u32 Width() const override;
 
-        virtual void set_position(Vector2 position) const override;
-        virtual auto position() const -> Vector2 override;
+        virtual void SetPosition(Vector2 position) const override;
+        virtual auto GetPosition() const -> Vector2 override;
 
-        virtual void set_icon(Image const& image) override;
-        virtual void maximize() override;
+        virtual void SetIcon(Image const& image) override;
+        virtual void Maximize() override;
 
-        virtual void* native_handle() const override;
+        virtual void* NativeHandle() const override;
 
     private:
-        bool m_is_minimized{ false };
+        bool m_IsMinimized { false };
 
-        WindowOptions m_options{};
-        GLFWwindow* m_window{};
-        EventFnType m_event_callback{};
+        WindowOptions m_Options {};
+        GLFWwindow* m_Window {};
+        EventFnType m_EventCallback {};
 
-        f32 m_old_x{}, m_old_y{};
-        u32 m_width{}, m_height{};
+        f32 m_OldX {}, m_OldY {};
+        u32 m_Width {}, m_Height {};
     };
 }

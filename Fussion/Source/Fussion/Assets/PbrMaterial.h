@@ -10,14 +10,14 @@ namespace Fussion {
     public:
         PbrMaterial();
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
-        static AssetType static_type() { return AssetType::PbrMaterial; }
-        virtual AssetType type() const override { return static_type(); }
+        static AssetType StaticType() { return AssetType::PbrMaterial; }
+        virtual AssetType Type() const override { return StaticType(); }
 
-        void update_buffer();
-        void update_sampler();
+        void UpdateBuffer();
+        void UpdateSampler();
 
         Color object_color {};
         f32 metallic {};

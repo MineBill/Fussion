@@ -8,27 +8,27 @@
 
 namespace Fussion {
     struct Vertex {
-        Vector3 position {};
-        Vector3 normal {};
-        Vector4 tangent { 1, 1, 1 };
-        Vector2 texture_coords {};
-        Vector3 color { 1, 1, 1 };
+        Vector3 Position {};
+        Vector3 Normal {};
+        Vector4 Tangent { 1, 1, 1 };
+        Vector2 TextureCoords {};
+        Vector3 Color { 1, 1, 1 };
     };
 
     struct Mesh {
-        std::vector<Vertex> vertices {};
-        Vector3 offset {};
-        BoundingBox bounding_box {};
+        std::vector<Vertex> Vertices {};
+        Vector3 Offset {};
+        BoundingBox Box {};
 
-        GPU::Buffer vertex_buffer {};
-        GPU::Buffer index_buffer {};
+        GPU::Buffer VertexBuffer {};
+        GPU::Buffer IndexBuffer {};
         // GPU::Buffer ShadowIndexBuffer{};
-        GPU::Buffer instance_buffer {};
-        u32 index_count {};
+        GPU::Buffer InstanceBuffer {};
+        u32 IndexCount {};
 
-        s32 material_index {};
+        s32 MaterialIndex {};
 
-        Mesh(std::vector<Vertex> const& p_vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset);
+        Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset);
     };
 
     class Model final : public Asset {
@@ -36,10 +36,10 @@ namespace Fussion {
         std::vector<Mesh> meshes {};
         u32 unique_materials {};
 
-        static Ref<Model> create(std::vector<Mesh>& meshes);
+        static Ref<Model> Create(std::vector<Mesh>& meshes);
 
-        virtual AssetType type() const override { return static_type(); }
+        virtual AssetType Type() const override { return StaticType(); }
 
-        static AssetType static_type() { return AssetType::Model; }
+        static AssetType StaticType() { return AssetType::Model; }
     };
 }

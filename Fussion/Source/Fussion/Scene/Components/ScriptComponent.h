@@ -1,28 +1,28 @@
 ﻿#pragma once
-#include "Fussion/Scene/Component.h"
-#include "Fussion/Scripting/ScriptAssembly.h"
-#include "Fussion/Scripting/ScriptingEngine.h"
+#include <Fussion/Scene/Component.h>
+#include <Fussion/Scripting/ScriptAssembly.h>
+#include <Fussion/Scripting/ScriptingEngine.h>
 
 namespace Fussion {
     class [[API]] ScriptComponent final : public Component {
     public:
         COMPONENT_DEFAULT(ScriptComponent)
 
-        virtual void on_start() override;
-        virtual void on_update(f32) override;
+        virtual void OnStart() override;
+        virtual void OnUpdate(f32) override;
 
-        virtual void on_destroy() override;
+        virtual void OnDestroy() override;
 
         void test() const;
 
-        std::string class_name{};
+        std::string ClassName {};
 
-        virtual auto clone() -> Ref<Component> override;
+        virtual auto Clone() -> Ref<Component> override;
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
     private:
-        ScriptInstance m_instance{};
+        ScriptInstance m_Instance {};
     };
 }

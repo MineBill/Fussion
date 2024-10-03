@@ -1,6 +1,5 @@
 #include "FussionPCH.h"
 #include "String.h"
-
 #include "Input/Keys.h"
 
 #include <cstring>
@@ -15,40 +14,40 @@ namespace Fussion {
         return len;
     }
 
-    String String::clone(mem::Allocator const& allocator) const
+    String String::Clone(Mem::Allocator const& allocator) const
     {
         String s;
-        s.data = mem::alloc<char>(data.length, allocator);
+        s.data = Mem::Alloc<char>(data.length, allocator);
 
-        mem::copy(s.data, data);
+        Mem::Copy(s.data, data);
         return s;
     }
 
-    void String::free(mem::Allocator const& allocator)
+    void String::Free(Mem::Allocator const& allocator)
     {
         if (data.length == 0) {
             return;
         }
-        mem::free(data.ptr, allocator);
+        Mem::Free(data.ptr, allocator);
         data.ptr = nullptr;
         data.length = 0;
     }
 
-    Slice<String> String::split(String const& separator, mem::Allocator const& allocator) const
+    Slice<String> String::Split(String const& separator, Mem::Allocator const& allocator) const
     {
         if (separator == *this) {
             // TODO: big oof
-            auto part = mem::alloc<String>(1, allocator);
+            auto part = Mem::Alloc<String>(1, allocator);
             part[0] = *this;
             return part;
         }
         String str = *this;
         u32 count = 1;
         while (true) {
-            auto pos = str.index_of(separator);
-            if (pos.is_empty())
+            auto pos = str.IndexOf(separator);
+            if (pos.IsEmpty())
                 break;
-            str = str.view(*pos + separator.len(), str.len());
+            str = str.View(*pos + separator.Len(), str.Len());
             count++;
         }
 
@@ -56,68 +55,68 @@ namespace Fussion {
             return {};
         }
 
-        auto parts = mem::alloc<String>(count, allocator);
+        auto parts = Mem::Alloc<String>(count, allocator);
 
         str = *this;
         count = 0;
         while (true) {
-            auto pos = str.index_of(separator);
-            if (pos.is_empty()) {
-                parts[count] = str.view(0, str.len());
+            auto pos = str.IndexOf(separator);
+            if (pos.IsEmpty()) {
+                parts[count] = str.View(0, str.Len());
                 break;
             }
-            parts[count] = str.view(0, *pos);
-            str = str.view(*pos + separator.len(), str.len());
+            parts[count] = str.View(0, *pos);
+            str = str.View(*pos + separator.Len(), str.Len());
             count++;
         }
         return parts;
     }
 
-    Maybe<String> String::replace(String const& old_str, String const& new_str, mem::Allocator const& allocator) const
+    Maybe<String> String::Replace(String const& old_str, String const& new_str, Mem::Allocator const& allocator) const
     {
-        if (len() == 0 || old_str.len() == 0) {
+        if (Len() == 0 || old_str.Len() == 0) {
             return None();
         }
 
-        auto parts = split(old_str, mem::temp_allocator());
+        auto parts = Split(old_str, Mem::GetTempAllocator());
         if (parts.len() == 0) {
             return None();
         }
 
         // only one part means old_str == *this
         if (parts.len() == 1) {
-            return new_str.clone(allocator);
+            return new_str.Clone(allocator);
         }
-        auto new_size = len() - old_str.len() * (parts.len() - 1) + new_str.len() * (parts.len() - 1);
-        auto str_buffer = mem::alloc<char>(new_size, allocator);
+        auto new_size = Len() - old_str.Len() * (parts.len() - 1) + new_str.Len() * (parts.len() - 1);
+        auto str_buffer = Mem::Alloc<char>(new_size, allocator);
         usz pos = 0;
         for (auto const& part : parts) {
             // str_buffer.append()
-            mem::copy(str_buffer.slice(pos, 1000), part.data);
-            pos += part.len();
-            mem::copy(str_buffer.slice(pos, 1000), new_str.data);
-            pos += new_str.len();
+            Mem::Copy(str_buffer.SubSlice(pos, 1000), part.data);
+            pos += part.Len();
+            Mem::Copy(str_buffer.SubSlice(pos, 1000), new_str.data);
+            pos += new_str.Len();
         }
 
         return String(str_buffer);
     }
 
-    Maybe<usz> String::index_of(String const& needle) const
+    Maybe<usz> String::IndexOf(String const& needle) const
     {
         for (usz i = 0; i < data.length; ++i) {
-            if (view(i, i + needle.data.length) == needle) {
+            if (View(i, i + needle.data.length) == needle) {
                 return i;
             }
         }
         return None();
     }
 
-    usz String::len() const
+    usz String::Len() const
     {
         return data.length;
     }
 
-    String String::view(usz start, usz end) const
+    String String::View(usz start, usz end) const
     {
         VERIFY(end >= start);
         String s;
@@ -126,18 +125,18 @@ namespace Fussion {
         return s;
     }
 
-    void String::trim(String whitespace)
+    void String::Trim(String whitespace)
     {
-        trim_left(whitespace);
-        trim_right(whitespace);
+        TrimLeft(whitespace);
+        TrimRight(whitespace);
     }
 
-    void String::trim_left(String whitespace)
+    void String::TrimLeft(String whitespace)
     {
-        if (len() == 0)
+        if (Len() == 0)
             return;
         auto match_any = [](char ch, String from) {
-            for (usz i = 0; i < from.len(); ++i) {
+            for (usz i = 0; i < from.Len(); ++i) {
                 if (from[i] == ch)
                     return true;
             }
@@ -155,21 +154,21 @@ namespace Fussion {
             return;
         }
 
-        *this = view(j, len());
+        *this = View(j, Len());
     }
 
-    void String::trim_right(String whitespace)
+    void String::TrimRight(String whitespace)
     {
-        if (len() == 0)
+        if (Len() == 0)
             return;
         auto match_any = [](char ch, String from) {
-            for (usz i = 0; i < from.len(); ++i) {
+            for (usz i = 0; i < from.Len(); ++i) {
                 if (from[i] == ch)
                     return true;
             }
             return false;
         };
-        s64 j = len() - 1;
+        s64 j = Len() - 1;
         while (j >= 0) {
             if (!match_any(data[j], whitespace)) {
                 j++;
@@ -182,7 +181,7 @@ namespace Fussion {
             data.length = 0;
             return;
         }
-        *this = view(0, j);
+        *this = View(0, j);
     }
 
     bool String::operator==(String const& other) const
@@ -210,9 +209,9 @@ namespace Fussion {
     }
 #endif
 
-    String String::alloc(char const* str, mem::Allocator const& allocator)
+    String String::Alloc(char const* str, Mem::Allocator const& allocator)
     {
         String s(str);
-        return s.clone(allocator);
+        return s.Clone(allocator);
     }
 }

@@ -1,9 +1,8 @@
 ﻿#pragma once
-#include "Fussion/Core/Core.h"
-#include "Fussion/Core/Types.h"
-#include "Fussion/Math/Vector2.h"
-
 #include <Fussion/Core/Concepts.h>
+#include <Fussion/Core/Core.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Math/Vector2.h>
 
 namespace Fussion {
     struct Vector3 final {
@@ -71,13 +70,16 @@ namespace Fussion {
             return { x, y };
         }
 
-        [[nodiscard]] Real length_squared() const;
+        [[nodiscard]]
+        Real Length() const;
 
-        [[nodiscard]] Real length() const;
+        [[nodiscard]]
+        Real LengthSquared() const;
 
-        [[nodiscard]] Vector3 normalized() const;
+        [[nodiscard]]
+        Vector3 Normalized() const;
 
-        void normalize();
+        void Normalize();
 
         Real& operator[](std::size_t i)
         {

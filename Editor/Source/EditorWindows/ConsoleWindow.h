@@ -6,8 +6,8 @@ class ConsoleWindow final : public EditorWindow {
 public:
     EDITOR_WINDOW(ConsoleWindow)
 
-    virtual void on_start() override;
-    virtual void on_draw() override;
+    virtual void OnStart() override;
+    virtual void OnDraw() override;
 
 private:
     bool m_info_enable{ true }, m_warning_enabled{ true }, m_error_enabled{ true };

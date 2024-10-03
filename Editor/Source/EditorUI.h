@@ -37,22 +37,22 @@ namespace EUI {
     {
         auto style = Detail::get_button_style(params.style_type);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.padding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.rounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.border ? 1.f : 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, style.normal_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.hover_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.pressed_color);
+        ImGui::PushStyleColor(ImGuiCol_Button, style.NormalColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.HoverColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.PressedColor);
 
-        ImGui::PushStyleColor(ImGuiCol_Text, style.text_color);
-        ImGui::PushStyleColor(ImGuiCol_Border, style.border_color);
-        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.border_shadow_color);
+        ImGui::PushStyleColor(ImGuiCol_Text, style.TextColor);
+        ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
+        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
 
-        auto size = params.size.value_or(Vector2(0, 0));
-        auto s = size.x + style.padding.x * 2.0f;
+        auto size = params.size.ValueOr(Vector2(0, 0));
+        auto s = size.x + style.Padding.x * 2.0f;
         auto avail = ImGui::GetContentRegionAvail().x;
-        auto off = (avail - s) * params.alignment.value_or(0.0f);
+        auto off = (avail - s) * params.alignment.ValueOr(0.0f);
 
         if (off > 0) {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
@@ -75,7 +75,7 @@ namespace EUI {
 
     void image_button(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
     {
-        image_button(texture->image().view, func, params);
+        image_button(texture->GetTexture().View, func, params);
     }
 
     bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data);
@@ -182,22 +182,22 @@ namespace EUI {
     {
         using ResultType = std::invoke_result_t<Func>;
 
-        auto const& style = params.override.value_or(Detail::get_button_style(params.style));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.padding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.rounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.border ? 1.f : 0.f);
+        auto const& style = params.override.ValueOr(Detail::get_button_style(params.style));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, style.normal_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.hover_color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.pressed_color);
+        ImGui::PushStyleColor(ImGuiCol_Button, style.NormalColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.HoverColor);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.PressedColor);
 
-        ImGui::PushStyleColor(ImGuiCol_Text, style.text_color);
-        ImGui::PushStyleColor(ImGuiCol_Border, style.border_color);
-        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.border_shadow_color);
+        ImGui::PushStyleColor(ImGuiCol_Text, style.TextColor);
+        ImGui::PushStyleColor(ImGuiCol_Border, style.BorderColor);
+        ImGui::PushStyleColor(ImGuiCol_BorderShadow, style.BorderShadowColor);
 
-        ImGui::PushFont(EditorStyle::get_style().fonts[style.font]);
+        ImGui::PushFont(EditorStyle::Style().Fonts[style.Font]);
 
-        auto s = !params.size.has_value() ? ImGui::CalcTextSize(label.data()).x : params.size->x + style.padding.x * 2.0f;
+        auto s = !params.size.HasValue() ? ImGui::CalcTextSize(label.data()).x : params.size->x + style.Padding.x * 2.0f;
         // auto s = params.Size.ValueOr(Vector2(ImGui::CalcTextSize(label.data()).x, 0)).X + style.Padding.X * 2.0f;
         auto avail = ImGui::GetContentRegionAvail().x;
         auto off = (avail - s) * params.alignment;
@@ -208,7 +208,7 @@ namespace EUI {
         if (params.disabled)
             ImGui::BeginDisabled();
 
-        bool opened = ImGui::Button(label.data(), params.size.value_or(Vector2::Zero));
+        bool opened = ImGui::Button(label.data(), params.size.ValueOr(Vector2::Zero));
 
         if (params.disabled)
             ImGui::EndDisabled();
@@ -278,7 +278,7 @@ namespace EUI {
 
     void window(std::string_view title, auto&& func, WindowParams params = {})
     {
-        auto style = params.override.value_or(Detail::get_window_style(params.style));
+        auto style = params.override.ValueOr(Detail::get_window_style(params.style));
 
         if (params.dirty)
             params.flags |= ImGuiWindowFlags_UnsavedDocument;
@@ -287,11 +287,11 @@ namespace EUI {
             ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.padding);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.rounding);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style.border ? 1.f : 0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.Padding);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.Rounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style.Border ? 1.f : 0.f);
 
-        if (!params.size.is_zero())
+        if (!params.size.IsZero())
             ImGui::SetNextWindowSize(params.size, ImGuiCond_Appearing);
         bool o = ImGui::Begin(title.data(), params.opened, params.flags);
         ImGui::PopStyleVar(3);
@@ -318,7 +318,7 @@ namespace EUI {
 
     void with_editor_font(EditorFont font, auto&& callback)
     {
-        auto* f = EditorStyle::get_style().fonts[font];
+        auto* f = EditorStyle::Style().Fonts[font];
         ImGui::PushFont(f);
         callback();
         ImGui::PopFont();

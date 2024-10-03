@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include "Keys.h"
-#include "Fussion/Events/Event.h"
 #include "Fussion/Core/Types.h"
+#include "Fussion/Events/Event.h"
 #include "Fussion/Events/MouseEvents.h"
+#include "Keys.h"
 #include <Fussion/Math/Vector2.h>
 
 namespace Fussion {
@@ -19,35 +19,35 @@ namespace Fussion {
         friend Application;
 
     public:
-        static auto is_key_down(Keys key) -> bool;
-        static auto is_key_up(Keys key) -> bool;
-        static auto is_key_pressed(Keys key) -> bool;
-        static auto is_key_released(Keys key) -> bool;
-        static auto get_axis(Keys positive, Keys negative) -> f32;
+        static auto IsKeyDown(Keys key) -> bool;
+        static auto IsKeyUp(Keys key) -> bool;
+        static auto IsKeyPressed(Keys key) -> bool;
+        static auto IsKeyReleased(Keys key) -> bool;
+        static auto GetAxis(Keys positive, Keys negative) -> f32;
 
-        static auto is_mouse_button_down(MouseButton button) -> bool;
-        static auto is_mouse_button_up(MouseButton button) -> bool;
-        static auto is_mouse_button_pressed(MouseButton button) -> bool;
-        static auto is_mouse_button_released(MouseButton button) -> bool;
+        static auto IsMouseButtonDown(MouseButton button) -> bool;
+        static auto IsMouseButtonUp(MouseButton button) -> bool;
+        static auto IsMouseButtonPressed(MouseButton button) -> bool;
+        static auto IsMouseButtonReleased(MouseButton button) -> bool;
 
         /// Gets the mouse position in window coordinates, relative to the
         /// top left of the window.
-        static auto mouse_position() -> Vector2;
+        static auto MousePosition() -> Vector2;
 
         template<std::same_as<Keys>... K>
-        static auto is_any_key_down(Keys const key, K... keys) -> bool
+        static auto IsAnyKeyDown(Keys const key, K... keys) -> bool
         {
-            if (is_key_down(key))
+            if (IsKeyDown(key))
                 return true;
             // @note Jesus fucking Christ, what the fuck is this
             if constexpr (sizeof...(keys) > 0)
-                return is_any_key_down(keys...);
+                return IsAnyKeyDown(keys...);
             return false;
         }
 
     private:
-        static void on_event(Event& event);
-        static void flush();
+        static void OnEvent(Event& event);
+        static void Flush();
     };
 
 }

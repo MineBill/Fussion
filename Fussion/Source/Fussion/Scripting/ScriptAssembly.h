@@ -1,27 +1,20 @@
 #pragma once
-#include "Attribute.h"
-#include "angelscript.h"
-#include "Fussion/Core/Uuid.h"
-#include "Fussion/Core/Core.h"
-#include "Fussion/Core/Types.h"
+#include <Fussion/Core/Core.h>
 #include <Fussion/Core/Maybe.h>
-#include "scriptbuilder/scriptbuilder.h"
+#include <Fussion/Core/Mem.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Core/Uuid.h>
 
-#include <cstring>
+#include <angelscript.h>
+#include <scriptbuilder/scriptbuilder.h>
+
 #include <any>
 
 namespace Fussion {
     class ScriptClass;
     class ScriptingEngine;
 
-    class HasAttribute {
-        //     auto GetAttribute(std::string_view name) -> std::optional<Ptr<Scripting::Attribute>&>;
-        //
-        // protected:
-        //     std::vector<Ptr<Scripting::Attribute>> m_Attributes{};
-        //
-        //     friend ScriptingEngine;
-    };
+    class HasAttribute { };
 
     class ScriptInstance final {
     public:
@@ -32,43 +25,43 @@ namespace Fussion {
         ScriptInstance(ScriptInstance const& other);
         ScriptInstance& operator=(ScriptInstance const& other);
 
-        bool is_valid() const { return m_instance != nullptr; }
+        bool IsValid() const { return m_Instance != nullptr; }
 
-        asIScriptObject* instance() const { return m_instance; }
-        ScriptClass* script_class() const { return m_script_class; }
+        asIScriptObject* Instance() const { return m_Instance; }
+        ScriptClass* GetScriptClass() const { return m_ScriptClass; }
 
         template<typename... Args>
-        void call_method(std::string_view name, Args&&... args);
-        
-        void call_method(std::string_view name, std::initializer_list<std::any> args);
+        void CallMethod(std::string_view name, Args&&... args);
+
+        void CallMethod(std::string_view name, std::initializer_list<std::any> args);
 
         template<typename T>
-        void set_property(std::string const& name, T& value);
+        void SetProperty(std::string const& name, T& value);
 
         template<typename T>
-        T* as()
+        T* As()
         {
-            return TRANSMUTE(T*, m_instance->GetAddressOfProperty(0));
+            return TRANSMUTE(T*, m_Instance->GetAddressOfProperty(0));
         }
 
     private:
-        ScriptClass* m_script_class{ nullptr };
-        asIScriptObject* m_instance{ nullptr };
+        ScriptClass* m_ScriptClass { nullptr };
+        asIScriptObject* m_Instance { nullptr };
 
-        asIScriptContext* m_context{ nullptr };
+        asIScriptContext* m_context { nullptr };
     };
 
     struct ScriptProperty : HasAttribute {
-        u32 index{};
-        std::string name{};
-        bool is_private{};
-        bool is_protected{};
-        asETypeIdFlags type_id{};
+        u32 Index {};
+        std::string Name {};
+        bool IsPrivate {};
+        bool IsProtected {};
+        asETypeIdFlags TypeID {};
 
-        int offset{};
-        bool is_reference{};
+        int Offset {};
+        bool IsReference {};
 
-        Uuid uuid{};
+        Uuid ID {};
     };
 
     class ScriptClass : public HasAttribute {
@@ -76,15 +69,15 @@ namespace Fussion {
         ScriptClass() = default;
         explicit ScriptClass(asITypeInfo* type);
 
-        auto name() -> std::string const& { return m_name; }
+        auto Name() -> std::string const& { return m_Name; }
 
-        auto create_instance() -> ScriptInstance;
+        auto CreateInstance() -> ScriptInstance;
 
-        auto create_instance_with(auto&& func) -> ScriptInstance
+        auto CreateInstanceWith(auto&& func) -> ScriptInstance
         {
-            auto ctx = m_type->GetEngine()->CreateContext();
+            auto ctx = m_Type->GetEngine()->CreateContext();
             defer(ctx->Release());
-            ctx->Prepare(m_factory);
+            ctx->Prepare(m_Factory);
 
             func(ctx);
 
@@ -97,40 +90,46 @@ namespace Fussion {
             return {};
         }
 
-        auto get_method(std::string const& name) -> asIScriptFunction*;
+        auto GetMethod(std::string const& name) -> asIScriptFunction*;
 
         [[nodiscard]]
-        auto get_type_info() const -> asITypeInfo* { return m_type; }
+        auto GetTypeInfo() const -> asITypeInfo*
+        {
+            return m_Type;
+        }
 
         [[nodiscard]]
-        auto get_properties() const -> std::unordered_map<std::string, ScriptProperty> { return m_properties; }
+        auto GetProperties() const -> std::unordered_map<std::string, ScriptProperty>
+        {
+            return m_Properties;
+        }
 
         [[nodiscard]]
-        auto get_methods() -> std::unordered_map<std::string, asIScriptFunction*>&;
+        auto GetMethods() -> std::unordered_map<std::string, asIScriptFunction*>&;
 
-        bool derives_from(std::string const& name) const;
+        bool DerivesFrom(std::string const& name) const;
 
-        void reload(asITypeInfo* type_info);
-        auto get_property(std::string const& name) -> ScriptProperty;
+        void Reload(asITypeInfo* type_info);
+        auto GetProperty(std::string const& name) -> ScriptProperty;
 
     private:
-        std::unordered_map<std::string, asIScriptFunction*> m_methods{};
-        std::unordered_map<std::string, ScriptProperty> m_properties{};
+        std::unordered_map<std::string, asIScriptFunction*> m_Methods {};
+        std::unordered_map<std::string, ScriptProperty> m_Properties {};
 
-        std::string m_name{ "Invalid" };
-        asIScriptFunction* m_factory{ nullptr };
-        asITypeInfo* m_type{ nullptr };
-        Uuid m_uuid{};
+        std::string m_Name { "Invalid" };
+        asIScriptFunction* m_Factory { nullptr };
+        asITypeInfo* m_Type { nullptr };
+        Uuid m_ID {};
 
         friend ScriptingEngine;
     };
 
     template<typename... Args>
-    void ScriptInstance::call_method(std::string_view name, Args&&... args)
+    void ScriptInstance::CallMethod(std::string_view name, Args&&... args)
     {
-        if (auto m = m_script_class->get_method(std::string(name))) {
+        if (auto m = m_ScriptClass->GetMethod(std::string(name))) {
             m_context->Prepare(m);
-            m_context->SetObject(m_instance);
+            m_context->SetObject(m_Instance);
             u32 i = 0;
             ([&]<typename Arg>() {
                 using BaseType = std::remove_cvref_t<Arg>;
@@ -150,20 +149,21 @@ namespace Fussion {
                 }
 
                 i++;
-            }.template operator()<Args>(), ...);
+            }.template operator()<Args>(),
+                ...);
             m_context->Execute();
         }
     }
 
     template<typename T>
-    void ScriptInstance::set_property(std::string const& name, T& value)
+    void ScriptInstance::SetProperty(std::string const& name, T& value)
     {
-        auto prop = m_script_class->get_property(name);
-        auto type_name = m_instance->GetObjectType()->GetName();
+        auto prop = m_ScriptClass->GetProperty(name);
+        auto type_name = m_Instance->GetObjectType()->GetName();
         LOG_DEBUGF("NAME: {}", type_name);
-        auto ptr = m_instance->GetAddressOfProperty(prop.index);
+        auto ptr = m_Instance->GetAddressOfProperty(prop.Index);
 
-        std::memcpy(ptr, &value, sizeof(T));
+        Mem::Copy(ptr, &value, sizeof(T));
     }
 
     class ScriptAssembly {
@@ -172,16 +172,16 @@ namespace Fussion {
     public:
         explicit ScriptAssembly(asIScriptModule* module);
 
-        auto get_class(std::string const& name) -> Maybe<ScriptClass*>;
+        auto GetClass(std::string const& name) -> Maybe<ScriptClass*>;
 
-        auto get_all_classes() -> std::unordered_map<std::string, ScriptClass>& { return m_classes; }
-        auto get_classes_of_type(std::string const& type) -> std::vector<ScriptClass*>;
-        void reload(asIScriptModule* module);
+        auto GetAllClasses() -> std::unordered_map<std::string, ScriptClass>& { return m_Classes; }
+        auto GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>;
+        void Reload(asIScriptModule* module);
 
     private:
-        std::unordered_map<std::string, ScriptClass> m_classes{};
-        asIScriptModule* m_module{ nullptr };
-        std::string m_name{};
+        std::unordered_map<std::string, ScriptClass> m_Classes {};
+        asIScriptModule* m_Module { nullptr };
+        std::string m_Name {};
 
         friend ScriptingEngine;
     };

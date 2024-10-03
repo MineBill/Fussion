@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <Fussion/Assets/AssetRef.h>
 #include <Fussion/Assets/PbrMaterial.h>
 #include <Fussion/GPU/GPU.h>
@@ -6,65 +6,66 @@
 namespace Fussion {
     class Renderer {
     public:
-        static void initialize(Window const& window);
-        static void shutdown();
+        static void Initialize(Window const& window);
+        static void Shutdown();
 
-        static Renderer& inst() { return *s_renderer; }
+        static Renderer& Self() { return *s_Renderer; }
 
-        static auto begin_rendering() -> Maybe<GPU::TextureView>;
-        static void end_rendering(GPU::CommandBuffer cmd);
-        static void resize(Vector2 const& new_size);
+        static auto BeginRendering() -> Maybe<GPU::TextureView>;
+        static void EndRendering(GPU::CommandBuffer cmd);
+        static void Resize(Vector2 const& new_size);
 
-        static auto device() -> GPU::Device&
+        static auto Device() -> GPU::Device&
         {
-            return s_renderer->m_device;
+            return s_Renderer->m_Device;
         }
 
-        static auto surface() -> GPU::Surface&
+        static auto Surface() -> GPU::Surface&
         {
-            return s_renderer->m_surface;
+            return s_Renderer->m_Surface;
         }
 
-        static auto gpu_instance() -> GPU::Instance&
+        static auto GPUInstance() -> GPU::Instance&
         {
-            return s_renderer->m_instance;
-        }
-
-        [[nodiscard]]
-        static auto default_material() -> AssetRef<PbrMaterial>
-        {
-            return s_renderer->m_default_material;
+            return s_Renderer->m_Instance;
         }
 
         [[nodiscard]]
-        static auto default_normal_map() -> AssetRef<Texture2D>;
+        static auto DefaultMaterial() -> AssetRef<PbrMaterial>
+        {
+            return s_Renderer->m_DefaultMaterial;
+        }
 
         [[nodiscard]]
-        static auto white_texture() -> AssetRef<Texture2D>;
+        static auto DefaultNormalMap() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto black_texture() -> AssetRef<Texture2D>;
+        static auto WhiteTexture() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto white_cube_texture() -> GPU::Texture;
+        static auto BlackTexture() -> AssetRef<Texture2D>;
 
-        void create_default_resources();
-        static bool has_pipeline_statistics();
+        [[nodiscard]]
+        static auto WhiteCubeTexture() -> GPU::Texture;
+
+        void CreateDefaultResources();
+
+        static bool HasPipelineStatistics();
 
     private:
-        static Renderer* s_renderer;
+        static Renderer* s_Renderer;
 
-        AssetRef<PbrMaterial> m_default_material;
-        AssetRef<Texture2D> m_white_texture, m_black_texture, m_normal_map;
-        GPU::Texture m_white_cube_texture;
+        AssetRef<PbrMaterial> m_DefaultMaterial;
+        AssetRef<Texture2D> m_WhiteTexture, m_BlackTexture, m_NormalMap;
+        GPU::Texture m_WhiteCubeTexture;
 
-        Vector2 m_window_size {};
-        bool m_skip_render {};
+        Vector2 m_WindowSize {};
+        bool m_SkipRender {};
 
-        GPU::Instance m_instance {};
-        GPU::Device m_device {};
-        GPU::Adapter m_adapter {};
-        GPU::Surface m_surface {};
-        bool m_has_pipeline_statistics {};
+        GPU::Instance m_Instance {};
+        GPU::Device m_Device {};
+        GPU::Adapter m_Adapter {};
+        GPU::Surface m_Surface {};
+        bool m_HasPipelineStatistics {};
     };
 }

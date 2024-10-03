@@ -8,11 +8,11 @@
 
 using namespace Fussion;
 
-void MaterialWindow::on_draw([[maybe_unused]] f32 delta)
+void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
 {
-    auto asset = AssetManager::get_asset<PbrMaterial>(m_asset_handle);
-    auto material = asset.get();
-    if (!asset.is_loaded()) {
+    auto asset = AssetManager::GetAsset<PbrMaterial>(m_AssetHandle);
+    auto material = asset.Get();
+    if (!asset.IsLoaded()) {
         ImGui::TextUnformatted("Material instance is null");
         return;
     }
@@ -32,7 +32,7 @@ void MaterialWindow::on_draw([[maybe_unused]] f32 delta)
     }
 }
 
-void MaterialWindow::on_save()
+void MaterialWindow::OnSave()
 {
-    Project::asset_manager()->save_asset(m_asset_handle);
+    Project::AssetManager()->SaveAsset(m_AssetHandle);
 }

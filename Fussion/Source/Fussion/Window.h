@@ -1,10 +1,9 @@
 ﻿#pragma once
-#include "Core/BitFlags.h"
-#include "Core/Types.h"
-#include "Events/Event.h"
-#include "Fussion/Math/Vector2.h"
-
+#include <Fussion/Core/BitFlags.h>
+#include <Fussion/Core/Types.h>
+#include <Fussion/Events/Event.h>
 #include <Fussion/Image.h>
+#include <Fussion/Math/Vector2.h>
 
 namespace Fussion {
     enum class WindowFlag {
@@ -18,10 +17,10 @@ namespace Fussion {
     DECLARE_OPERATORS_FOR_FLAGS(WindowFlags)
 
     struct WindowOptions {
-        std::string initial_title { "Window" };
-        s32 initial_width { 400 };
-        s32 initial_height { 400 };
-        WindowFlags flags {};
+        std::string InitialTitle { "Window" };
+        s32 InitialWidth { 400 };
+        s32 InitialHeight { 400 };
+        WindowFlags Flags {};
     };
 
     enum class MouseMode {
@@ -34,32 +33,32 @@ namespace Fussion {
     public:
         virtual ~Window() = default;
 
-        Vector2 size() const
+        Vector2 Size() const
         {
-            return { CAST(f32, width()), CAST(f32, height()) };
+            return { CAST(f32, Width()), CAST(f32, Height()) };
         }
 
-        virtual void set_mouse_mode(MouseMode mode) const = 0;
+        virtual void SetMouseMode(MouseMode mode) const = 0;
 
-        static Window* create(WindowOptions const& options);
+        static Window* Create(WindowOptions const& options);
 
-        virtual void update() = 0;
+        virtual void Update() = 0;
 
-        virtual bool should_close() = 0;
+        virtual bool ShouldClose() = 0;
 
-        virtual void on_event(EventFnType callback) = 0;
+        virtual void SetEventCallback(EventFnType callback) = 0;
 
-        virtual void* native_handle() const = 0;
+        virtual void* NativeHandle() const = 0;
 
-        virtual void set_title(std::string const& title) = 0;
-        virtual void set_position(Vector2 position) const = 0;
-        virtual auto position() const -> Vector2 = 0;
+        virtual void SetTitle(std::string const& title) = 0;
+        virtual void SetPosition(Vector2 position) const = 0;
+        virtual auto GetPosition() const -> Vector2 = 0;
 
-        virtual void set_icon(Image const& image) = 0;
-        virtual void maximize() = 0;
+        virtual void SetIcon(Image const& image) = 0;
+        virtual void Maximize() = 0;
 
-        [[nodiscard]] virtual u32 width() const = 0;
+        [[nodiscard]] virtual u32 Width() const = 0;
 
-        [[nodiscard]] virtual u32 height() const = 0;
+        [[nodiscard]] virtual u32 Height() const = 0;
     };
 }

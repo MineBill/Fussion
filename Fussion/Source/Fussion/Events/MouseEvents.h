@@ -16,49 +16,62 @@ namespace Fussion {
         Button8
     };
 
-
     class MouseMoved final : public Event {
     public:
         EVENT(MouseMoved)
-        MouseMoved(f64 x, f64 y, f64 rel_x, f64 rel_y) : x(x), y(y), rel_x(rel_x), rel_y(rel_y) {}
+        MouseMoved(f64 x, f64 y, f64 rel_x, f64 rel_y)
+            : x(x)
+            , y(y)
+            , rel_x(rel_x)
+            , rel_y(rel_y)
+        { }
 
-        f64 x{ 0 }, y{ 0 }, rel_x{ 0 }, rel_y{ 0 };
+        f64 x { 0 }, y { 0 }, rel_x { 0 }, rel_y { 0 };
     };
 
     class MouseButtonPressed final : public Event {
     public:
         EVENT(MouseButtonPressed)
-        explicit MouseButtonPressed(MouseButton button) : button(button) {}
+        explicit MouseButtonPressed(MouseButton button)
+            : button(button)
+        { }
 
-        MouseButton button{};
+        MouseButton button {};
     };
 
     class MouseButtonReleased final : public Event {
     public:
         EVENT(MouseButtonReleased)
-        explicit MouseButtonReleased(MouseButton b) : button(b) {}
+        explicit MouseButtonReleased(MouseButton b)
+            : button(b)
+        { }
 
-        MouseButton button{};
+        MouseButton button {};
     };
 
     class MouseButtonDown final : public Event {
     public:
         EVENT(MouseButtonDown)
-        explicit MouseButtonDown(MouseButton button) : button(button) {}
+        explicit MouseButtonDown(MouseButton button)
+            : button(button)
+        { }
 
-        MouseButton button{};
+        MouseButton button {};
     };
 
     class MouseWheelMoved final : public Event {
     public:
         EVENT(MouseWheelMoved)
-        explicit MouseWheelMoved(f32 x, f32 y) : x(x), y(y) {}
+        explicit MouseWheelMoved(f32 x, f32 y)
+            : x(x)
+            , y(y)
+        { }
 
         Vector2 offset() const
         {
             return { x, y };
         }
 
-        f32 x, y{ 0.0f };
+        f32 x, y { 0.0f };
     };
 }

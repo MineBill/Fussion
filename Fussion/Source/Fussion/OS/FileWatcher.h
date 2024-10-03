@@ -19,12 +19,12 @@ namespace Fussion {
 
         using CallbackType = void(std::filesystem::path const&, EventType);
 
-        static Ptr<FileWatcher> create(std::filesystem::path root);
+        static Ptr<FileWatcher> Create(std::filesystem::path root);
 
         virtual ~FileWatcher() = default;
 
-        virtual void register_listener(std::function<CallbackType>) = 0;
+        virtual void AddListener(std::function<CallbackType>) = 0;
 
-        virtual void start() = 0;
+        virtual void Start() = 0;
     };
 }

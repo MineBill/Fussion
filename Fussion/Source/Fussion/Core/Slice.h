@@ -10,16 +10,19 @@ namespace Fussion {
         Slice() = default;
 
         Slice(T* ptr, usz length)
-            : ptr(ptr),
-              length(length) {}
+            : ptr(ptr)
+            , length(length)
+        { }
 
         Slice(Slice const& other)
-            : ptr(other.ptr),
-              length(other.length) {}
+            : ptr(other.ptr)
+            , length(other.length)
+        { }
 
         Slice(Slice&& other) noexcept
-            : ptr(other.ptr),
-              length(other.length) {}
+            : ptr(other.ptr)
+            , length(other.length)
+        { }
 
         Slice& operator=(Slice const& other)
         {
@@ -62,14 +65,16 @@ namespace Fussion {
             return false;
         }
 
-        Slice slice(usz start, usz end)
+        Slice SubSlice(usz start, usz end)
         {
             VERIFY(start <= end, "start: {}, end: {}", start, end);
             return Slice(ptr + start, end - start);
         }
 
         struct Iterator {
-            Iterator(T* ptr): m_ptr(ptr) {}
+            Iterator(T* ptr)
+                : m_ptr(ptr)
+            { }
 
             Iterator& operator++()
             {

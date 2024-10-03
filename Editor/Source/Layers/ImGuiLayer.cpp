@@ -1,40 +1,38 @@
 ﻿#include "EditorPCH.h"
 #include "ImGuiLayer.h"
 
-#include "Fussion/Core/Application.h"
-
-#include <imgui.h>
-#include "ImGuizmo.h"
-#include <backends/imgui_impl_wgpu.h>
-#include <backends/imgui_impl_glfw.h>
-#include <tracy/Tracy.hpp>
-
 #include "Editor.h"
 #include "EditorStyle.h"
+
+#include "Fussion/Core/Application.h"
+
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_wgpu.h>
+#include <imgui.h>
+#include <tracy/Tracy.hpp>
+
+#include "ImGuizmo.h"
 
 #include "Fussion/GPU/EnumConversions.h"
 #include "Fussion/Rendering/Renderer.h"
 
-// #include <webgpu/webgpu.h>
-
-
-void ImGuiLayer::load_fonts()
+void ImGuiLayer::LoadFonts()
 {
     auto& io = ImGui::GetIO();
-    auto& style = EditorStyle::get_style();
+    auto& style = EditorStyle::Style();
     using enum EditorFont;
-    style.fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
-    style.fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
-    style.fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
-    style.fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
-    style.fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
-    style.fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
-    style.fonts[MonospaceRegular] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/JetBrainsMono-Regular.ttf", 15.0f);
+    style.Fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
+    style.Fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
+    style.Fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
+    style.Fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
+    style.Fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
+    style.Fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
+    style.Fonts[MonospaceRegular] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
-    io.FontDefault = style.fonts[RegularNormal];
+    io.FontDefault = style.Fonts[RegularNormal];
 }
 
-void ImGuiLayer::init()
+void ImGuiLayer::Initialize()
 {
     ZoneScoped;
     using namespace Fussion;
@@ -50,27 +48,27 @@ void ImGuiLayer::init()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-    auto window = CAST(GLFWwindow*, Application::inst()->window().native_handle());
+    auto window = CAST(GLFWwindow*, Application::Self()->GetWindow().NativeHandle());
 
     ImGui_ImplGlfw_InitForOther(window, true);
 
-    ImGui_ImplWGPU_InitInfo info{};
-    info.Device = Renderer::device().as<WGPUDevice>();
-    info.RenderTargetFormat = to_wgpu(Renderer::surface().format);
+    ImGui_ImplWGPU_InitInfo info {};
+    info.Device = Renderer::Device().As<WGPUDevice>();
+    info.RenderTargetFormat = ToWGPU(Renderer::Surface().Format);
     ImGui_ImplWGPU_Init(&info);
 
-    setup_im_gui_style();
-    load_fonts();
+    SetupImGuiStyle();
+    LoadFonts();
 }
 
-void ImGuiLayer::on_start() {}
+void ImGuiLayer::OnStart() { }
 
-void ImGuiLayer::on_update(f32 delta)
+void ImGuiLayer::OnUpdate(f32 delta)
 {
     (void)delta;
 }
 
-void ImGuiLayer::begin()
+void ImGuiLayer::Begin()
 {
     ZoneScoped;
     ImGui_ImplGlfw_NewFrame();
@@ -79,7 +77,7 @@ void ImGuiLayer::begin()
     ImGuizmo::BeginFrame();
 }
 
-void ImGuiLayer::end(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
+void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
 {
     ZoneScoped;
     ImGui::Render();
@@ -91,12 +89,12 @@ void ImGuiLayer::end(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
         // ImGui::SetCurrentContext(ctx);
     }
 
-    if (encoder.has_value()) {
-        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->as<WGPURenderPassEncoder>());
+    if (encoder.HasValue()) {
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->As<WGPURenderPassEncoder>());
     }
 }
 
-void ImGuiLayer::setup_im_gui_style()
+void ImGuiLayer::SetupImGuiStyle()
 {
     // Fork of Photoshop style from ImThemes
     ImGuiStyle& style = ImGui::GetStyle();
@@ -190,5 +188,4 @@ void ImGuiLayer::setup_im_gui_style()
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 0.39f, 0.00f, 1.00f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.59f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.59f);
-
 }

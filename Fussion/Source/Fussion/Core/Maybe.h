@@ -5,50 +5,66 @@
 
 namespace Fussion {
 
-    struct None {};
+    struct None { };
 
     template<typename T>
     class Maybe {
 
     public:
-        explicit constexpr Maybe(): m_nullable_value(nullptr) {}
-        constexpr Maybe(None): Maybe() {}
+        explicit constexpr Maybe()
+            : m_Value(nullptr)
+        {
+        }
+        constexpr Maybe(None)
+            : Maybe()
+        {
+        }
 
-        constexpr ~Maybe() { reset(); }
+        constexpr ~Maybe() { Reset(); }
 
-        constexpr Maybe(T const& _value):
-            m_nullable_value(new(m_storage) T(_value)) {}
+        constexpr Maybe(T const& _value)
+            : m_Value(new(m_Storage) T(_value))
+        {
+        }
 
-        constexpr Maybe(T&& _value):
-            m_nullable_value(new(m_storage) T(std::move(_value))) {}
+        constexpr Maybe(T&& _value)
+            : m_Value(new(m_Storage) T(std::move(_value)))
+        {
+        }
 
         constexpr Maybe& operator=(T const& _value)
         {
-            reset();
-            m_nullable_value = new(m_storage) T(_value);
+            Reset();
+            m_Value = new (m_Storage) T(_value);
             return *this;
         }
 
         constexpr Maybe& operator=(T&& _value)
         {
-            reset();
-            m_nullable_value = new(m_storage) T(std::move(_value));
+            Reset();
+            m_Value = new (m_Storage) T(std::move(_value));
             return *this;
         }
 
-        constexpr Maybe(Maybe const& _other):
-            m_nullable_value(_other ? new(m_storage) T(*_other) : nullptr) {}
+        constexpr Maybe(Maybe const& _other)
+            : m_Value(_other ? new(m_Storage) T(*_other) : nullptr)
+        {
+        }
 
-        constexpr Maybe(Maybe&& _other) noexcept:
-            m_nullable_value(_other
-                ? new(m_storage) T(std::move(*_other))
-                : nullptr) {}
+        constexpr Maybe(Maybe&& _other) noexcept
+            : m_Value(_other
+                      ? new(m_Storage) T(std::move(*_other))
+                      : nullptr)
+        {
+        }
 
         constexpr Maybe& operator=(Maybe const& _other)
         {
             if (&_other != this) {
-                reset();
-                if (_other) { m_nullable_value = new(m_storage) T(*_other); }
+                Reset();
+                if (_other) {
+                    m_Value = new (m_Storage) T(*_other);
+                }
             }
             return *this;
         }
@@ -56,71 +72,73 @@ namespace Fussion {
         constexpr Maybe& operator=(Maybe&& _other) noexcept
         {
             if (&_other != this) {
-                reset();
+                Reset();
                 if (_other) {
-                    m_nullable_value = new(m_storage) T(std::move(*_other));
+                    m_Value = new (m_Storage) T(std::move(*_other));
                 }
             }
             return *this;
         }
 
-        constexpr void reset()
+        constexpr void Reset()
         {
-            if (m_nullable_value) { m_nullable_value->~T(); }
-            m_nullable_value = nullptr;
+            if (m_Value) {
+                m_Value->~T();
+            }
+            m_Value = nullptr;
         }
 
         constexpr T& operator*()
         {
-            VERIFY(m_nullable_value, "Tried to access empty Maybe");
-            return *m_nullable_value;
+            VERIFY(m_Value, "Tried to access empty Maybe");
+            return *m_Value;
         }
 
         constexpr T const& operator*() const
         {
-            VERIFY(m_nullable_value, "Tried to access empty Maybe");
-            return *m_nullable_value;
+            VERIFY(m_Value, "Tried to access empty Maybe");
+            return *m_Value;
         }
 
         constexpr T* operator->()
         {
-            VERIFY(m_nullable_value, "Tried to access empty Maybe");
-            return m_nullable_value;
+            VERIFY(m_Value, "Tried to access empty Maybe");
+            return m_Value;
         }
 
         constexpr T const* operator->() const
         {
-            VERIFY(m_nullable_value, "Tried to access empty Maybe");
-            return m_nullable_value;
+            VERIFY(m_Value, "Tried to access empty Maybe");
+            return m_Value;
         }
 
-        constexpr T& unwrap() const
+        constexpr T& Unwrap() const
         {
-            VERIFY(m_nullable_value, "Tried to access empty Maybe");
-            return *m_nullable_value;
+            VERIFY(m_Value, "Tried to access empty Maybe");
+            return *m_Value;
         }
 
-        constexpr T value_or(T const& default_value) const
+        constexpr T ValueOr(T const& default_value) const
         {
-            return m_nullable_value ? *m_nullable_value : default_value;
+            return m_Value ? *m_Value : default_value;
         }
 
-        constexpr bool has_value() const { return m_nullable_value != nullptr; }
-        constexpr bool is_empty() const { return m_nullable_value == nullptr; }
+        constexpr bool HasValue() const { return m_Value != nullptr; }
+        constexpr bool IsEmpty() const { return m_Value == nullptr; }
 
-        constexpr bool operator !() const { return m_nullable_value == nullptr; }
+        constexpr bool operator!() const { return m_Value == nullptr; }
 
         constexpr explicit operator bool() const
         {
-            return has_value();
+            return HasValue();
         }
 
         constexpr friend bool operator==(Maybe const& a, Maybe const& b)
         {
-            if (a.is_empty() && b.is_empty()) {
+            if (a.IsEmpty() && b.IsEmpty()) {
                 return true;
             }
-            if (a.has_value() && b.has_value()) {
+            if (a.HasValue() && b.HasValue()) {
                 return *a == *b;
             }
             return false;
@@ -132,8 +150,8 @@ namespace Fussion {
         }
 
     private:
-        T* m_nullable_value;
-        alignas(alignof(T)) char m_storage[sizeof(T)];
+        T* m_Value;
+        alignas(alignof(T)) char m_Storage[sizeof(T)];
     };
 }
 

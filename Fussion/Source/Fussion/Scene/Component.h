@@ -1,13 +1,13 @@
 ﻿#pragma once
-#include "Fussion/Core/Types.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
-#include "Fussion/Rendering/RenderTypes.h"
-#include "Fussion/Serialization/ISerializable.h"
+#include <Fussion/Core/Types.h>
+#include <Fussion/Rendering/RenderTypes.h>
+#include <Fussion/Serialization/ISerializable.h>
+#include <Fussion/meta.hpp/meta_all.hpp>
 
 #define FSN_DEBUG_DRAW 1
 
 #if FSN_DEBUG_DRAW
-#include <Fussion/Debug/Debug.h>
+#    include <Fussion/Debug/Debug.h>
 #endif
 
 namespace Fussion {
@@ -21,45 +21,49 @@ namespace Fussion {
 
     public:
         Component() = default;
-        explicit Component(Entity* owner): m_owner(owner) {}
+        explicit Component(Entity* owner)
+            : m_Owner(owner)
+        { }
         virtual ~Component() override = default;
 
-        virtual void on_create()
+        virtual void OnCreate()
         {
-            on_start();
+            OnStart();
         }
 
-        virtual void on_destroy() {}
+        virtual void OnDestroy() { }
 
-        virtual void on_start() {}
-        virtual void on_update([[maybe_unused]] f32 delta) {}
+        virtual void OnStart() { }
+        virtual void OnUpdate([[maybe_unused]] f32 delta) { }
 
 #if FSN_DEBUG_DRAW
-        virtual void on_debug_draw([[maybe_unused]] DebugDrawContext& ctx) {}
+        virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) { }
 #endif
 
-        virtual void on_enabled() {}
-        virtual void on_disabled() {}
+        virtual void OnEnabled() { }
+        virtual void OnDisabled() { }
 
-        virtual void on_draw([[maybe_unused]] RenderContext& context) {}
+        virtual void OnDraw([[maybe_unused]] RenderContext& context) { }
 
-        virtual Ref<Component> clone() { return nullptr; }
+        virtual Ref<Component> Clone() { return nullptr; }
 
-        Entity* owner() const { return m_owner; }
+        Entity* GetOwner() const { return m_Owner; }
 
     protected:
-        Entity* m_owner;
+        Entity* m_Owner;
     };
 }
 
-#define COMPONENT(name)                               \
-    META_HPP_ENABLE_POLY_INFO(Component)              \
-    public:                                           \
-    explicit name(Entity* owner): Component(owner) {}
+#define COMPONENT(name)                  \
+    META_HPP_ENABLE_POLY_INFO(Component) \
+public:                                  \
+    explicit name(Entity* owner)         \
+        : Component(owner)               \
+    { }
 
 #define COMPONENT_DEFAULT(name) \
     name() = default;           \
     COMPONENT(name)
 
 #define COMPONENT_DEFAULT_COPY(name) \
-    virtual Ref<Component> clone() override { return make_ref<name>(); }
+    virtual Ref<Component> Clone() override { return MakeRef<name>(); }

@@ -1,27 +1,29 @@
 ﻿#include "FussionPCH.h"
 #include "Application.h"
-#include "Time.h"
 #include "Fussion/Input/Input.h"
 #include "Fussion/OS/Clock.h"
 #include "Fussion/Rendering/Renderer.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Time.h"
 
-#include <tracy/TracyC.h>
 #include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
 
 namespace Fussion {
-    Application* Application::s_instance = nullptr;
+    Application* Application::s_Instance = nullptr;
 
     class SimpleSink final : public LogSink {
         Application* m_application;
 
     public:
-        explicit SimpleSink(Application* app): m_application(app) {}
+        explicit SimpleSink(Application* app)
+            : m_application(app)
+        { }
 
-        virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override
+        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override
         {
-            m_application->on_log_received(level, message, loc);
+            m_application->OnLogReceived(level, message, loc);
         }
     };
 
@@ -30,58 +32,58 @@ namespace Fussion {
         LOG_DEBUGF("Application terminating");
     }
 
-    void Application::run()
+    void Application::Run()
     {
         LOG_DEBUG("Initializing application");
-        s_instance = this;
-        Log::default_logger()->set_log_level(LogLevel::Debug);
-        Log::default_logger()->register_sink(make_ref<SimpleSink>(this));
+        s_Instance = this;
+        Log::DefaultLogger()->SetLogLevel(LogLevel::Debug);
+        Log::DefaultLogger()->RegisterSink(MakeRef<SimpleSink>(this));
 
-        WindowOptions options{
-            .initial_title = "Window",
-            .initial_width = 1366,
-            .initial_height = 768,
-            .flags = WindowFlag::Centered | WindowFlag::Decorated,
+        WindowOptions options {
+            .InitialTitle = "Window",
+            .InitialWidth = 1366,
+            .InitialHeight = 768,
+            .Flags = WindowFlag::Centered | WindowFlag::Decorated,
         };
-        m_window.reset(Window::create(options));
-        m_window->on_event([this](Event& event) -> bool {
+        m_Window.reset(Window::Create(options));
+        m_Window->SetEventCallback([this](Event& event) -> bool {
             ZoneScoped;
-            Input::on_event(event);
+            Input::OnEvent(event);
 
-            on_event(event);
+            OnEvent(event);
             return false;
         });
 
-        ScriptingEngine::initialize();
-        defer(ScriptingEngine::shutdown());
+        ScriptingEngine::Initialize();
+        defer(ScriptingEngine::Shutdown());
 
-        Renderer::initialize(*m_window.get());
+        Renderer::Initialize(*m_Window.get());
 
-        on_start();
+        OnStart();
 
-        Renderer::inst().create_default_resources();
+        Renderer::Self().CreateDefaultResources();
 
         Clock clock;
-        while (!m_quit) {
+        while (!m_QuitRequested) {
             ZoneScopedN("Main Loop");
 
-            auto const delta = CAST(f32, clock.reset());
-            Time::set_delta_time(delta);
+            auto const delta = CAST(f32, clock.Reset());
+            Time::SetDeltaTime(delta);
 
-            m_window->update();
-            on_update(delta);
+            m_Window->Update();
+            OnUpdate(delta);
 
-            Input::flush();
+            Input::Flush();
             FrameMark;
         }
 
-        Renderer::shutdown();
+        Renderer::Shutdown();
     }
 
-    void Application::quit()
+    void Application::Quit()
     {
         LOG_DEBUG("Quit was requested");
-        m_quit = true;
+        m_QuitRequested = true;
     }
 }
 

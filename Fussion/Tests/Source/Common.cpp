@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <random>
 
-std::array<u8, 16> uuidv7() {
+std::array<u8, 16> uuidv7()
+{
     // random bytes
     std::random_device rd;
     std::array<uint8_t, 16> random_bytes;
@@ -15,8 +16,8 @@ std::array<u8, 16> uuidv7() {
     // current timestamp in ms
     auto now = std::chrono::system_clock::now();
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()
-    ).count();
+        now.time_since_epoch())
+                      .count();
 
     // timestamp
     value[0] = (millis >> 40) & 0xFF;

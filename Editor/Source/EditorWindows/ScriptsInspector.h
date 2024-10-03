@@ -6,8 +6,8 @@ class ScriptsInspector final : public EditorWindow {
 public:
     EDITOR_WINDOW(ScriptsInspector)
 
-    virtual void on_draw() override;
+    virtual void OnDraw() override;
 
 private:
-    Fussion::ScriptClass* m_selected_class{ nullptr };
+    Fussion::ScriptClass* m_SelectedClass { nullptr };
 };
