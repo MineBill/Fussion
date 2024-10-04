@@ -42,14 +42,14 @@ namespace Fussion {
 
     void AssetRefBase::Serialize(Serializer& ctx) const
     {
-        ctx.Write("handle", IsVirtual() ? 0_u64 : CAST(u64, this->m_Handle));
+        ctx.Write("Handle", IsVirtual() ? 0_u64 : CAST(u64, this->m_Handle));
     }
 
     void AssetRefBase::Deserialize(Deserializer& ctx)
     {
         if (IsVirtual())
             return;
-        FSN_DESERIALIZE_MEMBER(m_Handle);
+        ctx.Read("Handle", this->m_Handle);
     }
 
     Asset* AssetRefBase::GetRaw(AssetType type) const
