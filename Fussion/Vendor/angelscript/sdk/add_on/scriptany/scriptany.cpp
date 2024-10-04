@@ -147,8 +147,8 @@ void RegisterScriptAny_Native(asIScriptEngine *engine)
 	// We'll use the generic interface for the constructor as we need the engine pointer
 	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f()", asFUNCTION(ScriptAnyFactory_Generic), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f(?&in)", asFUNCTION(ScriptAnyFactory2_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f(const int64&in) explicit", asFUNCTION(ScriptAnyFactory2_Generic), asCALL_GENERIC); assert(r >= 0);
-	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f(const double&in) explicit", asFUNCTION(ScriptAnyFactory2_Generic), asCALL_GENERIC); assert(r >= 0);
+	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f(const int64&in)", asFUNCTION(ScriptAnyFactory2_Generic), asCALL_GENERIC); assert(r >= 0);
+	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_FACTORY, "Any@ f(const double&in)", asFUNCTION(ScriptAnyFactory2_Generic), asCALL_GENERIC); assert(r >= 0);
 
 	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_ADDREF, "void f()", asMETHOD(CScriptAny,AddRef), asCALL_THISCALL); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("Any", asBEHAVE_RELEASE, "void f()", asMETHOD(CScriptAny,Release), asCALL_THISCALL); assert( r >= 0 );
