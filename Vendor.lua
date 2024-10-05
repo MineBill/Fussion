@@ -137,6 +137,7 @@ target("aatc", function()
     set_kind "static"
     set_languages "c++20"
     set_version "0.0.1"
+    set_group "Vendor"
 
     add_deps("AngelScript")
     add_files("Vendor/aatc/source/**.cpp")
