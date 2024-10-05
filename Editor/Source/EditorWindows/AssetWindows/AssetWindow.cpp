@@ -13,7 +13,7 @@ void AssetWindow::draw(f32 delta)
     ImGui::PushID(CAST(s32, m_AssetHandle));
     defer(ImGui::PopID());
     auto window_name = fmt::format("Asset Window##{}", m_AssetHandle);
-    EUI::window(window_name, [&] {
+    EUI::Window(window_name, [&] {
         DrawMenuBar();
 
         ImGui::BeginChild("inner_child", {}, ImGuiChildFlags_Border);

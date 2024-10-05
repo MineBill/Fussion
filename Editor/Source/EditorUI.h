@@ -13,8 +13,8 @@
 
 namespace EUI {
     namespace Detail {
-        ButtonStyle& get_button_style(ButtonStyles style);
-        WindowStyle& get_window_style(WindowStyles style);
+        ButtonStyle& GetButtonStyle(ButtonStyles style);
+        WindowStyle& GetWindowStyle(WindowStyles style);
     }
 
     struct PropTypeGeneric { };
@@ -33,9 +33,9 @@ namespace EUI {
     /// Draws a button with a texture.
     /// @param texture The texture to use.
     /// @param func The callback to call when the button is pressed.
-    void image_button(Fussion::GPU::TextureView const& texture, auto&& func, ImageButtonParams params = {})
+    void ImageButton(Fussion::GPU::TextureView const& texture, auto&& func, ImageButtonParams params = {})
     {
-        auto style = Detail::get_button_style(params.style_type);
+        auto style = Detail::GetButtonStyle(params.style_type);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
@@ -73,15 +73,15 @@ namespace EUI {
             ImGui::EndDisabled();
     }
 
-    void image_button(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
+    void ImageButton(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
     {
-        image_button(texture->GetTexture().View, func, params);
+        ImageButton(texture->GetTexture().View, func, params);
     }
 
-    bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data);
+    bool AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data);
 
     template<typename T, typename TypeKind = PropTypeGeneric>
-    bool property(std::string_view name, T* data, TypeKind kind = {})
+    bool Property(std::string_view name, T* data, TypeKind kind = {})
     {
         bool modified { false };
         constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
@@ -128,7 +128,7 @@ namespace EUI {
             }
         } else if constexpr (Fussion::IsInstanceOf<T, Fussion::AssetRef>) {
             auto class_type = meta_hpp::resolve_type<T>();
-            asset_property(class_type, data);
+            AssetProperty(class_type, data);
         } else if constexpr (std::is_same_v<T, Vector2>) {
             modified |= ImGui::InputFloat2("", data->raw);
         } else if constexpr (std::is_same_v<T, Vector3>) {
@@ -146,7 +146,7 @@ namespace EUI {
         return modified;
     }
 
-    void property(std::string_view name, auto&& data)
+    void Property(std::string_view name, auto&& data)
     {
         constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
         auto table_opened = ImGui::BeginTable(name.data(), 2, table_flags);
@@ -178,11 +178,11 @@ namespace EUI {
     /// @param params Parameters.
     /// @return If the @p func return type is non-void, then this function will return whatever @p func returns.
     template<typename Func>
-    auto button(std::string_view label, Func&& func, ButtonParams params = {})
+    auto Button(std::string_view label, Func&& func, ButtonParams params = {})
     {
         using ResultType = std::invoke_result_t<Func>;
 
-        auto const& style = params.override.ValueOr(Detail::get_button_style(params.style));
+        auto const& style = params.override.ValueOr(Detail::GetButtonStyle(params.style));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, style.Padding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, style.Rounding);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, style.Border ? 1.f : 0.f);
@@ -230,7 +230,7 @@ namespace EUI {
         }
     }
 
-    void popup(std::string_view title, auto&& func)
+    void Popup(std::string_view title, auto&& func)
     {
         bool opened = ImGui::BeginPopup(title.data());
         if (opened) {
@@ -245,7 +245,7 @@ namespace EUI {
     };
 
     template<typename Func>
-    auto modal_window(std::string_view title, Func&& func, ModalWindowParams params = {})
+    auto ModalWindow(std::string_view title, Func&& func, ModalWindowParams params = {})
     {
         using ResultType = std::invoke_result_t<Func>;
         bool opened = ImGui::BeginPopupModal(title.data(), params.opened, params.flags);
@@ -276,9 +276,9 @@ namespace EUI {
         Maybe<WindowStyle> override {};
     };
 
-    void window(std::string_view title, auto&& func, WindowParams params = {})
+    void Window(std::string_view title, auto&& func, WindowParams params = {})
     {
-        auto style = params.override.ValueOr(Detail::get_window_style(params.style));
+        auto style = params.override.ValueOr(Detail::GetWindowStyle(params.style));
 
         if (params.dirty)
             params.flags |= ImGuiWindowFlags_UnsavedDocument;
@@ -309,14 +309,14 @@ namespace EUI {
         ImGui::End();
     }
 
-    void with_font(ImFont* font, auto&& callback)
+    void WithFont(ImFont* font, auto&& callback)
     {
         ImGui::PushFont(font);
         callback();
         ImGui::PopFont();
     }
 
-    void with_editor_font(EditorFont font, auto&& callback)
+    void WithEditorFont(EditorFont font, auto&& callback)
     {
         auto* f = EditorStyle::Style().Fonts[font];
         ImGui::PushFont(f);

@@ -80,7 +80,7 @@ void ViewportWindow::render_stats() const
             if (ImGui::BeginTabItem("Timings")) {
                 ImGuiH::BeginGroupPanel("Timings");
                 {
-                    EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
+                    EUI::WithEditorFont(EditorFont::MonospaceRegular, [&] {
                         ImGui::Text("CPU Time    : %4.2fms", Time::SmoothDeltaTime() * 1000.0f);
                         ImGui::Text("Shadow Pass : %4.2fms", renderer.timings.depth);
                         ImGui::Text("G-Buffer    : %4.2fms", renderer.timings.gbuffer);
@@ -94,7 +94,7 @@ void ViewportWindow::render_stats() const
             }
 
             if (ImGui::BeginTabItem("Pipeline Stats")) {
-                EUI::with_editor_font(EditorFont::MonospaceRegular, [&] {
+                EUI::WithEditorFont(EditorFont::MonospaceRegular, [&] {
                     if (ImGui::CollapsingHeader("G-Buffer")) {
                         ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.gbuffer.vertex_shader_invocations);
                         ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.gbuffer.fragment_shader_invocations);
@@ -246,16 +246,16 @@ void ViewportWindow::OnDraw()
         ImGui::SetCursorPos(origin + Vector2(5, 5));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);
 
-        EUI::button("Settings", [&] {
+        EUI::Button("Settings", [&] {
             ImGui::OpenPopup("EditorCameraSettings");
         },
             { .style = ButtonStyleViewportButton });
 
-        EUI::popup("EditorCameraSettings", [&] {
+        EUI::Popup("EditorCameraSettings", [&] {
             if (ImGui::BeginMenu("Camera")) {
-                EUI::property("Speed", &Editor::GetCamera().Speed);
-                EUI::property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange { .min = 0.0f, .max = 100.0f });
-                EUI::property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange { .min = 0.0f, .max = 1000.0f });
+                EUI::Property("Speed", &Editor::GetCamera().Speed);
+                EUI::Property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange { .min = 0.0f, .max = 100.0f });
+                EUI::Property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange { .min = 0.0f, .max = 1000.0f });
                 ImGui::EndMenu();
             }
 
@@ -312,12 +312,12 @@ void ViewportWindow::OnDraw()
         std::format_to(std::back_inserter(out), "Gizmo Mode: {}", magic_enum::enum_name(m_GizmoMode));
         std::string_view fuck { out.data(), out.size() };
 
-        EUI::button(fuck.data(), [&] {
+        EUI::Button(fuck.data(), [&] {
             ImGui::OpenPopup("GizmoSelection");
         },
             { .style = ButtonStyleViewportButton });
 
-        EUI::popup("GizmoSelection", [&] {
+        EUI::Popup("GizmoSelection", [&] {
             if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
                 m_GizmoMode = GizmoMode::Translation;
             }
@@ -335,7 +335,7 @@ void ViewportWindow::OnDraw()
         std::format_to(std::back_inserter(out), "Gizmo Space: {}", magic_enum::enum_name(m_GizmoSpace));
         fuck = { out.data(), out.size() };
 
-        EUI::button(fuck.data(), [&] {
+        EUI::Button(fuck.data(), [&] {
             if (m_GizmoSpace == GizmoSpace::Local) {
                 m_GizmoSpace = GizmoSpace::World;
             } else if (m_GizmoSpace == GizmoSpace::World) {

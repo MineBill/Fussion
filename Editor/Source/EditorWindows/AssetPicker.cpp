@@ -17,7 +17,7 @@ void AssetPicker::Update()
     bool was_open = m_Opened;
 
     auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
-    EUI::modal_window("Asset Picker", [&] {
+    EUI::ModalWindow("Asset Picker", [&] {
         ImGuiH::Text("Please pick an asset for '{}':", m_Member.get_name());
 
         ImGui::Separator();
@@ -44,7 +44,7 @@ void AssetPicker::Update()
             }
             size.x = texture->GetMetadata().Aspect() * size.y;
 
-            EUI::image_button(texture->GetTexture().View, [&] {
+            EUI::ImageButton(texture->GetTexture().View, [&] {
                 m_Member.set(m_Instance, handle);
                 // TODO: Call notify methods, if available.
                 m_Opened = false;

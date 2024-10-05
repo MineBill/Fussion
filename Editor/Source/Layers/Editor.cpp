@@ -265,7 +265,7 @@ void Editor::OnUpdate(f32 delta)
     if (state == PlayState::Playing) {
         ImGui::PushStyleColor(ImGuiCol_WindowBg, Color::Yellow);
     }
-    EUI::window("##toolbar", [this] {
+    EUI::Window("##toolbar", [this] {
         constexpr auto y = 4;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2 { 0, y });
         defer(ImGui::PopStyleVar());
@@ -279,7 +279,7 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSetCurrent(1);
 
         auto& style = EditorStyle::Style();
-        EUI::image_button(style.EditorIcons[EditorIcon::Play], [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Play], [this] {
             SetPlayState(PlayState::Playing);
         },
             { .size = Vector2 { height, height }, .disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing });
@@ -290,26 +290,26 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::image_button(style.EditorIcons[EditorIcon::Stop], [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], [this] {
             SetPlayState(PlayState::Editing);
         },
             { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
 
         ImGui::SameLine();
 
-        EUI::image_button(style.EditorIcons[EditorIcon::Pause], [this] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], [this] {
             SetPlayState(PlayState::Paused);
         },
             { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
 
         ImGui::SameLine();
 
-        EUI::image_button(style.EditorIcons[EditorIcon::Dots], [] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [] {
             ImGui::OpenPopup("Toolbar::Options");
         },
             { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
 
-        EUI::popup("Toolbar::Options", [&] {
+        EUI::Popup("Toolbar::Options", [&] {
             if (ImGui::MenuItem("Detach")) {
                 m_Detached = !m_Detached;
             }

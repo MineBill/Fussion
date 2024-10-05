@@ -7,7 +7,7 @@
 
 void AssetRegistryViewer::OnDraw()
 {
-    EUI::window("Asset Registry Viewer", [&] {
+    EUI::Window("Asset Registry Viewer", [&] {
         auto registry = Project::AssetManager()->GetRegistry().UnsafePtr();
 
         ImGui::BeginTable("registry_table", 6);

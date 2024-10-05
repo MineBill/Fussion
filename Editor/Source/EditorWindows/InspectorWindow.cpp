@@ -26,7 +26,7 @@ void InspectorWindow::OnStart()
 void InspectorWindow::OnDraw()
 {
     ZoneScoped;
-    EUI::window("Entity Inspector", [&] {
+    EUI::Window("Entity Inspector", [&] {
         m_IsFocused = ImGui::IsWindowFocused();
 
         if (auto const& selection = Editor::SceneTree().GetSelection(); !selection.empty()) {
@@ -77,14 +77,14 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
                 auto& region = region_attr->second.as<Attributes::RegionAttribute>();
                 (void)region;
                 // TODO: Support regions. Appending to the same collapsing header is not possible.
-                EUI::property(member_name, [&] {
+                EUI::Property(member_name, [&] {
                     if (DrawProperty(std::move(value), member, ptr)) {
                         notify_change(member_name);
                     }
                 });
             } else {
                 if (!metadata.contains("vector")) {
-                    EUI::property(member_name, [&] {
+                    EUI::Property(member_name, [&] {
                         if (DrawProperty(std::move(value), member, ptr)) {
                             notify_change(member_name);
                         }
@@ -96,7 +96,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
         for (auto const& method : component_type.get_methods()) {
             if (method.get_metadata().contains("EditorButtonAttribute")) {
                 auto& editor_button = method.get_metadata().at("EditorButtonAttribute").as<Attributes::EditorButtonAttribute>();
-                EUI::button(editor_button.ButtonText, [&] {
+                EUI::Button(editor_button.ButtonText, [&] {
                     auto result = method.try_invoke(ptr);
                     if (result.has_error()) {
                         LOG_ERRORF("Could not invoke method: {}", meta_hpp::get_error_code_message(result.get_error()));
@@ -121,7 +121,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     ImGui::SameLine(width - line_height * 0.75f);
     ImGui::PushID(CAST(s32, component_type.get_hash()));
-    EUI::image_button(EditorStyle::Style().EditorIcons[EditorIcon::Dots], [] {
+    EUI::ImageButton(EditorStyle::Style().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
     },
         { .size = Vector2 { line_height, line_height } });
@@ -144,7 +144,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
             draw_props();
             if (ImGui::TreeNode("Materials")) {
                 for (auto mr = *CAST(MeshRenderer**, ptr.get_data()); auto& material : mr->Materials) {
-                    EUI::asset_property(material.meta_poly_ptr().get_type().as_pointer().get_data_type().as_class(), material.meta_poly_ptr());
+                    EUI::AssetProperty(material.meta_poly_ptr().get_type().as_pointer().get_data_type().as_class(), material.meta_poly_ptr());
                 }
                 ImGui::TreePop();
             }
@@ -214,7 +214,7 @@ bool InspectorWindow::DrawProperty(meta_hpp::uvalue prop_value, meta_hpp::member
     } else if (prop_type.is_class()) {
         auto class_type = prop_type.as_class();
         if (class_type.get_argument_type(1) == meta_hpp::resolve_type<Detail::AssetRefMarker>()) {
-            modified |= EUI::asset_property(class_type, std::move(prop_value));
+            modified |= EUI::AssetProperty(class_type, std::move(prop_value));
         } else {
             ImGui::Text("Unsupported asset type for %s", member.get_name().c_str());
         }
@@ -263,16 +263,16 @@ bool InspectorWindow::DrawEntity(Entity& e)
 
         auto id = e.GetHandle();
         auto local_id = e.SceneLocalID();
-        EUI::property("ID", &id);
-        EUI::property("LocalID", &local_id);
-        EUI::property("Parent", &parent);
+        EUI::Property("ID", &id);
+        EUI::Property("LocalID", &local_id);
+        EUI::Property("Parent", &parent);
 
         ImGui::EndDisabled();
         ImGui::TreePop();
     }
 
-    modified |= EUI::property("Enabled", e.SetEnabled());
-    modified |= EUI::property("Name", &e.Name);
+    modified |= EUI::Property("Enabled", e.SetEnabled());
+    modified |= EUI::Property("Name", &e.Name);
 
     ImGuiHelpers::BeginGroupPanel("Transform", Vector2(0, 0), style.Fonts[EditorFont::BoldSmall]);
     ImGui::TextUnformatted("Position");
@@ -294,7 +294,7 @@ bool InspectorWindow::DrawEntity(Entity& e)
 
     static constexpr auto button_style = MakeAddComponentButtonStyle();
 
-    EUI::button("Add Component", [] {
+    EUI::Button("Add Component", [] {
         ImGui::OpenPopup("Popup::AddComponent");
     },
         { .alignment = 0.5f, .override = button_style });

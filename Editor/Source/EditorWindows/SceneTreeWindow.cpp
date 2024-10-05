@@ -24,7 +24,7 @@ void SceneTreeWindow::OnDraw()
         }
     }
 
-    EUI::window("Scene Entities", [this] {
+    EUI::Window("Scene Entities", [this] {
         m_IsFocused = ImGui::IsWindowFocused();
 
         if (auto& scene = Editor::ActiveScene()) {

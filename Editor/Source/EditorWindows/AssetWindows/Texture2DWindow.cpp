@@ -17,9 +17,9 @@ void Texture2DWindow::OnDraw(f32 delta)
     if (!GPU::IsHDR(settings->Format)) {
         ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
         {
-            auto modified = EUI::property("Is Normal Map", &settings->IsNormalMap);
-            modified |= EUI::property("Format", &settings->Format);
-            modified |= EUI::property("Generate Mipmaps", &settings->GenerateMipmaps);
+            auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
+            modified |= EUI::Property("Format", &settings->Format);
+            modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
             if (modified) {
                 Project::AssetManager()->RefreshAsset(m_AssetHandle);
             }

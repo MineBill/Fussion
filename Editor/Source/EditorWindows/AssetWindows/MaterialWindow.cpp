@@ -16,19 +16,19 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
         ImGui::TextUnformatted("Material instance is null");
         return;
     }
-    EUI::property("Object Color", &material->object_color);
-    EUI::property("Metallic", &material->metallic, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
-    EUI::property("Roughness", &material->roughness, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
+    EUI::Property("Object Color", &material->object_color);
+    EUI::Property("Metallic", &material->metallic, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
+    EUI::Property("Roughness", &material->roughness, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
 
-    if (EUI::property("Tiling", &material->tiling)) {
+    if (EUI::Property("Tiling", &material->tiling)) {
         // material->update_sampler();
     }
     if (ImGui::CollapsingHeader("Maps", ImGuiTreeNodeFlags_DefaultOpen)) {
-        EUI::property("Albedo Map", &material->albedo_map);
-        EUI::property("Normal Map", &material->normal_map);
-        EUI::property("Ambient Occlusion Map", &material->ambient_occlusion_map);
-        EUI::property("Metallic Roughness Map", &material->metallic_roughness_map);
-        EUI::property("Emissive Map", &material->emissive_map);
+        EUI::Property("Albedo Map", &material->albedo_map);
+        EUI::Property("Normal Map", &material->normal_map);
+        EUI::Property("Ambient Occlusion Map", &material->ambient_occlusion_map);
+        EUI::Property("Metallic Roughness Map", &material->metallic_roughness_map);
+        EUI::Property("Emissive Map", &material->emissive_map);
     }
 }
 

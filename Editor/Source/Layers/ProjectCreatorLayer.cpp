@@ -43,7 +43,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         }
     } request;
 
-    EUI::window("Window", [&] {
+    EUI::Window("Window", [&] {
         ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::RegularHuge]);
         ImGuiH::Text("Project Creator");
         ImGui::PopFont();
@@ -60,13 +60,13 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         constexpr auto button_width = width - padding;
         ImGui::SetCursorPosX(padding / 2.f);
         ImGui::SetCursorPosY(padding / 2.f);
-        EUI::button("New", [&] {
+        EUI::Button("New", [&] {
             m_OpenNewProjectPopup = true;
         },
             { .style = ButtonStyleProjectCreator, .size = Vector2 { button_width, 0 } });
 
         ImGui::SetCursorPosX(padding / 2.f);
-        EUI::button("Import", [&] {
+        EUI::Button("Import", [&] {
             m_OpenImportProjectPopup = true;
         },
             { .style = ButtonStyleProjectCreator, .size = Vector2 { button_width, 0 } });
@@ -92,12 +92,12 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
                     ImGui::BeginGroup();
                     PADDED(5, 5);
 
-                    EUI::with_editor_font(EditorFont::RegularBig, [&] {
+                    EUI::WithEditorFont(EditorFont::RegularBig, [&] {
                         ImGui::TextUnformatted(project.Name.c_str());
                     });
 
                     PADDED(5, 5);
-                    EUI::with_editor_font(EditorFont::RegularSmall, [&] {
+                    EUI::WithEditorFont(EditorFont::RegularSmall, [&] {
                         ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
                         defer(ImGui::PopStyleColor());
 
@@ -147,20 +147,20 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         auto size = Vector2(viewport->Size) / 2.0f;
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::modal_window("New Project", [&] {
+        EUI::ModalWindow("New Project", [&] {
             ImGui::Separator();
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(5, 5));
             ImGui::BeginChild("awd", { 0, size.y - 75 });
             static std::string project_name;
-            if (EUI::property("Project Name", &project_name)) {
+            if (EUI::Property("Project Name", &project_name)) {
                 m_ProjectNameValidated = !project_name.empty() && !StringUtils::IsWhitespace(project_name);
             }
 
             static std::string project_folder;
 
-            EUI::property("Project Folder", [] {
-                EUI::button("Select", [] {
+            EUI::Property("Project Folder", [] {
+                EUI::Button("Select", [] {
                     project_folder = Dialogs::ShowDirectoryPicker().string();
                 },
                     { .style = ButtonStyleViewportButton });
@@ -183,7 +183,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
             ImGui::Separator();
 
-            EUI::button("Cancel", [] {
+            EUI::Button("Cancel", [] {
                 ImGui::CloseCurrentPopup();
             },
                 { .style = ButtonStyleProjectCreator });
@@ -192,7 +192,7 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
             if (!m_ProjectNameValidated)
                 ImGui::BeginDisabled();
 
-            EUI::button("Create", [&] {
+            EUI::Button("Create", [&] {
                 auto path = EditorApplication::CreateProject(fs::path(project_folder), project_name);
                 AddProject(path);
 
@@ -208,10 +208,10 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
 
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::modal_window("Import Project", [&] {
+        EUI::ModalWindow("Import Project", [&] {
             static std::string project_path;
-            EUI::property("Project Folder", [] {
-                EUI::button("Select", [] {
+            EUI::Property("Project Folder", [] {
+                EUI::Button("Select", [] {
                     auto file = Dialogs::ShowFilePicker(Dialogs::FilePickerFilter {
                         .name = "Project File",
                         .file_patterns = { "*.fsnproj" } });

@@ -38,7 +38,7 @@ void ContentBrowserWindow::NamePopup::Update()
 
     bool was_opened = m_Opened;
     auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
-    EUI::modal_window("NamePicker", [&] {
+    EUI::ModalWindow("NamePicker", [&] {
         ImGuiH::Text("Please pick a name:");
         ImGui::Separator();
 
@@ -56,12 +56,12 @@ void ContentBrowserWindow::NamePopup::Update()
             ImGui::TextUnformatted("Item already exists");
         }
 
-        EUI::button("Accept", [this] {
+        EUI::Button("Accept", [this] {
             Accept();
         },
             { .disabled = m_ShowError });
         ImGui::SameLine();
-        EUI::button("Cancel", [&] {
+        EUI::Button("Cancel", [&] {
             m_Opened = false;
 
             // Prevent m_Callback from being called.
@@ -108,11 +108,11 @@ void ContentBrowserWindow::OnStart()
 
 void ContentBrowserWindow::OnDraw()
 {
-    EUI::window("Content", [&] {
+    EUI::Window("Content", [&] {
         m_IsFocused = ImGui::IsWindowFocused();
         m_NamePopup.Update();
 
-        EUI::button("Import", [&] {
+        EUI::Button("Import", [&] {
             for (auto const& path : Fussion::Dialogs::ShowFilePicker(m_ImportFilter, true)) {
                 ImportFile(path);
             }
@@ -133,7 +133,7 @@ void ContentBrowserWindow::OnDraw()
         ImGui::SameLine();
 
         auto& style = EditorStyle::Style();
-        EUI::image_button(style.EditorIcons[EditorIcon::Dots], [&] {
+        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [&] {
             ImGui::OpenPopup("ContentBrowserOptions");
         },
             { .size = Vector2 { 16, 16 } });
@@ -142,9 +142,9 @@ void ContentBrowserWindow::OnDraw()
             ImGui::EndTooltip();
         }
 
-        EUI::popup("ContentBrowserOptions", [&] {
-            EUI::property("Padding", &m_Padding, EUI::PropTypeRange { .min = 2, .max = 32 });
-            EUI::property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange { .min = 16, .max = 128 });
+        EUI::Popup("ContentBrowserOptions", [&] {
+            EUI::Property("Padding", &m_Padding, EUI::PropTypeRange { .min = 2, .max = 32 });
+            EUI::Property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange { .min = 16, .max = 128 });
         });
 
         ImGui::Separator();

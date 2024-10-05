@@ -4,18 +4,18 @@
 
 namespace EUI {
     namespace Detail {
-        ButtonStyle& get_button_style(ButtonStyles style)
+        ButtonStyle& GetButtonStyle(ButtonStyles style)
         {
             return EditorStyle::Style().ButtonStyles[style];
         }
 
-        WindowStyle& get_window_style(WindowStyles style)
+        WindowStyle& GetWindowStyle(WindowStyles style)
         {
             return EditorStyle::Style().WindowStyles[style];
         }
     }
 
-    bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data)
+    bool AssetProperty(meta_hpp::class_type class_type, meta_hpp::uvalue data)
     {
         bool modified {false};
         auto m_Handle = class_type.get_member("m_Handle");
@@ -71,7 +71,7 @@ namespace EUI {
         auto old_pos = ImGui::GetCursorPos();
         ImGui::SetCursorPos(pos + Vector2(2, 2));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(0, 0));
-        image_button(EditorStyle::Style().EditorIcons[EditorIcon::Search], [&] {
+        ImageButton(EditorStyle::Style().EditorIcons[EditorIcon::Search], [&] {
             auto asset_type = class_type.get_method("GetType").invoke(data).as<Fussion::AssetType>();
             Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
         }, { .size = Vector2{ 16, 16 } });
