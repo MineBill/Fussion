@@ -133,6 +133,17 @@ target("AngelScript", function()
     end
 end)
 
+target("aatc", function()
+    set_kind "static"
+    set_languages "c++20"
+    set_version "0.0.1"
+
+    add_deps("AngelScript")
+    add_files("Vendor/aatc/source/**.cpp")
+    add_headerfiles("Vendor/aatc/source/**.hpp")
+    add_sysincludedirs("Vendor/aatc/source/", {public = true})
+end)
+
 target("TracyClient", function()
     set_kind("static")
     set_languages "c++20"

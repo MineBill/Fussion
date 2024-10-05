@@ -1,0 +1,3 @@
+[submodule "Vendor/aatc"]
+	path = Vendor/aatc
+	url = https://github.com/MineBill/aatc.git

@@ -40,6 +40,7 @@ target("Fussion")
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
+    add_deps("aatc")
     add_deps("TracyClient")
 
     add_rules("HeaderTool")
