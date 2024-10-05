@@ -27,7 +27,7 @@ namespace Fussion {
     Mat4 Transform::AsCameraMatrix() const
     {
         auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
-        return RotationMatrix() * glm::inverse(translation_mat);
+        return glm::inverse(RotationMatrix()) * glm::inverse(translation_mat);
     }
 
     Vector3 Transform::Forward() const
