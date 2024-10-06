@@ -350,6 +350,13 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
     // FIXME: Assuming that this only gets called once per frame!
     // If not, we can't just re-allocate the IB or VB, we'll have to do a proper allocator.
     ImGui_ImplWGPU_Data* bd = ImGui_ImplWGPU_GetBackendData();
+    // HACK: Temporary workaround to prevent leaking bindgroups when images changed.
+    for (int i = 0; i < bd->renderResources.ImageBindGroups.Data.Size; i++)
+    {
+        if (bd->renderResources.ImageBindGroups.Data[i].val_p != bd->renderResources.ImageBindGroup)
+            SafeRelease((WGPUBindGroup&)bd->renderResources.ImageBindGroups.Data[i].val_p);
+    }
+    bd->renderResources.ImageBindGroups.Clear();
     bd->frameIndex = bd->frameIndex + 1;
     FrameResources* fr = &bd->pFrameResources[bd->frameIndex % bd->numFramesInFlight];
 
