@@ -237,7 +237,7 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let l = normalize(tangent_light_dir);
     let h = normalize(v + l);
 
-    let radiance = light.color.rgb;
+    let radiance = light.color.rgb * light.brightness;
     let albedo = textureSample(albedo_map, linear_sampler, in.frag_uv * material.tiling).rgb * material.albedo_color.rgb;
     let metalness = textureSample(metallic_roughness_map, linear_sampler, in.frag_uv * material.tiling).b * material.metallic;
     var f0 = mix(vec3f(0.04), albedo, metalness);
@@ -274,15 +274,11 @@ fn do_directional_light(light: DirectionalLight, in: VertexOutput) -> vec3f {
     let ssao_occlusion = textureSample(ssao_texture, linear_sampler, in.position.xy / view_data.screen_size).r;
 
     let irradiance = textureSample(environment_map, linear_sampler, n).rgb;
-    var ambient = albedo * irradiance * 0.03;
-    ambient *= occlusion * ssao_occlusion;
+    let diffuse = irradiance * albedo;
+    var ambient = (kd * diffuse) * occlusion * ssao_occlusion;
 
-    var ret = ambient + (kd * albedo * light.brightness / pi * irradiance * ssao_occlusion + specular) * radiance * ndotl * shadow;
-    let gamma = 2.2;
-    let exposure = 1.0;
-    var mapped = vec3f(1.0) - exp(-ret.rgb * exposure);
-    mapped = pow(mapped, vec3f(1.0 / gamma));
-    ret = mapped;
+    var ret = ambient + (kd * albedo / pi + specular) * radiance * ndotl * shadow;
+
     ret += textureSample(emissive_map, linear_sampler, in.frag_uv * material.tiling).rgb;
 
     return ret;
@@ -298,6 +294,12 @@ fn fs_main(in: VertexOutput) -> FragmentOutput {
 
     var lo = vec3f(0.0);
     lo += do_directional_light(light_data.directional, in);
+
+//    let gamma = 2.2;
+//    let exposure = 1.0;
+//    var mapped = vec3f(1.0) - exp(-lo.rgb * exposure);
+//    mapped = pow(mapped, vec3f(1.0 / gamma));
+//    lo = mapped;
 
     out.color = vec4f(lo, 1.0);
     return out;
