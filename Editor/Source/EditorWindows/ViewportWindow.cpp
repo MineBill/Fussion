@@ -82,11 +82,11 @@ void ViewportWindow::render_stats() const
                 {
                     EUI::WithEditorFont(EditorFont::MonospaceRegular, [&] {
                         ImGui::Text("CPU Time    : %4.2fms", Time::SmoothDeltaTime() * 1000.0f);
-                        ImGui::Text("Shadow Pass : %4.2fms", renderer.timings.depth);
-                        ImGui::Text("G-Buffer    : %4.2fms", renderer.timings.gbuffer);
-                        ImGui::Text("SSAO Pass   : %4.2fms", renderer.timings.ssao);
-                        ImGui::Text("SSAO Blur   : %4.2fms", renderer.timings.ssao_blur);
-                        ImGui::Text("PBR Pass    : %4.2fms", renderer.timings.pbr);
+                        ImGui::Text("Shadow Pass : %4.2fms", renderer.Timings.Depth);
+                        ImGui::Text("G-Buffer    : %4.2fms", renderer.Timings.Gbuffer);
+                        ImGui::Text("SSAO Pass   : %4.2fms", renderer.Timings.SSAO);
+                        ImGui::Text("SSAO Blur   : %4.2fms", renderer.Timings.SSAOBlur);
+                        ImGui::Text("PBR Pass    : %4.2fms", renderer.Timings.PBR);
                     });
                 }
                 ImGuiH::EndGroupPanel();
@@ -96,20 +96,20 @@ void ViewportWindow::render_stats() const
             if (ImGui::BeginTabItem("Pipeline Stats")) {
                 EUI::WithEditorFont(EditorFont::MonospaceRegular, [&] {
                     if (ImGui::CollapsingHeader("G-Buffer")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.gbuffer.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.gbuffer.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.gbuffer.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.GbufferStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.GbufferStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.GbufferStats.ClipperInvocations);
                     }
                     if (ImGui::CollapsingHeader("SSAO")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.ssao.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.ssao.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.ssao.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.SSAOStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.SSAOStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.SSAOStats.ClipperInvocations);
                     }
 
                     if (ImGui::CollapsingHeader("PBR")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.pipeline_statistics.pbr.vertex_shader_invocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.pipeline_statistics.pbr.fragment_shader_invocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.pipeline_statistics.pbr.clipper_invocations);
+                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.PBRStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.PBRStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.PBRStats.ClipperInvocations);
                     }
                 });
                 ImGui::EndTabItem();
@@ -181,16 +181,16 @@ void ViewportWindow::OnDraw()
             GPU::Texture image;
             switch (m_TextureViewMode) {
             case TEXTURE_SCENE:
-                image = Editor::Self().GetSceneRenderer().render_target();
+                image = Editor::Self().GetSceneRenderer().GetRenderTarget();
                 break;
             case TEXTURE_GBUFFER_POSITION:
-                image = Editor::Self().GetSceneRenderer().gbuffer.rt_position;
+                image = Editor::Self().GetSceneRenderer().gbuffer.PositionRT;
                 break;
             case TEXTURE_GBUFFER_NORMAL:
-                image = Editor::Self().GetSceneRenderer().gbuffer.rt_normal;
+                image = Editor::Self().GetSceneRenderer().gbuffer.NormalRT;
                 break;
             case TEXTURE_SSAO:
-                image = Editor::Self().GetSceneRenderer().ssao_blur.render_target();
+                image = Editor::Self().GetSceneRenderer().ssao_blur.GetRenderTarget();
                 break;
             }
 
@@ -266,7 +266,7 @@ void ViewportWindow::OnDraw()
                         if (ImGui::Selectable("Default", m_TextureViewMode == TEXTURE_SCENE, flags)) {
                             m_TextureViewMode = TEXTURE_SCENE;
                         }
-                        auto& scene_debug_options = m_Editor->GetSceneRenderer().scene_debug_options.Data;
+                        auto& scene_debug_options = m_Editor->GetSceneRenderer().SceneDebugOptions.Data;
                         if (ImGui::Selectable("Show Cascade Boxes", scene_debug_options.show_cascade_boxes, flags)) {
                             scene_debug_options.show_cascade_boxes = !scene_debug_options.show_cascade_boxes;
                         }

@@ -6,19 +6,19 @@ namespace Fussion {
     public:
         constexpr static auto Format = GPU::TextureFormat::R16Float;
 
-        void init(Vector2 const& size);
+        void Init(Vector2 const& size);
 
-        void resize(Vector2 const& new_size, GPU::Texture const& ssao_texture);
-        void draw(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end);
+        void Resize(Vector2 const& new_size, GPU::Texture const& ssao_texture);
+        void Render(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end);
 
-        auto render_target() -> GPU::Texture { return m_render_target; }
+        auto GetRenderTarget() -> GPU::Texture { return m_RenderTarget; }
 
     private:
-        GPU::Texture m_render_target{};
-        GPU::Sampler m_sampler{};
+        GPU::Texture m_RenderTarget {};
+        GPU::Sampler m_Sampler {};
 
-        GPU::RenderPipeline m_pipeline{};
-        GPU::BindGroup m_bind_group{};
-        GPU::BindGroupLayout m_bind_group_layout{};
+        GPU::RenderPipeline m_Pipeline {};
+        GPU::BindGroup m_BindGroup {};
+        GPU::BindGroupLayout m_BindGroupLayout {};
     };
 }

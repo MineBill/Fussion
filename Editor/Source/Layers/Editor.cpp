@@ -70,7 +70,7 @@ void Editor::OnStart()
 
     m_Camera.Resize(Application::Self()->GetWindow().Size());
     m_Camera.Position = Vector3(0, 3, 5);
-    m_SceneRenderer.init();
+    m_SceneRenderer.Init();
 
     OnViewportResized(Vector2(300, 300));
 
@@ -433,7 +433,7 @@ void Editor::OnEvent(Event& event)
 void Editor::OnDraw(GPU::CommandEncoder& encoder)
 {
     auto render_editor_view = [&](Ref<Scene> const& scene) {
-        m_SceneRenderer.render(encoder,
+        m_SceneRenderer.Render(encoder,
             {
                 .camera = RenderCamera {
                     .perspective = m_Camera.Perspective(),
@@ -450,7 +450,7 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
     };
     auto render_game_view = [&](Camera const& camera) {
         auto entity = camera.GetOwner();
-        m_SceneRenderer.render(encoder,
+        m_SceneRenderer.Render(encoder,
             {
                 .camera = RenderCamera {
                     .perspective = camera.GetPerspective(),
@@ -601,5 +601,5 @@ void Editor::OnViewportResized(Vector2 const& new_size)
     ZoneScoped;
 
     s_EditorInstance->m_Camera.Resize(new_size);
-    s_EditorInstance->m_SceneRenderer.resize(new_size);
+    s_EditorInstance->m_SceneRenderer.Resize(new_size);
 }

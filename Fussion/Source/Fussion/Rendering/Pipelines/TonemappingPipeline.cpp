@@ -1,11 +1,11 @@
 #include "FussionPCH.h"
+#include "TonemappingPipeline.h"
 #include "GPU/ShaderProcessor.h"
 #include "Rendering/Renderer.h"
-#include "TonemappingPipeline.h"
 
 namespace Fussion {
 
-    void TonemappingPipeline::init(Vector2 size, GPU::TextureFormat output_format)
+    void TonemappingPipeline::Init(Vector2 size, GPU::TextureFormat output_format)
     {
         std::array entries {
             GPU::BindGroupLayoutEntry {
@@ -39,7 +39,7 @@ namespace Fussion {
             .Entries = entries,
         };
 
-        m_bind_group_layout = Renderer::Device().CreateBindGroupLayout(spec);
+        m_BindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
 
         GPU::SamplerSpec sampler_spec {
             .label = "HDR::Sampler"sv,
@@ -51,10 +51,10 @@ namespace Fussion {
             .MipMapFilter = GPU::FilterMode::Linear,
         };
 
-        m_sampler = Renderer::Device().CreateSampler(sampler_spec);
+        m_Sampler = Renderer::Device().CreateSampler(sampler_spec);
 
-        m_tonemapping_buffer = UniformBuffer<PostProcessing::Tonemapping>::Create(Renderer::Device(), "Tonemapping Settings Buffer"sv);
-        resize(size);
+        m_TonemappingBuffer = UniformBuffer<PostProcessing::Tonemapping>::Create(Renderer::Device(), "Tonemapping Settings Buffer"sv);
+        Resize(size);
 
         auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/HDR.wgsl").Unwrap();
 
@@ -70,7 +70,7 @@ namespace Fussion {
         auto shader = Renderer::Device().CreateShaderModule(shader_spec);
 
         std::array bind_group_layouts {
-            m_bind_group_layout,
+            m_BindGroupLayout,
         };
         GPU::PipelineLayoutSpec pl_spec {
             .BindGroupLayouts = bind_group_layouts
@@ -100,10 +100,10 @@ namespace Fussion {
             },
         };
 
-        m_pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        m_Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
     }
 
-    void TonemappingPipeline::process(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context)
+    void TonemappingPipeline::Render(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context)
     {
         using namespace GPU;
         std::array color_attachments {
@@ -122,20 +122,20 @@ namespace Fussion {
         };
         auto rp = encoder.BeginRendering(spec);
 
-        m_tonemapping_buffer.Data = render_context.PostProcessingSettings.TonemappingSettings;
-        m_tonemapping_buffer.flush();
+        m_TonemappingBuffer.Data = render_context.PostProcessingSettings.TonemappingSettings;
+        m_TonemappingBuffer.flush();
 
-        rp.SetPipeline(m_pipeline);
-        rp.SetBindGroup(m_bind_group, 0);
+        rp.SetPipeline(m_Pipeline);
+        rp.SetBindGroup(m_BindGroup, 0);
         rp.Draw({ 0, 4 }, { 0, 1 });
 
         rp.End();
         rp.Release();
     }
 
-    void TonemappingPipeline::resize(Vector2 size)
+    void TonemappingPipeline::Resize(Vector2 size)
     {
-        m_render_texture.Release();
+        m_RenderTexture.Release();
         GPU::TextureSpec rt_spec {
             .Label = "HDR::RenderTarget"sv,
             .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
@@ -145,25 +145,25 @@ namespace Fussion {
             .SampleCount = 1,
             .Aspect = GPU::TextureAspect::All,
         };
-        m_render_texture = Renderer::Device().CreateTexture(rt_spec);
+        m_RenderTexture = Renderer::Device().CreateTexture(rt_spec);
 
-        m_bind_group.Release();
+        m_BindGroup.Release();
         std::array bind_group_entries {
             GPU::BindGroupEntry {
                 .Binding = 0,
-                .Resource = m_render_texture.View,
+                .Resource = m_RenderTexture.View,
             },
             GPU::BindGroupEntry {
                 .Binding = 1,
-                .Resource = m_sampler,
+                .Resource = m_Sampler,
             },
             GPU::BindGroupEntry {
                 .Binding = 2,
                 // TODO: Make the UniformBuffer create the binding directly?
                 .Resource = GPU::BufferBinding {
-                    .TargetBuffer = m_tonemapping_buffer.Buffer(),
+                    .TargetBuffer = m_TonemappingBuffer.Buffer(),
                     .Offset = 0,
-                    .Size = m_tonemapping_buffer.Buffer().Size() },
+                    .Size = m_TonemappingBuffer.Buffer().Size() },
             },
         };
 
@@ -172,11 +172,11 @@ namespace Fussion {
             .Entries = bind_group_entries
         };
 
-        m_bind_group = Renderer::Device().CreateBindGroup(m_bind_group_layout, global_bg_spec);
+        m_BindGroup = Renderer::Device().CreateBindGroup(m_BindGroupLayout, global_bg_spec);
     }
 
-    auto TonemappingPipeline::view() -> GPU::TextureView&
+    auto TonemappingPipeline::GetView() -> GPU::TextureView&
     {
-        return m_render_texture.View;
+        return m_RenderTexture.View;
     }
 }
