@@ -37,6 +37,8 @@ namespace Fussion {
         auto GetAssembly(std::string const& name) -> Ref<ScriptAssembly> { return m_LoadedAssemblies[name]; }
         auto GetLoadedAssemblies() -> std::unordered_map<std::string, Ref<ScriptAssembly>>& { return m_LoadedAssemblies; }
 
+        auto GetTypeInfo(s32 typeId) -> asITypeInfo*;
+
         template<typename T>
         static auto GetAttribute(Uuid uuid) -> T*
         {

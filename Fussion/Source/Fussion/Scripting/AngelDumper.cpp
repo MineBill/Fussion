@@ -49,10 +49,10 @@ namespace Fussion {
             if (t->GetSubTypeCount() > 0) {
                 out << "<";
                 for (u32 sub = 0; sub < t->GetSubTypeCount(); ++sub) {
-                    if (sub < t->GetSubTypeCount() - 1)
-                        out << ", ";
                     auto const st = t->GetSubType(sub);
                     out << st->GetName();
+                    if (sub < t->GetSubTypeCount() - 1)
+                        out << ", ";
                 }
 
                 out << ">";

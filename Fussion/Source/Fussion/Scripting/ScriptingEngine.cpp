@@ -12,6 +12,21 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
+    constexpr auto g_ExtraSource = R"(
+shared abstract class Script {
+    void OnStart() {}
+    void OnUpdate(float delta) {}
+
+    Entity@ Owner {
+        get {
+            return m_Owner;
+        }
+    }
+
+    private Entity@ m_Owner;
+}
+)";
+
     ScriptingEngine* ScriptingEngine::s_Instance = nullptr;
 
     void MessageCallback(asSMessageInfo const* msg, [[maybe_unused]] void* param)
@@ -55,7 +70,9 @@ namespace Fussion {
     auto ScriptingEngine::DumpCurrentTypes() const -> std::stringstream
     {
         AngelDumper dumper(m_ScriptEngine);
-        return dumper.DumpTypes();
+        auto stream = dumper.DumpTypes();
+        stream << g_ExtraSource;
+        return stream;
     }
 
     auto StringSplit(std::string const& str, std::string_view seperator) -> std::vector<std::string_view>
@@ -136,6 +153,8 @@ namespace Fussion {
             }
         }
 
+        builder.AddSectionFromMemory("EngineInternals", g_ExtraSource);
+
         r = builder.BuildModule();
         if (r < 0) {
             LOG_ERRORF("Error while building module '{}'", module_name);
@@ -163,6 +182,11 @@ namespace Fussion {
     auto ScriptingEngine::GetGameAssembly() -> Ref<ScriptAssembly>
     {
         return m_LoadedAssemblies["Game"];
+    }
+
+    auto ScriptingEngine::GetTypeInfo(s32 typeId) -> asITypeInfo*
+    {
+        return m_ScriptEngine->GetTypeInfoById(typeId);
     }
 
     // auto ScriptingEngine::GetAttribute(Uuid uuid) -> Scripting::Attribute*

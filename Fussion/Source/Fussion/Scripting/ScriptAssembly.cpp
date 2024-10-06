@@ -4,6 +4,8 @@
 #include "Fussion/Core/Core.h"
 #include "Fussion/Log/Log.h"
 
+#include "scripthelper/scripthelper.h"
+
 #include <ranges>
 
 namespace Fussion {
@@ -13,6 +15,8 @@ namespace Fussion {
     {
         (void)m_Instance->AddRef();
         m_context = m_Instance->GetEngine()->CreateContext();
+
+        m_context->SetExceptionCallback(asMETHOD(ScriptInstance, OnScriptException), this, asCALL_THISCALL);
     }
 
     ScriptInstance::~ScriptInstance()
@@ -63,8 +67,41 @@ namespace Fussion {
                 } else {
                     LOG_ERRORF("Unsupported argument type");
                 }
+                ++i;
             }
             m_context->Execute();
+        }
+    }
+
+    void ScriptInstance::OnScriptException()
+    {
+        LOG_ERRORF("Script exception occured: {}", m_context->GetExceptionString());
+
+        int column;
+        char const* sectionName;
+        int lineNumber = m_context->GetExceptionLineNumber(&column, &sectionName);
+
+        auto* function = m_context->GetExceptionFunction();
+        LOG_ERROR("Additional info:");
+        LOG_ERRORF("\tPosition: {}:{}", lineNumber, column);
+        LOG_ERRORF("\tFile: {}", sectionName);
+        LOG_ERRORF("\tFunction: {}", function->GetName());
+
+        LOG_ERROR("<< CALLSTACK >>");
+        for (asUINT n = 1; n < m_context->GetCallstackSize(); n++) {
+            function = m_context->GetFunction(n);
+            if (function) {
+                if (function->GetFuncType() == asFUNC_SCRIPT) {
+                    auto scriptSectionName = (function->GetScriptSectionName() ? function->GetScriptSectionName() : "");
+                    LOG_ERRORF("\t{} ({}): {}", scriptSectionName, m_context->GetLineNumber(n), function->GetDeclaration());
+                } else {
+                    // The context is being reused by the application for a nested call
+                    LOG_ERRORF("\t[...Application...]: {}", function->GetDeclaration());
+                }
+            } else {
+                // The context is being reused by the script engine for a nested call
+                LOG_ERROR("\t[...Script Engine...]");
+            }
         }
     }
 

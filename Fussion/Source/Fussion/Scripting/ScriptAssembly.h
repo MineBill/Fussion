@@ -30,9 +30,6 @@ namespace Fussion {
         asIScriptObject* Instance() const { return m_Instance; }
         ScriptClass* GetScriptClass() const { return m_ScriptClass; }
 
-        template<typename... Args>
-        void CallMethod(std::string_view name, Args&&... args);
-
         void CallMethod(std::string_view name, std::initializer_list<std::any> args);
 
         template<typename T>
@@ -45,6 +42,8 @@ namespace Fussion {
         }
 
     private:
+        void OnScriptException();
+
         ScriptClass* m_ScriptClass { nullptr };
         asIScriptObject* m_Instance { nullptr };
 
@@ -123,37 +122,6 @@ namespace Fussion {
 
         friend ScriptingEngine;
     };
-
-    template<typename... Args>
-    void ScriptInstance::CallMethod(std::string_view name, Args&&... args)
-    {
-        if (auto m = m_ScriptClass->GetMethod(std::string(name))) {
-            m_context->Prepare(m);
-            m_context->SetObject(m_Instance);
-            u32 i = 0;
-            ([&]<typename Arg>() {
-                using BaseType = std::remove_cvref_t<Arg>;
-
-                if constexpr (std::is_same_v<BaseType, f32>) {
-                    m_context->SetArgFloat(i, args);
-                } else if constexpr (std::is_same_v<BaseType, f64>) {
-                    m_context->SetArgDouble(i, args);
-                } else if constexpr (std::is_same_v<BaseType, u32>) {
-                    m_context->SetArgDWord(i, args);
-                } else if constexpr (std::is_same_v<BaseType, u64>) {
-                    m_context->SetArgQWord(i, args);
-                } else if constexpr (std::is_same_v<BaseType, std::string>) {
-                    m_context->SetArgObject(i, &args);
-                } else {
-                    static_assert(false, "Unsupported arg type");
-                }
-
-                i++;
-            }.template operator()<Args>(),
-                ...);
-            m_context->Execute();
-        }
-    }
 
     template<typename T>
     void ScriptInstance::SetProperty(std::string const& name, T& value)

@@ -342,7 +342,7 @@ bool CScriptAny::Retrieve(void *ref, int refTypeId) const
 
 			// RefCastObject will increment the refCount of the returned pointer if successful
 			engine->RefCastObject(value.valueObj, engine->GetTypeInfoById(value.typeId), engine->GetTypeInfoById(refTypeId), reinterpret_cast<void**>(ref));
-			if( *(asPWORD*)ref == 0 )
+			if( ref == nullptr )
 				return false;
 			return true;
 		}

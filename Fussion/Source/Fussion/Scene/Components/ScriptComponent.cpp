@@ -13,7 +13,7 @@ namespace Fussion {
                 if (m_Instance.IsValid()) {
                     m_Instance.SetProperty("m_Owner", m_Owner);
 
-                    m_Instance.CallMethod("OnStart");
+                    m_Instance.CallMethod("OnStart", {});
                 }
             }
         }
@@ -34,7 +34,7 @@ namespace Fussion {
             if (klass.Unwrap()->DerivesFrom("Script")) {
                 if (auto inst = klass.Unwrap()->CreateInstance(); inst.IsValid()) {
                     inst.SetProperty("m_Owner", m_Owner);
-                    inst.CallMethod("OnStart");
+                    inst.CallMethod("OnStart", {});
                 } else {
                     LOG_WARNF("Instance not valid");
                 }

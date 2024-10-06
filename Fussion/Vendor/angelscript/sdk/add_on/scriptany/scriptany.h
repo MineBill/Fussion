@@ -44,6 +44,8 @@ public:
 	void EnumReferences(asIScriptEngine *engine);
 	void ReleaseAllHandles(asIScriptEngine *engine);
 
+	void* GetAsPtr() const { return value.valueObj; }
+
 protected:
 	virtual ~CScriptAny();
 	void FreeObject();

@@ -9,9 +9,16 @@
 #include <Fussion/Math/Vector4.h>
 #include <Fussion/Scene/Entity.h>
 
+#include "Scene/Scene.h"
+#include "aatc.hpp"
+#include "aatc_container_mapped_templated_shared.hpp"
+#include "aatc_container_unordered_map.hpp"
+#include "aatc_container_vector.hpp"
 #include "scriptany/scriptany.h"
 #include "scriptarray/scriptarray.h"
 #include "scriptstdstring/scriptstdstring.h"
+
+#include <fmt/args.h>
 
 namespace Fussion {
 
@@ -77,34 +84,114 @@ namespace Fussion {
         new (self) Transform();
     }
 
-    void print(std::string const& message)
+    CScriptArray* Entity_GetChildren(Entity* entity)
     {
-        LOG_INFOF("[Script]: {}", message);
+        auto ctx = asGetActiveContext();
+        auto ti = ctx->GetEngine()->GetTypeInfoByDecl("Array<Entity@>");
+
+        auto children = entity->GetChildren();
+        auto arr = CScriptArray::Create(ti, children.size());
+        for (usz i = 0; i < children.size(); ++i) {
+            Entity* e = entity->GetScene().GetEntity(children[i]);
+            arr->SetValue(i, &e);
+        }
+        return arr;
     }
 
-    void log_debug(std::string const& message, [[maybe_unused]] ScriptingEngine* engine)
+    void Print(std::string const& message, CScriptArray* array)
+    {
+        fmt::dynamic_format_arg_store<fmt::format_context> args;
+        for (u32 i = 0; i < array->GetSize(); ++i) {
+            auto* any = CAST(CScriptAny*, array->At(i));
+            auto typeId = any->GetTypeId();
+            switch (typeId) {
+            case asTYPEID_INT8:
+            case asTYPEID_INT16:
+            case asTYPEID_INT32:
+            case asTYPEID_INT64:
+                s64 value;
+                any->Retrieve(value);
+                args.push_back(value);
+                break;
+            case asTYPEID_FLOAT:
+            case asTYPEID_DOUBLE:
+                f64 fvalue;
+                any->Retrieve(fvalue);
+                args.push_back(fvalue);
+                break;
+            case asTYPEID_BOOL:
+                bool bvalue;
+                any->Retrieve(&bvalue, asTYPEID_BOOL);
+                args.push_back(bvalue);
+                break;
+            default:
+                if (typeId & asTYPEID_SCRIPTOBJECT) {
+                    auto ctx = asGetActiveContext();
+                    if (auto info = ctx->GetEngine()->GetTypeInfoById(typeId)) {
+                        if (auto function = info->GetMethodByDecl("string ToString() const")) {
+                            auto local_ctx = ctx->GetEngine()->CreateContext();
+                            defer(local_ctx->Release());
+                            local_ctx->Prepare(function);
+
+                            local_ctx->SetObject(any->GetAsPtr());
+                            auto status = local_ctx->Execute();
+                            if (status == asEXECUTION_FINISHED) {
+                                auto ret = CAST(std::string*, local_ctx->GetAddressOfReturnValue());
+                                if (ret) {
+                                    args.push_back(*ret);
+                                }
+                            } else {
+                                LOG_ERRORF("{}", local_ctx->GetExceptionString());
+                            }
+                        } else {
+                            args.push_back(info->GetName());
+                        }
+                    }
+                    args.push_back("(script object)");
+                } else if (typeId & asTYPEID_APPOBJECT) {
+                    args.push_back("(app object)");
+                } else {
+                    args.push_back("(unknown type)");
+                }
+            }
+        }
+        Log::DefaultLogger()->Write(LogLevel::Debug, fmt::vformat(message, args));
+    }
+
+    void LogDebug(std::string const& message)
     {
         LOG_DEBUGF("[Script]: {}", message);
     }
 
-    void log_warn(std::string const& message, [[maybe_unused]] ScriptingEngine* engine)
+    void LogWarn(std::string const& message)
     {
         LOG_WARNF("[Script]: {}", message);
     }
 
-    void log_error(std::string const& message, [[maybe_unused]] ScriptingEngine* engine)
+    void LogError(std::string const& message)
     {
         LOG_ERRORF("[Script]: {}", message);
     }
 
-    f32 as_max(f32 x, f32 y)
+    f32 As_Max(f32 x, f32 y)
     {
         return Math::Max(x, y);
     }
 
-    f32 as_min(f32 x, f32 y)
+    f32 As_Min(f32 x, f32 y)
     {
         return Math::Min(x, y);
+    }
+
+    auto GetDict() -> aatc::container::mapped::templated::unordered_map*
+    {
+        asITypeInfo* tinfo = asGetActiveContext()->GetEngine()->GetTypeInfoByDecl("Dictionary<string,int>");
+        auto result = new aatc::container::mapped::templated::unordered_map(tinfo);
+
+        std::string pepegas = "pepegas";
+        int value = 10;
+        result->insert(&pepegas, &value);
+        return result;
     }
 
     void ScriptingEngine::RegisterTypes()
@@ -114,34 +201,37 @@ namespace Fussion {
         RegisterScriptArray(m_ScriptEngine, true);
         RegisterScriptAny(m_ScriptEngine);
 
-        m_ScriptEngine->RegisterGlobalFunction("void print(const string &in message)", asFUNCTION(print), asCALL_CDECL);
+        aatc::RegisterAllContainers(m_ScriptEngine);
 
+        auto r = m_ScriptEngine->RegisterGlobalFunction("void Print(const string &in fmt, const Array<Any>&in args = {})", asFUNCTION(Print), asCALL_CDECL); VERIFY(r >= 0);
+
+        r = m_ScriptEngine->RegisterGlobalFunction("Dictionary<string, int>@ GetDict()", asFUNCTION(GetDict), asCALL_CDECL); VERIFY(r >= 0);
         {
             auto default_namespace = m_ScriptEngine->GetDefaultNamespace();
             defer(m_ScriptEngine->SetDefaultNamespace(default_namespace));
 
-            auto r = m_ScriptEngine->SetDefaultNamespace("Log"); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("void debug(const string &in message)", asFUNCTION(log_debug), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("void warn(const string &in message)", asFUNCTION(log_warn), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("void error(const string &in message)", asFUNCTION(log_error), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->SetDefaultNamespace("Log"); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("void debug(const string &in message)", asFUNCTION(LogDebug), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("void warn(const string &in message)", asFUNCTION(LogWarn), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("void error(const string &in message)", asFUNCTION(LogError), asCALL_CDECL, this); VERIFY(r >= 0);
         }
 
         {
             auto default_namespace = m_ScriptEngine->GetDefaultNamespace();
             defer(m_ScriptEngine->SetDefaultNamespace(default_namespace));
 
-            auto r = m_ScriptEngine->SetDefaultNamespace("Math"); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float abs(float)", asFUNCTION(Math::Abs<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float sin(float)", asFUNCTION(Math::Sin<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float cos(float)", asFUNCTION(Math::Cos<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float max(float, float)", asFUNCTION(as_max), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float min(float, float)", asFUNCTION(as_min), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float clamp(float value, float min, float max)", asFUNCTION(Math::Clamp<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("float pow(float value, float power)", asFUNCTION(Math::Pow<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
-            r = m_ScriptEngine->RegisterGlobalFunction("bool is_zero(float value)", asFUNCTION(Math::IsZero<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->SetDefaultNamespace("Math"); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Abs(float)", asFUNCTION(Math::Abs<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Sin(float)", asFUNCTION(Math::Sin<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Cos(float)", asFUNCTION(Math::Cos<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Max(float, float)", asFUNCTION(As_Max), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Min(float, float)", asFUNCTION(As_Min), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Clamp(float value, float min, float max)", asFUNCTION(Math::Clamp<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("float Pow(float value, float power)", asFUNCTION(Math::Pow<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("bool IsZero(float value)", asFUNCTION(Math::IsZero<f32>), asCALL_CDECL, this); VERIFY(r >= 0);
         }
 
-        auto r = m_ScriptEngine->RegisterObjectType("Vector2", sizeof(Vector2), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Vector2>()); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterObjectType("Vector2", sizeof(Vector2), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Vector2>()); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector2", "float x", offsetof(Vector2, x)); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector2", "float y", offsetof(Vector2, y)); VERIFY(r >= 0);
 
@@ -162,12 +252,12 @@ namespace Fussion {
         r = m_ScriptEngine->RegisterObjectMethod("Vector2", "Vector2 opDiv(const Vector2 &in) const", asMETHODPR(Vector2, operator/, (const Vector2&) const, Vector2), asCALL_THISCALL); VERIFY( r >= 0 );
         r = m_ScriptEngine->RegisterObjectMethod("Vector2", "Vector2 opDiv(float) const", asMETHODPR(Vector2, operator/, (f32) const, Vector2), asCALL_THISCALL); VERIFY( r >= 0 );
 
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float length() const", asMETHOD(Vector2, Length), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float length_squared() const", asMETHOD(Vector2, LengthSquared), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float distance_to(const Vector2 &in) const", asMETHOD(Vector2, DistanceTo), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float distance_to_squared(const Vector2 &in) const", asMETHOD(Vector2, DistanceToSquared), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float aspect() const", asMETHODPR(Vector2, Aspect, () const, f32), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "bool is_zero() const", asMETHOD(Vector2, IsZero), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float Length() const", asMETHOD(Vector2, Length), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float LengthSquared() const", asMETHOD(Vector2, LengthSquared), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float DistanceTo(const Vector2 &in) const", asMETHOD(Vector2, DistanceTo), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float DistanceToSquared(const Vector2 &in) const", asMETHOD(Vector2, DistanceToSquared), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float Aspect() const", asMETHODPR(Vector2, Aspect, () const, f32), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector2", "bool IsZero() const", asMETHOD(Vector2, IsZero), asCALL_THISCALL); VERIFY( r >= 0 );
 
         r = m_ScriptEngine->RegisterObjectType("Vector3", sizeof(Vector3), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Vector3>()); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector3", "float x", asOFFSET(Vector3, x)); VERIFY(r >= 0);
@@ -191,10 +281,10 @@ namespace Fussion {
         r = m_ScriptEngine->RegisterObjectMethod("Vector3", "Vector3 opDiv(const Vector3 &in) const", asMETHODPR(Vector3, operator/, (const Vector3&) const, Vector3), asCALL_THISCALL); VERIFY( r >= 0 );
         r = m_ScriptEngine->RegisterObjectMethod("Vector3", "Vector3 opDiv(float) const", asMETHODPR(Vector3, operator/, (f32) const, Vector3), asCALL_THISCALL); VERIFY( r >= 0 );
 
-        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "float length() const", asMETHOD(Vector3, Length), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "float length_squared() const", asMETHOD(Vector3, LengthSquared), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "void normalize()", asMETHOD(Vector3, Normalize), asCALL_THISCALL); VERIFY( r >= 0 );
-        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "Vector3 normalized() const", asMETHOD(Vector3, Normalized), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "float Length() const", asMETHOD(Vector3, Length), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "float LengthSquared() const", asMETHOD(Vector3, LengthSquared), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "void Normalize()", asMETHOD(Vector3, Normalize), asCALL_THISCALL); VERIFY( r >= 0 );
+        r = m_ScriptEngine->RegisterObjectMethod("Vector3", "Vector3 Normalized() const", asMETHOD(Vector3, Normalized), asCALL_THISCALL); VERIFY( r >= 0 );
 
         r = m_ScriptEngine->RegisterObjectType("Color", sizeof(Color), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Color>()); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Color", "float r", asOFFSET(Color, r)); VERIFY(r >= 0);
@@ -239,7 +329,7 @@ namespace Fussion {
             r = m_ScriptEngine->RegisterGlobalFunction("bool IsKeyDown(Keys key)", asFUNCTION(Input::IsKeyDown), asCALL_CDECL); VERIFY(r >= 0);
             r = m_ScriptEngine->RegisterGlobalFunction("bool IsKeyUp(Keys key)", asFUNCTION(Input::IsKeyUp), asCALL_CDECL); VERIFY(r >= 0);
 
-            auto is_any_key_down = [](CScriptArray* keys) -> bool {
+            auto isAnyKeyDown = [](CScriptArray* keys) -> bool {
                 for (u32 i = 0; i < keys->GetSize(); i++) {
                     if (auto key = CAST(Keys*, keys->At(i)); Input::IsKeyDown(*key)) {
                         return true;
@@ -247,7 +337,7 @@ namespace Fussion {
                 }
                 return false;
             };
-            r = m_ScriptEngine->RegisterGlobalFunction("bool is_any_key_down(const Keys[] &in key)", asFUNCTION(CAST(bool(*)(CScriptArray*), is_any_key_down)), asCALL_CDECL); VERIFY(r >= 0);
+            r = m_ScriptEngine->RegisterGlobalFunction("bool IsAnyKeyDown(const Keys[] &in key)", asFUNCTION(CAST(bool(*)(CScriptArray*), isAnyKeyDown)), asCALL_CDECL); VERIFY(r >= 0);
         }
 
         {
@@ -299,6 +389,7 @@ namespace Fussion {
         r = m_ScriptEngine->RegisterObjectType("Entity", sizeof(Entity), asOBJ_REF | asOBJ_NOCOUNT); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Entity", "string Name", asOFFSET(Entity, Name)); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Entity", "Transform Transform", asOFFSET(Entity, Transform)); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterObjectMethod("Entity", "Array<Entity@>@ GetChildren() const", asFUNCTION(Entity_GetChildren), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
 
         r = m_ScriptEngine->RegisterObjectType("ScriptBase", 0, asOBJ_REF); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectBehaviour("ScriptBase", asBEHAVE_ADDREF, "void f()", asMETHOD(ScriptBase, AddRef), asCALL_THISCALL); VERIFY(r >= 0);

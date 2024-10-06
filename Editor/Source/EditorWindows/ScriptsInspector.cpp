@@ -53,7 +53,7 @@ void ScriptsInspector::OnDraw()
                 if (ImGui::Button(name.c_str())) {
                     auto instance = m_SelectedClass->CreateInstance();
                     LOG_DEBUGF("Calling {}", name);
-                    instance.CallMethod(name);
+                    instance.CallMethod(name, {});
                 }
             }
         }
