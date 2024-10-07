@@ -49,7 +49,7 @@ ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
     UNREACHABLE;
 }
 
-void ViewportWindow::render_stats() const
+void ViewportWindow::RenderStats() const
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     static int location = 1;
@@ -241,7 +241,7 @@ void ViewportWindow::OnDraw()
             ImGui::EndDragDropTarget();
         }
 
-        render_stats();
+        RenderStats();
 
         ImGui::SetCursorPos(origin + Vector2(5, 5));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5);
