@@ -6,7 +6,10 @@
 namespace Fussion {
     class [[API]] ScriptComponent final : public Component {
     public:
-        COMPONENT_DEFAULT(ScriptComponent)
+        COMPONENT_DEFAULT(ScriptComponent);
+
+        [[API]]
+        std::string ClassName {};
 
         virtual void OnStart() override;
         virtual void OnUpdate(f32) override;
@@ -14,8 +17,6 @@ namespace Fussion {
         virtual void OnDestroy() override;
 
         void test() const;
-
-        std::string ClassName {};
 
         virtual auto Clone() -> Ref<Component> override;
 
