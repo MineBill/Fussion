@@ -11,6 +11,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
 #include <fileapi.h>
 #include <synchapi.h>
 
@@ -65,32 +66,73 @@ namespace Fussion {
     private:
         void Work()
         {
-            m_WatchHandle = FindFirstChangeNotificationW(m_Root.wstring().c_str(), true, NotifyFlags);
+            // m_WatchHandle = FindFirstChangeNotificationW(m_Root.wstring().c_str(), true, NotifyFlags);
+            m_WatchHandle = CreateFile(m_Root.string().c_str(),
+                FILE_LIST_DIRECTORY,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                NULL,
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+                NULL);
+
+            u8 buffer[1024];
+            DWORD bytes_returned;
+            OVERLAPPED overlapped;
+            overlapped.hEvent = CreateEvent(nullptr, FALSE, 0, nullptr);
+            ReadDirectoryChangesW(
+                m_WatchHandle,
+                buffer, sizeof(buffer),
+                true,
+                NotifyFlags,
+                nullptr,
+                &overlapped,
+                nullptr);
 
             while (m_Update) {
-                auto status = WaitForSingleObject(m_WatchHandle, 100);
+                auto status = WaitForSingleObject(overlapped.hEvent, INFINITE);
                 switch (status) {
                 case WAIT_OBJECT_0: {
-                    u8 buffer[1024];
-                    DWORD bytes_returned;
-                    if (!ReadDirectoryChangesW(m_WatchHandle, buffer, sizeof(buffer), true, NotifyFlags, &bytes_returned, nullptr, nullptr)) {
-                        LOG_ERRORF("ReadDirectoryChangesW failed: {}", GetLastError());
-                        return;
+                    DWORD bytes_transferred;
+                    GetOverlappedResult(m_WatchHandle, &overlapped, &bytes_transferred, FALSE);
+
+                    auto fileInfo = TRANSMUTE(FILE_NOTIFY_INFORMATION*, buffer);
+
+                    for (;;) {
+                        std::wstring name { fileInfo->FileName, fileInfo->FileNameLength / sizeof(WCHAR) };
+                        name.shrink_to_fit();
+                        std::filesystem::path path { name };
+
+                        m_Listeners.Fire(path, WindowsFileActionToEventType(fileInfo->Action));
+
+                        if (fileInfo->NextEntryOffset) {
+                            *((uint8_t**)&fileInfo) += fileInfo->NextEntryOffset;
+                        } else {
+                            break;
+                        }
                     }
 
-                    auto file_info = TRANSMUTE(FILE_NOTIFY_INFORMATION*, buffer);
-                    // file_info->Action
-                    std::wstring name { file_info->FileName, file_info->FileNameLength / sizeof(WCHAR) };
-                    name.shrink_to_fit();
-                    std::filesystem::path path { name };
-
-                    {
-                        std::scoped_lock lock(m_Mutex);
-
-                        m_Listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
-                    }
-
-                    FindNextChangeNotification(m_WatchHandle);
+                    ReadDirectoryChangesW(
+                        m_WatchHandle,
+                        buffer, sizeof(buffer),
+                        true,
+                        NotifyFlags,
+                        nullptr,
+                        &overlapped,
+                        nullptr);
+                    // if (!ReadDirectoryChangesW(m_WatchHandle, buffer, sizeof(buffer), true, NotifyFlags, &bytes_returned, nullptr, nullptr)) {
+                    //     LOG_ERRORF("ReadDirectoryChangesW failed: {}", GetLastError());
+                    //     re       turn;
+                    // }
+                    //
+                    // auto file_info = TRANSMUTE(FILE_NOTIFY_INFORMATION*, buffer);
+                    // // file_info->Action
+                    //
+                    // {
+                    //     std::scoped_lock lock(m_Mutex);
+                    //
+                    //     m_Listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
+                    // }
+                    // FindNextChangeNotification(m_WatchHandle);
                 } break;
                 case WAIT_TIMEOUT:
 
