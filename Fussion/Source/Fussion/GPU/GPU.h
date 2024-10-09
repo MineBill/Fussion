@@ -13,6 +13,8 @@
 #include <span>
 #include <variant>
 
+#define WGPU_DEV
+
 // TODO: Add tests for this
 template<Fussion::ScalarType T>
 struct Range {
@@ -430,6 +432,11 @@ namespace Fussion::GPU {
         std::string_view FragmentEntryPoint {};
     };
 
+    struct SpirVShaderSpec {
+        Maybe<std::string_view> Label {};
+        std::span<u32> Data {};
+    };
+
     struct ShaderModule final : GPUHandle<ShaderModuleSpec> {
         using GPUHandle::GPUHandle;
 
@@ -438,6 +445,7 @@ namespace Fussion::GPU {
 
     /// Vertex inputs (attributes) to shaders.
     struct VertexAttribute {
+        std::string Name {};
         /// Format of the input
         ElementType Type {};
         /// Byte offset of the start of the input
@@ -581,6 +589,10 @@ namespace Fussion::GPU {
         Maybe<DepthStencilState> DepthStencil {};
         MultiSampleState MultiSample {};
         Maybe<FragmentStage> Fragment {};
+        /// Used if the shader module is a SpirV binary.
+        Maybe<std::string_view> VertexEntryPointOverride {};
+        /// Used if the shader module is a SpirV binary.
+        Maybe<std::string_view> FragmentEntryPointOverride {};
         // MutliView
         // Cache
     };
@@ -754,6 +766,9 @@ namespace Fussion::GPU {
         [[nodiscard]] auto CreateQuerySet(QuerySetSpec const& spec) const -> QuerySet;
 
         [[nodiscard]] auto CreateShaderModule(ShaderModuleSpec const& spec) const -> ShaderModule;
+#ifdef WGPU_DEV
+        [[nodiscard]] auto CreateShaderModuleSpirV(SpirVShaderSpec const& spec) const -> ShaderModule;
+#endif
         [[nodiscard]] auto CreatePipelineLayout(PipelineLayoutSpec const& spec) const -> PipelineLayout;
         [[nodiscard]] auto CreateRenderPipeline(ShaderModule const& vert_module, ShaderModule const& frag_module, RenderPipelineSpec const& spec) const -> RenderPipeline;
 

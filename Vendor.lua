@@ -195,9 +195,6 @@ package("wgpu-native")
     elseif is_plat("linux") and is_arch("x86_64") then
         add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-linux-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
         add_versions("v22.1.0+5", "851984418f237aae593cda2a6f44a03afc1cc6e444662222ed2f9f6bc4c776fc")
-    elseif is_plat("macosx") and is_arch("x86_64") then
-        add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-macos-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+5", "1488fc2fb19b156266f0b50ef026d677a261ae2dc30a13d6624f0ff701b489e7")
     end
 
     if is_plat("windows") then
@@ -218,14 +215,7 @@ package("wgpu-native")
         end
     end)
 
-    on_load("macosx", function (package)
-        if not package:config("shared") then
-            package:add("syslinks", "objc")
-            package:add("frameworks", "Metal", "QuartzCore")
-        end
-    end)
-
-    on_install("windows|x64", "windows|x86", "linux|arm64-v8a", "linux|x86_64", "macosx|x86_64", "macosx|arm64", function (package)
+    on_install("windows|x64", "windows|x86", "linux|arm64-v8a", "linux|x86_64", function (package)
         os.cp("include/**.h", package:installdir("include", "webgpu"))
         if package:is_plat("windows") then
             if package:config("shared") then
@@ -241,9 +231,58 @@ package("wgpu-native")
             else
                 os.cp("lib/libwgpu_native.a", package:installdir("lib"))
             end
-        elseif package:is_plat("macosx") then
+        end
+    end)
+
+    on_test(function (package)
+        assert(package:has_cfuncs("wgpuCreateInstance", {includes = "wgpu.h"}))
+    end)
+package_end()
+
+package("wgpu-native-custom")
+    set_homepage("https://github.com/MineBill/wgpu-native")
+    set_description("Native WebGPU implementation based on wgpu-core")
+    set_license("Apache-2.0")
+
+    if is_plat("windows") and is_arch("x64") then
+        add_urls("https://github.com/MineBill/wgpu-native/releases/download/$(version)/wgpu-windows-x86_64-msvc-release.zip", {version = function(version) return version:gsub("%+", ".") end})
+        add_versions("v22.1.0+5-custom", "afc9c5e9d4fe1625e2e1c906b8b7ef950b17605e1ada25d8d834adeb928eeb53")
+    elseif is_plat("linux") and is_arch("x86_64") then
+        add_urls("https://github.com/MineBill/wgpu-native/releases/download/$(version)/wgpu-linux-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
+        add_versions("v22.1.0+5-custom", "d28938ff05d641e61872953010e9a960cac5c60fa0fbfe70a9368399c7e423b7")
+    end
+
+    if is_plat("windows") then
+        add_configs("vs_runtime", {description = "Set vs compiler runtime.", default = "MD", readonly = true})
+    end
+
+    add_includedirs("include", "include/webgpu")
+
+    on_load("windows", function (package)
+        if not package:config("shared") then
+            package:add("syslinks", "Advapi32", "bcrypt", "d3dcompiler", "NtDll", "User32", "Userenv", "WS2_32", "Gdi32", "Opengl32", "OleAut32", "Ole32")
+        end
+    end)
+
+    on_load("linux", function (package)
+        if not package:config("shared") then
+            package:add("syslinks", "dl", "pthread")
+        end
+    end)
+
+    on_install("windows|x64", "windows|x86", "linux|arm64-v8a", "linux|x86_64", function (package)
+        os.cp("include/**.h", package:installdir("include", "webgpu"))
+        if package:is_plat("windows") then
             if package:config("shared") then
-                os.cp("lib/libwgpu_native.dylib", package:installdir("bin"))
+                os.cp("lib/wgpu_native.dll", package:installdir("bin"))
+                os.cp("lib/wgpu_native.pdb", package:installdir("bin"))
+                os.cp("lib/wgpu_native.dll.lib", package:installdir("lib"))
+            else
+                os.cp("lib/wgpu_native.lib", package:installdir("lib"))
+            end
+        elseif package:is_plat("linux") then
+            if package:config("shared") then
+                os.cp("lib/libwgpu_native.so", package:installdir("bin"))
             else
                 os.cp("lib/libwgpu_native.a", package:installdir("lib"))
             end

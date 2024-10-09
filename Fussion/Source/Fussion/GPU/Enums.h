@@ -2,6 +2,8 @@
 #include <Fussion/Core/BitFlags.h>
 #include <Fussion/Core/Core.h>
 
+#define WGPU_LOCAL
+
 namespace Fussion::GPU {
     enum class BackendRenderer {
         Vulkan,
@@ -14,6 +16,10 @@ namespace Fussion::GPU {
         TimestampQuery,
         PipelineStatistics,
         Float32Filterable,
+
+#ifdef WGPU_LOCAL
+        SpirVPassthrough,
+#endif
     };
 
     // enum class QueryType {
@@ -74,6 +80,7 @@ namespace Fussion::GPU {
     BITFLAGS(TextureUsage);
 
     enum class ShaderStage {
+        None = 0,
         Vertex = 1 << 0,
         Fragment = 1 << 1,
         Compute = 1 << 2,

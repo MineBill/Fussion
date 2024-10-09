@@ -1045,6 +1045,18 @@ namespace Fussion::GPU {
         return ShaderModule { module, spec };
     }
 
+#ifdef WGPU_DEV
+    auto Device::CreateShaderModuleSpirV(SpirVShaderSpec const& spec) const -> ShaderModule
+    {
+        WGPUShaderModuleDescriptorSpirV desc;
+        desc.label = spec.Label.ValueOr("SpirVShaderModule"sv).data();
+        desc.sourceSize = CAST(u32, spec.Data.size());
+        desc.source = spec.Data.data();
+        auto module = wgpuDeviceCreateShaderModuleSpirV(CAST(WGPUDevice, Handle), &desc);
+        return ShaderModule { module };
+    }
+#endif
+
     auto Device::CreatePipelineLayout(PipelineLayoutSpec const& spec) const -> PipelineLayout
     {
         std::vector<WGPUBindGroupLayout> layouts {};
@@ -1093,7 +1105,7 @@ namespace Fussion::GPU {
         WGPUVertexState vertex {
             .nextInChain = nullptr,
             .module = vert_module.As<WGPUShaderModule>(),
-            .entryPoint = vert_module.Spec.VertexEntryPoint.data(),
+            .entryPoint = spec.VertexEntryPointOverride.ValueOr(vert_module.Spec.VertexEntryPoint).data(),
             .constantCount = 0,
             .constants = nullptr,
             .bufferCount = CAST(u32, vertex_buffer_layouts.size()),
@@ -1127,7 +1139,7 @@ namespace Fussion::GPU {
 
         if (spec.Fragment.HasValue()) {
             fragment.module = frag_module.As<WGPUShaderModule>();
-            fragment.entryPoint = frag_module.Spec.FragmentEntryPoint.data();
+            fragment.entryPoint = spec.FragmentEntryPointOverride.ValueOr(frag_module.Spec.FragmentEntryPoint).data();
             fragment.constantCount = 0;
             fragment.constants = nullptr;
             // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations

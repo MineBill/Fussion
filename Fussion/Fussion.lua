@@ -1,4 +1,7 @@
 add_requires("wgpu-native")
+add_requires("wgpu-native-custom")
+add_requires("spirv-cross", "shaderc")
+add_requires("slang", {config = {slang_glslang = true}})
 
 target("Fussion")
     set_kind("static")
@@ -10,8 +13,6 @@ target("Fussion")
         "Source/**.cpp",
         "Source/**.c",
         "Impl/**.cpp"
-
-        -- "Vendor/tracy/public/TracyClient.cpp"
     )
     if is_plat("windows") then
         add_files("Platform/Windows/**.cpp")
@@ -36,7 +37,10 @@ target("Fussion")
     add_includedirs("Vendor/entt/src", {public = true})
 
     add_packages("fmt", "cpptrace", {public = true})
-    add_packages("glfw", "VMA", "wgpu-native", "JoltPhysics")
+    add_packages("glfw", "wgpu-native-custom", "JoltPhysics")
+
+    add_packages("spirv-cross", "shaderc", "slang")
+
     add_deps("magic_enum")
     add_deps("glm", {public = true})
     add_deps("AngelScript")
@@ -63,9 +67,6 @@ target("Fussion")
         add_cxxflags("cl::/utf-8", {public = true})
     elseif is_plat("linux") then
         add_defines("OS_LINUX", {public = true})
-        add_links("shaderc_shared")
-
-        add_packages("spirv-cross")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end

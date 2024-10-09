@@ -29,7 +29,11 @@ namespace Fussion::GPU {
             return WGPUFeatureName_Float32Filterable;
         case Feature::PipelineStatistics:
             return CAST(WGPUFeatureName, WGPUNativeFeature_PipelineStatisticsQuery);
+#ifdef WGPU_LOCAL
+        case Feature::SpirVPassthrough:
+            return CAST(WGPUFeatureName, WGPUNativeFeature_SpirvShaderPassthrough);
         }
+#endif
         UNREACHABLE;
     }
 
@@ -217,6 +221,8 @@ namespace Fussion::GPU {
     auto ToWGPU(ShaderStageFlags flags) -> WGPUShaderStageFlags
     {
         WGPUShaderStageFlags result = 0;
+        if (flags.test(ShaderStage::None))
+            result |= WGPUShaderStage_None;
         if (flags.test(ShaderStage::Vertex))
             result |= WGPUShaderStage_Vertex;
         if (flags.test(ShaderStage::Fragment))
