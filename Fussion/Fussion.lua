@@ -1,7 +1,7 @@
 add_requires("wgpu-native")
 add_requires("wgpu-native-custom")
 add_requires("spirv-cross", "shaderc")
-add_requires("slang", {config = {slang_glslang = true}})
+add_requires("slang 2024.13", {config = {slang_glslang = true}})
 
 target("Fussion")
     set_kind("static")
