@@ -7,6 +7,8 @@
 
 #include <tracy/Tracy.hpp>
 
+#include <string>
+
 class QueryIterator {
 public:
     QueryIterator(TSNode const& node, TSQuery const* query);

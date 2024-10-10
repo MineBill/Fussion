@@ -1,5 +1,7 @@
 ﻿#include "Query.h"
 
+#include <stdexcept>
+
 QueryIterator::QueryIterator(TSNode const& node, TSQuery const* query): m_cursor(ts_query_cursor_new()), m_is_end(false) {
     ts_query_cursor_exec(m_cursor, query, node);
     advance();
