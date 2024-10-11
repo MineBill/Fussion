@@ -242,6 +242,7 @@ namespace Fussion::GPU {
         case StoreOp::Discard:
             return WGPUStoreOp_Discard;
         }
+        UNREACHABLE;
     }
 
     auto ToWGPU(VertexStepMode mode) -> WGPUVertexStepMode
@@ -924,6 +925,7 @@ namespace Fussion::GPU {
         case WGPUTextureFormat_Force32:
             return Force32;
         }
+        UNREACHABLE;
     }
 
     auto from_wgpu(WGPUBufferMapState state) -> MapState
