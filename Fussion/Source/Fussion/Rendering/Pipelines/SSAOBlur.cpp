@@ -1,6 +1,8 @@
-﻿#include "W:\source\projects\Fussion\build\.gens\Fussion\windows\x64\debug\Fussion\Source\FussionPCH.h"
+﻿#include "FussionPCH.h"
 #include "SSAOBlur.h"
 
+#include "Assets/AssetManager.h"
+#include "Assets/ShaderAsset.h"
 #include "GPU/ShaderProcessor.h"
 #include "Rendering/Renderer.h"
 
@@ -9,33 +11,39 @@
 namespace Fussion {
     void SSAOBlur::Init(Vector2 const& size)
     {
-        std::array entries {
-            GPU::BindGroupLayoutEntry {
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float { true },
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler {
-                    .Type = GPU::SamplerBindingType::Filtering,
-                },
-                .Count = 1,
-            }
-        };
+        // std::array entries {
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 0,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float { true },
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 1,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Sampler {
+        //             .Type = GPU::SamplerBindingType::Filtering,
+        //         },
+        //         .Count = 1,
+        //     }
+        // };
+        //
+        // GPU::BindGroupLayoutSpec spec {
+        //     .Label = "SSAOBlur::BGL"sv,
+        //     .Entries = entries,
+        // };
+        //
+        // m_BindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
 
-        GPU::BindGroupLayoutSpec spec {
-            .Label = "SSAOBlur::BGL"sv,
-            .Entries = entries,
-        };
-
-        m_BindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
+        constexpr auto path = "Assets/Shaders/Slang/Effects/Blur.slang";
+        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        compiledShader.Metadata.UseDepth = false;
+        auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { Format });
+        m_Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
         GPU::TextureSpec rt_spec {
             .Label = "SSAOBlur::RenderTarget"sv,
@@ -77,51 +85,51 @@ namespace Fussion {
             .Entries = bind_group_entries
         };
 
-        m_BindGroup = Renderer::Device().CreateBindGroup(m_BindGroupLayout, bgSpec);
+        m_BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bgSpec);
 
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/blur.wgsl").Unwrap();
+        // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/blur.wgsl").Unwrap();
+        //
+        // GPU::ShaderModuleSpec shader_spec {
+        //     .Label = "SSAOBlur::Shader"sv,
+        //     .Type = GPU::WGSLShader {
+        //         .Source = shader_src,
+        //     },
+        //     .VertexEntryPoint = "vs_main",
+        //     .FragmentEntryPoint = "fs_main",
+        // };
+        //
+        // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "SSAOBlur::Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_BindGroupLayout,
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "SSAOBlur::RenderPipeline"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
-            },
-            .DepthStencil = None(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage { .Targets = {
-                                                 GPU::ColorTargetState {
-                                                     .Format = Format,
-                                                     .Blend = None(),
-                                                     .WriteMask = GPU::ColorWrite::All,
-                                                 },
-                                             } },
-        };
-
-        m_Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        // std::array bind_group_layouts {
+        //     m_BindGroupLayout,
+        // };
+        // GPU::PipelineLayoutSpec pl_spec {
+        //     .BindGroupLayouts = bind_group_layouts
+        // };
+        // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        //
+        // GPU::RenderPipelineSpec rp_spec {
+        //     .Label = "SSAOBlur::RenderPipeline"sv,
+        //     .Layout = layout,
+        //     .Vertex = {},
+        //     .Primitive = {
+        //         .Topology = GPU::PrimitiveTopology::TriangleList,
+        //         .StripIndexFormat = None(),
+        //         .FrontFace = GPU::FrontFace::Ccw,
+        //         .Cull = GPU::Face::None,
+        //     },
+        //     .DepthStencil = None(),
+        //     .MultiSample = GPU::MultiSampleState::Default(),
+        //     .Fragment = GPU::FragmentStage { .Targets = {
+        //                                          GPU::ColorTargetState {
+        //                                              .Format = Format,
+        //                                              .Blend = None(),
+        //                                              .WriteMask = GPU::ColorWrite::All,
+        //                                          },
+        //                                      } },
+        // };
+        //
+        // m_Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
     }
 
     void SSAOBlur::Resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)
@@ -145,7 +153,8 @@ namespace Fussion {
             .Entries = bgEntries
         };
 
-        m_BindGroup = Renderer::Device().CreateBindGroup(m_BindGroupLayout, bg_spec);
+        auto shader = m_Shader.Get();
+        m_BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
 
         GPU::TextureSpec rt_spec {
             .Label = "SSAOBlur::RenderTarget"sv,
@@ -185,7 +194,8 @@ namespace Fussion {
         };
         auto rp = encoder.BeginRendering(spec);
 
-        rp.SetPipeline(m_Pipeline);
+        auto shader = m_Shader.Get();
+        rp.SetPipeline(shader->Pipeline());
         rp.SetBindGroup(m_BindGroup, 0);
         rp.Draw({ 0, 6 }, { 0, 1 });
 

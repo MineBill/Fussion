@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "Fussion/Assets/AssetRef.h"
+#include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Core/Types.h"
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
@@ -67,8 +69,8 @@ struct GBuffer {
     Fussion::GPU::Texture PositionRT;
     Fussion::GPU::Texture NormalRT;
     Fussion::GPU::Texture AlbedoRT;
-    Fussion::GPU::RenderPipeline Pipeline {};
-    Fussion::GPU::BindGroupLayout Layout {};
+
+    Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
 
     void Init(Vector2 const& size, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
     void Resize(Vector2 const& new_size);
@@ -78,8 +80,9 @@ struct GBuffer {
 struct SSAO {
     Fussion::GPU::Texture RenderTarget {};
     Fussion::GPU::Texture NoiseTexture {};
-    Fussion::GPU::RenderPipeline Pipeline {};
-    Fussion::GPU::BindGroupLayout Layout {};
+    // Fussion::GPU::RenderPipeline Pipeline {};
+    // Fussion::GPU::BindGroupLayout Layout {};
+    Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
     Fussion::GPU::BindGroup BindGroup {};
     Fussion::GPU::Sampler Sampler {}, NoiseSampler {};
 
@@ -169,6 +172,7 @@ private:
     Fussion::GPU::Texture m_ShadowPassRenderTarget {};
     std::array<Fussion::GPU::TextureView, MAX_SHADOW_CASCADES> m_ShadowPassRenderTargetViews {};
 
+    Fussion::AssetRef<Fussion::ShaderAsset> m_GridShader {};
     Fussion::GPU::RenderPipeline m_SimplePipeline {}, m_GridPipeline {}, m_PBRPipeline {}, m_DepthPipeline {}, m_SkyPipeline {}, m_DebugPipeline {};
 
     Fussion::GPU::BindGroup m_GlobalBindGroup {}, m_SceneBindGroup {};

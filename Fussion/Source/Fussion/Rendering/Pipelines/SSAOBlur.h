@@ -1,7 +1,9 @@
 ﻿#pragma once
+#include "Fussion/Assets/AssetRef.h"
 #include <Fussion/GPU/GPU.h>
 
 namespace Fussion {
+    class ShaderAsset;
     class SSAOBlur {
     public:
         constexpr static auto Format = GPU::TextureFormat::R16Float;
@@ -17,8 +19,9 @@ namespace Fussion {
         GPU::Texture m_RenderTarget {};
         GPU::Sampler m_Sampler {};
 
-        GPU::RenderPipeline m_Pipeline {};
+        // GPU::RenderPipeline m_Pipeline {};
+        // GPU::BindGroupLayout m_BindGroupLayout {};
         GPU::BindGroup m_BindGroup {};
-        GPU::BindGroupLayout m_BindGroupLayout {};
+        AssetRef<ShaderAsset> m_Shader {};
     };
 }

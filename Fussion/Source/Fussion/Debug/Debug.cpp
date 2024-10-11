@@ -22,9 +22,8 @@ namespace Fussion {
     };
 
     struct DebugData {
-        AssetRef<ShaderAsset> DebugShader {};
         GPU::Buffer VertexBuffer {};
-        GPU::RenderPipeline Pipeline {};
+        AssetRef<ShaderAsset> Shader;
 
         bool Initialized { false };
         std::vector<Point> Points {};
@@ -47,62 +46,70 @@ namespace Fussion {
         }
         g_DebugData.Device = device;
 
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DebugDraw.wgsl").Unwrap();
+        constexpr auto path = "Assets/Shaders/Slang/Debug.slang";
+        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        compiledShader.Metadata.UseBlending = true;
+        compiledShader.Metadata.ParsedPragmas.push_back({ .Key = "topology", .Value = "lines" });
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "DebugDraw::Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main"sv,
-            .FragmentEntryPoint = "fs_main"sv,
-        };
+        auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { target_format });
+        g_DebugData.Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            global_bind_group_layout
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        auto primitive = GPU::PrimitiveState::Default();
-        primitive.Topology = GPU::PrimitiveTopology::LineList;
-
-        std::array attributes {
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float,
-                .ShaderLocation = 1,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
-            },
-        };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "DebugDraw::RenderPipeline"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout } },
-            .Primitive = primitive,
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage { .Targets = { GPU::ColorTargetState {
-                                                 .Format = target_format,
-                                                 .Blend = GPU::BlendState::Default(),
-                                                 .WriteMask = GPU::ColorWrite::All,
-                                             } } },
-        };
-
-        g_DebugData.Pipeline = device.CreateRenderPipeline(shader, shader, rp_spec);
+        // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DebugDraw.wgsl").Unwrap();
+        //
+        // GPU::ShaderModuleSpec shader_spec {
+        //     .Label = "DebugDraw::Shader"sv,
+        //     .Type = GPU::WGSLShader {
+        //         .Source = shader_src,
+        //     },
+        //     .VertexEntryPoint = "vs_main"sv,
+        //     .FragmentEntryPoint = "fs_main"sv,
+        // };
+        //
+        // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        //
+        // std::array bind_group_layouts {
+        //     global_bind_group_layout
+        // };
+        // GPU::PipelineLayoutSpec pl_spec {
+        //     .BindGroupLayouts = bind_group_layouts
+        // };
+        // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        //
+        // auto primitive = GPU::PrimitiveState::Default();
+        // primitive.Topology = GPU::PrimitiveTopology::LineList;
+        //
+        // std::array attributes {
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float3,
+        //         .ShaderLocation = 0,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float,
+        //         .ShaderLocation = 1,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float4,
+        //         .ShaderLocation = 2,
+        //     },
+        // };
+        // auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+        //
+        // GPU::RenderPipelineSpec rp_spec {
+        //     .Label = "DebugDraw::RenderPipeline"sv,
+        //     .Layout = layout,
+        //     .Vertex = {
+        //         .AttributeLayouts = { attribute_layout } },
+        //     .Primitive = primitive,
+        //     .DepthStencil = GPU::DepthStencilState::Default(),
+        //     .MultiSample = GPU::MultiSampleState::Default(),
+        //     .Fragment = GPU::FragmentStage { .Targets = { GPU::ColorTargetState {
+        //                                          .Format = target_format,
+        //                                          .Blend = GPU::BlendState::Default(),
+        //                                          .WriteMask = GPU::ColorWrite::All,
+        //                                      } } },
+        // };
+        //
+        // g_DebugData.Pipeline = device.CreateRenderPipeline(shader, shader, rp_spec);
 
         GPU::BufferSpec spec {
             .Label = "Debug::VertexBuffer"sv,
@@ -250,7 +257,8 @@ namespace Fussion {
         }
         VERIFY(line_count % 2 == 0);
 
-        encoder.SetPipeline(g_DebugData.Pipeline);
+        auto shader = g_DebugData.Shader.Get();
+        encoder.SetPipeline(shader->Pipeline());
 
         g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
         g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));

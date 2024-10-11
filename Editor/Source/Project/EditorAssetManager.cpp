@@ -4,6 +4,7 @@
 #include "EditorApplication.h"
 #include "Fussion/Assets/Model.h"
 #include "Fussion/Assets/PbrMaterial.h"
+#include "Fussion/Assets/ShaderAsset.h"
 #include "Project.h"
 #include "Serialization/AssetSerializer.h"
 #include "Serialization/MeshSerializer.h"
@@ -121,11 +122,11 @@ EditorAssetManager::EditorAssetManager()
     m_AssetImporters[AssetType::Model] = MakePtr<MeshSerializer>();
 
     m_EditorWatcher->AddListener([this](fs::path const& path, FileWatcher::EventType type) {
-        LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
         if (type == FileWatcher::EventType::FileModified) {
+            LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
             using namespace std::chrono_literals;
 
-            std::this_thread::sleep_for(100ms);
+            std::this_thread::sleep_for(50ms);
             using namespace std::string_literals;
             auto const full_path = fs::path("Assets") / "Shaders"s / path;
             auto meta = GetMetadata(full_path);
@@ -134,12 +135,12 @@ EditorAssetManager::EditorAssetManager()
             }
             switch (meta->Type) {
             case AssetType::Shader: {
-                // auto shader = get_asset(meta->handle, AssetType::Shader)->as<ShaderAsset>();
-                // auto data = FileSystem::read_entire_file(meta->path);
-                // auto result = RHI::ShaderCompiler::Compile(*data);
-                // if (result.has_value()) {
-                //     *shader = ShaderAsset(shader->AssociatedRenderPass(), result->ShaderStages, result->Metadata);
-                // }
+                auto shader = GetAsset(meta->Handle, AssetType::Shader)->As<ShaderAsset>();
+                auto result = GPU::ShaderProcessor::CompileSlang(meta->Path);
+                if (result) {
+                    result->Metadata = shader->GetMetadata();
+                    *shader = ShaderAsset(*result, shader->GetColorTargetFormats());
+                }
             } break;
             default:
                 break;

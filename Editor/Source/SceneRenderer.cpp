@@ -1,6 +1,9 @@
 #include "SceneRenderer.h"
 
 #include "EditorPCH.h"
+
+#include "Fussion/Assets/AssetManager.h"
+#include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Core/Mem.h"
 #include "Fussion/Rendering/Pipelines/IBLIrradiance.h"
 #include "Project/Project.h"
@@ -57,105 +60,10 @@ void GBuffer::Init(Vector2 const& size, GPU::BindGroupLayout const& global_bind_
     spec.Label = "GBuffer::albedo"sv;
     AlbedoRT = Renderer::Device().CreateTexture(spec);
 
-    auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/GBuffer.wgsl").Unwrap();
-
-    GPU::ShaderModuleSpec shader_spec {
-        .Label = "GBuffer::shader"sv,
-        .Type = GPU::WGSLShader {
-            .Source = shader_src,
-        },
-        .VertexEntryPoint = "vs_main",
-        .FragmentEntryPoint = "fs_main",
-    };
-
-    auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-    std::array entries {
-        GPU::BindGroupLayoutEntry {
-            .Binding = 0,
-            .Visibility = GPU::ShaderStage::Vertex,
-            .Type = GPU::BindingType::Buffer {
-                .Type = GPU::BufferBindingType::Storage {
-                    .ReadOnly = true,
-                },
-                .HasDynamicOffset = false,
-                .MinBindingSize = None(),
-            },
-            .Count = 1,
-        },
-    };
-
-    GPU::BindGroupLayoutSpec bgl_spec {
-        .Label = "GBuffer::bind_group_layout"sv,
-        .Entries = entries,
-    };
-
-    Layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
-
-    std::array bind_group_layouts {
-        global_bind_group_layout,
-        Layout,
-    };
-    GPU::PipelineLayoutSpec pl_spec {
-        .BindGroupLayouts = bind_group_layouts
-    };
-    auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-    std::array attributes {
-        GPU::VertexAttribute {
-            .Type = GPU::ElementType::Float3,
-            .ShaderLocation = 0,
-        },
-        GPU::VertexAttribute {
-            .Type = GPU::ElementType::Float3,
-            .ShaderLocation = 1,
-        },
-        GPU::VertexAttribute {
-            .Type = GPU::ElementType::Float4,
-            .ShaderLocation = 2,
-        },
-        GPU::VertexAttribute {
-            .Type = GPU::ElementType::Float2,
-            .ShaderLocation = 3,
-        },
-        GPU::VertexAttribute {
-            .Type = GPU::ElementType::Float3,
-            .ShaderLocation = 4,
-        },
-    };
-    auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
-
-    GPU::RenderPipelineSpec rp_spec {
-        .Label = "GBuffer::pipeline"sv,
-        .Layout = layout,
-        .Vertex = {
-            .AttributeLayouts = { attribute_layout },
-        },
-        .Primitive = GPU::PrimitiveState::Default(),
-        .DepthStencil = GPU::DepthStencilState::Default(),
-        .MultiSample = GPU::MultiSampleState::Default(),
-        .Fragment = GPU::FragmentStage {
-            .Targets = {
-                GPU::ColorTargetState {
-                    .Format = GPU::TextureFormat::RGBA16Float,
-                    .Blend = GPU::BlendState::Default(),
-                    .WriteMask = GPU::ColorWrite::All,
-                },
-                GPU::ColorTargetState {
-                    .Format = GPU::TextureFormat::RGBA16Float,
-                    .Blend = GPU::BlendState::Default(),
-                    .WriteMask = GPU::ColorWrite::All,
-                },
-                GPU::ColorTargetState {
-                    .Format = GPU::TextureFormat::RGBA16Float,
-                    .Blend = GPU::BlendState::Default(),
-                    .WriteMask = GPU::ColorWrite::All,
-                },
-            },
-        },
-    };
-
-    Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+    constexpr auto path = "Assets/Shaders/Slang/GBuffer.slang";
+    auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+    auto shader = MakeRef<ShaderAsset>(compiled, std::vector { GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float });
+    Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path, "GBuffer Shader");
 }
 
 void GBuffer::Resize(Vector2 const& new_size)
@@ -211,91 +119,89 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
     };
     NoiseTexture = Renderer::Device().CreateTexture(noise_spec);
 
-    auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/SSAO.wgsl").Unwrap();
-
-    GPU::ShaderModuleSpec shader_spec {
-        .Label = "SSAO::shader"sv,
-        .Type = GPU::WGSLShader {
-            .Source = shader_src,
-        },
-        .VertexEntryPoint = "vs_main",
-        .FragmentEntryPoint = "fs_main",
-    };
-
-    auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-    std::array entries {
-        GPU::BindGroupLayoutEntry {
-            .Binding = 0,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Float {},
-                .ViewDimension = GPU::TextureViewDimension::D2,
-            },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 1,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Float {},
-                .ViewDimension = GPU::TextureViewDimension::D2,
-            },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 2,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Float {
-                    .Filterable = true,
-                },
-                .ViewDimension = GPU::TextureViewDimension::D2,
-            },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 3,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 4,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 5,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Buffer {
-                .Type = GPU::BufferBindingType::Storage {
-                    .ReadOnly = true,
-                },
-                .HasDynamicOffset = false,
-                .MinBindingSize = None(),
-            },
-            .Count = 1,
-        },
-        GPU::BindGroupLayoutEntry {
-            .Binding = 6,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Buffer {
-                .Type = GPU::BufferBindingType::Uniform {},
-                .HasDynamicOffset = false,
-                .MinBindingSize = None(),
-            },
-            .Count = 1,
-        },
-    };
-
-    GPU::BindGroupLayoutSpec bgl_spec {
-        .Label = "SSAO::bind_group_layout"sv,
-        .Entries = entries,
-    };
-
-    Layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
+    // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/SSAO.wgsl").Unwrap();
+    //
+    // GPU::ShaderModuleSpec shader_spec {
+    //     .Label = "SSAO::shader"sv,
+    //     .Type = GPU::WGSLShader {
+    //         .Source = shader_src,
+    //     },
+    //     .VertexEntryPoint = "vs_main",
+    //     .FragmentEntryPoint = "fs_main",
+    // };
+    //
+    // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+    //
+    // std::array entries {
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 0,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Texture {
+    //             .SampleType = GPU::TextureSampleType::Float {},
+    //             .ViewDimension = GPU::TextureViewDimension::D2,
+    //         },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 1,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Texture {
+    //             .SampleType = GPU::TextureSampleType::Float {},
+    //             .ViewDimension = GPU::TextureViewDimension::D2,
+    //         },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 2,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Texture {
+    //             .SampleType = GPU::TextureSampleType::Float {},
+    //             .ViewDimension = GPU::TextureViewDimension::D2,
+    //         },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 3,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 4,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 5,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Buffer {
+    //             .Type = GPU::BufferBindingType::Storage {
+    //                 .ReadOnly = true,
+    //             },
+    //             .HasDynamicOffset = false,
+    //             .MinBindingSize = None(),
+    //         },
+    //         .Count = 1,
+    //     },
+    //     GPU::BindGroupLayoutEntry {
+    //         .Binding = 6,
+    //         .Visibility = GPU::ShaderStage::Fragment,
+    //         .Type = GPU::BindingType::Buffer {
+    //             .Type = GPU::BufferBindingType::Uniform {},
+    //             .HasDynamicOffset = false,
+    //             .MinBindingSize = None(),
+    //         },
+    //         .Count = 1,
+    //     },
+    // };
+    //
+    // GPU::BindGroupLayoutSpec bgl_spec {
+    //     .Label = "SSAO::bind_group_layout"sv,
+    //     .Entries = entries,
+    // };
+    //
+    // Layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
 
     GPU::SamplerSpec sampler_spec {};
     sampler_spec.label = "SSAO::sampler"sv;
@@ -358,35 +264,42 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
 
     Options = UniformBuffer<PostProcessing::SSAO>::Create(Renderer::Device(), "SSAO Options"sv);
 
+    constexpr auto path = "Assets/Shaders/Slang/Effects/SSAO.slang";
+    auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+    compiledShader.Metadata.UseDepth = false;
+
+    auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { GPU::TextureFormat::R32Float });
+    Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+
     UpdateBindGroup(gbuffer);
 
-    std::array bind_group_layouts {
-        global_bind_group_layout,
-        Layout,
-    };
-    GPU::PipelineLayoutSpec pl_spec {
-        .BindGroupLayouts = bind_group_layouts
-    };
-    auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-    GPU::RenderPipelineSpec rp_spec {
-        .Label = "SSAO::pipeline"sv,
-        .Layout = layout,
-        .Vertex = {},
-        .Primitive = GPU::PrimitiveState::Default(),
-        .DepthStencil = None(),
-        .MultiSample = GPU::MultiSampleState::Default(),
-        .Fragment = GPU::FragmentStage {
-            .Targets = {
-                GPU::ColorTargetState {
-                    .Format = GPU::TextureFormat::R32Float,
-                    .Blend = None(),
-                    .WriteMask = GPU::ColorWrite::All,
-                },
-            } },
-    };
-
-    Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+    // std::array bind_group_layouts {
+    //     global_bind_group_layout,
+    //     Layout,
+    // };
+    // GPU::PipelineLayoutSpec pl_spec {
+    //     .BindGroupLayouts = bind_group_layouts
+    // };
+    // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+    //
+    // GPU::RenderPipelineSpec rp_spec {
+    //     .Label = "SSAO::pipeline"sv,
+    //     .Layout = layout,
+    //     .Vertex = {},
+    //     .Primitive = GPU::PrimitiveState::Default(),
+    //     .DepthStencil = None(),
+    //     .MultiSample = GPU::MultiSampleState::Default(),
+    //     .Fragment = GPU::FragmentStage {
+    //         .Targets = {
+    //             GPU::ColorTargetState {
+    //                 .Format = GPU::TextureFormat::R32Float,
+    //                 .Blend = None(),
+    //                 .WriteMask = GPU::ColorWrite::All,
+    //             },
+    //         } },
+    // };
+    //
+    // Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
 }
 
 void SSAO::Resize(Vector2 const& new_size, GBuffer const& gbuffer)
@@ -450,7 +363,8 @@ void SSAO::UpdateBindGroup(GBuffer const& gbuffer)
         .Label = "SSAO::bing_group"sv,
         .Entries = bing_group_entries
     };
-    BindGroup = Renderer::Device().CreateBindGroup(Layout, bg_spec);
+    auto shader = Shader.Get();
+    BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(1).Unwrap(), bg_spec);
 }
 
 void SceneRenderer::SetupSceneBindGroup()
@@ -483,6 +397,26 @@ void SceneRenderer::SetupSceneBindGroup()
             .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
             .Count = 1,
         },
+        GPU::BindGroupLayoutEntry {
+            .Binding = 3,
+            .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
+            .Type = GPU::BindingType::Buffer {
+                .Type = GPU::BufferBindingType::Uniform {},
+                .HasDynamicOffset = false,
+                .MinBindingSize = None(),
+            },
+            .Count = 1,
+        },
+        GPU::BindGroupLayoutEntry {
+            .Binding = 4,
+            .Visibility = GPU::ShaderStage::Fragment,
+            .Type = GPU::BindingType::Texture {
+                .SampleType = GPU::TextureSampleType::Depth {},
+                .ViewDimension = GPU::TextureViewDimension::D2_Array,
+                .MultiSampled = false,
+            },
+            .Count = 1,
+        },
     };
 
     GPU::BindGroupLayoutSpec scene_bgl_spec = {
@@ -507,7 +441,20 @@ void SceneRenderer::SetupSceneBindGroup()
         },
         GPU::BindGroupEntry {
             .Binding = 2,
-            .Resource = m_LinearSampler }
+            .Resource = m_LinearSampler,
+        },
+        GPU::BindGroupEntry {
+            .Binding = 3,
+            .Resource = GPU::BufferBinding {
+                .TargetBuffer = SceneLightData.Buffer(),
+                .Offset = 0,
+                .Size = UniformBuffer<LightData>::Size(),
+            },
+        },
+        GPU::BindGroupEntry {
+            .Binding = 4,
+            .Resource = m_ShadowPassRenderTarget.View,
+        },
     };
 
     GPU::BindGroupSpec scene_bg_spec {
@@ -537,7 +484,20 @@ void SceneRenderer::UpdateSceneBindGroup(GPU::Texture const& ssao_texture)
         },
         GPU::BindGroupEntry {
             .Binding = 2,
-            .Resource = m_LinearSampler }
+            .Resource = m_LinearSampler,
+        },
+        GPU::BindGroupEntry {
+            .Binding = 3,
+            .Resource = GPU::BufferBinding {
+                .TargetBuffer = SceneLightData.Buffer(),
+                .Offset = 0,
+                .Size = UniformBuffer<LightData>::Size(),
+            },
+        },
+        GPU::BindGroupEntry {
+            .Binding = 4,
+            .Resource = m_ShadowPassRenderTarget.View,
+        },
     };
 
     GPU::BindGroupSpec scene_bg_spec {
@@ -575,26 +535,6 @@ void SceneRenderer::Init()
                 },
                 .Count = 1,
             },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer {
-                    .Type = GPU::BufferBindingType::Uniform {},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 2,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Depth {},
-                    .ViewDimension = GPU::TextureViewDimension::D2_Array,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
         };
 
         GPU::BindGroupLayoutSpec spec {
@@ -611,13 +551,9 @@ void SceneRenderer::Init()
                     .TargetBuffer = SceneViewData.Buffer(),
                     .Offset = 0,
                     .Size = UniformBuffer<ViewData>::Size(),
-                } },
-            GPU::BindGroupEntry { .Binding = 1, .Resource = GPU::BufferBinding {
-                                                    .TargetBuffer = SceneLightData.Buffer(),
-                                                    .Offset = 0,
-                                                    .Size = UniformBuffer<LightData>::Size(),
-                                                } },
-            GPU::BindGroupEntry { .Binding = 2, .Resource = m_ShadowPassRenderTarget.View }
+                },
+            },
+
         };
 
         GPU::BindGroupSpec global_bg_spec {
@@ -775,93 +711,13 @@ void SceneRenderer::Init()
     }
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/Editor/Grid.wgsl").Unwrap();
+        constexpr auto path = "Assets/Shaders/Slang/Editor/Grid.slang";
+        GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        compiled.Metadata.UseBlending = true;
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "Grid Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_GlobalBindGroupLayout
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "Grid RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = GPU::PrimitiveState::Default(),
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
-                    GPU::ColorTargetState {
-                        .Format = TonemappingPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
-                    } } },
-        };
-
-        m_GridPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
-    }
-
-    {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/Sky.wgsl").Unwrap();
-
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "Sky Shader:VS"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_GlobalBindGroupLayout
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        auto primitive = GPU::PrimitiveState::Default();
-        primitive.Topology = GPU::PrimitiveTopology::TriangleStrip;
-
-        auto depth = GPU::DepthStencilState::Default();
-        depth.DepthWriteEnabled = false;
-        depth.DepthCompare = GPU::CompareFunction::Always;
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "Sky RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = primitive,
-            .DepthStencil = depth,
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
-                    GPU::ColorTargetState {
-                        .Format = TonemappingPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
-                    },
-                },
-            },
-        };
-
-        m_SkyPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        // NOTE: Oof much?
+        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
+        m_GridShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
     GPU::BufferSpec ibs {
@@ -902,6 +758,55 @@ void SceneRenderer::Init()
     ssao_blur.Init(window_size);
 
     SetupSceneBindGroup();
+    {
+        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/Sky.wgsl").Unwrap();
+
+        GPU::ShaderModuleSpec shader_spec {
+            .Label = "Sky Shader:VS"sv,
+            .Type = GPU::WGSLShader {
+                .Source = shader_src,
+            },
+            .VertexEntryPoint = "vs_main",
+            .FragmentEntryPoint = "fs_main",
+        };
+
+        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+
+        std::array bind_group_layouts {
+            m_GlobalBindGroupLayout,
+            m_SceneBindGroupLayout,
+        };
+        GPU::PipelineLayoutSpec pl_spec {
+            .BindGroupLayouts = bind_group_layouts
+        };
+        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+
+        auto primitive = GPU::PrimitiveState::Default();
+        primitive.Topology = GPU::PrimitiveTopology::TriangleStrip;
+
+        auto depth = GPU::DepthStencilState::Default();
+        depth.DepthWriteEnabled = false;
+        depth.DepthCompare = GPU::CompareFunction::Always;
+        GPU::RenderPipelineSpec rp_spec {
+            .Label = "Sky RP"sv,
+            .Layout = layout,
+            .Vertex = {},
+            .Primitive = primitive,
+            .DepthStencil = depth,
+            .MultiSample = GPU::MultiSampleState::Default(),
+            .Fragment = GPU::FragmentStage {
+                .Targets = {
+                    GPU::ColorTargetState {
+                        .Format = TonemappingPipeline::Format,
+                        .Blend = GPU::BlendState::Default(),
+                        .WriteMask = GPU::ColorWrite::All,
+                    },
+                },
+            },
+        };
+
+        m_SkyPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+    }
 
     // Creating the pbr pipeline after the scene bind group, which must be done after the ssao blur pipeline. oof incarnate.
     {
@@ -1490,7 +1395,9 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .TimestampWrites = timestamp_writes,
         };
         auto gpass = encoder.BeginRendering(gpass_rp_spec);
-        gpass.SetPipeline(gbuffer.Pipeline);
+
+        auto shader = gbuffer.Shader.Get();
+        gpass.SetPipeline(shader->Pipeline());
         gpass.SetBindGroup(m_GlobalBindGroup, 0);
         BeginPipelineStatisticsQuery(gpass, m_StatisticsQuerySet, 0);
 
@@ -1509,7 +1416,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .Entries = bind_group_entries
         };
 
-        auto object_group = Renderer::Device().CreateBindGroup(gbuffer.Layout, bg_spec);
+        auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(1).Unwrap(), bg_spec);
         m_ObjectGroupsToRelease.push_back(object_group);
         gpass.SetBindGroup(object_group, 1);
         buffer_count_offset = 0;
@@ -1562,7 +1469,8 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             ssao.Options.Data = m_RenderContext.PostProcessingSettings.SSAOData;
             ssao.Options.flush();
 
-            pass.SetPipeline(ssao.Pipeline);
+            auto shader = ssao.Shader.Get();
+            pass.SetPipeline(shader->Pipeline());
             pass.SetBindGroup(m_GlobalBindGroup, 0);
             pass.SetBindGroup(ssao.BindGroup, 1);
             pass.Draw({ 0, 3 }, { 0, 1 });
@@ -1722,7 +1630,8 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         if (!game_view) {
             Debug::Render(scene_rp);
 
-            scene_rp.SetPipeline(m_GridPipeline);
+            auto shader = m_GridShader.Get();
+            scene_rp.SetPipeline(shader->Pipeline());
             scene_rp.Draw({ 0, 6 }, { 0, 1 });
         }
 

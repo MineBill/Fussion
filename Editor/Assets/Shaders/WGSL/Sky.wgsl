@@ -18,7 +18,8 @@ struct LightData {
 }
 
 @group(0) @binding(0) var<uniform> view_data: ViewData;
-@group(0) @binding(1) var<uniform> light_data: LightData;
+
+@group(1) @binding(3) var<uniform> light_data: LightData;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

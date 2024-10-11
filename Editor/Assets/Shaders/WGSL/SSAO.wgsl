@@ -56,21 +56,21 @@ fn fs_main(in: VertexOutput) -> @location(0) f32 {
 
     let kernel_size = 64;
     var occlusion: f32 = 0.0;
-        for(var i = 0; i < kernel_size; i++) {
-            var sample_pos = tbn * ssao_data.samples[i];
-            sample_pos = frag_pos + sample_pos * options.radius;
+    for(var i = 0; i < kernel_size; i++) {
+        var sample_pos = tbn * ssao_data.samples[i];
+        sample_pos = frag_pos + sample_pos * options.radius;
 
-            var offset = vec4f(sample_pos, 1.0);
-            offset = view_data.projection * offset;
-            offset = vec4f(offset.xyz / offset.w, 1.0);
-            offset = vec4f(offset.xyz * 0.5 + 0.5, 1.0);
-            offset.y *= -1.0;
+        var offset = vec4f(sample_pos, 1.0);
+        offset = view_data.projection * offset;
+        offset = vec4f(offset.xyz / offset.w, 1.0);
+        offset = vec4f(offset.xyz * 0.5 + 0.5, 1.0);
+        offset.y *= -1.0;
 
-            let sample_depth = textureSample(position_texture, the_sampler, offset.xy).z;
-            if (sample_depth >= sample_pos.z + options.bias) {
-                let range_check = smoothstep(0.0, 1.0, options.radius / abs(frag_pos.z - sample_depth));
-                occlusion += range_check;
-            }
+        let sample_depth = textureSample(position_texture, the_sampler, offset.xy).z;
+        if (sample_depth >= sample_pos.z + options.bias) {
+            let range_check = smoothstep(0.0, 1.0, options.radius / abs(frag_pos.z - sample_depth));
+            occlusion += range_check;
         }
+    }
     return 1.0 - (occlusion / f32(kernel_size));
 }
