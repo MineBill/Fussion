@@ -1,8 +1,8 @@
+#include "FussionPCH.h"
 #include "Utils.h"
 
 #if OS_WINDOWS
 #    include "C:/Users/Jonathan/scoop/apps/renderdoc/1.35/renderdoc_app.h"
-#    include "FussionPCH.h"
 #    define WIN32_LEAN_AND_MEAN
 #    include "Windows.h"
 #endif
@@ -38,8 +38,8 @@ namespace Fussion::GPU::Utils {
         }
     }
 #elif OS_LINUX
-    void RenderDoc::initialize() { }
-    void RenderDoc::start_capture() { }
-    void RenderDoc::end_capture() { }
+    void RenderDoc::Initialize() { }
+    void RenderDoc::StartCapture() { }
+    void RenderDoc::EndCapture() { }
 #endif
 }

@@ -1,7 +1,6 @@
 ﻿#include "Model.h"
 #include "FussionPCH.h"
 
-#include "../../../../build/.packages/m/meshoptimizer/latest/45f33ceed5a5435d86c88631b393e9c3/include/meshoptimizer.h"
 #include "GPU/GPU.h"
 #include "Rendering/Renderer.h"
 

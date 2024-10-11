@@ -47,7 +47,7 @@ namespace Fussion {
                 });
             }
             auto layout = Renderer::Device().CreateBindGroupLayout({
-                .Label = "asd",
+                .Label = "asd"sv,
                 .Entries = entries,
             });
             m_BindGroupLayouts[setIndex] = layout;

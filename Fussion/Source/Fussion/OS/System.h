@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <filesystem>
+
 namespace Fussion::System {
     /// Returns if the OS is currently in dark mode.
     bool PrefersDark();

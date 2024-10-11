@@ -4,10 +4,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <spirv_cross/spirv.hpp>
 
 namespace Fussion::Dialogs {
-    auto shell_execute(std::string const& command) -> std::vector<std::string>
+    auto ShellExecute(std::string const& command) -> std::vector<std::string>
     {
         auto file = popen(command.c_str(), "r");
         defer(pclose(file));
@@ -40,11 +39,11 @@ namespace Fussion::Dialogs {
     public:
         virtual ~LinuxDialog() = default;
 
-        virtual auto open_file_picker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> = 0;
-        virtual auto open_directory_picker() -> std::filesystem::path = 0;
-        virtual void show_message_box(MessageBox box) = 0;
+        virtual auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> = 0;
+        virtual auto OpenDirectoryPicker() -> std::filesystem::path = 0;
+        virtual void ShowMessageBox(MessageBox box) = 0;
 
-        void set_path(std::string const& path)
+        void SetPath(std::string const& path)
         {
             m_Path = path;
         }
@@ -55,12 +54,12 @@ namespace Fussion::Dialogs {
 
     class KDialog final : public LinuxDialog {
     public:
-        auto open_directory_picker() -> std::filesystem::path override
+        auto OpenDirectoryPicker() -> std::filesystem::path override
         {
-            return shell_execute(std::format("{} --getexistingdirectory", m_Path)).at(0);
+            return ShellExecute(fmt::format("{} --getexistingdirectory", m_Path)).at(0);
         }
 
-        auto open_file_picker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> override
+        auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> override
         {
             std::string filter_string;
             for (size_t i = 0; i < filters.size(); i++) {
@@ -77,35 +76,35 @@ namespace Fussion::Dialogs {
                 }
             }
 
-            auto string_paths = shell_execute(std::format("{0} --getopenfilename {2} . \"{1}\"", m_Path, filter_string, allow_multiple ? "--multiple" : ""));
+            auto string_paths = ShellExecute(std::format("{0} --getopenfilename {2} . \"{1}\"", m_Path, filter_string, allow_multiple ? "--multiple" : ""));
             std::vector<std::filesystem::path> paths;
             std::ranges::copy(string_paths, std::back_inserter(paths));
             return paths;
         }
 
-        void show_message_box(MessageBox box) override
+        void ShowMessageBox(MessageBox box) override
         {
-            (void)shell_execute(std::format("{} --msgbox \"{}\"", m_Path, box.message));
+            (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
         }
     };
 
     class Zenity : public LinuxDialog {
     public:
-        std::filesystem::path open_directory_picker() override
+        std::filesystem::path OpenDirectoryPicker() override
         {
             return {};
         }
 
-        auto open_file_picker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path> override
+        auto OpenFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path> override
         {
             (void)filter;
             (void)allow_multiple;
             return {};
         }
 
-        void show_message_box(MessageBox box) override
+        void ShowMessageBox(MessageBox box) override
         {
-            (void)shell_execute(std::format("{} --msgbox \"{}\"", m_Path, box.message));
+            (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
         }
     };
 
@@ -130,7 +129,7 @@ namespace Fussion::Dialogs {
         return path;
     }
 
-    void create_native_dialog()
+    void CreateNativeDialog()
     {
         if (g_NativeDialog)
             return;
@@ -145,61 +144,61 @@ namespace Fussion::Dialogs {
         if (strcmp(desktop, "KDE") == 0) {
             // Prefer kdialog on KDE
             if (kdialog) {
-                g_NativeDialog = make_ptr<KDialog>();
-                g_NativeDialog->set_path(kdialog->string());
+                g_NativeDialog = MakePtr<KDialog>();
+                g_NativeDialog->SetPath(kdialog->string());
             } else if (zenity) {
-                g_NativeDialog = make_ptr<Zenity>();
-                g_NativeDialog->set_path(zenity->string());
+                g_NativeDialog = MakePtr<Zenity>();
+                g_NativeDialog->SetPath(zenity->string());
             }
         } else if (strcmp(desktop, "GNOME") == 0) {
             // Prefer zenity on GNOME
             if (zenity) {
-                g_NativeDialog = make_ptr<Zenity>();
-                g_NativeDialog->set_path(zenity->string());
+                g_NativeDialog = MakePtr<Zenity>();
+                g_NativeDialog->SetPath(zenity->string());
             } else if (kdialog) {
-                g_NativeDialog = make_ptr<KDialog>();
-                g_NativeDialog->set_path(kdialog->string());
+                g_NativeDialog = MakePtr<KDialog>();
+                g_NativeDialog->SetPath(kdialog->string());
             }
         } else {
             PANIC("{} desktop not supported currently", desktop);
         }
     }
 
-    MessageButton show_message_box(MessageBox data)
+    MessageButton ShowMessageBox(MessageBox data)
     {
-        create_native_dialog();
+        CreateNativeDialog();
 
         return MessageButton::Ok;
     }
 
-    auto show_file_picker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        return show_file_picker(FilePickerFilter {
+        return ShowFilePicker(FilePickerFilter {
                                   .name = std::string(name),
                                   .file_patterns = supported_files,
                               },
             allow_multiple);
     }
 
-    auto show_file_picker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto ShowFilePicker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        return show_file_picker(std::vector { filter }, allow_multiple);
+        return ShowFilePicker(std::vector { filter }, allow_multiple);
     }
 
-    auto show_file_picker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        create_native_dialog();
-        return g_NativeDialog->open_file_picker(filter, allow_multiple);
+        CreateNativeDialog();
+        return g_NativeDialog->OpenFilePicker(filter, allow_multiple);
     }
 
-    auto show_directory_picker(std::filesystem::path const& base) -> std::filesystem::path
+    auto ShowDirectoryPicker(std::filesystem::path const& base) -> std::filesystem::path
     {
         (void)base;
-        create_native_dialog();
-        return g_NativeDialog->open_directory_picker();
+        CreateNativeDialog();
+        return g_NativeDialog->OpenDirectoryPicker();
     }
-    
-    void open_directory(std::filesystem::path const& path) {
-        (void)shell_execute(std::format("xdg-open {}", path.string()));
+
+    void OpenDirectory(std::filesystem::path const& path) {
+        (void)ShellExecute(std::format("xdg-open {}", path.string()));
     }
 }

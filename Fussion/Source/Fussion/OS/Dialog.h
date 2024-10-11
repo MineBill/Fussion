@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#include <string_view>
+#include <filesystem>
+#include <vector>
+
 #ifdef OS_WINDOWS
 #    undef MessageBox
 #endif

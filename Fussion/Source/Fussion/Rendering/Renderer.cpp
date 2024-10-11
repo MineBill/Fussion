@@ -144,7 +144,7 @@ namespace Fussion {
         s_Renderer->m_NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
 
         GPU::TextureSpec texture_spec {
-            .Label = "CubeTexGen::cube_texture",
+            .Label = "CubeTexGen::cube_texture"sv,
             .Usage = GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopyDst,
             .Dimension = GPU::TextureDimension::D2,
             .Size = { 512, 512, 6 },

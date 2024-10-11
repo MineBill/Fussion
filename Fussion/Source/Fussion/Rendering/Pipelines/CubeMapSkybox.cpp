@@ -23,7 +23,7 @@ namespace Fussion {
                               .Unwrap();
 
         ShaderModuleSpec shader_spec {
-            .Label = "CubeSkybox::Shader",
+            .Label = "CubeSkybox::Shader"sv,
             .Type = WGSLShader {
                 .Source = shader_src,
             },
@@ -54,7 +54,7 @@ namespace Fussion {
             },
         };
         BindGroupLayoutSpec bgl_spec {
-            .Label = "poop",
+            .Label = "poop"sv,
             .Entries = bgl_entries
         };
         m_bind_group_layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
@@ -62,7 +62,7 @@ namespace Fussion {
         layouts.push_back(m_bind_group_layout);
 
         PipelineLayoutSpec layout_spec {
-            .Label = "asdasd",
+            .Label = "asdasd"sv,
             .BindGroupLayouts = layouts,
         };
         auto layout = Renderer::Device().CreatePipelineLayout(layout_spec);
@@ -80,7 +80,7 @@ namespace Fussion {
         depth.DepthCompare = CompareFunction::Always;
 
         RenderPipelineSpec spec {
-            .Label = "CubeSkybox::Pipeline",
+            .Label = "CubeSkybox::Pipeline"sv,
             .Layout = layout,
             .Vertex = VertexState {
                 .AttributeLayouts = {
@@ -109,7 +109,7 @@ namespace Fussion {
         m_pipeline = Renderer::Device().CreateRenderPipeline(m_shader, m_shader, spec);
 
         m_sampler = Renderer::Device().CreateSampler({
-            .label = "sampler",
+            .label = "sampler"sv,
         });
 
         std::vector<Vector3> vertices {
@@ -158,7 +158,7 @@ namespace Fussion {
         };
 
         m_cube_vertices = Renderer::Device().CreateBuffer({
-            .Label = "Cube Verts",
+            .Label = "Cube Verts"sv,
             .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
             .Size = 36 * sizeof(Vector3),
             .Mapped = false,
@@ -219,7 +219,7 @@ namespace Fussion {
 
         m_bind_group = Renderer::Device().CreateBindGroup(m_bind_group_layout,
             {
-                .Label = "asdasd",
+                .Label = "asdasd"sv,
                 .Entries = entries,
             });
     }

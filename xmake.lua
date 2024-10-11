@@ -6,8 +6,11 @@ set_policy("package.install_locally", true)
 set_runtimes("MDd")
 rule("CompilerFlags")
     on_load(function (target)
-        --[[ target:add("cxxflags", "gcc::-Wno-changes-meaning")
-        target:add("cxxflags", "clang::-Wno-changes-meaning") ]]
+        --[[ target:add("cxxflags", "gcc::-Wno-changes-meaning") ]]
+        target:add("cxxflags", "gcc::-Wno-changes-meaning")
+        target:add("cxxflags", "gcc::-Wno-attributes")
+
+        target:add("cxxflags", "clang::-Wno-changes-meaning")
         target:add("cxxflags", "clang::-Wno-c++98-compat")
         target:add("cxxflags", "clang_cl::-ftime-trace")
 

@@ -1,13 +1,15 @@
 #include "Fussion/OS/FileWatcher.h"
 
 namespace Fussion {
-    class LinuxFileWatcher: public FileWatcher {
+    class LinuxFileWatcher : public FileWatcher {
     public:
-        virtual void register_listener(std::function<CallbackType>) override {}
-        virtual void start() override {}
+        virtual void AddListener(std::function<CallbackType>) override { }
+        virtual void Start() override { }
     };
 
-    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root) {
-        return make_ptr<LinuxFileWatcher>();
+    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root)
+    {
+        (void)root;
+        return MakePtr<LinuxFileWatcher>();
     }
 }

@@ -6,22 +6,24 @@
 // #include <GLFW/glfw3native.h>
 
 namespace Fussion::System {
-    bool prefers_dark()
+    bool PrefersDark()
     {
-        return !prefers_light();
+        return !PrefersLight();
     }
 
-    bool prefers_light()
+    bool PrefersLight()
     {
         return false;
     }
 
-    auto get_known_folder(KnownFolders folder) -> std::filesystem::path
+    auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path
     {
+        (void)folder;
         return {};
     }
-    
-    bool console_supports_color() {
+
+    bool ConsoleSupportsColor()
+    {
         return false;
     }
 }

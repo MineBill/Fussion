@@ -67,7 +67,7 @@ namespace Fussion {
                                   .Unwrap();
 
             ShaderModuleSpec shader_spec {
-                .Label = "CubeTexGen::Shader",
+                .Label = "CubeTexGen::Shader"sv,
                 .Type = WGSLShader {
                     .Source = shader_src,
                 },
@@ -107,7 +107,7 @@ namespace Fussion {
 
             };
             BindGroupLayoutSpec bgl_spec {
-                .Label = "CubeTexGen::BGL",
+                .Label = "CubeTexGen::BGL"sv,
                 .Entries = bgl_entries
             };
             m_bind_group_layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
@@ -117,7 +117,7 @@ namespace Fussion {
             };
 
             PipelineLayoutSpec layout_spec {
-                .Label = "CubeTexGen::PipelineLayout",
+                .Label = "CubeTexGen::PipelineLayout"sv,
                 .BindGroupLayouts = layouts,
             };
             auto layout = Renderer::Device().CreatePipelineLayout(layout_spec);
@@ -135,7 +135,7 @@ namespace Fussion {
             depth.DepthCompare = CompareFunction::Always;
 
             RenderPipelineSpec spec {
-                .Label = "CubeTexGen::Pipeline",
+                .Label = "CubeTexGen::Pipeline"sv,
                 .Layout = layout,
                 .Vertex = VertexState {
                     .AttributeLayouts = {
@@ -161,7 +161,7 @@ namespace Fussion {
         {
             auto shader = ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/OneShot/CubeTexConvolution.wgsl").Unwrap();
             ShaderModuleSpec shader_spec {
-                .Label = "CubeTexGen::conv_shader",
+                .Label = "CubeTexGen::conv_shader"sv,
                 .Type = WGSLShader {
                     .Source = shader,
                 },
@@ -200,7 +200,7 @@ namespace Fussion {
                 },
             };
             BindGroupLayoutSpec bgl_spec {
-                .Label = "CubeTexGen::conv_bgl",
+                .Label = "CubeTexGen::conv_bgl"sv,
                 .Entries = bgl_entries
             };
             m_conv_bind_group_layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
@@ -210,7 +210,7 @@ namespace Fussion {
             };
 
             PipelineLayoutSpec layout_spec {
-                .Label = "CubeTexGen::PipelineLayout",
+                .Label = "CubeTexGen::PipelineLayout"sv,
                 .BindGroupLayouts = layouts,
             };
             auto layout = Renderer::Device().CreatePipelineLayout(layout_spec);
@@ -228,7 +228,7 @@ namespace Fussion {
             depth.DepthCompare = CompareFunction::Always;
 
             RenderPipelineSpec spec {
-                .Label = "CubeTexGen::conv_pipeline",
+                .Label = "CubeTexGen::conv_pipeline"sv,
                 .Layout = layout,
                 .Vertex = VertexState {
                     .AttributeLayouts = {
@@ -252,14 +252,14 @@ namespace Fussion {
         }
 
         m_sampler = Renderer::Device().CreateSampler({
-            .label = "sampler",
+            .label = "sampler"sv,
             .AddressModeU = AddressMode::ClampToEdge,
             .AddressModeV = AddressMode::ClampToEdge,
             .AddressModeW = AddressMode::ClampToEdge,
         });
 
         m_cube_vertices = Renderer::Device().CreateBuffer({
-            .Label = "Cube Verts",
+            .Label = "Cube Verts"sv,
             .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
             .Size = 36 * sizeof(Vector3),
             .Mapped = false,
@@ -279,7 +279,7 @@ namespace Fussion {
 
         for (u32 i = 0; i < 6; ++i) {
             TextureSpec rt_spec {
-                .Label = "CubeTexGen::CrapGPU",
+                .Label = "CubeTexGen::CrapGPU"sv,
                 .Usage = TextureUsage::RenderAttachment | TextureUsage::CopySrc,
                 .Dimension = TextureDimension::D2,
                 .Size = { 512, 512, 1 },
@@ -322,7 +322,7 @@ namespace Fussion {
         using namespace GPU;
 
         TextureSpec texture_spec {
-            .Label = "CubeTexGen::cube_texture",
+            .Label = "CubeTexGen::cube_texture"sv,
             .Usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
             .Dimension = TextureDimension::D2,
             .Size = { 512, 512, 6 },
@@ -368,7 +368,7 @@ namespace Fussion {
 
             m_bind_group = Renderer::Device().CreateBindGroup(m_bind_group_layout,
                 {
-                    .Label = "CubeTexGen::bind_group",
+                    .Label = "CubeTexGen::bind_group"sv,
                     .Entries = entries,
                 });
 
@@ -381,7 +381,7 @@ namespace Fussion {
                 },
             };
             RenderPassSpec spec {
-                .Label = "CubeTexGen::render_pass",
+                .Label = "CubeTexGen::render_pass"sv,
                 .ColorAttachments = attachments,
             };
             auto pass = encoder.BeginRendering(spec);
@@ -409,7 +409,7 @@ namespace Fussion {
         using namespace GPU;
 
         TextureSpec texture_spec {
-            .Label = "CubeTexGen::conv_texture",
+            .Label = "CubeTexGen::conv_texture"sv,
             .Usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
             .Dimension = TextureDimension::D2,
             .Size = { 512, 512, 6 },
@@ -455,7 +455,7 @@ namespace Fussion {
 
             m_conv_bind_group = Renderer::Device().CreateBindGroup(m_conv_bind_group_layout,
                 {
-                    .Label = "CubeTexGen::bind_group",
+                    .Label = "CubeTexGen::bind_group"sv,
                     .Entries = entries,
                 });
 
@@ -468,7 +468,7 @@ namespace Fussion {
                 },
             };
             RenderPassSpec spec {
-                .Label = "CubeTexGen::render_pass",
+                .Label = "CubeTexGen::render_pass"sv,
                 .ColorAttachments = attachments,
             };
             auto pass = encoder.BeginRendering(spec);

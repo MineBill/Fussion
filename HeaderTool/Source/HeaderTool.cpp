@@ -260,8 +260,8 @@ int main(int argc, char** argv)
             tree = ts_parser_parse_string(parser, nullptr, file->data(), file->size());
         }
 
-        std::unordered_map<std::string_view, ReflectedClass> classes_in_file{};
-        std::unordered_map<std::string_view, Enum> enums_in_file{};
+        std::unordered_map<std::string, ReflectedClass> classes_in_file{};
+        std::unordered_map<std::string, Enum> enums_in_file{};
 
         for (auto match : enum_query.execute(ts_tree_root_node(tree))) {
             ZoneScopedN("Enum Query");
