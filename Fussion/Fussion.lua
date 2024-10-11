@@ -1,6 +1,5 @@
 add_requires("wgpu-native")
 add_requires("wgpu-native-custom")
-add_requires("spirv-cross", "shaderc")
 add_requires("slang 2024.13", {config = {slang_glslang = true}})
 
 target("Fussion")
@@ -39,7 +38,7 @@ target("Fussion")
     add_packages("fmt", "cpptrace", {public = true})
     add_packages("glfw", "wgpu-native-custom", "JoltPhysics")
 
-    add_packages("spirv-cross", "shaderc", "slang")
+    add_packages("slang")
 
     add_deps("magic_enum")
     add_deps("glm", {public = true})
