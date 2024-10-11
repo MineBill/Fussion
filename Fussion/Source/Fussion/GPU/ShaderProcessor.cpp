@@ -241,7 +241,7 @@ namespace Fussion::GPU {
 
             switch (resultType->getKind()) { // NOLINT(clang-diagnostic-switch-enum)
             case TypeReflection::Kind::Struct: {
-                for (int i = 0; i < resultType->getFieldCount(); ++i) {
+                for (u32 i = 0; i < resultType->getFieldCount(); ++i) {
                     auto field = resultType->getFieldByIndex(i);
                     // auto fieldType = field->getType();
 
@@ -300,7 +300,7 @@ namespace Fussion::GPU {
                 break;
             case TypeReflection::Kind::Resource: {
                 bool skip = false;
-                TextureViewDimension viewDimension;
+                TextureViewDimension viewDimension {};
                 auto shape = var->getType()->getResourceShape();
                 switch (shape) {
                 case SLANG_TEXTURE_2D:
@@ -348,7 +348,7 @@ namespace Fussion::GPU {
             default:
                 UNIMPLEMENTED;
             }
-            metadata.Uniforms[set][index] = resourceUsage;
+            metadata.Uniforms[set][CAST(usz, index)] = resourceUsage;
         }
         return metadata;
     }

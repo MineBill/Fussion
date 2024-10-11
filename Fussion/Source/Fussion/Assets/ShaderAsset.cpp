@@ -117,6 +117,11 @@ namespace Fussion {
         m_Pipeline = Renderer::Device().CreateRenderPipeline(vertexShader, fragmentShader, spec);
     }
 
+    ShaderAsset::~ShaderAsset()
+    {
+        m_Pipeline.Release();
+    }
+
     Maybe<GPU::BindGroupLayout> ShaderAsset::GetBindGroupLayout(u32 index)
     {
         if (m_BindGroupLayouts.contains(index)) {

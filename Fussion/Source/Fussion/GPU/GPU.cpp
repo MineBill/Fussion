@@ -292,7 +292,7 @@ namespace Fussion::GPU {
 
     auto Buffer::Slice() -> BufferSlice
     {
-        return BufferSlice(*this, 0, Size());
+        return BufferSlice(*this, 0, CAST(u32, Size()));
     }
 
     auto Buffer::GetMapState() const -> MapState
@@ -325,8 +325,7 @@ namespace Fussion::GPU {
 
     BufferSlice::BufferSlice(Buffer& buffer)
         : BackingBuffer(&buffer)
-        , Start(0)
-        , Size(buffer.Size())
+        , Size(CAST(u32, buffer.Size()))
     {
     }
 

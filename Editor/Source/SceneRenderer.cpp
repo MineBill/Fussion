@@ -41,7 +41,7 @@ void EndPipelineStatisticsQuery(GPU::RenderPassEncoder const& encoder)
     }
 }
 
-void GBuffer::Init(Vector2 const& size, GPU::BindGroupLayout const& global_bind_group_layout)
+void GBuffer::Init(Vector2 const& size)
 {
     GPU::TextureSpec spec {
         .Label = "GBuffer::position"sv,
@@ -95,7 +95,7 @@ void GBuffer::Render(GPU::CommandEncoder& encoder)
     (void)encoder;
 }
 
-void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayout const& global_bind_group_layout)
+void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
 {
     GPU::TextureSpec spec {
         .Label = "SSAO::render_target"sv,
@@ -118,90 +118,6 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
         .Aspect = GPU::TextureAspect::All,
     };
     NoiseTexture = Renderer::Device().CreateTexture(noise_spec);
-
-    // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/SSAO.wgsl").Unwrap();
-    //
-    // GPU::ShaderModuleSpec shader_spec {
-    //     .Label = "SSAO::shader"sv,
-    //     .Type = GPU::WGSLShader {
-    //         .Source = shader_src,
-    //     },
-    //     .VertexEntryPoint = "vs_main",
-    //     .FragmentEntryPoint = "fs_main",
-    // };
-    //
-    // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-    //
-    // std::array entries {
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 0,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Texture {
-    //             .SampleType = GPU::TextureSampleType::Float {},
-    //             .ViewDimension = GPU::TextureViewDimension::D2,
-    //         },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 1,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Texture {
-    //             .SampleType = GPU::TextureSampleType::Float {},
-    //             .ViewDimension = GPU::TextureViewDimension::D2,
-    //         },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 2,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Texture {
-    //             .SampleType = GPU::TextureSampleType::Float {},
-    //             .ViewDimension = GPU::TextureViewDimension::D2,
-    //         },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 3,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 4,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 5,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Buffer {
-    //             .Type = GPU::BufferBindingType::Storage {
-    //                 .ReadOnly = true,
-    //             },
-    //             .HasDynamicOffset = false,
-    //             .MinBindingSize = None(),
-    //         },
-    //         .Count = 1,
-    //     },
-    //     GPU::BindGroupLayoutEntry {
-    //         .Binding = 6,
-    //         .Visibility = GPU::ShaderStage::Fragment,
-    //         .Type = GPU::BindingType::Buffer {
-    //             .Type = GPU::BufferBindingType::Uniform {},
-    //             .HasDynamicOffset = false,
-    //             .MinBindingSize = None(),
-    //         },
-    //         .Count = 1,
-    //     },
-    // };
-    //
-    // GPU::BindGroupLayoutSpec bgl_spec {
-    //     .Label = "SSAO::bind_group_layout"sv,
-    //     .Entries = entries,
-    // };
-    //
-    // Layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
 
     GPU::SamplerSpec sampler_spec {};
     sampler_spec.label = "SSAO::sampler"sv;
@@ -272,34 +188,6 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer, GPU::BindGroupLayou
     Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
     UpdateBindGroup(gbuffer);
-
-    // std::array bind_group_layouts {
-    //     global_bind_group_layout,
-    //     Layout,
-    // };
-    // GPU::PipelineLayoutSpec pl_spec {
-    //     .BindGroupLayouts = bind_group_layouts
-    // };
-    // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-    //
-    // GPU::RenderPipelineSpec rp_spec {
-    //     .Label = "SSAO::pipeline"sv,
-    //     .Layout = layout,
-    //     .Vertex = {},
-    //     .Primitive = GPU::PrimitiveState::Default(),
-    //     .DepthStencil = None(),
-    //     .MultiSample = GPU::MultiSampleState::Default(),
-    //     .Fragment = GPU::FragmentStage {
-    //         .Targets = {
-    //             GPU::ColorTargetState {
-    //                 .Format = GPU::TextureFormat::R32Float,
-    //                 .Blend = None(),
-    //                 .WriteMask = GPU::ColorWrite::All,
-    //             },
-    //         } },
-    // };
-    //
-    // Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
 }
 
 void SSAO::Resize(Vector2 const& new_size, GBuffer const& gbuffer)
@@ -753,8 +641,8 @@ void SceneRenderer::Init()
 
     m_TonemappingPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
 
-    gbuffer.Init(window_size, m_GlobalBindGroupLayout);
-    ssao.Init(window_size, gbuffer, m_GlobalBindGroupLayout);
+    gbuffer.Init(window_size);
+    ssao.Init(window_size, gbuffer);
     ssao_blur.Init(window_size);
 
     SetupSceneBindGroup();

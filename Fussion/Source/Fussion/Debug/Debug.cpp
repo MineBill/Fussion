@@ -54,63 +54,6 @@ namespace Fussion {
         auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { target_format });
         g_DebugData.Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
 
-        // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DebugDraw.wgsl").Unwrap();
-        //
-        // GPU::ShaderModuleSpec shader_spec {
-        //     .Label = "DebugDraw::Shader"sv,
-        //     .Type = GPU::WGSLShader {
-        //         .Source = shader_src,
-        //     },
-        //     .VertexEntryPoint = "vs_main"sv,
-        //     .FragmentEntryPoint = "fs_main"sv,
-        // };
-        //
-        // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-        //
-        // std::array bind_group_layouts {
-        //     global_bind_group_layout
-        // };
-        // GPU::PipelineLayoutSpec pl_spec {
-        //     .BindGroupLayouts = bind_group_layouts
-        // };
-        // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-        //
-        // auto primitive = GPU::PrimitiveState::Default();
-        // primitive.Topology = GPU::PrimitiveTopology::LineList;
-        //
-        // std::array attributes {
-        //     GPU::VertexAttribute {
-        //         .Type = GPU::ElementType::Float3,
-        //         .ShaderLocation = 0,
-        //     },
-        //     GPU::VertexAttribute {
-        //         .Type = GPU::ElementType::Float,
-        //         .ShaderLocation = 1,
-        //     },
-        //     GPU::VertexAttribute {
-        //         .Type = GPU::ElementType::Float4,
-        //         .ShaderLocation = 2,
-        //     },
-        // };
-        // auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
-        //
-        // GPU::RenderPipelineSpec rp_spec {
-        //     .Label = "DebugDraw::RenderPipeline"sv,
-        //     .Layout = layout,
-        //     .Vertex = {
-        //         .AttributeLayouts = { attribute_layout } },
-        //     .Primitive = primitive,
-        //     .DepthStencil = GPU::DepthStencilState::Default(),
-        //     .MultiSample = GPU::MultiSampleState::Default(),
-        //     .Fragment = GPU::FragmentStage { .Targets = { GPU::ColorTargetState {
-        //                                          .Format = target_format,
-        //                                          .Blend = GPU::BlendState::Default(),
-        //                                          .WriteMask = GPU::ColorWrite::All,
-        //                                      } } },
-        // };
-        //
-        // g_DebugData.Pipeline = device.CreateRenderPipeline(shader, shader, rp_spec);
-
         GPU::BufferSpec spec {
             .Label = "Debug::VertexBuffer"sv,
             .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,

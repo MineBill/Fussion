@@ -72,7 +72,7 @@ struct GBuffer {
 
     Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
 
-    void Init(Vector2 const& size, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
+    void Init(Vector2 const& size);
     void Resize(Vector2 const& new_size);
     void Render(Fussion::GPU::CommandEncoder& encoder);
 };
@@ -80,8 +80,6 @@ struct GBuffer {
 struct SSAO {
     Fussion::GPU::Texture RenderTarget {};
     Fussion::GPU::Texture NoiseTexture {};
-    // Fussion::GPU::RenderPipeline Pipeline {};
-    // Fussion::GPU::BindGroupLayout Layout {};
     Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
     Fussion::GPU::BindGroup BindGroup {};
     Fussion::GPU::Sampler Sampler {}, NoiseSampler {};
@@ -90,7 +88,7 @@ struct SSAO {
 
     Fussion::UniformBuffer<Fussion::PostProcessing::SSAO> Options {};
 
-    void Init(Vector2 const& size, GBuffer const& gbuffer, Fussion::GPU::BindGroupLayout const& global_bind_group_layout);
+    void Init(Vector2 const& size, GBuffer const& gbuffer);
     void Resize(Vector2 const& new_size, GBuffer const& gbuffer);
 
     void UpdateBindGroup(GBuffer const& gbuffer);

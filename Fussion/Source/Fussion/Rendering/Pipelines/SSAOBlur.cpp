@@ -86,50 +86,6 @@ namespace Fussion {
         };
 
         m_BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bgSpec);
-
-        // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/blur.wgsl").Unwrap();
-        //
-        // GPU::ShaderModuleSpec shader_spec {
-        //     .Label = "SSAOBlur::Shader"sv,
-        //     .Type = GPU::WGSLShader {
-        //         .Source = shader_src,
-        //     },
-        //     .VertexEntryPoint = "vs_main",
-        //     .FragmentEntryPoint = "fs_main",
-        // };
-        //
-        // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        // std::array bind_group_layouts {
-        //     m_BindGroupLayout,
-        // };
-        // GPU::PipelineLayoutSpec pl_spec {
-        //     .BindGroupLayouts = bind_group_layouts
-        // };
-        // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-        //
-        // GPU::RenderPipelineSpec rp_spec {
-        //     .Label = "SSAOBlur::RenderPipeline"sv,
-        //     .Layout = layout,
-        //     .Vertex = {},
-        //     .Primitive = {
-        //         .Topology = GPU::PrimitiveTopology::TriangleList,
-        //         .StripIndexFormat = None(),
-        //         .FrontFace = GPU::FrontFace::Ccw,
-        //         .Cull = GPU::Face::None,
-        //     },
-        //     .DepthStencil = None(),
-        //     .MultiSample = GPU::MultiSampleState::Default(),
-        //     .Fragment = GPU::FragmentStage { .Targets = {
-        //                                          GPU::ColorTargetState {
-        //                                              .Format = Format,
-        //                                              .Blend = None(),
-        //                                              .WriteMask = GPU::ColorWrite::All,
-        //                                          },
-        //                                      } },
-        // };
-        //
-        // m_Pipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
     }
 
     void SSAOBlur::Resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)

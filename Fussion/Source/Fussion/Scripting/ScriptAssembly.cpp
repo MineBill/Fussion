@@ -58,12 +58,12 @@ namespace Fussion {
             for (std::any const& arg : args) {
                 if (f32 const* f = std::any_cast<f32>(&arg)) {
                     m_context->SetArgFloat(i, *f);
-                } else if (f64 const* f = std::any_cast<f64>(&arg)) {
-                    m_context->SetArgDouble(i, *f);
-                } else if (u32 const* f = std::any_cast<u32>(&arg)) {
-                    m_context->SetArgDWord(i, *f);
-                } else if (u64 const* f = std::any_cast<u64>(&arg)) {
-                    m_context->SetArgQWord(i, *f);
+                } else if (f64 const* d = std::any_cast<f64>(&arg)) {
+                    m_context->SetArgDouble(i, *d);
+                } else if (u32 const* dw = std::any_cast<u32>(&arg)) {
+                    m_context->SetArgDWord(i, *dw);
+                } else if (u64 const* qw = std::any_cast<u64>(&arg)) {
+                    m_context->SetArgQWord(i, *qw);
                 } else {
                     LOG_ERRORF("Unsupported argument type");
                 }

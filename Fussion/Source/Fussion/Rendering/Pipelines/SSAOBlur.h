@@ -19,8 +19,6 @@ namespace Fussion {
         GPU::Texture m_RenderTarget {};
         GPU::Sampler m_Sampler {};
 
-        // GPU::RenderPipeline m_Pipeline {};
-        // GPU::BindGroupLayout m_BindGroupLayout {};
         GPU::BindGroup m_BindGroup {};
         AssetRef<ShaderAsset> m_Shader {};
     };

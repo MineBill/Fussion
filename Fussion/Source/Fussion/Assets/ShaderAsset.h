@@ -20,6 +20,7 @@ namespace Fussion {
         // Ref<RHI::RenderPass>& AssociatedRenderPass() { return m_TheRenderPass; }
 
         explicit ShaderAsset(GPU::ShaderProcessor::CompiledShader const& compiledShader, std::vector<GPU::TextureFormat> colorTargetFormats);
+        virtual ~ShaderAsset() override;
 
         GPU::RenderPipeline Pipeline() const { return m_Pipeline; }
 
