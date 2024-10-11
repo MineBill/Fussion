@@ -886,7 +886,7 @@ void SceneRenderer::Init()
 
     m_CubeSkybox.init({ m_GlobalBindGroupLayout, m_SceneBindGroupLayout });
 
-    Debug::Initialize(Renderer::Device(), m_GlobalBindGroupLayout, m_TonemappingPipeline.Format);
+    Debug::Initialize(Renderer::Device(), m_TonemappingPipeline.Format);
 
     SetupShadowPass();
 

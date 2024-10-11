@@ -23,8 +23,7 @@ namespace Fussion {
     class Debug {
     public:
         static void Initialize(
-            GPU::Device& device,
-            GPU::BindGroupLayout global_bind_group_layout,
+            GPU::Device const& device,
             GPU::TextureFormat target_format);
 
         static void DrawBox(BoundingBox const& box, Vector3 euler_angles, Vector3 size, f32 time = 0.0f, Color color = Color::Red);

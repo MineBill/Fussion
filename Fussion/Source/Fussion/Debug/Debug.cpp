@@ -38,7 +38,7 @@ namespace Fussion {
         DebugData g_DebugData;
     }
 
-    void Debug::Initialize(GPU::Device& device, GPU::BindGroupLayout global_bind_group_layout, GPU::TextureFormat target_format)
+    void Debug::Initialize(GPU::Device const& device, GPU::TextureFormat target_format)
     {
         if (g_DebugData.Initialized) {
             LOG_ERROR("Debug is already initialized");
