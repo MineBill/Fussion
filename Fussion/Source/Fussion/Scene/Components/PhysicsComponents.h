@@ -3,24 +3,31 @@
 #include <Fussion/Scene/Component.h>
 
 namespace Fussion {
-    struct BoxCollider final : Component {
+    class [[API]] BoxCollider final : public Component {
+    public:
+        COMPONENT_DEFAULT(BoxCollider)
+        COMPONENT_DEFAULT_COPY(BoxCollider)
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
         Vector3 half_extent{};
+    };
+
+    class [[API]] SphereCollider final : public Component {
+    public:
+        COMPONENT_DEFAULT(SphereCollider)
+        COMPONENT_DEFAULT_COPY(SphereCollider)
 
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
-    };
 
-    struct SphereCollider final : Component {
         f32 radius{};
-
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
     };
 
-    struct RigidBody final : Component {
-        // BodyType type{};
-        f32 linear_damping{};
-        f32 angular_damping{};
+    class [[API]] RigidBody final : public Component {
+    public:
+        COMPONENT_DEFAULT(RigidBody)
+        COMPONENT_DEFAULT_COPY(RigidBody)
 
         virtual void OnStart() override;
         virtual void OnUpdate(f32 delta) override;
@@ -28,6 +35,9 @@ namespace Fussion {
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
 
+        // BodyType type{};
+        f32 linear_damping{};
+        f32 angular_damping{};
     private:
         u32 m_body_id{};
     };

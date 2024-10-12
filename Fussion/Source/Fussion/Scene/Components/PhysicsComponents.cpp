@@ -59,6 +59,26 @@ namespace Fussion {
         // }
     }
 
+    void BoxCollider::Serialize(Serializer& ctx) const
+    {
+        Component::Serialize(ctx);
+    }
+
+    void BoxCollider::Deserialize(Deserializer& ctx)
+    {
+        Component::Deserialize(ctx);
+    }
+
+    void SphereCollider::Serialize(Serializer& ctx) const
+    {
+        Component::Serialize(ctx);
+    }
+
+    void SphereCollider::Deserialize(Deserializer& ctx)
+    {
+        Component::Deserialize(ctx);
+    }
+
     void RigidBody::OnUpdate(f32 delta)
     {
         (void)delta;
