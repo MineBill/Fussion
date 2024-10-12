@@ -5,6 +5,7 @@
 #include "Utils.h"
 #include "glfw3webgpu.h"
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>

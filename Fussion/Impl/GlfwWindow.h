@@ -1,6 +1,7 @@
 #pragma once
 #include "Fussion/Core/Types.h"
 #include "Fussion/Window.h"
+#define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 
 namespace Fussion {

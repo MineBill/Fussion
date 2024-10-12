@@ -57,6 +57,7 @@
 #include <QuartzCore/CAMetalLayer.h>
 #endif
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #if WGPU_TARGET == WGPU_TARGET_MACOS
 #define GLFW_EXPOSE_NATIVE_COCOA
