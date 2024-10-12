@@ -42,6 +42,7 @@ namespace Fussion::GPU {
             bool UseBlending {};
             bool UseDepth { true };
             u32 Samples { 1 };
+            Maybe<DepthStencilState> DepthState {};
         };
 
         struct CompiledShaderStage {

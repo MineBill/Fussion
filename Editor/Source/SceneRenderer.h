@@ -170,11 +170,11 @@ private:
     Fussion::GPU::Texture m_ShadowPassRenderTarget {};
     std::array<Fussion::GPU::TextureView, MAX_SHADOW_CASCADES> m_ShadowPassRenderTargetViews {};
 
-    Fussion::AssetRef<Fussion::ShaderAsset> m_GridShader {};
-    Fussion::GPU::RenderPipeline m_SimplePipeline {}, m_GridPipeline {}, m_PBRPipeline {}, m_DepthPipeline {}, m_SkyPipeline {}, m_DebugPipeline {};
+    Fussion::AssetRef<Fussion::ShaderAsset> m_GridShader {}, m_SkyShader {}, m_DepthShader {};
+    Fussion::GPU::RenderPipeline m_GridPipeline {}, m_PBRPipeline {}, m_DebugPipeline {};
 
     Fussion::GPU::BindGroup m_GlobalBindGroup {}, m_SceneBindGroup {};
-    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout {}, m_SceneBindGroupLayout {}, m_ObjectBindGroupLayout {}, m_ObjectDepthBgl {};
+    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout {}, m_SceneBindGroupLayout {}, m_ObjectBindGroupLayout {};
 
     std::vector<Fussion::GPU::Buffer> m_InstanceBufferPool {};
 

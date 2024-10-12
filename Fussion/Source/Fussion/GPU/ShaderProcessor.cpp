@@ -233,7 +233,7 @@ namespace Fussion::GPU {
             }
         }
 
-        {
+        if (fsEntryPoint) {
             auto fragmentReflection = fsEntryPoint->getLayout();
             auto entryPointReflection = fragmentReflection->getEntryPointByIndex(0);
 
@@ -287,12 +287,13 @@ namespace Fussion::GPU {
 
             ShaderProcessor::ResourceUsage resourceUsage {
                 .Label = var->getName(),
-                .Stages = ShaderStage::Fragment | ShaderStage::Vertex,
+                .Stages = ShaderStage::Vertex,
                 .Binding = index,
             };
 
             switch (var->getType()->getKind()) {
             case TypeReflection::Kind::ConstantBuffer:
+                resourceUsage.Stages = ShaderStage::Fragment | ShaderStage::Vertex;
                 resourceUsage.Type = BindingType::Buffer {
                     .Type = BufferBindingType::Uniform {},
                     .HasDynamicOffset = false,
@@ -321,17 +322,35 @@ namespace Fussion::GPU {
                 case SLANG_STRUCTURED_BUFFER: {
                     skip = true;
                     bool readOnly = var->getType()->getResourceAccess() == SLANG_RESOURCE_ACCESS_READ;
+                    resourceUsage.Stages = ShaderStage::Fragment | ShaderStage::Vertex;
                     resourceUsage.Type = BindingType::Buffer {
                         .Type = BufferBindingType::Storage { .ReadOnly = readOnly },
                         .HasDynamicOffset = false,
                     };
                 } break;
                 default:
-                    PANIC("Unimplemented: {}", magic_enum::enum_name(var->getType()->getResourceShape()));
+                    break;
+                    // PANIC("Unimplemented: {}", magic_enum::enum_name(var->getType()->getResourceShape()));
                 }
                 if (skip) {
                     break;
                 }
+                if (shape & SLANG_TEXTURE_SHADOW_FLAG) {
+                    if (shape & SLANG_TEXTURE_ARRAY_FLAG) {
+                        viewDimension = TextureViewDimension::D2_Array;
+                    } else {
+                        viewDimension = TextureViewDimension::D2;
+                    }
+                    resourceUsage.Stages = ShaderStage::Fragment;
+                    resourceUsage.Type = BindingType::Texture {
+                        .SampleType = TextureSampleType::Depth {},
+                        .ViewDimension = viewDimension, // Uninitialized access prevented by the skip check above.
+                        .MultiSampled = false,
+                    };
+                    break;
+                }
+
+                resourceUsage.Stages = ShaderStage::Fragment;
                 resourceUsage.Type = BindingType::Texture {
                     .SampleType = TextureSampleType::Float { .Filterable = true },
                     .ViewDimension = viewDimension, // Uninitialized access prevented by the skip check above.
@@ -339,6 +358,7 @@ namespace Fussion::GPU {
                 };
             } break;
             case TypeReflection::Kind::SamplerState:
+                resourceUsage.Stages = ShaderStage::Fragment;
                 resourceUsage.Type = BindingType::Sampler {
                     .Type = SamplerBindingType::Filtering,
                 };
@@ -432,7 +452,10 @@ namespace Fussion::GPU {
         componentTypes.push_back(g_CommonModule);
         componentTypes.push_back(slangModule);
         componentTypes.push_back(vsEntryPoint);
-        componentTypes.push_back(fsEntryPoint);
+
+        if (fsEntryPoint) {
+            componentTypes.push_back(fsEntryPoint);
+        }
 
         ComPtr<IComponentType> composedProgram;
         {
@@ -456,6 +479,7 @@ namespace Fussion::GPU {
             SLANG_CHECK(result);
         }
 
+        CompiledShader shader {};
         ComPtr<IBlob> spirvBlob;
         {
             ZoneScopedN("VS Entry Point Code");
@@ -464,28 +488,27 @@ namespace Fussion::GPU {
                 0, 0, spirvBlob.writeRef(), diagnosticsBlob.writeRef());
             DiagnoseIfNeeded(diagnosticsBlob);
             SLANG_CHECK(result);
+
+            usz size = spirvBlob->getBufferSize() / 4;
+            shader.VertexStage.resize(size);
+            auto const* ptr = CAST(u32 const*, spirvBlob->getBufferPointer());
+            std::copy_n(ptr, size, shader.VertexStage.data());
         }
 
         ComPtr<IBlob> fsSpirvBlob;
-        {
+        if (fsEntryPoint) {
             ZoneScopedN("FS Entry Point Code");
             ComPtr<IBlob> diagnosticsBlob;
             SlangResult result = linkedProgram->getEntryPointCode(
                 1, 0, fsSpirvBlob.writeRef(), diagnosticsBlob.writeRef());
             DiagnoseIfNeeded(diagnosticsBlob);
             SLANG_CHECK(result);
+
+            usz size = fsSpirvBlob->getBufferSize() / 4;
+            shader.FragmentStage.resize(size);
+            auto const* ptr = CAST(u32 const*, fsSpirvBlob->getBufferPointer());
+            std::copy_n(ptr, size, shader.FragmentStage.data());
         }
-
-        CompiledShader shader {};
-        usz size = spirvBlob->getBufferSize() / 4;
-        shader.VertexStage.resize(size);
-        auto const* ptr = CAST(u32 const*, spirvBlob->getBufferPointer());
-        std::copy_n(ptr, size, shader.VertexStage.data());
-
-        size = fsSpirvBlob->getBufferSize() / 4;
-        shader.FragmentStage.resize(size);
-        ptr = CAST(u32 const*, fsSpirvBlob->getBufferPointer());
-        std::copy_n(ptr, size, shader.FragmentStage.data());
 
         ProgramLayout* reflection = slangModule->getLayout();
 

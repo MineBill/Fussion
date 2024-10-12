@@ -19,7 +19,11 @@ struct LightData {
 
 @group(0) @binding(0) var<uniform> view_data: ViewData;
 
+@group(1) @binding(0) var ssao_texture: texture_2d<f32>;
+@group(1) @binding(1) var environment_map: texture_cube<f32>;
+@group(1) @binding(2) var ssao_sampler: sampler;
 @group(1) @binding(3) var<uniform> light_data: LightData;
+@group(1) @binding(4) var shadow_texture: texture_depth_2d_array;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

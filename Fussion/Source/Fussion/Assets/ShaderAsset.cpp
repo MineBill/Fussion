@@ -63,11 +63,14 @@ namespace Fussion {
             .Primitive = GPU::PrimitiveState::Default(),
             .DepthStencil = None(),
             .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {},
+            .Fragment = None(),
             .VertexEntryPointOverride = "main"sv,
             .FragmentEntryPointOverride = "main"sv,
         };
-        if (compiledShader.Metadata.UseDepth) {
+
+        if (compiledShader.Metadata.DepthState) {
+            spec.DepthStencil = compiledShader.Metadata.DepthState.Unwrap();
+        } else if (compiledShader.Metadata.UseDepth) {
             spec.DepthStencil = GPU::DepthStencilState::Default();
         }
 
@@ -90,6 +93,10 @@ namespace Fussion {
                 // Default is triangle list.
                 spec.Primitive.Topology = GPU::PrimitiveTopology::TriangleList;
             }
+        }
+
+        if (!compiledShader.Metadata.ColorOutputs.empty()) {
+            spec.Fragment = GPU::FragmentStage {};
         }
 
         u32 i = 0;

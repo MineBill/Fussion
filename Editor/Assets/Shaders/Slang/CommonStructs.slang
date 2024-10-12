@@ -19,3 +19,16 @@ public struct SurfaceGeometry {
     public float2 UV;
     public float3 Color;
 }
+
+public struct DirectionalLight {
+    public float4x4 LightSpaceMatrix[4];
+    public float4 Direction;
+    public float4 Color;
+}
+
+public struct LightData {
+    public DirectionalLight Directional;
+    public float4 ShadowSplitDistances;
+}
+
+

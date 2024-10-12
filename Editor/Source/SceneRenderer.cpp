@@ -558,47 +558,6 @@ void SceneRenderer::Init()
     ////////////////////////
 
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/simple.wgsl").Unwrap();
-
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "Simple WGSL Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_GlobalBindGroupLayout
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "Simple RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = GPU::PrimitiveState::Default(),
-            .DepthStencil = None(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
-                    GPU::ColorTargetState {
-                        .Format = GPU::TextureFormat::RGBA8Unorm,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
-                    } } },
-        };
-
-        m_SimplePipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
-    }
-
-    {
         constexpr auto path = "Assets/Shaders/Slang/Editor/Grid.slang";
         GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
         compiled.Metadata.UseBlending = true;
@@ -647,53 +606,16 @@ void SceneRenderer::Init()
 
     SetupSceneBindGroup();
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/Sky.wgsl").Unwrap();
+        constexpr auto path = "Assets/Shaders/Slang/ProceduralSky.slang";
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        compiled.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
+        compiled.Metadata.DepthState = GPU::DepthStencilState::Default();
+        compiled.Metadata.DepthState->DepthWriteEnabled = false;
+        compiled.Metadata.DepthState->DepthCompare = GPU::CompareFunction::Always;
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "Sky Shader:VS"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
+        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
 
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_GlobalBindGroupLayout,
-            m_SceneBindGroupLayout,
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        auto primitive = GPU::PrimitiveState::Default();
-        primitive.Topology = GPU::PrimitiveTopology::TriangleStrip;
-
-        auto depth = GPU::DepthStencilState::Default();
-        depth.DepthWriteEnabled = false;
-        depth.DepthCompare = GPU::CompareFunction::Always;
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "Sky RP"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = primitive,
-            .DepthStencil = depth,
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
-                    GPU::ColorTargetState {
-                        .Format = TonemappingPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
-                    },
-                },
-            },
-        };
-
-        m_SkyPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
     // Creating the pbr pipeline after the scene bind group, which must be done after the ssao blur pipeline. oof incarnate.
@@ -928,86 +850,11 @@ void SceneRenderer::SetupShadowPassRenderTarget()
 void SceneRenderer::SetupShadowPass()
 {
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/DepthPass.wgsl").Unwrap();
+        constexpr auto path = "Assets/Shaders/Slang/DepthPass.slang";
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        auto shader = MakeRef<ShaderAsset>(compiled, std::vector<GPU::TextureFormat> {});
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "PBR Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            //.FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bgl_entries {
-            GPU::BindGroupLayoutEntry {
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex,
-                .Type = GPU::BindingType::Buffer {
-                    .Type = GPU::BufferBindingType::Storage {
-                        .ReadOnly = true,
-                    },
-                },
-                .Count = 1,
-            },
-        };
-        GPU::BindGroupLayoutSpec bgl_spec {
-            .Entries = bgl_entries,
-        };
-
-        m_ObjectDepthBgl = Renderer::Device().CreateBindGroupLayout(bgl_spec);
-
-        std::array bind_group_layouts {
-            m_ObjectDepthBgl,
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        std::array attributes {
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 1,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float2,
-                .ShaderLocation = 3,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 4,
-            },
-        };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "DepthPass::Pipeline"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout } },
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
-            },
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = None(),
-        };
-
-        m_DepthPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        m_DepthShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
     }
 
     GPU::BufferSpec ibs {
@@ -1155,7 +1002,8 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 };
                 auto rp = encoder.BeginRendering(rp_spec);
                 rp.SetViewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
-                rp.SetPipeline(m_DepthPipeline);
+                auto shader = m_DepthShader.Get();
+                rp.SetPipeline(shader->Pipeline());
 
                 std::array bind_group_entries {
                     GPU::BindGroupEntry {
@@ -1172,7 +1020,7 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     .Entries = bind_group_entries
                 };
 
-                auto object_group = Renderer::Device().CreateBindGroup(m_ObjectDepthBgl, bg_spec);
+                auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
                 m_ObjectGroupsToRelease.push_back(object_group);
                 rp.SetBindGroup(object_group, 0);
                 for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
@@ -1401,7 +1249,8 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
         scene_rp.SetBindGroup(m_SceneBindGroup, 1);
         {
-            scene_rp.SetPipeline(m_SkyPipeline);
+            auto shader = m_SkyShader.Get();
+            scene_rp.SetPipeline(shader->Pipeline());
             scene_rp.Draw({ 0, 4 }, { 0, 1 });
         }
 
