@@ -14,7 +14,7 @@ being able to load a "cooked" game from a single asset file.
 The engine uses a "component" based system. Entities exist in the world and can have multiple components attached to them. It follows the logic of Unity's MonoBehaviour and not an ECS.
 The reason for this is that i just feel more comfortable working with this type of components and speed is not a hude concern right now.
 
-Vulkan is used for rendering, with a simple wrapper that tries to make it more friendly to work with.
+[wgpu-native](https://github.com/gfx-rs/wgpu-native) is used for rendering.
 
 ## Building and Running
 > [!WARNING]  
@@ -22,15 +22,15 @@ Vulkan is used for rendering, with a simple wrapper that tries to make it more f
 > If you do encounter issues, please open in issue, i would love to help you get it working!
 
 ### Linux
-The engine and editor are designed in such a way to be cross-platorm but there are several missing implementation of various systems, simply because i'm too lazy to boot into Linux, implement and test them. This means that most likely it won't compile in Linux.
+Make sure the GLFW build dependencies are met by following GLFW [compilation guide](https://www.glfw.org/docs/latest/compile.html).
+
+The project will build GLFW for X11 by default, mainly because RenderDoc doesn't support wayland. This can be overriden in `Vendor.lua`.
 
 ### MacOS
 No
 
 ### Requirements
 - A C++ compiler
-- Vulkan SDK
-  - You __MUST__ make sure the SDK is installed with the debug versions of the shader libraries!
 - XMake
 
 ### Building the Editor
