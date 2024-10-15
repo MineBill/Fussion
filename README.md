@@ -47,17 +47,11 @@ Once that is done, you should be able to build the engine by simple running xmak
 xmake
 ```
 
-To launch the editor, you first need to create a project. A project creator is "in the works" and will be runnable with the following command:
-```shell
-xmake r Editor # Run the Editor target without any args
-```
+### Running
+If you run the Editor without any arguments, a project creator should appear.
 
-However, currently you need an existing project. A sample is provided under `Editor/Assets/Projects/SampleProject`:
-```shell
-xmake r Editor -Project=Editor/Assets/Projects/SampleProject/SampleProject.fsnproj
-```
-
-Hopefully, the engine should now be running!
+You can then create a new project and the editor should automatically launch to the newly created
+project!
 
 ### Discord
 Everybody and their mum has a discord server, so why not me? :)
