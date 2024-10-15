@@ -13,6 +13,7 @@
     }
 
 namespace Fussion {
+    // TODO: Rename and/or namespace this.
     enum class EventType : u8 {
         OnKeyPressed = 0,
         OnKeyReleased,

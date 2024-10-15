@@ -23,7 +23,9 @@ namespace Fussion {
 
         virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override
         {
-            m_application->OnLogReceived(level, message, loc);
+            if (m_application) {
+                m_application->OnLogReceived(level, message, loc);
+            }
         }
     };
 
@@ -37,7 +39,8 @@ namespace Fussion {
         LOG_DEBUG("Initializing application");
         s_Instance = this;
         Log::DefaultLogger()->SetLogLevel(LogLevel::Debug);
-        Log::DefaultLogger()->RegisterSink(MakeRef<SimpleSink>(this));
+        m_Sink = MakeRef<SimpleSink>(this);
+        Log::DefaultLogger()->RegisterSink(m_Sink);
 
         WindowOptions options {
             .InitialTitle = "Window",
@@ -78,6 +81,7 @@ namespace Fussion {
         }
 
         Renderer::Shutdown();
+        Log::DefaultLogger()->RemoveSink(m_Sink);
     }
 
     void Application::Quit()

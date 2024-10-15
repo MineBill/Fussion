@@ -29,6 +29,7 @@ namespace Fussion {
     protected:
         Ptr<Window> m_Window {};
         bool m_QuitRequested { false };
+        Ref<LogSink> m_Sink {};
 
     private:
         static Application* s_Instance;

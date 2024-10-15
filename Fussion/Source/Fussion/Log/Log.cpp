@@ -90,4 +90,18 @@ namespace Fussion {
         sink->m_logger = this;
         m_Sinks.push_back(sink);
     }
+
+    void Log::RemoveSink(Ref<LogSink> const& sink)
+    {
+        s32 pos = -1;
+        for (usz i = 0; i < m_Sinks.size(); i++) {
+            if (m_Sinks[i].get() == sink.get()) {
+                pos = CAST(s32, i);
+                break;
+            }
+        }
+        if (pos != -1) {
+            m_Sinks.erase(m_Sinks.begin() + pos);
+        }
+    }
 }

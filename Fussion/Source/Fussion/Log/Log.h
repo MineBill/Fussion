@@ -47,6 +47,7 @@ namespace Fussion {
             std::source_location const& loc = std::source_location::current());
 
         void RegisterSink(Ref<LogSink> const& sink);
+        void RemoveSink(Ref<LogSink> const& sink);
 
         LogLevel GetPriority() const { return m_Priority; }
 
