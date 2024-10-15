@@ -51,8 +51,10 @@ namespace Fussion::System {
         switch (folder) {
         case KnownFolders::Downloads:
             folder_id = FOLDERID_Downloads;
+            break;
         case KnownFolders::AppData:
             folder_id = FOLDERID_LocalAppData;
+            break;
         }
 
         PWSTR path;
