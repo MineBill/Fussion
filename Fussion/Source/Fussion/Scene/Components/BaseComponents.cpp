@@ -111,43 +111,43 @@ namespace Fussion {
         if (!context.RenderFlags.test(RenderState::LightCollection))
             return;
 
-        context.PostProcessingSettings.UseSSAO = ssao;
-        context.PostProcessingSettings.SSAOData.Radius = ssao_radius;
-        context.PostProcessingSettings.SSAOData.Bias = ssao_bias;
-        context.PostProcessingSettings.SSAOData.NoiseScale = ssao_noise_scale;
+        context.PostProcessingSettings.UseSSAO = UseSSAO;
+        context.PostProcessingSettings.SSAOData.Radius = SSAORadius;
+        context.PostProcessingSettings.SSAOData.Bias = SSAOBias;
+        context.PostProcessingSettings.SSAOData.NoiseScale = SSAONoiseScale;
 
-        context.PostProcessingSettings.TonemappingSettings.Gamma = gamma;
-        context.PostProcessingSettings.TonemappingSettings.Exposure = exposure;
-        context.PostProcessingSettings.TonemappingSettings.Mode = CAST(u32, tonemap_mode);
+        context.PostProcessingSettings.TonemappingSettings.Gamma = TMGamma;
+        context.PostProcessingSettings.TonemappingSettings.Exposure = TMExposure;
+        context.PostProcessingSettings.TonemappingSettings.Mode = CAST(u32, TMMode);
 
-        context.EnvironmentMap = environment_map.Get();
+        context.EnvironmentMap = EnvironmentMap.Get();
     }
 
     void Environment::Serialize(Serializer& ctx) const
     {
         Component::Serialize(ctx);
-        FSN_SERIALIZE_MEMBER(ssao);
-        FSN_SERIALIZE_MEMBER(ssao_bias);
-        FSN_SERIALIZE_MEMBER(ssao_noise_scale);
-        FSN_SERIALIZE_MEMBER(ssao_radius);
-        FSN_SERIALIZE_MEMBER(gamma);
-        FSN_SERIALIZE_MEMBER(exposure);
-        FSN_SERIALIZE_MEMBER(tonemap_mode);
+        FSN_SERIALIZE_MEMBER(UseSSAO);
+        FSN_SERIALIZE_MEMBER(SSAOBias);
+        FSN_SERIALIZE_MEMBER(SSAONoiseScale);
+        FSN_SERIALIZE_MEMBER(SSAORadius);
+        FSN_SERIALIZE_MEMBER(TMGamma);
+        FSN_SERIALIZE_MEMBER(TMExposure);
+        FSN_SERIALIZE_MEMBER(TMMode);
 
-        FSN_SERIALIZE_MEMBER(environment_map);
+        FSN_SERIALIZE_MEMBER(EnvironmentMap);
     }
 
     void Environment::Deserialize(Deserializer& ctx)
     {
         Component::Deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(ssao);
-        FSN_DESERIALIZE_MEMBER(ssao_bias);
-        FSN_DESERIALIZE_MEMBER(ssao_noise_scale);
-        FSN_DESERIALIZE_MEMBER(ssao_radius);
-        FSN_DESERIALIZE_MEMBER(gamma);
-        FSN_DESERIALIZE_MEMBER(exposure);
-        FSN_DESERIALIZE_MEMBER(tonemap_mode);
+        FSN_DESERIALIZE_MEMBER(UseSSAO);
+        FSN_DESERIALIZE_MEMBER(SSAOBias);
+        FSN_DESERIALIZE_MEMBER(SSAONoiseScale);
+        FSN_DESERIALIZE_MEMBER(SSAORadius);
+        FSN_DESERIALIZE_MEMBER(TMGamma);
+        FSN_DESERIALIZE_MEMBER(TMExposure);
+        FSN_DESERIALIZE_MEMBER(TMMode);
 
-        FSN_DESERIALIZE_MEMBER(environment_map);
+        FSN_DESERIALIZE_MEMBER(EnvironmentMap);
     }
 }

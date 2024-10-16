@@ -81,28 +81,28 @@ namespace Fussion {
         virtual void OnDraw(RenderContext& context) override;
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO")]]
-        bool ssao {};
+        bool UseSSAO {};
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO Radius"), Range(0, 1, 0.1)]]
-        f32 ssao_radius {};
+        f32 SSAORadius { 0.5f };
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO Bias"), Range(0, 0.05, 0.001)]]
-        f32 ssao_bias {};
+        f32 SSAOBias { 0.025f };
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO Noise Scale"), Range(1, 16, 1)]]
-        f32 ssao_noise_scale {};
+        f32 SSAONoiseScale { 2.0f };
 
         [[API, EditorRegion("ToneMapping"), EditorName("Gamma")]]
-        f32 gamma {};
+        f32 TMGamma { 2.2f };
 
         [[API, EditorRegion("ToneMapping"), EditorName("Exposure")]]
-        f32 exposure {};
+        f32 TMExposure { 1.0f };
 
         [[API, EditorRegion("ToneMapping"), EditorName("Tonemap Mode")]]
-        TonemapMode tonemap_mode {};
+        TonemapMode TMMode { TonemapMode::Reinhard };
 
         [[API, EditorName("Env Map")]]
-        AssetRef<Texture2D> environment_map;
+        AssetRef<Texture2D> EnvironmentMap;
 
         virtual void Serialize(Serializer& ctx) const override;
         virtual void Deserialize(Deserializer& ctx) override;
