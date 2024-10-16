@@ -259,7 +259,7 @@ namespace Fussion {
         r = m_ScriptEngine->RegisterObjectMethod("Vector2", "float Aspect() const", asMETHODPR(Vector2, Aspect, () const, f32), asCALL_THISCALL); VERIFY( r >= 0 );
         r = m_ScriptEngine->RegisterObjectMethod("Vector2", "bool IsZero() const", asMETHOD(Vector2, IsZero), asCALL_THISCALL); VERIFY( r >= 0 );
 
-        r = m_ScriptEngine->RegisterObjectType("Vector3", sizeof(Vector3), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Vector3>()); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterObjectType("Vector3", sizeof(Vector3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_ALLFLOATS | asGetTypeTraits<Vector3>()); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector3", "float x", asOFFSET(Vector3, x)); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector3", "float y", asOFFSET(Vector3, y)); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Vector3", "float z", asOFFSET(Vector3, z)); VERIFY(r >= 0);
