@@ -6,45 +6,14 @@
 #include "glfw3webgpu.h"
 
 #define GLFW_INCLUDE_NONE
+#include "Assets/AssetManager.h"
+#include "Assets/AssetRef.h"
+#include "Assets/ShaderAsset.h"
 #include <GLFW/glfw3.h>
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 #include <webgpu/webgpu.h>
 #include <webgpu/wgpu.h>
-
-constexpr auto MipMapGeneratorSource = R"wgsl(
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) uv: vec2<f32>,
-}
-
-@vertex
-fn vs_main(@builtin(vertex_index) vtx: u32) -> VertexOutput {
-    var out: VertexOutput;
-    var plane: array<vec3f, 6> = array(
-        vec3f(-1, -1, 0), vec3f(1, -1, 0), vec3f(-1, 1, 0),
-        vec3f(-1, 1, 0), vec3f(1, -1, 0), vec3f(1, 1, 0)
-    );
-    var uvs: array<vec2<f32>, 6> = array(
-        vec2f(0, 1), vec2f(1, 1), vec2f(0, 0),
-        vec2f(0, 0), vec2f(1, 1), vec2f(1, 0),
-    );
-    let p = plane[vtx].xyz;
-
-    out.position = vec4<f32>(p, 1.0);
-    out.uv = uvs[vtx];
-    // out.uv = vec2f(f32((vtx << 1) & 2), f32(vtx & 2));
-    // out.position = vec4f(out.uv * vec2f(2.0f, -2.0f) + vec2f( -1.0f, 1.0f), 0.0f, 1.0f);
-    return out;
-}
-
-@group(0) @binding(0) var tex: texture_2d<f32>;
-@group(0) @binding(1) var sam: sampler;
-
-@fragment
-fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(tex, sam, in.uv);
-})wgsl";
 
 namespace Fussion::GPU {
     template<class... Ts>
@@ -55,119 +24,30 @@ namespace Fussion::GPU {
     template<class... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
 
-    struct MipMapPipeline {
-        ShaderModule shader {};
-        RenderPipeline pipeline {};
-        BindGroupLayout layout {};
-        BindGroup bind_group {};
-        Sampler sampler {};
-        Texture render_texture {};
-        Texture target_texture {};
-        u32 mip_levels {};
-        std::vector<TextureView> views {};
-
-        void Initalize(Device const& device, Texture& texture)
+    class MipMapPipeline {
+    public:
+        void Initialize(Device const& device)
         {
-            target_texture = texture;
-            {
-                Vector2 size = { texture.Spec.Size.x, texture.Spec.Size.y };
-                render_texture = device.CreateTexture({
-                    .Usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
-                    .Dimension = TextureDimension::D2,
-                    .Size = { texture.Spec.Size.x, texture.Spec.Size.y, 1 },
-                    .Format = texture.Spec.Format,
-                    .SampleCount = 1,
-                    .Aspect = TextureAspect::All,
-                    .GenerateMipMaps = true,
-                });
-                render_texture.InitializeView();
-
-                auto encoder = device.CreateCommandEncoder();
-                encoder.CopyTextureToTexture(texture, render_texture, size);
-                auto cmd = encoder.Finish();
-                device.SubmitCommandBuffer(cmd);
-            }
-            mip_levels = texture.MipLevelCount;
-            ShaderModuleSpec shader_spec {
-                .Label = "MipMap Generator"sv,
-                .Type = GPU::WGSLShader {
-                    .Source = MipMapGeneratorSource,
-                },
-                .VertexEntryPoint = "vs_main",
-                .FragmentEntryPoint = "fs_main",
-            };
-            shader = device.CreateShaderModule(shader_spec);
-
-            RenderPipelineSpec spec {
-                .Label = "fuck"sv,
-                .Layout = None(),
-                .Primitive = {
-                    .Topology = PrimitiveTopology::TriangleList,
-                    .StripIndexFormat = None(),
-                    .FrontFace = FrontFace::Ccw,
-                    .Cull = Face::None,
-                },
-                .DepthStencil = None(),
-                .MultiSample = MultiSampleState::Default(),
-                .Fragment = FragmentStage {
-                    .Targets = { ColorTargetState {
-                        .Format = texture.Spec.Format,
-                        .Blend = BlendState::Default(),
-                        .WriteMask = ColorWrite::All,
-                    } },
-                },
-            };
-            spec.Primitive.Topology = PrimitiveTopology::TriangleStrip;
-
-            pipeline = device.CreateRenderPipeline(shader, shader, spec);
-
-            layout = pipeline.GetBindGroupLayout(0);
+            constexpr auto ShaderPath = "Assets/Shaders/Slang/MipMapGenerator.slang";
+            m_CompiledShader = ShaderProcessor::CompileSlang(ShaderPath).Unwrap();
+            m_CompiledShader.Metadata.UseDepth = false;
+            m_CompiledShader.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
 
             SamplerSpec sampler_spec {
                 .LodMinClamp = 0.f,
                 .LodMaxClamp = 0.f,
                 .AnisotropyClamp = 2,
             };
-            sampler = device.CreateSampler(sampler_spec);
-
-            std::array entries = {
-                BindGroupEntry {
-                    .Binding = 0,
-                    .Resource = texture.View,
-                },
-                BindGroupEntry {
-                    .Binding = 1,
-                    .Resource = sampler },
-            };
-            BindGroupSpec bg_spec {
-                .Label = "fuck2"sv,
-                .Entries = entries,
-            };
-
-            bind_group = device.CreateBindGroup(layout, bg_spec);
-
-            // NOTE: When this is called from another thread logging
-            //       stuff here causes problems like segfaults and
-            //       other race condition fun stuff.
-
-            for (u32 i = 1; i < mip_levels; ++i) {
-                views.emplace_back(render_texture.CreateView({ .Label = "View"sv,
-                    .Usage = render_texture.Spec.Usage,
-                    .Dimension = TextureViewDimension::D2,
-                    .Format = render_texture.Spec.Format,
-                    .BaseMipLevel = i,
-                    .MipLevelCount = 1,
-                    .BaseArrayLayer = 0,
-                    .ArrayLayerCount = 1,
-                    .Aspect = render_texture.Spec.Aspect }));
-            }
+            m_Sampler = device.CreateSampler(sampler_spec);
         }
 
-        void Process(Device const& device)
+        void Process(Device const& device, Texture& texture)
         {
+            SetTexture(device, texture);
+
             auto encoder = device.CreateCommandEncoder("MipMap Generation");
             u32 i = 1;
-            Vector2 size = render_texture.Spec.Size;
+            Vector2 size = m_RenderTexture.Spec.Size;
             for (auto& view : views) {
                 if (size.x > 1)
                     size.x = CAST(f32, CAST(u32, size.x) / 2);
@@ -187,13 +67,13 @@ namespace Fussion::GPU {
                 };
                 auto rp = encoder.BeginRendering(spec);
 
-                rp.SetPipeline(pipeline);
-                rp.SetBindGroup(bind_group, 0);
+                rp.SetPipeline(m_Shader->Pipeline());
+                rp.SetBindGroup(m_BindGroup, 0);
                 rp.Draw({ 0, 6 }, { 0, 1 });
                 rp.End();
                 rp.Release();
 
-                encoder.CopyTextureToTexture(render_texture, target_texture, size, i, i);
+                encoder.CopyTextureToTexture(m_RenderTexture, m_TargetTexture, size, i, i);
                 ++i;
             }
 
@@ -204,12 +84,85 @@ namespace Fussion::GPU {
             for (auto& view : views) {
                 view.Release();
             }
-            pipeline.Release();
-            sampler.Release();
-            bind_group.Release();
-            shader.Release();
+            views.clear();
+            m_BindGroup.Release();
+            m_RenderTexture.Release();
         }
+
+    private:
+        void SetTexture(Device const& device, Texture& texture)
+        {
+            m_Shader = MakeRef<ShaderAsset>(m_CompiledShader, std::vector { texture.Spec.Format });
+
+            m_TargetTexture = texture;
+            {
+                Vector2 size = { texture.Spec.Size.x, texture.Spec.Size.y };
+                m_RenderTexture = device.CreateTexture({
+                    .Usage = TextureUsage::CopySrc | TextureUsage::RenderAttachment | TextureUsage::CopyDst,
+                    .Dimension = TextureDimension::D2,
+                    .Size = { texture.Spec.Size.x, texture.Spec.Size.y, 1 },
+                    .Format = texture.Spec.Format,
+                    .SampleCount = 1,
+                    .Aspect = TextureAspect::All,
+                    .GenerateMipMaps = true,
+                });
+                m_RenderTexture.InitializeView();
+
+                auto encoder = device.CreateCommandEncoder();
+                encoder.CopyTextureToTexture(texture, m_RenderTexture, size);
+                auto cmd = encoder.Finish();
+                device.SubmitCommandBuffer(cmd);
+            }
+            m_TargetMipLevels = texture.MipLevelCount;
+
+            // spec.Primitive.Topology = PrimitiveTopology::TriangleStrip;
+
+            std::array entries = {
+                BindGroupEntry {
+                    .Binding = 0,
+                    .Resource = texture.View,
+                },
+                BindGroupEntry {
+                    .Binding = 1,
+                    .Resource = m_Sampler,
+                },
+            };
+            BindGroupSpec bg_spec {
+                .Label = "MipMapGenerator::BindGroup"sv,
+                .Entries = entries,
+            };
+
+            m_BindGroup = device.CreateBindGroup(m_Shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
+
+            // NOTE: When this is called from another thread logging
+            //       stuff here causes problems like segfaults and
+            //       other race condition fun stuff.
+
+            for (u32 i = 1; i < m_TargetMipLevels; ++i) {
+                views.emplace_back(m_RenderTexture.CreateView({ .Label = "View"sv,
+                    .Usage = m_RenderTexture.Spec.Usage,
+                    .Dimension = TextureViewDimension::D2,
+                    .Format = m_RenderTexture.Spec.Format,
+                    .BaseMipLevel = i,
+                    .MipLevelCount = 1,
+                    .BaseArrayLayer = 0,
+                    .ArrayLayerCount = 1,
+                    .Aspect = m_RenderTexture.Spec.Aspect }));
+            }
+        }
+
+        BindGroup m_BindGroup {};
+        Sampler m_Sampler {};
+        Texture m_RenderTexture {};
+        Texture m_TargetTexture {};
+        u32 m_TargetMipLevels {};
+        std::vector<TextureView> views {};
+        Ref<ShaderAsset> m_Shader;
+
+        ShaderProcessor::CompiledShader m_CompiledShader {};
     };
+
+    MipMapPipeline g_MipMapPipeline;
 
     // Utility function to retrieve the adapter without callbacks.
     WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
@@ -378,11 +331,8 @@ namespace Fussion::GPU {
     void Texture::GenerateMipmaps(Device const& device)
     {
         if (Spec.GenerateMipMaps && MipLevelCount > 1) {
-            MipMapPipeline mmp;
-            mmp.Initalize(device, *this);
-
             // Utils::RenderDoc::StartCapture();
-            mmp.Process(device);
+            g_MipMapPipeline.Process(device, *this);
             // Utils::RenderDoc::EndCapture();
         }
     }
@@ -837,7 +787,8 @@ namespace Fussion::GPU {
                            [&](TextureView const& view) {
                                wgpu_entry.textureView = CAST(WGPUTextureView, view.Handle);
                            },
-                           [](auto&&) {} },
+                           [](auto&&) {},
+                       },
                 entry.Resource);
 
             return wgpu_entry;
@@ -1279,20 +1230,6 @@ namespace Fussion::GPU {
         wgpuQueueWriteBuffer(CAST(WGPUQueue, Queue), CAST(WGPUBuffer, buffer.Handle), offset, data, size);
     }
 
-    // void Device::SetErrorCallback(ErrorFn const& function)
-    // {
-    //     m_Function = std::move(function);
-    //
-    //     wgpuDeviceSetUncapturedErrorCallback(
-    //         CAST(WGPUDevice, Handle), [](WGPUErrorType type, char const* message, void* userdata) {
-    //             auto self = CAST(Device*, userdata);
-    //
-    //             if (self->m_Function)
-    //                 self->m_Function(FromWgpu(type), std::string_view(message));
-    //         },
-    //         this);
-    // }
-
     auto Adapter::RequestDevice(DeviceSpec const& spec) -> Device
     {
         std::vector<WGPUFeatureName> features {};
@@ -1321,9 +1258,12 @@ namespace Fussion::GPU {
             },
         };
 
-        auto device = request_device_sync(CAST(WGPUAdapter, Handle), &desc);
+        auto device = Device { request_device_sync(CAST(WGPUAdapter, Handle), &desc) };
 
-        return Device { device };
+        // TODO: Is there a better way to put this?
+        g_MipMapPipeline.Initialize(device);
+
+        return device;
     }
 
     bool Adapter::HasFeature(Feature feature) const
