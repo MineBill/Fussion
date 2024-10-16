@@ -349,3 +349,38 @@ package("slang")
         ]] }, {configs = {languages = "c++17"}}))
     end)
 package_end()
+
+if is_plat("linux") then
+    package("libsigcplusplus")
+        add_configs("shared", { description = "Build shared library", default = false, type = "boolean" })
+
+        add_deps("cmake")
+        set_sourcedir(path.join(os.scriptdir(), "Vendor/libsigcplusplus"))
+        add_includedirs("include/sigc++-3.0", "lib/sigc++-3.0/include")
+        on_install(function (package)
+            local configs = {}
+            table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
+            table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+            import("package.tools.cmake").install(package, configs)
+        end)
+    package_end()
+
+    package("dbus-cxx")
+--         set_version("")
+        add_configs("shared", { description = "Build shared library", default = false, type = "boolean" })
+
+        add_deps("cmake", "libsigcplusplus")
+        set_sourcedir(path.join(os.scriptdir(), "Vendor/dbus-cxx"))
+        add_includedirs("include/dbus-cxx-2.0", "include/dbus-cxx-uv-2.0")
+        on_install(function (package)
+            local configs = {}
+            table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
+            table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
+            table.insert(configs, "-DBUILD_TESTING=OFF")
+            import("package.tools.cmake").install(package, configs)
+        end)
+    package_end()
+end
+
+add_rpathdirs("@executable_name/lib", {installonly = true})
+set_policy("install.rpath")

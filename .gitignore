@@ -6,6 +6,7 @@
 vsxmake2022/
 Binaries/
 build/
+dist/
 cmake-build-debug/
 .cache/
 **/Generated/
@@ -21,6 +22,7 @@ Makefile
 imgui.ini
 .reflect_cache
 /CMakeLists.txt
+compile_commands.json
 
 # Exclude
 !Vendor/Binaries
