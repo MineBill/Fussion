@@ -1,5 +1,8 @@
 #include "Core/Core.h"
 #include "Fussion/OS/Dialog.h"
+#include "Log/Log.h"
+
+#include <dbus-cxx.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -35,12 +38,84 @@ namespace Fussion::Dialogs {
         return strings;
     }
 
+    using OpenFileFn = DBus::Path(std::string, std::string, std::map<std::string, DBus::Variant>);
+    using OpenFileResponseFn = void(u32 response, std::map<std::string, DBus::Variant> data);
+
     class LinuxDialog {
     public:
+        explicit LinuxDialog()
+        {
+            LOG_DEBUGF("Initializing Linux Dialog");
+            DBus::set_logging_function([](
+                                           char const* logger_name,
+                                           SL_LogLocation const* location,
+                                           SL_LogLevel const level,
+                                           char const* log_string) {
+                switch (level) {
+                case SL_WARN:
+                    LOG_WARNF("DBUS [{}]: {}", logger_name, log_string);
+                    break;
+                case SL_ERROR:
+                    LOG_ERRORF("DBUS [{}]: {}", logger_name, log_string);
+                    break;
+                case SL_FATAL:
+                    LOG_FATALF("DBUS [{}]: {}", logger_name, log_string);
+                    break;
+                default:
+                    break;
+                }
+            });
+
+            m_Dispatcher = DBus::StandaloneDispatcher::create();
+            m_Connection = m_Dispatcher->create_connection(DBus::BusType::SESSION);
+            m_DesktopProxy = m_Connection->create_object_proxy("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", DBus::ThreadForCalling::CurrentThread);
+            m_OpenFileFn = m_DesktopProxy->create_method<OpenFileFn>("org.freedesktop.portal.FileChooser", "OpenFile");
+        }
+
         virtual ~LinuxDialog() = default;
 
-        virtual auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> = 0;
-        virtual auto OpenDirectoryPicker() -> std::filesystem::path = 0;
+        auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple, bool directory = false) -> std::vector<std::filesystem::path>
+        {
+            std::vector<std::filesystem::path> files {};
+
+            std::map<std::string, DBus::Variant> options {};
+            if (directory) {
+                allow_multiple = false;
+            }
+            options["multiple"] = allow_multiple;
+            options["directory"] = directory;
+
+            auto responsePath = (*m_OpenFileFn)("", "Please select a file", options);
+
+            auto requestProxy = m_Connection->create_object_proxy("org.freedesktop.portal.Desktop", responsePath);
+            auto request = requestProxy->create_signal<OpenFileResponseFn>("org.freedesktop.portal.Request", "Response");
+            request->connect([this, &files](u32 response, std::map<std::string, DBus::Variant> data) {
+                if (response == 0) {
+                    if (data.contains("uris")) {
+                        for (auto const& file : data["uris"].to_vector<std::string>()) {
+                            // We only support localhost for now.
+                            if (file.starts_with("file:///")) {
+                                files.emplace_back(file.substr(7));
+                            } else {
+                                LOG_WARNF("Got invalid URI: {}", file);
+                            }
+                        }
+                    }
+                }
+                m_CompletedVariable.notify_all();
+            });
+
+            std::unique_lock lock(m_Mutex);
+            m_CompletedVariable.wait(lock);
+
+            return files;
+        }
+
+        auto OpenDirectoryPicker() -> std::filesystem::path
+        {
+            return OpenFilePicker({}, false, true).at(0);
+        }
+
         virtual void ShowMessageBox(MessageBox box) = 0;
 
         void SetPath(std::string const& path)
@@ -49,39 +124,17 @@ namespace Fussion::Dialogs {
         }
 
     protected:
+        std::condition_variable m_CompletedVariable;
+        std::mutex m_Mutex;
+        Ref<DBus::Dispatcher> m_Dispatcher {};
+        Ref<DBus::Connection> m_Connection {};
+        Ref<DBus::ObjectProxy> m_DesktopProxy {};
+        Ref<DBus::MethodProxy<OpenFileFn>> m_OpenFileFn {};
         std::string m_Path;
     };
 
     class KDialog final : public LinuxDialog {
     public:
-        auto OpenDirectoryPicker() -> std::filesystem::path override
-        {
-            return ShellExecute(fmt::format("{} --getexistingdirectory", m_Path)).at(0);
-        }
-
-        auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple) -> std::vector<std::filesystem::path> override
-        {
-            std::string filter_string;
-            for (size_t i = 0; i < filters.size(); i++) {
-                auto filter = filters[i];
-                filter_string += filter.name;
-                filter_string += " (";
-                for (auto const& pattern : filter.file_patterns) {
-                    filter_string += pattern + " ";
-                }
-                filter_string += ")";
-
-                if (i != filters.size() - 1) {
-                    filter_string += "|";
-                }
-            }
-
-            auto string_paths = ShellExecute(std::format("{0} --getopenfilename {2} . \"{1}\"", m_Path, filter_string, allow_multiple ? "--multiple" : ""));
-            std::vector<std::filesystem::path> paths;
-            std::ranges::copy(string_paths, std::back_inserter(paths));
-            return paths;
-        }
-
         void ShowMessageBox(MessageBox box) override
         {
             (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
@@ -90,18 +143,6 @@ namespace Fussion::Dialogs {
 
     class Zenity : public LinuxDialog {
     public:
-        std::filesystem::path OpenDirectoryPicker() override
-        {
-            return {};
-        }
-
-        auto OpenFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path> override
-        {
-            (void)filter;
-            (void)allow_multiple;
-            return {};
-        }
-
         void ShowMessageBox(MessageBox box) override
         {
             (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
@@ -198,7 +239,8 @@ namespace Fussion::Dialogs {
         return g_NativeDialog->OpenDirectoryPicker();
     }
 
-    void OpenDirectory(std::filesystem::path const& path) {
+    void OpenDirectory(std::filesystem::path const& path)
+    {
         (void)ShellExecute(std::format("xdg-open {}", path.string()));
     }
 }
