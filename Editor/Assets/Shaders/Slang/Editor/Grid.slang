@@ -1,4 +1,4 @@
-import common;
+import Common;
 import glsl;
 #include "Include/GlobalUniforms.slang"
 

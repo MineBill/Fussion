@@ -1,5 +1,5 @@
 #pragma once
-import common;
+import Common;
 
 __generic<let sampleCount : int = 0, let format : int = 0>
     typealias Depth2DArray = __TextureImpl<

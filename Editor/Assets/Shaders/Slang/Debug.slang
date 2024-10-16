@@ -1,4 +1,4 @@
-import common;
+import Common;
 #include "Include/GlobalUniforms.slang"
 
 struct VertexInput {

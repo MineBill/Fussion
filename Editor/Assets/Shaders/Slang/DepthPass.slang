@@ -1,4 +1,4 @@
-import common;
+import Common;
 
 struct InstanceData {
     float4x4 Model;

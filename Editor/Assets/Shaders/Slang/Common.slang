@@ -1,4 +1,4 @@
-module common;
+module Common;
 
 __include "CommonStructs";
 

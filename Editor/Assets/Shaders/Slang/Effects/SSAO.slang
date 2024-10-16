@@ -1,4 +1,4 @@
-import common;
+import Common;
 #include "Include/GlobalUniforms.slang"
 
 static const int g_KernelSize = 64;

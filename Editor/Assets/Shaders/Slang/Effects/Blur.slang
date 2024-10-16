@@ -1,4 +1,4 @@
-import common;
+import Common;
 
 [[vk::binding(0, 0)]]
 Texture2D uTexture;
