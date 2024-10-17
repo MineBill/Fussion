@@ -786,6 +786,12 @@ namespace Fussion::GPU {
             WriteBuffer(buffer, offset, data.data(), data.size_bytes());
         }
 
+        template<typename T>
+        void WriteBuffer(Buffer const& buffer, u64 offset, std::vector<T> const& data) const
+        {
+            WriteBuffer(buffer, offset, data.data(), data.size() * sizeof(T));
+        }
+
         void WriteTexture(
             Texture const& texture,
             void const* data,
