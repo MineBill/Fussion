@@ -5,7 +5,7 @@
 #include "Fussion/Math/Vector2.h"
 #include "Fussion/Math/Vector4.h"
 #include "Fussion/Rendering/Pipelines/CubeMapSkybox.h"
-#include "Fussion/Rendering/Pipelines/IBLIrradiance.h"
+#include "Fussion/Rendering/Pipelines/IrradianceIBLGenerator.h"
 #include "Fussion/Rendering/Pipelines/SSAOBlur.h"
 #include "Fussion/Rendering/Pipelines/TonemappingPipeline.h"
 #include "Fussion/Rendering/UniformBuffer.h"

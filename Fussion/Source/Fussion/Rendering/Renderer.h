@@ -52,6 +52,8 @@ namespace Fussion {
 
         static bool HasPipelineStatistics();
 
+        static GPU::Texture GenerateIrradianceMap(GPU::Texture const& texture);
+
     private:
         static Renderer* s_Renderer;
 

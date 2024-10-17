@@ -6,12 +6,17 @@
 #include "Fussion/Core/Application.h"
 #include "Fussion/GPU/Utils.h"
 #include "Fussion/Util/TextureImporter.h"
+#include "Pipelines/IrradianceIBLGenerator.h"
 
 #include <magic_enum/magic_enum.hpp>
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
     Renderer* Renderer::s_Renderer = nullptr;
+
+    struct Data {
+        IrradianceIBLGenerator IrradianceGenerator;
+    } g_Data;
 
     void Renderer::Initialize(Window const& window)
     {
@@ -51,6 +56,8 @@ namespace Fussion {
         s_Renderer->m_Adapter = adapter;
         s_Renderer->m_Instance = instance;
         s_Renderer->m_Surface = surface;
+
+        g_Data.IrradianceGenerator.Initialize();
 
         GPU::Utils::RenderDoc::Initialize();
     }
@@ -182,5 +189,10 @@ namespace Fussion {
     bool Renderer::HasPipelineStatistics()
     {
         return s_Renderer->m_HasPipelineStatistics;
+    }
+
+    GPU::Texture Renderer::GenerateIrradianceMap(GPU::Texture const& texture)
+    {
+        return g_Data.IrradianceGenerator.Generate(texture);
     }
 }

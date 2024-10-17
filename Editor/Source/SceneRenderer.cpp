@@ -5,7 +5,7 @@
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Core/Mem.h"
-#include "Fussion/Rendering/Pipelines/IBLIrradiance.h"
+#include "Fussion/Rendering/Pipelines/IrradianceIBLGenerator.h"
 #include "Project/Project.h"
 
 #include <Fussion/Core/Application.h>
@@ -798,12 +798,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     DepthPass(encoder, packet);
     if (m_RenderContext.EnvironmentMap != nullptr) {
         if (auto handle = m_RenderContext.EnvironmentMap->GetHandle(); !m_EnvironmentMaps.contains(handle)) {
-            IBLIrradiance ibl_irradiance {};
-            ibl_irradiance.init();
-            auto texture = ibl_irradiance.generate(m_RenderContext.EnvironmentMap->GetTexture());
-            m_EnvironmentMaps[handle] = texture;
-            // Somehow this causes a User-mode data execution prevention (DEP) violation
-            // m_environment_maps[handle] = gen.generate(m_render_context.environment_map->image());
+            m_EnvironmentMaps[handle] = Renderer::GenerateIrradianceMap(m_RenderContext.EnvironmentMap->GetTexture());
         }
     }
     PBRPass(encoder, packet, game_view);
