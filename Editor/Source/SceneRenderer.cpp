@@ -787,13 +787,13 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     SceneViewData.Data.view_rotation_only = packet.camera.rotation;
     SceneViewData.Data.position = packet.camera.position;
     SceneViewData.Data.screen_size = m_RenderArea;
-    SceneViewData.flush();
+    SceneViewData.Flush();
 
     if (!m_RenderContext.DirectionalLights.empty()) {
         SceneLightData.Data.directional_light = m_RenderContext.DirectionalLights[0].ShaderData;
         SceneLightData.Data.shadow_split_distances = Vector4 { 0.0f };
     }
-    SceneLightData.flush();
+    SceneLightData.Flush();
 
     DepthPass(encoder, packet);
     if (m_RenderContext.EnvironmentMap != nullptr) {
@@ -1037,7 +1037,7 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 rp.End();
                 rp.Release();
             }
-            SceneLightData.flush();
+            SceneLightData.Flush();
         }
     }
 }
@@ -1199,7 +1199,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
 
         if (m_RenderContext.PostProcessingSettings.UseSSAO) {
             ssao.Options.Data = m_RenderContext.PostProcessingSettings.SSAOData;
-            ssao.Options.flush();
+            ssao.Options.Flush();
 
             auto shader = ssao.Shader.Get();
             pass.SetPipeline(shader->Pipeline());

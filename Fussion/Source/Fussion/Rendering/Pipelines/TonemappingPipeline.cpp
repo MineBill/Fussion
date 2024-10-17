@@ -123,7 +123,7 @@ namespace Fussion {
         auto rp = encoder.BeginRendering(spec);
 
         m_TonemappingBuffer.Data = render_context.PostProcessingSettings.TonemappingSettings;
-        m_TonemappingBuffer.flush();
+        m_TonemappingBuffer.Flush();
 
         rp.SetPipeline(m_Pipeline);
         rp.SetBindGroup(m_BindGroup, 0);

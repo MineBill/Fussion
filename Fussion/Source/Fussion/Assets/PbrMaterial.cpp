@@ -44,7 +44,7 @@ void Fussion::PbrMaterial::UpdateBuffer()
     material_uniform_buffer.Data.roughness = roughness;
     material_uniform_buffer.Data.object_color = object_color;
     material_uniform_buffer.Data.tilling = tiling;
-    material_uniform_buffer.flush();
+    material_uniform_buffer.Flush();
 }
 
 void Fussion::PbrMaterial::UpdateSampler()

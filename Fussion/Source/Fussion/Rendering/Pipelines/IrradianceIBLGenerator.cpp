@@ -121,7 +121,7 @@ namespace Fussion {
 
             m_PerFaceViewData[i] = UniformBuffer<ViewData>::Create(Renderer::Device());
             m_PerFaceViewData[i].Data.View = m_CaptureViews[i];
-            m_PerFaceViewData[i].flush();
+            m_PerFaceViewData[i].Flush();
         }
     }
 

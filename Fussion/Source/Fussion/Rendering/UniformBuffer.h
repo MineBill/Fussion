@@ -29,7 +29,7 @@ namespace Fussion {
             return UniformBuffer(device, label);
         }
 
-        void flush()
+        void Flush()
         {
             ZoneScopedN("Uniform Buffer Flush");
             VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
