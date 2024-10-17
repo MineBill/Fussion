@@ -64,7 +64,7 @@ namespace Fussion {
 
         OnStart();
 
-        Renderer::Self().CreateDefaultResources();
+        Renderer::CreateDefaultResources();
 
         Clock clock;
         while (!m_QuitRequested) {
