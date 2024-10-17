@@ -799,6 +799,7 @@ void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     if (m_RenderContext.EnvironmentMap != nullptr) {
         if (auto handle = m_RenderContext.EnvironmentMap->GetHandle(); !m_EnvironmentMaps.contains(handle)) {
             m_EnvironmentMaps[handle] = Renderer::GenerateIrradianceMap(m_RenderContext.EnvironmentMap->GetTexture());
+            UpdateSceneBindGroup(ssao.RenderTarget);
         }
     }
     PBRPass(encoder, packet, game_view);
