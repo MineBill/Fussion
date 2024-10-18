@@ -13,6 +13,29 @@ public extension Texture2D
     }
 }
 
+__generic<let sampleCount : int = 0, let format : int = 0> public typealias Depth2DArray = __TextureImpl<
+    float,
+    __Shape2D,
+    1, // isArray
+    0, // isMS
+    sampleCount,
+    0, // access
+    1, // isShadow
+    0, // isCombined
+    format>;
+
+public extension Depth2DArray
+{
+    public float2 GetDim(uint mipLevel)
+    {
+        uint2 dim;
+        uint numLevels;
+        uint elements;
+        GetDimensions(mipLevel, dim.x, dim.y, elements, numLevels);
+        return float2(dim);
+    }
+}
+
 // Matrix multiplication operator don't seem to work??
 // We route them to mul as a workaround.
 public float4 operator*(float4x4 left, float4 right)
@@ -28,7 +51,8 @@ public float4x4 operator*(float4x4 left, float4x4 right)
 // https://gist.github.com/mattatz/86fff4b32d198d0928d0fa4ff32cf6fa
 #define IDENTITY_MATRIX float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
 
-public float4x4 inverse(float4x4 m) {
+public float4x4 inverse(float4x4 m)
+{
     float n11 = m[0][0], n12 = m[1][0], n13 = m[2][0], n14 = m[3][0];
     float n21 = m[0][1], n22 = m[1][1], n23 = m[2][1], n24 = m[3][1];
     float n31 = m[0][2], n32 = m[1][2], n33 = m[2][2], n34 = m[3][2];
@@ -73,32 +97,25 @@ public float4 matrix_to_quaternion(float4x4 m)
     float tr = m[0][0] + m[1][1] + m[2][2];
     float4 q = float4(0, 0, 0, 0);
 
-    if (tr > 0)
-    {
+    if (tr > 0) {
         float s = sqrt(tr + 1.0) * 2; // S=4*qw
         q.w = 0.25 * s;
         q.x = (m[2][1] - m[1][2]) / s;
         q.y = (m[0][2] - m[2][0]) / s;
         q.z = (m[1][0] - m[0][1]) / s;
-    }
-    else if ((m[0][0] > m[1][1]) && (m[0][0] > m[2][2]))
-    {
+    } else if ((m[0][0] > m[1][1]) && (m[0][0] > m[2][2])) {
         float s = sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2; // S=4*qx
         q.w = (m[2][1] - m[1][2]) / s;
         q.x = 0.25 * s;
         q.y = (m[0][1] + m[1][0]) / s;
         q.z = (m[0][2] + m[2][0]) / s;
-    }
-    else if (m[1][1] > m[2][2])
-    {
+    } else if (m[1][1] > m[2][2]) {
         float s = sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2; // S=4*qy
         q.w = (m[0][2] - m[2][0]) / s;
         q.x = (m[0][1] + m[1][0]) / s;
         q.y = 0.25 * s;
         q.z = (m[1][2] + m[2][1]) / s;
-    }
-    else
-    {
+    } else {
         float s = sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2; // S=4*qz
         q.w = (m[1][0] - m[0][1]) / s;
         q.x = (m[0][2] + m[2][0]) / s;
@@ -113,10 +130,18 @@ public float4x4 m_scale(float4x4 m, float3 v)
 {
     float x = v.x, y = v.y, z = v.z;
 
-    m[0][0] *= x; m[1][0] *= y; m[2][0] *= z;
-    m[0][1] *= x; m[1][1] *= y; m[2][1] *= z;
-    m[0][2] *= x; m[1][2] *= y; m[2][2] *= z;
-    m[0][3] *= x; m[1][3] *= y; m[2][3] *= z;
+    m[0][0] *= x;
+    m[1][0] *= y;
+    m[2][0] *= z;
+    m[0][1] *= x;
+    m[1][1] *= y;
+    m[2][1] *= z;
+    m[0][2] *= x;
+    m[1][2] *= y;
+    m[2][2] *= z;
+    m[0][3] *= x;
+    m[1][3] *= y;
+    m[2][3] *= z;
 
     return m;
 }
@@ -215,8 +240,7 @@ public float4x4 axis_matrix(float3 right, float3 up, float3 forward)
         xaxis.x, yaxis.x, zaxis.x, 0,
         xaxis.y, yaxis.y, zaxis.y, 0,
         xaxis.z, yaxis.z, zaxis.z, 0,
-        0, 0, 0, 1
-	);
+        0, 0, 0, 1);
 }
 
 // http://stackoverflow.com/questions/349050/calculating-a-lookat-matrix
@@ -274,3 +298,5 @@ public float4x4 extract_rotation_matrix(float4x4 m)
 
     return m;
 }
+
+
