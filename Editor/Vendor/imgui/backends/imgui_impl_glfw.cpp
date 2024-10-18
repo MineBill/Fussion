@@ -446,6 +446,8 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         bd->PrevUserCallbackCursorPos(window, x, y);
 
     ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)
+        return;
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
         int window_x, window_y;
