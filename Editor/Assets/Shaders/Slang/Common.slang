@@ -24,17 +24,17 @@ __generic<let sampleCount : int = 0, let format : int = 0> public typealias Dept
     0, // isCombined
     format>;
 
-public extension Depth2DArray
-{
-    public float2 GetDim(uint mipLevel)
-    {
-        uint2 dim;
-        uint numLevels;
-        uint elements;
-        GetDimensions(mipLevel, dim.x, dim.y, elements, numLevels);
-        return float2(dim);
-    }
-}
+// public extension Depth2DArray
+// {
+//     public float2 GetDim(uint mipLevel)
+//     {
+//         uint2 dim;
+//         uint numLevels;
+//         uint elements;
+//         GetDimensions(mipLevel, dim.x, dim.y, elements, numLevels);
+//         return float2(dim);
+//     }
+// }
 
 // Matrix multiplication operator don't seem to work??
 // We route them to mul as a workaround.
@@ -87,6 +87,40 @@ public float4x4 inverse(float4x4 m)
     ret[3][1] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * idet;
     ret[3][2] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * idet;
     ret[3][3] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * idet;
+
+    return ret;
+}
+
+float det2(const float a00, const float a01, const float a10, const float a11)
+{
+    return a00 * a11 - a01 * a10;
+}
+
+float determinant(float3x3 m)
+{
+    float det = 0;
+
+    det += m[0][0] * det2(m[1][1], m[1][2], m[2][1], m[2][2]);
+    det -= m[0][1] * det2(m[1][0], m[1][2], m[2][0], m[2][2]);
+    det += m[0][2] * det2(m[1][0], m[1][1], m[2][0], m[2][1]);
+
+    return det;
+}
+
+public float3x3 inverse(float3x3 m)
+{
+    float3x3 ret;
+    const float det = determinant(m);
+
+    ret[0][0] = det2(m[1][1], m[1][2], m[2][1], m[2][2]) / det;
+    ret[0][1] = det2(m[0][2], m[0][1], m[2][2], m[2][1]) / det;
+    ret[0][2] = det2(m[0][1], m[0][2], m[1][1], m[1][2]) / det;
+    ret[1][0] = det2(m[1][2], m[1][0], m[2][2], m[2][0]) / det;
+    ret[1][1] = det2(m[0][0], m[0][2], m[2][0], m[2][2]) / det;
+    ret[1][2] = det2(m[0][2], m[0][0], m[1][2], m[1][0]) / det;
+    ret[2][0] = det2(m[1][0], m[1][1], m[2][0], m[2][1]) / det;
+    ret[2][1] = det2(m[0][1], m[0][0], m[2][1], m[2][0]) / det;
+    ret[2][2] = det2(m[0][0], m[0][1], m[1][0], m[1][1]) / det;
 
     return ret;
 }

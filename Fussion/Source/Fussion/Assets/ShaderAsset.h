@@ -25,9 +25,10 @@ namespace Fussion {
         GPU::RenderPipeline Pipeline() const { return m_Pipeline; }
 
         /// Returns a bind group layout by set.
-        Maybe<GPU::BindGroupLayout> GetBindGroupLayout(u32 index);
-        std::vector<GPU::TextureFormat> GetColorTargetFormats() const { return m_ColorTargetFormats; }
-        GPU::ShaderProcessor::ShaderMetadata const& GetMetadata() const { return m_Metadata; }
+        // NOTE: What about creating an enum { Global, Scene, Object }, instead of using an index?
+        auto GetBindGroupLayout(u32 index) -> Maybe<GPU::BindGroupLayout>;
+        auto GetColorTargetFormats() const -> std::vector<GPU::TextureFormat> { return m_ColorTargetFormats; }
+        auto GetMetadata() const -> GPU::ShaderProcessor::ShaderMetadata const& { return m_Metadata; }
 
         static AssetType StaticType() { return AssetType::Shader; }
         virtual AssetType Type() const override { return StaticType(); }

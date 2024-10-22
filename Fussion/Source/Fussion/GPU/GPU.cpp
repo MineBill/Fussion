@@ -48,7 +48,7 @@ namespace Fussion::GPU {
             auto encoder = device.CreateCommandEncoder("MipMap Generation");
             u32 i = 1;
             Vector2 size = m_RenderTexture.Spec.Size;
-            for (auto& view : views) {
+            for (auto& view : m_Views) {
                 if (size.x > 1)
                     size.x = CAST(f32, CAST(u32, size.x) / 2);
                 if (size.y > 1)
@@ -81,10 +81,10 @@ namespace Fussion::GPU {
             device.SubmitCommandBuffer(cmd);
 
             encoder.Release();
-            for (auto& view : views) {
+            for (auto& view : m_Views) {
                 view.Release();
             }
-            views.clear();
+            m_Views.clear();
             m_BindGroup.Release();
             m_RenderTexture.Release();
         }
@@ -139,7 +139,7 @@ namespace Fussion::GPU {
             //       other race condition fun stuff.
 
             for (u32 i = 1; i < m_TargetMipLevels; ++i) {
-                views.emplace_back(m_RenderTexture.CreateView({ .Label = "View"sv,
+                m_Views.emplace_back(m_RenderTexture.CreateView({ .Label = "View"sv,
                     .Usage = m_RenderTexture.Spec.Usage,
                     .Dimension = TextureViewDimension::D2,
                     .Format = m_RenderTexture.Spec.Format,
@@ -156,7 +156,7 @@ namespace Fussion::GPU {
         Texture m_RenderTexture {};
         Texture m_TargetTexture {};
         u32 m_TargetMipLevels {};
-        std::vector<TextureView> views {};
+        std::vector<TextureView> m_Views {};
         Ref<ShaderAsset> m_Shader;
 
         ShaderProcessor::CompiledShader m_CompiledShader {};
@@ -1181,6 +1181,7 @@ namespace Fussion::GPU {
             CAST(WGPUCommandBuffer, cmd.handle),
         };
         wgpuQueueSubmit(CAST(WGPUQueue, Queue), 1, cmds);
+        cmd.Release();
     }
 
     void Device::WriteTexture(
@@ -1442,6 +1443,8 @@ namespace Fussion::GPU {
     void CommandBuffer::Release() const
     {
         ZoneScoped;
-        wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, handle));
+        if (handle != nullptr) {
+            wgpuCommandBufferRelease(CAST(WGPUCommandBuffer, handle));
+        }
     }
 }

@@ -1,5 +1,6 @@
 module Lights;
 import Common;
+import Math;
 
 namespace PBR {
     public float3 FresnelSchlick(float cos_theta, float3 f0, float roughness)
@@ -16,7 +17,7 @@ namespace PBR {
 
         let num = a2;
         var denom = (n_dot_h2 * (a2 - 1.0) + 1.0);
-        denom = pi * denom * denom;
+        denom = PI * denom * denom;
 
         return num / denom;
     }
@@ -34,8 +35,8 @@ namespace PBR {
 
     public float GeometrySmith(float3 n, float3 v, float3 l, float roughness)
     {
-        float3 n_dot_v = max(dot(n, v), 0.0);
-        float3 n_dot_l = max(dot(n, l), 0.0);
+        float n_dot_v = max(dot(n, v), 0.0);
+        float n_dot_l = max(dot(n, l), 0.0);
         float ggx2 = GeometrySchlickGGX(n_dot_v, roughness);
         float ggx1 = GeometrySchlickGGX(n_dot_l, roughness);
         return ggx1 * ggx2;

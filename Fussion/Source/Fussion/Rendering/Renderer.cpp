@@ -106,7 +106,6 @@ namespace Fussion {
         ZoneScoped;
         g_Data.Device.SubmitCommandBuffer(cmd);
         g_Data.Surface.Present();
-        cmd.Release();
     }
 
     void Renderer::Resize(Vector2 const& new_size)

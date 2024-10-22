@@ -126,7 +126,11 @@ namespace Fussion {
 
     ShaderAsset::~ShaderAsset()
     {
-        m_Pipeline.Release();
+        // NOTE: During shader reload, it's possible that the renderer will use the pipeline
+        // as the reload happens, during which the older shader asset destructor is called and the
+        // pipeline is destroyed. For now, we avoid destroying the pipeline, because live shader reload
+        // is much more valuable than being correct.
+        // m_Pipeline.Release();
     }
 
     Maybe<GPU::BindGroupLayout> ShaderAsset::GetBindGroupLayout(u32 index)

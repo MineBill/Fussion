@@ -453,104 +453,104 @@ void SceneRenderer::Init()
     }
 
     {
-        std::array entries {
-            GPU::BindGroupLayoutEntry {
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex,
-                .Type = GPU::BindingType::Buffer {
-                    .Type = GPU::BufferBindingType::Storage {
-                        .ReadOnly = true,
-                    },
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer {
-                    .Type = GPU::BufferBindingType::Uniform {},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 2,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float {},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 3,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float {},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 4,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float {},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 5,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float {},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 6,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float {},
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 7,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler {
-                    .Type = GPU::SamplerBindingType::Filtering,
-                },
-                .Count = 1,
-            },
-            GPU::BindGroupLayoutEntry {
-                .Binding = 8,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler {
-                    .Type = GPU::SamplerBindingType::Comparison,
-                },
-                .Count = 1,
-            },
-
-        };
-
-        GPU::BindGroupLayoutSpec spec {
-            .Label = "Object BGL"sv,
-            .Entries = entries,
-        };
-
-        m_ObjectBindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
+        // std::array entries {
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 0,
+        //         .Visibility = GPU::ShaderStage::Vertex,
+        //         .Type = GPU::BindingType::Buffer {
+        //             .Type = GPU::BufferBindingType::Storage {
+        //                 .ReadOnly = true,
+        //             },
+        //             .HasDynamicOffset = false,
+        //             .MinBindingSize = None(),
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 1,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Buffer {
+        //             .Type = GPU::BufferBindingType::Uniform {},
+        //             .HasDynamicOffset = false,
+        //             .MinBindingSize = None(),
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 2,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float {},
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 3,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float {},
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 4,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float {},
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 5,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float {},
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 6,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Texture {
+        //             .SampleType = GPU::TextureSampleType::Float {},
+        //             .ViewDimension = GPU::TextureViewDimension::D2,
+        //             .MultiSampled = false,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 7,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Sampler {
+        //             .Type = GPU::SamplerBindingType::Filtering,
+        //         },
+        //         .Count = 1,
+        //     },
+        //     GPU::BindGroupLayoutEntry {
+        //         .Binding = 8,
+        //         .Visibility = GPU::ShaderStage::Fragment,
+        //         .Type = GPU::BindingType::Sampler {
+        //             .Type = GPU::SamplerBindingType::Comparison,
+        //         },
+        //         .Count = 1,
+        //     },
+        //
+        // };
+        //
+        // GPU::BindGroupLayoutSpec spec {
+        //     .Label = "Object BGL"sv,
+        //     .Entries = entries,
+        // };
+        //
+        // m_ObjectBindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
     }
 
     ////////////////////////
@@ -620,78 +620,87 @@ void SceneRenderer::Init()
 
     // Creating the pbr pipeline after the scene bind group, which must be done after the ssao blur pipeline. oof incarnate.
     {
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/PBR.wgsl").Unwrap();
+        constexpr auto path = "Assets/Shaders/Slang/PBR.slang";
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        // compiled.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
+        // compiled.Metadata.DepthState = GPU::DepthStencilState::Default();
+        // compiled.Metadata.DepthState->DepthWriteEnabled = false;
+        // compiled.Metadata.DepthState->DepthCompare = GPU::CompareFunction::Always;
 
-        GPU::ShaderModuleSpec shader_spec {
-            .Label = "PBR Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
-            },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
-        };
-
-        auto shader = Renderer::Device().CreateShaderModule(shader_spec);
-
-        std::array bind_group_layouts {
-            m_GlobalBindGroupLayout,
-            m_SceneBindGroupLayout,
-            m_ObjectBindGroupLayout,
-        };
-        GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
-        };
-        auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
-
-        std::array attributes {
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 0,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 1,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float4,
-                .ShaderLocation = 2,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float2,
-                .ShaderLocation = 3,
-            },
-            GPU::VertexAttribute {
-                .Type = GPU::ElementType::Float3,
-                .ShaderLocation = 4,
-            },
-        };
-        auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
-
-        GPU::RenderPipelineSpec rp_spec {
-            .Label = "PBR Render Pass"sv,
-            .Layout = layout,
-            .Vertex = {
-                .AttributeLayouts = { attribute_layout } },
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
-            },
-            .DepthStencil = GPU::DepthStencilState::Default(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
-                    GPU::ColorTargetState {
-                        .Format = TonemappingPipeline::Format,
-                        .Blend = GPU::BlendState::Default(),
-                        .WriteMask = GPU::ColorWrite::All,
-                    },
-                },
-            },
-        };
-
-        m_PBRPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
+        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
+        m_PbrShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        // auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/PBR.wgsl").Unwrap();
+        //
+        // GPU::ShaderModuleSpec shader_spec {
+        //     .Label = "PBR Shader"sv,
+        //     .Type = GPU::WGSLShader {
+        //         .Source = shader_src,
+        //     },
+        //     .VertexEntryPoint = "vs_main",
+        //     .FragmentEntryPoint = "fs_main",
+        // };
+        //
+        // auto shader = Renderer::Device().CreateShaderModule(shader_spec);
+        //
+        // std::array bind_group_layouts {
+        //     m_GlobalBindGroupLayout,
+        //     m_SceneBindGroupLayout,
+        //     m_ObjectBindGroupLayout,
+        // };
+        // GPU::PipelineLayoutSpec pl_spec {
+        //     .BindGroupLayouts = bind_group_layouts
+        // };
+        // auto layout = Renderer::Device().CreatePipelineLayout(pl_spec);
+        //
+        // std::array attributes {
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float3,
+        //         .ShaderLocation = 0,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float3,
+        //         .ShaderLocation = 1,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float4,
+        //         .ShaderLocation = 2,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float2,
+        //         .ShaderLocation = 3,
+        //     },
+        //     GPU::VertexAttribute {
+        //         .Type = GPU::ElementType::Float3,
+        //         .ShaderLocation = 4,
+        //     },
+        // };
+        // auto attribute_layout = GPU::VertexBufferLayout::Create(attributes);
+        //
+        // GPU::RenderPipelineSpec rp_spec {
+        //     .Label = "PBR Render Pass"sv,
+        //     .Layout = layout,
+        //     .Vertex = {
+        //         .AttributeLayouts = { attribute_layout } },
+        //     .Primitive = {
+        //         .Topology = GPU::PrimitiveTopology::TriangleList,
+        //         .StripIndexFormat = None(),
+        //         .FrontFace = GPU::FrontFace::Ccw,
+        //         .Cull = GPU::Face::None,
+        //     },
+        //     .DepthStencil = GPU::DepthStencilState::Default(),
+        //     .MultiSample = GPU::MultiSampleState::Default(),
+        //     .Fragment = GPU::FragmentStage {
+        //         .Targets = {
+        //             GPU::ColorTargetState {
+        //                 .Format = TonemappingPipeline::Format,
+        //                 .Blend = GPU::BlendState::Default(),
+        //                 .WriteMask = GPU::ColorWrite::All,
+        //             },
+        //         },
+        //     },
+        // };
+        //
+        // m_PBRPipeline = Renderer::Device().CreateRenderPipeline(shader, shader, rp_spec);
     }
 
     m_CubeSkybox.init({ m_GlobalBindGroupLayout, m_SceneBindGroupLayout });
@@ -1252,7 +1261,8 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
 
         m_CubeSkybox.execute(scene_rp);
 
-        scene_rp.SetPipeline(m_PBRPipeline);
+        auto shader = m_PbrShader.Get();
+        scene_rp.SetPipeline(shader->Pipeline());
 
         // For each material
         // - Create a bind group
@@ -1342,7 +1352,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
                 .Entries = bind_group_entries
             };
 
-            auto object_group = Renderer::Device().CreateBindGroup(m_ObjectBindGroupLayout, global_bg_spec);
+            auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(2).Unwrap(), global_bg_spec);
             m_ObjectGroupsToRelease.push_back(object_group);
             scene_rp.SetBindGroup(object_group, 2);
 
@@ -1363,8 +1373,8 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         if (!game_view) {
             Debug::Render(scene_rp);
 
-            auto shader = m_GridShader.Get();
-            scene_rp.SetPipeline(shader->Pipeline());
+            auto gridShader = m_GridShader.Get();
+            scene_rp.SetPipeline(gridShader->Pipeline());
             scene_rp.Draw({ 0, 6 }, { 0, 1 });
         }
 

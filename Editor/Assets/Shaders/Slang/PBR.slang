@@ -5,10 +5,15 @@ import Math;
 #include "Include/SceneUniforms.slang"
 
 static const float4x4 ShadowBias = {
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
+    0.5, 0.0, 0.0, 0.5,
+    0.0, 0.5, 0.0, 0.5,
     0.0, 0.0, 1.0, 0.0,
-    0.5, 0.5, 0.0, 1.0
+    0.0, 0.0, 0.0, 1.0
+
+    // 0.5, 0.0, 0.0, 0.0,
+    // 0.0, 0.5, 0.0, 0.0,
+    // 0.0, 0.0, 1.0, 0.0,
+    // 0.5, 0.5, 0.0, 1.0
 };
 
 struct VertexOutput {
@@ -55,12 +60,13 @@ VertexOutput VS_Main(SurfaceGeometry surface, uint idx: SV_InstanceID)
 
     float4x4 model = uInstanceData[idx].Model;
 
-    float3x3 normal = transpose(float3x3(inverse(model)));
-    float3 t = normalize(mul(normal, surface.Tangent.xyz));
+    float3x3 normal = transpose(inverse(float3x3(model)));
+    float3 t = normalize(mul(normal, surface.Tangent.xyz * surface.Tangent.w));
     float3 n = normalize(mul(normal, surface.Normal));
     t = normalize(t - dot(t, n) * n);
     float3 b = cross(n, t);
-    out.TBN = float3x3(t, b, n);
+    out.TBN = (float3x3(t, b, n));
+    out.Normal = n;
 
     out.FragPos = model * float4(surface.Position, 1);
     out.ViewPos = uViewData.View * out.FragPos;
@@ -125,9 +131,10 @@ float3 DoDirectionalLight(DirectionalLight light, VertexOutput in)
     float3 n = uNormal.Sample(uLinearSampler, in.FragUV * uMaterial.TilingFactor).rgb;
     n = normalize(n * 2 - 1);
 
-    float3 tangentViewPos = mul(in.TBN, uViewData.Position.xyz);
-    float3 tangentFragPos = mul(in.TBN, in.FragPos.xyz);
-    float3 tangentLightDir = mul(in.TBN, light.Direction.xyz);
+    float3x3 tbn = in.TBN;
+    float3 tangentViewPos = mul(tbn, uViewData.Position.xyz);
+    float3 tangentFragPos = mul(tbn, in.FragPos.xyz);
+    float3 tangentLightDir = mul(tbn, light.Direction.xyz);
 
     float3 v = normalize(tangentViewPos - tangentFragPos);
     float3 l = normalize(tangentLightDir);

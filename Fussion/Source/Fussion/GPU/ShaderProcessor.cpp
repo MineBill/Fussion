@@ -360,7 +360,7 @@ namespace Fussion::GPU {
             case TypeReflection::Kind::SamplerState:
                 resourceUsage.Stages = ShaderStage::Fragment;
                 resourceUsage.Type = BindingType::Sampler {
-                    .Type = SamplerBindingType::Filtering,
+                    .Type = std::strcmp(var->getType()->getName(), "SamplerComparisonState") == 0 ? SamplerBindingType::Comparison : SamplerBindingType::Filtering,
                 };
                 break;
             case TypeReflection::Kind::ShaderStorageBuffer:
