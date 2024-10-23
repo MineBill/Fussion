@@ -64,7 +64,7 @@ void SceneTreeWindow::OnDraw()
             ImGui::TextUnformatted("No scene loaded");
         }
     },
-        { .flags = flags });
+        { .Flags = flags });
 }
 
 void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)

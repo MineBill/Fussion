@@ -90,7 +90,7 @@ namespace Fussion {
         PbrMaterial* Material {};
         GPU::Buffer VertexBuffer {};
         GPU::Buffer IndexBuffer {};
-        GPU::Buffer InstanceBuffer {};
+        // GPU::Buffer InstanceBuffer {};
         u32 IndexCount {};
     };
 

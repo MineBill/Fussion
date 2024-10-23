@@ -8,7 +8,7 @@
 
 using namespace Fussion;
 
-void AssetWindow::draw(f32 delta)
+void AssetWindow::Draw(f32 delta)
 {
     ImGui::PushID(CAST(s32, m_AssetHandle));
     defer(ImGui::PopID());
@@ -16,12 +16,16 @@ void AssetWindow::draw(f32 delta)
     EUI::Window(window_name, [&] {
         DrawMenuBar();
 
-        ImGui::BeginChild("inner_child", {}, ImGuiChildFlags_Border);
-        defer(ImGui::EndChild());
+        EUI::ImGuiStyleBuilder()
+            .With(ImGuiCol_ChildBg, Color::Transparent)
+            .Do([&] {
+                ImGui::BeginChild("inner_child", {}, ImGuiChildFlags_Border);
+                defer(ImGui::EndChild());
 
-        OnDraw(delta);
-
-    }, { .style = WindowStyleAssetPreview, .opened = &m_Opened, .flags = ImGuiWindowFlags_MenuBar, .use_child = false });
+                OnDraw(delta);
+            });
+    },
+        { .Style = WindowStyleAssetPreview, .Opened = &m_Opened, .Flags = ImGuiWindowFlags_MenuBar, .UseChild = false });
 }
 
 void AssetWindow::DrawMenuBar()

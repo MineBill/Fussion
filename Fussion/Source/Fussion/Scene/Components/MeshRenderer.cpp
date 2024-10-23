@@ -28,7 +28,7 @@ namespace Fussion {
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
         m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : model->meshes) {
+        for (auto const& mesh : model->Meshes) {
             for (auto const& corner : mesh.Box.GetCorners()) {
                 m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
             }
@@ -53,14 +53,14 @@ namespace Fussion {
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
         m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : m->meshes) {
+        for (auto const& mesh : m->Meshes) {
             for (auto const& corner : mesh.Box.GetCorners()) {
                 m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
             }
         }
 
-        Materials.resize(m->meshes.size());
-        for (auto& mesh : m->meshes) {
+        Materials.resize(m->Meshes.size());
+        for (auto& mesh : m->Meshes) {
             PbrMaterial* material = nullptr;
             if (mesh.MaterialIndex != -1) {
                 material = Materials.at(mesh.MaterialIndex).Get();
@@ -80,7 +80,7 @@ namespace Fussion {
             obj.VertexBuffer = mesh.VertexBuffer;
             obj.IndexBuffer = mesh.IndexBuffer;
             obj.IndexCount = mesh.IndexCount;
-            obj.InstanceBuffer = mesh.InstanceBuffer;
+            // obj.InstanceBuffer = mesh.InstanceBuffer;
             obj.Pass = DrawPass::All;
 
             ctx.AddRenderObject(obj);
@@ -131,7 +131,7 @@ namespace Fussion {
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
         m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : model->meshes) {
+        for (auto const& mesh : model->Meshes) {
             for (auto const& corner : mesh.Box.GetCorners()) {
                 m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
             }

@@ -249,13 +249,13 @@ void ViewportWindow::OnDraw()
         EUI::Button("Settings", [&] {
             ImGui::OpenPopup("EditorCameraSettings");
         },
-            { .style = ButtonStyleViewportButton });
+            { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("EditorCameraSettings", [&] {
             if (ImGui::BeginMenu("Camera")) {
                 EUI::Property("Speed", &Editor::GetCamera().Speed);
-                EUI::Property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange { .min = 0.0f, .max = 100.0f });
-                EUI::Property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange { .min = 0.0f, .max = 1000.0f });
+                EUI::Property("Near", &Editor::GetCamera().Near, EUI::PropTypeRange { .Min = 0.0f, .Max = 100.0f });
+                EUI::Property("Far", &Editor::GetCamera().Far, EUI::PropTypeRange { .Min = 0.0f, .Max = 1000.0f });
                 ImGui::EndMenu();
             }
 
@@ -315,7 +315,7 @@ void ViewportWindow::OnDraw()
         EUI::Button(fuck.data(), [&] {
             ImGui::OpenPopup("GizmoSelection");
         },
-            { .style = ButtonStyleViewportButton });
+            { .Style = ButtonStyleViewportButton });
 
         EUI::Popup("GizmoSelection", [&] {
             if (ImGui::MenuItem("Translation", "1", m_GizmoMode == GizmoMode::Translation)) {
@@ -342,7 +342,7 @@ void ViewportWindow::OnDraw()
                 m_GizmoSpace = GizmoSpace::Local;
             }
         },
-            { .style = ButtonStyleViewportButton });
+            { .Style = ButtonStyleViewportButton });
 
         ImGui::PopStyleVar();
 

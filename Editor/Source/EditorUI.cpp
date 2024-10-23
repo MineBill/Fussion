@@ -74,7 +74,7 @@ namespace EUI {
         ImageButton(EditorStyle::Style().EditorIcons[EditorIcon::Search], [&] {
             auto asset_type = class_type.get_method("GetType").invoke(data).as<Fussion::AssetType>();
             Editor::GenericAssetPicker.Show(m_Handle, data, asset_type);
-        }, { .size = Vector2{ 16, 16 } });
+        }, { .Size = Vector2{ 16, 16 } });
         ImGui::PopStyleVar();
         ImGui::SetCursorPos(old_pos);
         return modified;

@@ -18,6 +18,8 @@
 
 using namespace Fussion;
 
+
+
 void InspectorWindow::OnStart()
 {
     EditorWindow::OnStart();
@@ -108,12 +110,14 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
 
     auto const name = component_type.get_metadata().at("Name").as<std::string>();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, Vector2::Zero);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(15, 5));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
-    auto opened = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_AllowOverlap);
-    ImGui::PopStyleVar(4);
+    auto opened = EUI::ImGuiStyleBuilder()
+                      .With(ImGuiStyleVar_ItemSpacing, Vector2::Zero)
+                      .With(ImGuiStyleVar_FramePadding, Vector2(15, 3))
+                      .With(ImGuiStyleVar_FrameRounding, 2.0f)
+                      .With(ImGuiStyleVar_FrameBorderSize, 0.0f)
+                      .Do([&] {
+                          return ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_AllowOverlap);
+                      });
 
     auto width = ImGui::GetContentRegionMax().x;
 
@@ -124,7 +128,7 @@ bool InspectorWindow::DrawComponent([[maybe_unused]] Entity& entity, meta_hpp::c
     EUI::ImageButton(EditorStyle::Style().EditorIcons[EditorIcon::Dots], [] {
         ImGui::OpenPopup("ComponentSettings");
     },
-        { .size = Vector2 { line_height, line_height } });
+        { .Size = Vector2 { line_height, line_height } });
 
     if (ImGui::BeginPopupContextItem("ComponentSettings")) {
         if (ImGui::MenuItem("Remove Component")) {
@@ -297,7 +301,7 @@ bool InspectorWindow::DrawEntity(Entity& e)
     EUI::Button("Add Component", [] {
         ImGui::OpenPopup("Popup::AddComponent");
     },
-        { .alignment = 0.5f, .override = button_style });
+        { .Alignment = 0.5f, .StyleOverride = button_style });
 
     if (ImGui::BeginPopup("Popup::AddComponent")) {
         auto scope = meta_hpp::resolve_scope("Components");

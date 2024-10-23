@@ -43,5 +43,5 @@ void AssetRegistryViewer::OnDraw()
         }
         ImGui::EndTable();
     },
-        { .opened = &m_IsVisible });
+        { .Opened = &m_IsVisible });
 }

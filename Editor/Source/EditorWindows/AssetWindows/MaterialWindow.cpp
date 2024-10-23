@@ -17,8 +17,8 @@ void MaterialWindow::OnDraw([[maybe_unused]] f32 delta)
         return;
     }
     EUI::Property("Object Color", &material->object_color);
-    EUI::Property("Metallic", &material->metallic, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
-    EUI::Property("Roughness", &material->roughness, EUI::PropTypeRange { .min = 0.0, .max = 1.0 });
+    EUI::Property("Metallic", &material->metallic, EUI::PropTypeRange { .Min = 0.0, .Max = 1.0 });
+    EUI::Property("Roughness", &material->roughness, EUI::PropTypeRange { .Min = 0.0, .Max = 1.0 });
 
     if (EUI::Property("Tiling", &material->tiling)) {
         // material->update_sampler();

@@ -212,6 +212,6 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
     }
 
     auto the_model = Model::Create(meshes);
-    the_model->unique_materials = CAST(u32, model.materials.size());
+    the_model->UniqueMaterialCount = CAST(u32, model.materials.size());
     return the_model;
 }

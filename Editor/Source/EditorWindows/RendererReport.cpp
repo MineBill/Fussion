@@ -6,9 +6,9 @@
 
 using namespace Fussion;
 
-void draw_registry_report(GPU::RegistryReport const& report, char const* name)
+void DrawRegistryReport(GPU::RegistryReport const& report, char const* name)
 {
-    if (ImGui::CollapsingHeader(name)) {
+    if (ImGui::TreeNode(name)) {
         // Create a table for better alignment
         if (ImGui::BeginTable(name, 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
             // Table headers
@@ -56,29 +56,29 @@ void draw_registry_report(GPU::RegistryReport const& report, char const* name)
             // End table
             ImGui::EndTable();
         }
+        ImGui::TreePop();
     }
 }
 
-void draw_global_report(GPU::GlobalReport const& report)
+void DrawGlobalReport(GPU::GlobalReport const& report)
 {
     if (ImGui::CollapsingHeader("Global Report")) {
-        // Draw each section of the GlobalReport
-        draw_registry_report(report.Adapters, "Adapters");
-        draw_registry_report(report.Devices, "Devices");
-        draw_registry_report(report.Queues, "Queues");
-        draw_registry_report(report.PipelineLayouts, "Pipeline Layouts");
-        draw_registry_report(report.ShaderModules, "Shader Modules");
-        draw_registry_report(report.BindGroupLayouts, "Bind Group Layouts");
-        draw_registry_report(report.BindGroups, "Bind Groups");
-        draw_registry_report(report.CommandBuffers, "Command Buffers");
-        draw_registry_report(report.RenderBundles, "Render Bundles");
-        draw_registry_report(report.RenderPipelines, "Render Pipelines");
-        draw_registry_report(report.ComputePipelines, "Compute Pipelines");
-        draw_registry_report(report.QuerySets, "Query Sets");
-        draw_registry_report(report.Buffers, "Buffers");
-        draw_registry_report(report.Textures, "Textures");
-        draw_registry_report(report.TextureViews, "Texture Views");
-        draw_registry_report(report.Samplers, "Samplers");
+        DrawRegistryReport(report.Adapters, "Adapters");
+        DrawRegistryReport(report.Devices, "Devices");
+        DrawRegistryReport(report.Queues, "Queues");
+        DrawRegistryReport(report.PipelineLayouts, "Pipeline Layouts");
+        DrawRegistryReport(report.ShaderModules, "Shader Modules");
+        DrawRegistryReport(report.BindGroupLayouts, "Bind Group Layouts");
+        DrawRegistryReport(report.BindGroups, "Bind Groups");
+        DrawRegistryReport(report.CommandBuffers, "Command Buffers");
+        DrawRegistryReport(report.RenderBundles, "Render Bundles");
+        DrawRegistryReport(report.RenderPipelines, "Render Pipelines");
+        DrawRegistryReport(report.ComputePipelines, "Compute Pipelines");
+        DrawRegistryReport(report.QuerySets, "Query Sets");
+        DrawRegistryReport(report.Buffers, "Buffers");
+        DrawRegistryReport(report.Textures, "Textures");
+        DrawRegistryReport(report.TextureViews, "Texture Views");
+        DrawRegistryReport(report.Samplers, "Samplers");
     }
 }
 
@@ -90,6 +90,6 @@ void RendererReport::OnDraw()
         auto& instance = Renderer::GPUInstance();
         auto report = instance.GenerateGlobalReport();
 
-        draw_global_report(report);
+        DrawGlobalReport(report);
     });
 }

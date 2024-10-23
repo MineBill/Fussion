@@ -32,20 +32,20 @@ namespace Fussion {
 
         IndexCount = CAST(u32, indices.size());
 
-        auto instance_spec = GPU::BufferSpec{
-            .Label = "Instance Buffer"sv,
-            .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-            .Size = sizeof(Mat4) * 1'000,
-        };
-
-        InstanceBuffer = device.CreateBuffer(instance_spec);
+        // auto instance_spec = GPU::BufferSpec{
+        //     .Label = "Instance Buffer"sv,
+        //     .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+        //     .Size = sizeof(Mat4) * 1'000,
+        // };
+        //
+        // InstanceBuffer = device.CreateBuffer(instance_spec);
     }
 
     Ref<Model> Model::Create(std::vector<Mesh>& meshes)
     {
         LOG_DEBUGF("Creating model with {} meshes", meshes.size());
         auto model = MakeRef<Model>();
-        model->meshes = std::move(meshes);
+        model->Meshes = std::move(meshes);
         return model;
     }
 }

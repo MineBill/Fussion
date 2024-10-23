@@ -23,7 +23,7 @@ namespace Fussion {
         GPU::Buffer VertexBuffer {};
         GPU::Buffer IndexBuffer {};
         // GPU::Buffer ShadowIndexBuffer{};
-        GPU::Buffer InstanceBuffer {};
+        // GPU::Buffer InstanceBuffer {};
         u32 IndexCount {};
 
         s32 MaterialIndex {};
@@ -33,8 +33,8 @@ namespace Fussion {
 
     class Model final : public Asset {
     public:
-        std::vector<Mesh> meshes {};
-        u32 unique_materials {};
+        std::vector<Mesh> Meshes {};
+        u32 UniqueMaterialCount {};
 
         static Ref<Model> Create(std::vector<Mesh>& meshes);
 

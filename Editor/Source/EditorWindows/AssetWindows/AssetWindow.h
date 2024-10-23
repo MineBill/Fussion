@@ -9,7 +9,7 @@ public:
     { }
     virtual ~AssetWindow() = default;
 
-    void draw(f32 delta);
+    void Draw(f32 delta);
 
     /**
      * Called every frame.

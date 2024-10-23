@@ -49,13 +49,13 @@ void AssetPicker::Update()
                 // TODO: Call notify methods, if available.
                 m_Opened = false;
             },
-                { .size = size });
+                { .Size = size });
 
             ImGui::TextUnformatted(name.data());
             ImGui::NextColumn();
         }
     },
-        { .flags = flags, .opened = &m_Opened });
+        { .Flags = flags, .Opened = &m_Opened });
 
     if (was_open && !m_Opened) {
         m_Entries.clear();

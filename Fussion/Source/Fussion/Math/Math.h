@@ -103,6 +103,14 @@ namespace Fussion::Math {
         return CAST(decltype(value), CAST(s32, value));
     }
 
+    constexpr auto FloorSigned(ScalarType auto value)
+    {
+        if (value >= 0 || CAST(s32, value) == value) {
+            return CAST(s32, value);
+        }
+        return CAST(s32, value) - 1;
+    }
+
     auto FloorLog2(s32 value) -> s32;
     auto FloorLog2(s64 value) -> s64;
 

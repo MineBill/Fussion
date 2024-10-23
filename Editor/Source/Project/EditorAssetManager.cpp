@@ -82,10 +82,14 @@ void WorkerPool::Work(s32 index)
 
             if (asset_serializers.contains(task->Type)) {
                 auto asset = asset_serializers[task->Type]->Load(*task);
-                asset->SetHandle(task->Handle);
-                LoadedAssets.Access([&](auto& queue) {
-                    queue.push(asset);
-                });
+                if (asset == nullptr) {
+                    LOG_ERRORF("Failed to load asset {}", task->Path);
+                } else {
+                    asset->SetHandle(task->Handle);
+                    LoadedAssets.Access([&](auto& queue) {
+                        queue.push(asset);
+                    });
+                }
             } else {
                 auto asset = make_asset(task->Type);
                 if (auto json_string = FileSystem::ReadEntireFile(Project::AssetsFolderPath() / task->Path)) {
@@ -168,6 +172,8 @@ Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
 
 auto EditorAssetManager::GetAsset(std::string const& path, AssetType type) -> Asset*
 {
+    // TODO: This is wrong, GetAsset will call functions that will try to lock the registry
+    // while we already have it locked.
     return m_Registry.Access([&](Registry const& registry) -> Asset* {
         for (auto const& [handle, asset] : registry) {
             if (asset.Path == path && asset.Type == type) {

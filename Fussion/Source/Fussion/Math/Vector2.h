@@ -88,6 +88,13 @@ namespace Fussion {
             return *this;
         }
 
+        constexpr Vector2& operator-=(Vector2 const& other)
+        {
+            x -= other.x;
+            y -= other.y;
+            return *this;
+        }
+
         Vector2 operator+(Vector2 const& right) const;
         Vector2 operator-(Vector2 const& right) const;
         Vector2 operator*(Vector2 const& right) const;
@@ -146,6 +153,11 @@ namespace Fussion {
         {
             return { x, y };
         }
+
+        static Vector2 Clamp(Vector2 self, Vector2 const& min, Vector2 const& max);
+        static Vector2 Max(Vector2 const& min, Vector2 const& max);
+        static Vector2 Min(Vector2 const& min, Vector2 const& max);
+        static Vector2 Abs(Vector2 const& vector2);
 
         static Vector2 const Zero;
         static Vector2 const One;

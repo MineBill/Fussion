@@ -10,5 +10,8 @@ public:
     virtual void OnSave() override;
 
 private:
-    Vector2 m_uv0{ 0, 0 }, m_uv1{ 1, 1 };
+    Vector2 m_PanPosition { 0.5f, 0.5f };
+    Vector2 m_Scale { 1.0f, 1.0f };
+    f32 m_ZoomRate { 1.2f };
+    bool m_IsDragging {};
 };

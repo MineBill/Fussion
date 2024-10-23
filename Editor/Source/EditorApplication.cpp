@@ -119,8 +119,8 @@ void EditorApplication::OnUpdate(f32 delta)
     main_rp.Release();
 
     auto cmd = encoder.Finish();
-    encoder.Release();
     Renderer::EndRendering(cmd);
+    encoder.Release();
     view->Release();
 }
 

@@ -282,7 +282,7 @@ void Editor::OnUpdate(f32 delta)
         EUI::ImageButton(style.EditorIcons[EditorIcon::Play], [this] {
             SetPlayState(PlayState::Playing);
         },
-            { .size = Vector2 { height, height }, .disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing });
+            { .Size = Vector2 { height, height }, .Disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing });
 
         auto min = ImGui::GetItemRectMin();
 
@@ -293,21 +293,21 @@ void Editor::OnUpdate(f32 delta)
         EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], [this] {
             SetPlayState(PlayState::Editing);
         },
-            { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
 
         ImGui::SameLine();
 
         EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], [this] {
             SetPlayState(PlayState::Paused);
         },
-            { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
 
         ImGui::SameLine();
 
         EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [] {
             ImGui::OpenPopup("Toolbar::Options");
         },
-            { .size = Vector2 { height, height }, .disabled = m_PlayState != PlayState::Playing });
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
 
         EUI::Popup("Toolbar::Options", [&] {
             if (ImGui::MenuItem("Detach")) {
@@ -328,7 +328,7 @@ void Editor::OnUpdate(f32 delta)
 
         list->ChannelsMerge();
     },
-        { .flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .use_child = false });
+        { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
     if (state == PlayState::Playing) {
         ImGui::PopStyleColor();
     }
@@ -357,7 +357,7 @@ void Editor::OnUpdate(f32 delta)
         m_AssetRegistryViewer->OnDraw();
 
     for (auto const& asset_window : m_AssetWindows | std::views::values) {
-        asset_window->draw(delta);
+        asset_window->Draw(delta);
     }
 
     std::erase_if(m_AssetWindows, [](auto const& pair) {
