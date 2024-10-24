@@ -21,7 +21,6 @@ LivePP/
 Makefile
 imgui.ini
 .reflect_cache
-/CMakeLists.txt
 compile_commands.json
 
 # Exclude
