@@ -16,7 +16,7 @@ namespace Fussion {
         {
         }
         constexpr Maybe(None)
-            : Maybe()
+            : m_Value(nullptr)
         {
         }
 
