@@ -15,7 +15,7 @@ namespace Fussion {
         if (!context.RenderFlags.test(RenderState::LightCollection))
             return;
         auto light = GPUPointLight {
-            .Position = m_Owner->Transform.Position,
+            .Position = m_Owner->WorldTransform.Position,
             .LightColor = Color::White,
             .Radius = radius,
         };
@@ -41,9 +41,9 @@ namespace Fussion {
         (void)ctx;
 
         if (draw_type == Type::Box) {
-            Debug::DrawCube(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, Vector3::One * size);
+            Debug::DrawCube(m_Owner->WorldTransform.Position, m_Owner->WorldTransform.EulerAngles, Vector3::One * size);
         } else if (draw_type == Type::Sphere) {
-            Debug::DrawSphere(m_Owner->Transform.Position, m_Owner->Transform.EulerAngles, size);
+            Debug::DrawSphere(m_Owner->WorldTransform.Position, m_Owner->WorldTransform.EulerAngles, size);
         }
     }
 
@@ -63,7 +63,7 @@ namespace Fussion {
 
     void BallSpawner::OnUpdate(f32 delta)
     {
-        m_Owner->Transform.Position.x += delta * speed;
+        m_Owner->WorldTransform.Position.x += delta * speed;
     }
 
     void BallSpawner::spawn()
@@ -73,7 +73,7 @@ namespace Fussion {
                 auto new_entity = m_Owner->GetScene().CreateEntity("Test", m_Owner->GetHandle());
                 auto mr = new_entity->AddComponent<MeshRenderer>();
                 mr->ModelAsset = model;
-                new_entity->Transform.Position = Vector3(x, Math::Sin((x + y) / 50.0f), y);
+                new_entity->WorldTransform.Position = Vector3(x, Math::Sin((x + y) / 50.0f), y);
 
                 auto mat = MakeRef<PbrMaterial>();
                 mat->object_color = Color::Red;

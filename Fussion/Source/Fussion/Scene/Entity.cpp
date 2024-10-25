@@ -55,7 +55,7 @@ namespace Fussion {
     }
 
     Entity::Entity(Entity const& other)
-        : Transform(other.Transform)
+        : WorldTransform(other.WorldTransform)
         , Name(other.Name)
         , m_Parent(other.m_Parent)
         , m_Children(other.m_Children)
@@ -74,7 +74,7 @@ namespace Fussion {
     }
 
     Entity::Entity(Entity&& other) noexcept
-        : Transform(std::move(other.Transform))
+        : WorldTransform(std::move(other.WorldTransform))
         , Name(std::move(other.Name))
         , m_Parent(other.m_Parent)
         , m_Children(std::move(other.m_Children))
@@ -94,7 +94,7 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        Transform = other.Transform;
+        WorldTransform = other.WorldTransform;
         Name = other.Name;
         m_Parent = other.m_Parent;
         // Since Entity only has a handle to it's parent,
@@ -119,7 +119,7 @@ namespace Fussion {
     {
         if (this == &other)
             return *this;
-        Transform = std::move(other.Transform);
+        WorldTransform = std::move(other.WorldTransform);
         Name = std::move(other.Name);
         m_Parent = other.m_Parent;
         m_Children = std::move(other.m_Children);
@@ -169,7 +169,7 @@ namespace Fussion {
 
     auto Entity::LocalMatrix() const -> Mat4
     {
-        return Transform.Matrix();
+        return WorldTransform.Matrix();
     }
 
     void Entity::AddChildInternal(Entity const& child)
@@ -288,7 +288,7 @@ namespace Fussion {
         FSN_SERIALIZE_MEMBER(m_Enabled);
         FSN_SERIALIZE_MEMBER(m_Handle);
         FSN_SERIALIZE_MEMBER(m_Parent);
-        FSN_SERIALIZE_MEMBER(Transform);
+        FSN_SERIALIZE_MEMBER(WorldTransform);
 
         ctx.BeginObject("Components", m_Components.size());
         for (auto const& [id, component] : m_Components) {
@@ -305,7 +305,7 @@ namespace Fussion {
         FSN_DESERIALIZE_MEMBER(m_Enabled);
         FSN_DESERIALIZE_MEMBER(m_Handle);
         FSN_DESERIALIZE_MEMBER(m_Parent);
-        FSN_DESERIALIZE_MEMBER(Transform);
+        FSN_DESERIALIZE_MEMBER(WorldTransform);
 
         size_t size;
         ctx.BeginObject("Components", size);

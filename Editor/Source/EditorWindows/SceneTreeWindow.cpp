@@ -39,13 +39,13 @@ void SceneTreeWindow::OnDraw()
                         auto entity = scene->CreateEntity();
                         entity->Name = "Directional Light";
                         entity->AddComponent<Fussion::DirectionalLight>();
-                        entity->Transform.EulerAngles.x = 45.0f;
+                        entity->WorldTransform.EulerAngles.x = 45.0f;
                     }
                     if (ImGui::MenuItem("Camera")) {
                         auto entity = scene->CreateEntity();
                         entity->Name = "Camera";
                         entity->AddComponent<Fussion::Camera>();
-                        entity->Transform.EulerAngles.x = 45.0f;
+                        entity->WorldTransform.EulerAngles.x = 45.0f;
                     }
                     ImGui::EndMenu();
                 }
@@ -114,13 +114,13 @@ void SceneTreeWindow::DrawEntityHierarchy(Fsn::Uuid handle)
         }
 
         if (ImGui::MenuItem("Align camera to object")) {
-            Editor::GetCamera().EulerAngles = entity->Transform.EulerAngles;
-            Editor::GetCamera().Position = entity->Transform.Position;
+            Editor::GetCamera().EulerAngles = entity->WorldTransform.EulerAngles;
+            Editor::GetCamera().Position = entity->WorldTransform.Position;
         }
 
         if (ImGui::MenuItem("Align object to camera")) {
-            entity->Transform.EulerAngles = Editor::GetCamera().EulerAngles;
-            entity->Transform.Position = Editor::GetCamera().Position;
+            entity->WorldTransform.EulerAngles = Editor::GetCamera().EulerAngles;
+            entity->WorldTransform.Position = Editor::GetCamera().Position;
         }
 
         ImGui::Separator();

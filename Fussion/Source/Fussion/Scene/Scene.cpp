@@ -186,7 +186,7 @@ namespace Fussion {
         auto const& entity = m_Entities[handle];
 
         auto new_entity = CreateEntity(entity.Name, entity.m_Parent);
-        new_entity->Transform = entity.Transform;
+        new_entity->WorldTransform = entity.WorldTransform;
         new_entity->m_Enabled = entity.m_Enabled;
 
         for (auto const& [component_id, component] : entity.GetComponents()) {

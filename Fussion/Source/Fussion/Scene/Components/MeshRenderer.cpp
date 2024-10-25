@@ -75,7 +75,7 @@ namespace Fussion {
 
             RenderObject obj;
             obj.Material = material;
-            obj.Position = m_Owner->Transform.Position;
+            obj.Position = m_Owner->WorldTransform.Position;
             obj.WorldMatrix = translate(matrix, CAST(glm::vec3, mesh.Offset));
             obj.VertexBuffer = mesh.VertexBuffer;
             obj.IndexBuffer = mesh.IndexBuffer;
