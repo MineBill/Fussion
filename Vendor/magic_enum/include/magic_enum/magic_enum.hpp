@@ -5,7 +5,7 @@
 // | |  | | (_| | (_| | | (__  | |____| | | | |_| | | | | | | | |____|_|   |_|
 // |_|  |_|\__,_|\__, |_|\___| |______|_| |_|\__,_|_| |_| |_|  \_____|
 //                __/ | https://github.com/Neargye/magic_enum
-//               |___/  version 0.9.5
+//               |___/  version 0.9.6
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 // SPDX-License-Identifier: MIT
@@ -34,7 +34,7 @@
 
 #define MAGIC_ENUM_VERSION_MAJOR 0
 #define MAGIC_ENUM_VERSION_MINOR 9
-#define MAGIC_ENUM_VERSION_PATCH 5
+#define MAGIC_ENUM_VERSION_PATCH 6
 
 #ifndef MAGIC_ENUM_USE_STD_MODULE
 #include <array>
@@ -104,7 +104,7 @@
 #  define MAGIC_ENUM_RANGE_MIN -128
 #endif
 
-// Enum value must be less or equals than MAGIC_ENUM_RANGE_MAX. By default MAGIC_ENUM_RANGE_MAX = 128.
+// Enum value must be less or equals than MAGIC_ENUM_RANGE_MAX. By default MAGIC_ENUM_RANGE_MAX = 127.
 // If need another max range for all enum types by default, redefine the macro MAGIC_ENUM_RANGE_MAX.
 #if !defined(MAGIC_ENUM_RANGE_MAX)
 #  define MAGIC_ENUM_RANGE_MAX 127
@@ -165,7 +165,7 @@ static_assert([] {
 
 namespace customize {
 
-// Enum value must be in range [MAGIC_ENUM_RANGE_MIN, MAGIC_ENUM_RANGE_MAX]. By default MAGIC_ENUM_RANGE_MIN = -128, MAGIC_ENUM_RANGE_MAX = 128.
+// Enum value must be in range [MAGIC_ENUM_RANGE_MIN, MAGIC_ENUM_RANGE_MAX]. By default MAGIC_ENUM_RANGE_MIN = -128, MAGIC_ENUM_RANGE_MAX = 127.
 // If need another range for all enum types by default, redefine the macro MAGIC_ENUM_RANGE_MIN and MAGIC_ENUM_RANGE_MAX.
 // If need another range for specific enum type, add specialization enum_range for necessary enum type.
 template <typename E>
@@ -1412,6 +1412,36 @@ template <typename E, detail::enum_subtype S = detail::subtype_v<E>, typename Bi
   using D = std::decay_t<E>;
 
   return static_cast<bool>(enum_cast<D, S>(value, std::move(p)));
+}
+
+// Returns true if the enum integer value is in the range of values that can be reflected.
+template <typename E, detail::enum_subtype S = detail::subtype_v<E>>
+[[nodiscard]] constexpr auto enum_reflected(underlying_type_t<E> value) noexcept -> detail::enable_if_t<E, bool> {
+  using D = std::decay_t<E>;
+
+  if constexpr (detail::is_reflected_v<D, S>) {
+    constexpr auto min = detail::reflected_min<E, S>();
+    constexpr auto max = detail::reflected_max<E, S>();
+    return value >= min && value <= max;
+  } else {
+    return false;
+  }
+}
+
+// Returns true if the enum value is in the range of values that can be reflected.
+template <typename E, detail::enum_subtype S = detail::subtype_v<E>>
+[[nodiscard]] constexpr auto enum_reflected(E value) noexcept -> detail::enable_if_t<E, bool> {
+  using D = std::decay_t<E>;
+
+  return enum_reflected<D, S>(static_cast<underlying_type_t<D>>(value));
+}
+
+// Returns true if the enum value is in the range of values that can be reflected.
+template <detail::enum_subtype S, typename E>
+[[nodiscard]] constexpr auto enum_reflected(E value) noexcept -> detail::enable_if_t<E, bool> {
+  using D = std::decay_t<E>;
+
+  return enum_reflected<D, S>(value);
 }
 
 template <bool AsFlags = true>
