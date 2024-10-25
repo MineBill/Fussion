@@ -33,8 +33,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
-#include <magic_enum_containers.hpp>
-#include <magic_enum_iostream.hpp>
+#include <magic_enum/magic_enum_containers.hpp>
+#include <magic_enum/magic_enum_iostream.hpp>
 
 #include <functional>
 
@@ -282,7 +282,7 @@ TEST_CASE("containers_set") {
   REQUIRE(color_set_filled.size() == 3);
   REQUIRE(magic_enum::enum_count<Color>() == color_set_filled.size());
 
-  magic_enum::containers::set color_set_not_const {Color::RED, Color::GREEN, Color::BLUE};
+  magic_enum::containers::set color_set_not_const = {Color::RED, Color::GREEN, Color::BLUE};
   REQUIRE_FALSE(color_set_not_const.empty());
   REQUIRE(color_set_not_const.size() == 3);
   REQUIRE(magic_enum::enum_count<Color>() == color_set_not_const.size());

@@ -26,10 +26,10 @@
 #define MAGIC_ENUM_NO_CHECK_REFLECTED_ENUM
 #define MAGIC_ENUM_RANGE_MIN -120
 #define MAGIC_ENUM_RANGE_MAX 120
-#include <magic_enum.hpp>
-#include <magic_enum_fuse.hpp>
-#include <magic_enum_iostream.hpp>
-#include <magic_enum_utility.hpp>
+#include <magic_enum/magic_enum.hpp>
+#include <magic_enum/magic_enum_fuse.hpp>
+#include <magic_enum/magic_enum_iostream.hpp>
+#include <magic_enum/magic_enum_utility.hpp>
 
 #include <array>
 #include <cctype>
@@ -1176,7 +1176,7 @@ TEST_CASE("multdimensional-switch-case") {
 
 #if defined(__cpp_lib_format)
 
-#include <magic_enum_format.hpp>
+#include <magic_enum/magic_enum_format.hpp>
 
 TEST_CASE("format-base") {
   REQUIRE(std::format("{}", Color::RED) == "red");
@@ -1273,4 +1273,16 @@ TEST_CASE("valid_enum") {
   REQUIRE(magic_enum::detail::is_reflected_v<Empty3, as_flags<false>>);
   REQUIRE(magic_enum::detail::is_reflected_v<Empty4, as_flags<true>>);
   REQUIRE(magic_enum::detail::is_reflected_v<Empty4, as_flags<false>>);
+}
+
+TEST_CASE("enum_reflected") {
+  REQUIRE(enum_reflected<number>(number::one));
+  REQUIRE(enum_reflected<number>(number::three));
+  REQUIRE_FALSE(enum_reflected<number>(number::four));
+  REQUIRE(enum_reflected<number>(100));
+  REQUIRE(enum_reflected<number>(101));
+  REQUIRE(enum_reflected<number>(234));
+  REQUIRE(enum_reflected<number>(300));
+  REQUIRE_FALSE(enum_reflected<number>(400));
+  REQUIRE_FALSE(enum_reflected<number>(500));
 }
