@@ -13,7 +13,7 @@ public extension Texture2D
     }
 }
 
-__generic<let sampleCount : int = 0, let format : int = 0> public typealias Depth2DArray = __TextureImpl<
+__generic<let sampleCount : int = 0, let format : int = 0> public typealias Depth2DArray = _Texture<
     float,
     __Shape2D,
     1, // isArray
