@@ -14,7 +14,7 @@ namespace Fussion {
         // This needs to be here because the update doesn't run during edit mode.
         auto aspect = Application::Self()->GetWindow().Size().Aspect();
         m_Perspective = glm::perspective(glm::radians(fov), aspect, near, far);
-        auto corners = Math::GetFrustumCornersWorldSpace(m_Perspective, m_Owner->Transform.AsCameraMatrix());
+        auto corners = Math::GetFrustumCornersWorldSpace(m_Perspective, m_Owner->WorldTransform.AsCameraMatrix());
 
         constexpr auto color = Color::SkyBlue;
 

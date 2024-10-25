@@ -388,7 +388,7 @@ namespace Fussion {
 
         r = m_ScriptEngine->RegisterObjectType("Entity", sizeof(Entity), asOBJ_REF | asOBJ_NOCOUNT); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectProperty("Entity", "string Name", asOFFSET(Entity, Name)); VERIFY(r >= 0);
-        r = m_ScriptEngine->RegisterObjectProperty("Entity", "Transform Transform", asOFFSET(Entity, Transform)); VERIFY(r >= 0);
+        r = m_ScriptEngine->RegisterObjectProperty("Entity", "Transform WorldTransform", asOFFSET(Entity, WorldTransform)); VERIFY(r >= 0);
         r = m_ScriptEngine->RegisterObjectMethod("Entity", "Array<Entity@>@ GetChildren() const", asFUNCTION(Entity_GetChildren), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
 
         r = m_ScriptEngine->RegisterObjectType("ScriptBase", 0, asOBJ_REF); VERIFY(r >= 0);

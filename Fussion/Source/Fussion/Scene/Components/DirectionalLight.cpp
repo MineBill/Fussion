@@ -22,10 +22,10 @@ namespace Fussion {
     {
         (void)ctx;
 
-        auto start = m_Owner->Transform.Position;
-        auto end = start + m_Owner->Transform.Forward();
+        auto start = m_Owner->WorldTransform.Position;
+        auto end = start + m_Owner->WorldTransform.Forward();
         Debug::DrawLine(start, end, 0.0f, Color::Green);
-        Debug::DrawCube(end, m_Owner->Transform.EulerAngles, Vector3::One * 0.1f);
+        Debug::DrawCube(end, m_Owner->WorldTransform.EulerAngles, Vector3::One * 0.1f);
     }
 
     void DirectionalLight::OnDraw(RenderContext& context)
@@ -35,7 +35,7 @@ namespace Fussion {
 
         context.DirectionalLights.push_back(GPUDirectionalLight {
             {
-                .Direction = Vector4 { -m_Owner->Transform.Forward() },
+                .Direction = Vector4 { -m_Owner->WorldTransform.Forward() },
                 .LightColor = LightColor,
                 .Brightness = Brightness,
             },
