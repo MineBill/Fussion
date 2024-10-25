@@ -57,7 +57,8 @@ target("Fussion")
     set_pcxxheader("Source/FussionPCH.h")
 
     add_defines (
-        "GLM_ENABLE_EXPERIMENTAL"
+        "GLM_ENABLE_EXPERIMENTAL",
+        "USE_XMAKE"
     )
 
     add_rules("CompilerFlags")
