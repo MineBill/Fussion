@@ -7,6 +7,10 @@ add_subdirectory(fmt-11.0.2)
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
 set(GLFW_BUILD_TESTS OFF)
+if (UNIX)
+    set(GLFW_BUILD_X11 ON)
+    set(GLFW_BUILD_WAYLAND OFF)
+endif ()
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(magic_enum)
@@ -66,29 +70,46 @@ function(InstallSlang)
     set(SLANG_VERSION 2024.14.2)
     if (WIN32)
         set(SLANG_OS "windows")
+        set(SLANG_URL_HASH "68b8e480353707cfd043b74939d9f6a12183c9a8dbd09dc2ef0c728de1212c03")
     endif ()
     if (UNIX)
         set(SLANG_OS "linux")
+        set(SLANG_URL_HASH "48c951efd96bd547d96a8a3a8d9160ab5489b8dd5ed71de0e16e135e02a03f6d")
     endif ()
     CPMAddPackage(
         NAME Slang
         VERSION ${SLANG_VERSION}
         URL https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}/slang-${SLANG_VERSION}-${SLANG_OS}-x86_64.zip
-        URL_HASH SHA256=68b8e480353707cfd043b74939d9f6a12183c9a8dbd09dc2ef0c728de1212c03
+        URL_HASH SHA256=${SLANG_URL_HASH}
     )
 
     if (Slang_ADDED)
         add_library(Slang SHARED IMPORTED GLOBAL)
 
-        set_target_properties(Slang PROPERTIES
-            IMPORTED_LOCATION "${Slang_SOURCE_DIR}/bin/slang.dll"
-            IMPORTED_IMPLIB "${Slang_SOURCE_DIR}/lib/slang.lib"
-        )
+        if (WIN32)
+            set_target_properties(Slang PROPERTIES
+                IMPORTED_LOCATION "${Slang_SOURCE_DIR}/bin/slang.dll"
+                IMPORTED_IMPLIB "${Slang_SOURCE_DIR}/lib/slang.lib"
+            )
+        elseif (UNIX)
+            set_target_properties(Slang PROPERTIES
+                IMPORTED_LOCATION "${Slang_SOURCE_DIR}/lib/libslang.so"
+            )
+        endif ()
 
         target_include_directories(Slang SYSTEM INTERFACE "${Slang_SOURCE_DIR}/include")
+    endif ()
+endfunction()
+
+function(InstallLinuxDeps)
+    if (LINUX)
+        add_subdirectory(libsigcplusplus)
+        set(BUILD_TESTING OFF)
+        add_subdirectory(dbus-cxx)
     endif ()
 endfunction()
 
 InstallAATC()
 InstallWGPUNative()
 InstallSlang()
+InstallLinuxDeps()

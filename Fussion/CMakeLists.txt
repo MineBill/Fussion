@@ -342,6 +342,7 @@ target_link_libraries(Fussion PUBLIC
     Slang
 )
 
+
 target_include_directories(Fussion
     PUBLIC
     Source
@@ -353,6 +354,8 @@ target_include_directories(Fussion
 target_compile_definitions(Fussion PUBLIC
     GLM_ENABLE_EXPERIMENTAL
     USE_ASSERTIONS
+    TRACY_ENABLE
+    TRACY_ON_DEMAND
 )
 
 if (WIN32)
@@ -370,6 +373,11 @@ if (UNIX)
         Platform/Linux/LinuxDialog.cpp
         Platform/Linux/LinuxFileWatcher.cpp
         Platform/Linux/LinuxSystem.cpp
+    )
+
+    target_link_libraries(Fussion
+        PRIVATE
+        dbus-cxx
     )
 endif ()
 

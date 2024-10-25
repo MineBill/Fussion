@@ -32,7 +32,8 @@ target "Editor"
         "GLM_ENABLE_EXPERIMENTAL",
         "USE_EDITOR",
         "FSN_MATH_USE_GLOBALLY",
-        "FSN_CORE_USE_GLOBALLY"
+        "FSN_CORE_USE_GLOBALLY",
+        "USE_XMAKE"
     )
 
     add_extrafiles("Assets/**.wgsl", "Assets/**.slang")
