@@ -82,9 +82,16 @@ Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
     tinygltf::Model model;
     std::string err, warn;
 
-    if (!loader.LoadBinaryFromFile(&model, &err, &warn, path.string())) {
-        LOG_ERRORF("Failed to load GLB file: {} {}", err, warn);
-        return nullptr;
+    if (path.extension().string().contains("gltf")) {
+        if (!loader.LoadASCIIFromFile(&model, &err, &warn, path.string())) {
+            LOG_ERRORF("Failed to load GLB file: {} {}", err, warn);
+            return nullptr;
+        }
+    } else {
+        if (!loader.LoadBinaryFromFile(&model, &err, &warn, path.string())) {
+            LOG_ERRORF("Failed to load GLB file: {} {}", err, warn);
+            return nullptr;
+        }
     }
 
     LOG_DEBUGF("Using first mesh from glTF file");
