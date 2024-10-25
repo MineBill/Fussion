@@ -1,6 +1,6 @@
 add_requires("wgpu-native")
 add_requires("wgpu-native-custom")
-add_requires("slang 2024.13", {configs = {slang_glslang = true}})
+add_requires("slang 2024.14.2")
 
 if is_plat("linux") then
     add_requires("libsigcplusplus", "dbus-cxx")

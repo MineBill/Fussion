@@ -14,7 +14,7 @@ namespace Fussion {
         virtual void OnUpdate(f32 delta) override;
         virtual void OnDraw(RenderContext& context) override;
 
-        [[API, BackgroundColor(Color::Red)]]
+        [[API]]
         f32 radius { 10.0f };
         [[API]]
         Vector3 offset {};

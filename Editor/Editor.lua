@@ -43,7 +43,7 @@ target "Editor"
 
     add_deps("Fussion", "argparse")
     -- We need an explicit link to glfw here to be able to build the glfw imgui backend.
-    add_packages("glfw", "wgpu-native-custom", "meshoptimizer")
+    add_packages("glfw", "wgpu-native-custom", "meshoptimizer", "slang")
 
     set_pcxxheader("Source/EditorPCH.h")
 
