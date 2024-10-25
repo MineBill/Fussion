@@ -4,7 +4,7 @@
 #include "Fussion/Core/Core.h"
 #include "Fussion/Log/Log.h"
 
-#include "scripthelper/scripthelper.h"
+#include <scriptbuilder/scriptbuilder.h>
 
 #include <ranges>
 

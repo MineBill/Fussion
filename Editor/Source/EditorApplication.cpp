@@ -21,11 +21,15 @@
 
 using namespace Fussion;
 
+#ifdef USE_XMAKE
 namespace {
     unsigned char LOGO32_DATA[] = {
-#include "logo_32.png.h"
+#    include "logo_32.png.h"
     };
 }
+#else
+#    include <battery/embed.hpp>
+#endif
 
 EditorApplication* EditorApplication::s_EditorInstance;
 
@@ -46,7 +50,12 @@ void EditorApplication::OnStart()
 
     Project::Initialize();
 
+#ifdef USE_XMAKE
     auto image = TextureImporter::LoadImageFromMemory({ LOGO32_DATA }).Unwrap();
+#else
+    auto logo_data = b::embed<"Assets/Icons/logo_32.png">().vec();
+    auto image = TextureImporter::LoadImageFromMemory(logo_data).Unwrap();
+#endif
     m_Window->SetIcon(image);
 
     g_Imgui = MakePtr<ImGuiLayer>();

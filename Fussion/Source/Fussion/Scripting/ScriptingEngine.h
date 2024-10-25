@@ -3,6 +3,7 @@
 #include <Fussion/Scripting/ScriptAssembly.h>
 
 #include "angelscript.h"
+#include <scriptbuilder/scriptbuilder.h>
 
 #include <sstream>
 

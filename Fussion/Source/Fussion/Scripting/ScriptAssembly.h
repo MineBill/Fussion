@@ -6,7 +6,6 @@
 #include <Fussion/Core/Uuid.h>
 
 #include <angelscript.h>
-#include <scriptbuilder/scriptbuilder.h>
 
 #include <any>
 

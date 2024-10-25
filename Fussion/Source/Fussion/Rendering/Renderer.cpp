@@ -10,6 +10,26 @@
 
 #include <tracy/Tracy.hpp>
 
+#ifdef USE_XMAKE
+static unsigned char g_white_texture_png[] = {
+#    include "white_texture.png.h"
+};
+
+static unsigned char g_white_texture_hdr[] = {
+#    include "white_texture.hdr.h"
+};
+
+static unsigned char g_black_texture_png[] = {
+#    include "black_texture.png.h"
+};
+
+static unsigned char g_normal_map_png[] = {
+#    include "default_normal_map.png.h"
+};
+#else
+#    include <battery/embed.hpp>
+#endif
+
 namespace Fussion {
     struct Data {
         AssetRef<PbrMaterial> DefaultMaterial;
@@ -152,32 +172,24 @@ namespace Fussion {
         return g_Data.WhiteCubeTexture;
     }
 
-    static unsigned char g_white_texture_png[] = {
-#include "white_texture.png.h"
-    };
-
-    static unsigned char g_white_texture_hdr[] = {
-#include "white_texture.hdr.h"
-    };
-
-    static unsigned char g_black_texture_png[] = {
-#include "black_texture.png.h"
-    };
-
-    static unsigned char g_normal_map_png[] = {
-#include "default_normal_map.png.h"
-    };
-
     void Renderer::CreateDefaultResources()
     {
         auto material = MakeRef<PbrMaterial>();
         material->object_color = Color(1, 1, 1, 1);
         g_Data.DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
 
+#ifdef USE_XMAKE
         g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png).Unwrap(), "Default White Texture");
         g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png).Unwrap(), "Default Black Texture");
         g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
-
+#else
+        auto white_texture = b::embed<"Assets/Textures/white_texture.png">().vec();
+        auto black_texture = b::embed<"Assets/Textures/black_texture.png">().vec();
+        auto normal_map = b::embed<"Assets/Textures/default_normal_map.png">().vec();
+        g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(white_texture).Unwrap(), "Default White Texture");
+        g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(black_texture).Unwrap(), "Default Black Texture");
+        g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(normal_map, true).Unwrap(), "Default Normal Map");
+#endif
         GPU::TextureSpec texture_spec {
             .Label = "CubeTexGen::cube_texture"sv,
             .Usage = GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopyDst,
@@ -203,7 +215,15 @@ namespace Fussion {
             .Aspect = texture_spec.Aspect // TODO: Make configurable
         });
 
+#ifdef USE_XMAKE
+        g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png).Unwrap(), "Default White Texture");
+        g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png).Unwrap(), "Default Black Texture");
+        g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
         auto data = TextureImporter::LoadHDRTextureFromMemory(g_white_texture_hdr).Unwrap();
+#else
+        auto white_hdr_texture = b::embed<"Assets/Textures/white_texture.hdr">().vec();
+        auto data = TextureImporter::LoadHDRTextureFromMemory(white_hdr_texture).Unwrap();
+#endif
 
         auto encoder = g_Data.Device.CreateCommandEncoder();
 

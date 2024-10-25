@@ -3,8 +3,9 @@
 namespace Fussion {
     class ReflectionRegistry {
     public:
-        ReflectionRegistry();
         static void Register();
+
+    private:
         static void RegisterGenerated();
     };
 }
