@@ -23,7 +23,8 @@ namespace fs = std::filesystem;
 
 WorkerPool::WorkerPool()
 {
-    auto max_threads = std::thread::hardware_concurrency();
+    // auto max_threads = std::thread::hardware_concurrency();
+    auto max_threads = 1;
     LOG_INFOF("Creating {} worker threads for background asset loading.", max_threads);
     m_Quit = false;
     for (u32 i = 0; i < max_threads; i++) {
