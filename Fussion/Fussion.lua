@@ -34,23 +34,31 @@ target("Fussion")
     add_files("Assets/Textures/**.png")
     add_files("Assets/Textures/**.hdr")
 
-    add_includedirs("Source/Fussion")
     add_includedirs("Source", {public = true})
     add_includedirs("Impl", {public = true})
     add_includedirs("Vendor/entt/src", {public = true})
+    add_includedirs("Source/Fussion")
 
     add_packages("fmt", "cpptrace", {public = true})
-    add_packages("glfw", "wgpu-native-custom", "JoltPhysics", "slang")
+    add_packages(
+        "glfw",
+        "wgpu-native-custom",
+        "JoltPhysics",
+        "slang"
+    )
 
     if is_plat("linux") then
         add_packages("libsigcplusplus", "dbus-cxx")
     end
 
-    add_deps("magic_enum")
     add_deps("glm", {public = true})
-    add_deps("AngelScript")
-    add_deps("aatc")
-    add_deps("TracyClient")
+    add_deps(
+        "yaml-cpp",
+        "magic_enum",
+        "AngelScript",
+        "aatc",
+        "TracyClient"
+    )
 
     add_rules("HeaderTool")
 

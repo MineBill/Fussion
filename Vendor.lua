@@ -106,7 +106,7 @@ add_requires("JoltPhysics")
 target("glm", function()
     set_kind "headeronly"
     set_group "Vendor"
-    set_languages("c++23")
+    set_languages "c++23"
 
     add_includedirs("Vendor/glm", {public = true})
 end)
@@ -146,9 +146,9 @@ target("aatc", function()
 end)
 
 target("TracyClient", function()
-    set_kind("static")
+    set_kind "static"
     set_languages "c++20"
-    set_group("Vendor")
+    set_group "Vendor"
     add_files(
         "Fussion/Vendor/tracy/public/TracyClient.cpp"
     )
@@ -171,7 +171,7 @@ end)
 target("magic_enum", function()
     set_kind "headeronly"
     set_group "Vendor"
-    set_languages("c++23")
+    set_languages "c++23"
 
     add_sysincludedirs("Vendor/magic_enum/include", {public = true})
 end)
@@ -179,67 +179,24 @@ end)
 target("argparse", function()
     set_kind "headeronly"
     set_group "Vendor"
-    set_languages("c++23")
+    set_languages "c++23"
 
     add_sysincludedirs("Vendor/argparse/include", {public = true})
 end)
 
-package("wgpu-native")
-    set_homepage("https://github.com/gfx-rs/wgpu-native")
-    set_description("Native WebGPU implementation based on wgpu-core")
-    set_license("Apache-2.0")
+target("yaml-cpp", function()
+set_group "Vendor"
+    set_kind "static"
+    set_languages "c++20"
 
-    if is_plat("windows") and is_arch("x64") then
-        add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-windows-x86_64-msvc-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+5", "81b1c6d83c1a9b8d507d6c5862c71d45b877ff952488daf7bc53edc3817ae3b8")
-    elseif is_plat("linux") and is_arch("x86_64") then
-        add_urls("https://github.com/gfx-rs/wgpu-native/releases/download/$(version)/wgpu-linux-x86_64-release.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("v22.1.0+5", "851984418f237aae593cda2a6f44a03afc1cc6e444662222ed2f9f6bc4c776fc")
-    end
+    add_files("Vendor/yaml-cpp/src/*.cpp")
 
-    if is_plat("windows") then
-        add_configs("vs_runtime", {description = "Set vs compiler runtime.", default = "MD", readonly = true})
-    end
+    add_sysincludedirs("Vendor/yaml-cpp/include", { public = true })
 
-    add_includedirs("include", "include/webgpu")
+    add_defines("YAML_CPP_STATIC_DEFINE", {public = true})
+end)
 
-    on_load("windows", function (package)
-        if not package:config("shared") then
-            package:add("syslinks", "Advapi32", "bcrypt", "d3dcompiler", "NtDll", "User32", "Userenv", "WS2_32", "Gdi32", "Opengl32", "OleAut32", "Ole32")
-        end
-    end)
-
-    on_load("linux", function (package)
-        if not package:config("shared") then
-            package:add("syslinks", "dl", "pthread")
-        end
-    end)
-
-    on_install("windows|x64", "windows|x86", "linux|arm64-v8a", "linux|x86_64", function (package)
-        os.cp("include/**.h", package:installdir("include", "webgpu"))
-        if package:is_plat("windows") then
-            if package:config("shared") then
-                os.cp("lib/wgpu_native.dll", package:installdir("bin"))
-                os.cp("lib/wgpu_native.pdb", package:installdir("bin"))
-                os.cp("lib/wgpu_native.dll.lib", package:installdir("lib"))
-            else
-                os.cp("lib/wgpu_native.lib", package:installdir("lib"))
-            end
-        elseif package:is_plat("linux") then
-            if package:config("shared") then
-                os.cp("lib/libwgpu_native.so", package:installdir("bin"))
-            else
-                os.cp("lib/libwgpu_native.a", package:installdir("lib"))
-            end
-        end
-    end)
-
-    on_test(function (package)
-        assert(package:has_cfuncs("wgpuCreateInstance", {includes = "wgpu.h"}))
-    end)
-package_end()
-
-package("wgpu-native-custom")
+package("wgpu-native-custom", function()
     set_homepage("https://github.com/MineBill/wgpu-native")
     set_description("Native WebGPU implementation based on wgpu-core")
     set_license("Apache-2.0")
@@ -292,9 +249,9 @@ package("wgpu-native-custom")
     on_test(function (package)
         assert(package:has_cfuncs("wgpuCreateInstance", {includes = "wgpu.h"}))
     end)
-package_end()
+end)
 
-package("slang")
+package("slang", function()
     set_homepage("https://github.com/shader-slang/slang")
     set_description("Making it easier to work with shaders")
     set_license("MIT")
@@ -322,11 +279,10 @@ package("slang")
     on_test(function (package)
         -- assert(package:has_cfuncs("wgpuCreateInstance", {includes = "wgpu.h"}))
     end)
-
-package_end()
+end)
 
 if is_plat("linux") then
-    package("libsigcplusplus")
+    package("libsigcplusplus", function()
         add_configs("shared", { description = "Build shared library", default = false, type = "boolean" })
 
         add_deps("cmake")
@@ -338,10 +294,9 @@ if is_plat("linux") then
             table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
             import("package.tools.cmake").install(package, configs)
         end)
-    package_end()
+    end)
 
-    package("dbus-cxx")
---         set_version("")
+    package("dbus-cxx", function()
         add_configs("shared", { description = "Build shared library", default = false, type = "boolean" })
 
         add_deps("cmake", "libsigcplusplus")
@@ -354,7 +309,7 @@ if is_plat("linux") then
             table.insert(configs, "-DBUILD_TESTING=OFF")
             import("package.tools.cmake").install(package, configs)
         end)
-    package_end()
+    end)
 end
 
 add_rpathdirs("@executable_name/lib", {installonly = true})
