@@ -185,8 +185,8 @@ target("argparse", function()
 end)
 
 target("yaml-cpp", function()
-set_group "Vendor"
     set_kind "static"
+    set_group "Vendor"
     set_languages "c++20"
 
     add_files("Vendor/yaml-cpp/src/*.cpp")

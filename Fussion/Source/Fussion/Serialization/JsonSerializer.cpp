@@ -93,7 +93,7 @@ namespace Fussion {
         EndObject();
     }
 
-    void JsonSerializer::BeginObject(std::string_view name, size_t size)
+    void JsonSerializer::BeginObject(std::string_view name, size_t size, SerdeOptions const& options)
     {
         (void)size;
         m_ObjectStack.emplace();
@@ -265,7 +265,7 @@ namespace Fussion {
         if (m_TypeStack.top() == Type::Object) {
             auto& top = m_ObjectStack.top();
             VERIFY(top.is_object());
-            size = top.size();
+            size = top.size(); // TODO: Check if this is correct. size should be set from the node we push.
 
             if (!top.contains(name)) {
                 return false;

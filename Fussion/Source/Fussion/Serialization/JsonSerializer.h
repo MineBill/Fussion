@@ -25,7 +25,7 @@ namespace Fussion {
         virtual void Write(std::string_view name, char const* value) override;
         virtual void Write(std::string_view name, ISerializable const& object) override;
 
-        virtual void BeginObject(std::string_view name, size_t size) override;
+        virtual void BeginObject(std::string_view name, size_t size, SerdeOptions const& options = {}) override;
         virtual void EndObject() override;
         virtual void BeginArray(std::string_view name, size_t size) override;
         virtual void EndArray() override;

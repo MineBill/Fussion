@@ -10,7 +10,7 @@
 namespace Fussion {
     void Serializer::Write(std::string_view name, Vector2 const& value)
     {
-        BeginObject(name, 2);
+        BeginObject(name, 2, SerdeOption::Compact);
         Write("x", value.x);
         Write("y", value.y);
         EndObject();
@@ -18,7 +18,7 @@ namespace Fussion {
 
     void Serializer::Write(std::string_view name, Vector3 const& value)
     {
-        BeginObject(name, 3);
+        BeginObject(name, 3, SerdeOption::Compact);
         Write("x", value.x);
         Write("y", value.y);
         Write("z", value.z);
@@ -27,7 +27,7 @@ namespace Fussion {
 
     void Serializer::Write(std::string_view name, Vector4 const& value)
     {
-        BeginObject(name, 4);
+        BeginObject(name, 4, SerdeOption::Compact);
         Write("x", value.x);
         Write("y", value.y);
         Write("z", value.z);
@@ -37,7 +37,7 @@ namespace Fussion {
 
     void Serializer::Write(std::string_view name, Color const& value)
     {
-        BeginObject(name, 4);
+        BeginObject(name, 4, SerdeOption::Compact);
         Write("r", value.r);
         Write("g", value.g);
         Write("b", value.b);

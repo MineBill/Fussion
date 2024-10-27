@@ -2,6 +2,7 @@
 #include <Fussion/Core/Concepts.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/Serialization/ISerializable.h>
+#include <Fussion/Core/BitFlags.h>
 
 #include <filesystem>
 #include <magic_enum/magic_enum.hpp>
@@ -14,6 +15,13 @@ namespace Fussion {
     struct Vector3;
     struct Vector4;
     struct Color;
+
+    enum class SerdeOption {
+        Compact = 1 << 0,
+    };
+
+    DECLARE_FLAGS(SerdeOption, SerdeOptions)
+    DECLARE_OPERATORS_FOR_FLAGS(SerdeOptions)
 
     /// Serialization provider interface.
     /// This interface can be used to provide a serialization backend for ISerializable types.
@@ -42,7 +50,7 @@ namespace Fussion {
 
         virtual void Write(std::string_view name, ISerializable const& object) = 0;
 
-        virtual void BeginObject(std::string_view name, size_t size) = 0;
+        virtual void BeginObject(std::string_view name, size_t size, SerdeOptions const& options = {}) = 0;
         virtual void EndObject() = 0;
 
         virtual void BeginArray(std::string_view name, size_t size) = 0;
