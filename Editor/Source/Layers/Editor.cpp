@@ -7,6 +7,7 @@
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "EditorWindows/RendererReport.h"
 #include "Fussion/Math/BoundingBox.h"
+#include "Fussion/Serialization/YamlSerializer.h"
 
 #include <Fussion/Assets/AssetRef.h>
 #include <Fussion/Core/Application.h>
@@ -90,7 +91,7 @@ void Editor::OnStart()
         LOG_DEBUG("On Begin Play");
         auto meta = Project::AssetManager()->GetMetadata(m_ActiveScene->GetHandle());
 
-        JsonDeserializer ds(*FileSystem::ReadEntireFile(Project::AssetsFolderPath() / meta.Path));
+        YamlDeserializer ds(*FileSystem::ReadEntireFile(Project::AssetsFolderPath() / meta.Path));
         m_PlayScene = MakeRef<Scene>();
         m_PlayScene->Deserialize(ds);
 
@@ -128,7 +129,7 @@ void Editor::Save() const
 
     if (m_PlayState == PlayState::Editing && m_ActiveScene != nullptr) {
         LOG_DEBUGF("Saving scene {} to {}", m_ActiveScene->GetName(), m_ActiveScenePath);
-        JsonSerializer js;
+        YamlSerializer js;
         js.Initialize();
 
         m_ActiveScene->Serialize(js);
@@ -563,7 +564,7 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
         auto meta = Project::AssetManager()->GetMetadata(scene.GetHandle());
 
         if (auto scene_json = FileSystem::ReadEntireFile(Project::AssetsFolderPath() / meta.Path)) {
-            JsonDeserializer ds(*scene_json);
+            YamlDeserializer ds(*scene_json);
 
             auto scene_asset = MakeRef<Scene>();
             scene_asset->Deserialize(ds);

@@ -60,7 +60,7 @@ namespace Fussion {
         Write(name, path.string());
     }
 
-    void Deserializer::Read(std::string_view name, Vector2& value)
+    bool Deserializer::Read(std::string_view name, Vector2& value)
     {
         size_t size;
         if (BeginObject(name, size)) {
@@ -68,9 +68,10 @@ namespace Fussion {
             Read("y", value.y);
             EndObject();
         }
+        return true;
     }
 
-    void Deserializer::Read(std::string_view name, Vector3& value)
+    bool Deserializer::Read(std::string_view name, Vector3& value)
     {
         size_t size;
         if (BeginObject(name, size)) {
@@ -79,9 +80,10 @@ namespace Fussion {
             Read("z", value.z);
             EndObject();
         }
+        return true;
     }
 
-    void Deserializer::Read(std::string_view name, Vector4& value)
+    bool Deserializer::Read(std::string_view name, Vector4& value)
     {
         size_t size;
         if (BeginObject(name, size)) {
@@ -91,9 +93,10 @@ namespace Fussion {
             Read("w", value.w);
             EndObject();
         }
+        return true;
     }
 
-    void Deserializer::Read(std::string_view name, Color& value)
+    bool Deserializer::Read(std::string_view name, Color& value)
     {
         size_t size;
         if (BeginObject(name, size)) {
@@ -103,19 +106,26 @@ namespace Fussion {
             Read("a", value.a);
             EndObject();
         }
+        return true;
     }
 
-    void Deserializer::Read(std::string_view name, Uuid& value)
+    bool Deserializer::Read(std::string_view name, Uuid& value)
     {
         u64 id;
         Read(name, id);
         value = Uuid(id);
+        return true;
     }
 
-    void Deserializer::Read(std::string_view name, std::filesystem::path& p)
+    bool Deserializer::Read(std::string_view name, std::filesystem::path& p, std::filesystem::path const& base)
     {
         std::string s;
         Read(name, s);
-        p = s;
+        if (!base.empty()) {
+            p = base / s;
+        } else {
+            p = s;
+        }
+        return true;
     }
 }

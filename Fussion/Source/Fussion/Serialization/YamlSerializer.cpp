@@ -136,25 +136,27 @@ namespace Fussion {
     }
 
     template<typename T>
-    void YamlDeserializer::GenericRead(std::string_view name, T& value)
+    bool YamlDeserializer::GenericRead(std::string_view name, T& value)
     {
         if (m_Nodes.top().IsMap()) {
             auto& node = m_Nodes.top();
-            if (node[std::string(name)]) {
-                value = node[std::string(name)].as<T>();
+            if (!node[std::string(name)]) {
+                return false;
             }
+            value = node[std::string(name)].as<T>();
         } else if (m_Nodes.top().IsSequence()) {
             value = m_Nodes.top()[m_IndexStack.top()++].as<T>();
         } else {
-            PANIC("Unknown type");
+            LOG_WARNF("Unknown type");
+            return false;
         }
+        return true;
     }
 
     YamlDeserializer::YamlDeserializer(std::string const& data)
     {
         try {
             YAML::Node node = YAML::Load(data.c_str());
-            VERIFY(node.IsMap());
             m_Nodes.push(std::move(node));
         } catch (YAML::ParserException const& e) {
             LOG_ERRORF("Yaml exception: {}", e.what());
@@ -165,72 +167,74 @@ namespace Fussion {
     {
     }
 
-    void YamlDeserializer::Read(std::string_view name, s8& value)
+    bool YamlDeserializer::Read(std::string_view name, s8& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, s16& value)
+    bool YamlDeserializer::Read(std::string_view name, s16& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, s32& value)
+    bool YamlDeserializer::Read(std::string_view name, s32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, s64& value)
+    bool YamlDeserializer::Read(std::string_view name, s64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, u8& value)
+    bool YamlDeserializer::Read(std::string_view name, u8& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, u16& value)
+    bool YamlDeserializer::Read(std::string_view name, u16& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, u32& value)
+    bool YamlDeserializer::Read(std::string_view name, u32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, u64& value)
+    bool YamlDeserializer::Read(std::string_view name, u64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, f32& value)
+    bool YamlDeserializer::Read(std::string_view name, f32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, f64& value)
+    bool YamlDeserializer::Read(std::string_view name, f64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, bool& value)
+    bool YamlDeserializer::Read(std::string_view name, bool& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, std::string& value)
+    bool YamlDeserializer::Read(std::string_view name, std::string& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void YamlDeserializer::Read(std::string_view name, ISerializable& object)
+    bool YamlDeserializer::Read(std::string_view name, ISerializable& object)
     {
         if (size_t size; BeginObject(name, size)) {
             object.Deserialize(*this);
             EndObject();
+            return true;
         }
+        return false;
     }
 
     bool YamlDeserializer::BeginObject(std::string_view name, size_t& size)
@@ -273,11 +277,13 @@ namespace Fussion {
         } else if (m_Nodes.top().IsSequence()) {
             m_Nodes.push(m_Nodes.top()[m_IndexStack.top()++]);
         } else {
-            PANIC("Unknown node type");
+            size = 0;
+            return;
         }
         VERIFY(m_Nodes.top().IsSequence());
 
         size = m_Nodes.top().size();
+        m_IndexStack.emplace(0);
     }
 
     void YamlDeserializer::EndArray()

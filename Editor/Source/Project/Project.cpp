@@ -5,6 +5,7 @@
 
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Serialization/Json.h"
+#include "Fussion/Serialization/YamlSerializer.h"
 #include "Serialization/AssetSerializer.h"
 
 Ptr<Project> Project::s_ActiveProject;
@@ -31,32 +32,20 @@ void Project::Save()
 
 bool Project::Load(fs::path const& path)
 {
-    auto const data = FileSystem::ReadEntireFile(path);
-
-    auto j = json::parse(*data, nullptr, true, true);
-
     s_ActiveProject->m_ProjectPath = path;
     auto const base = path.parent_path();
 
-    if (j.contains("Name")) {
-        s_ActiveProject->m_Name = j["Name"].get<std::string>();
-    }
+    auto const data = FileSystem::ReadEntireFile(path);
 
-    if (j.contains(ASSETS_FOLDER)) {
-        s_ActiveProject->m_AssetsFolderPath = base / j[ASSETS_FOLDER].get<std::string>();
-    }
-    if (j.contains(CACHE_FOLDER)) {
-        s_ActiveProject->m_CacheFolderPath = base / j[CACHE_FOLDER].get<std::string>();
-    }
-    if (j.contains(SCRIPTS_FOLDER)) {
-        s_ActiveProject->m_ScriptsFolderPath = base / j[SCRIPTS_FOLDER].get<std::string>();
-    }
-    if (j.contains(ASSET_REGISTRY)) {
-        s_ActiveProject->m_AssetRegistryPath = base / j[ASSET_REGISTRY].get<std::string>();
-    }
-    if (j.contains(LOGS_FOLDER)) {
-        s_ActiveProject->m_LogsFolderPath = base / j[LOGS_FOLDER].get<std::string>();
-    }
+    YamlDeserializer ds(*data);
+
+    ds.Read("Name", s_ActiveProject->m_Name);
+
+    ds.Read(ASSETS_FOLDER, s_ActiveProject->m_AssetsFolderPath, base);
+    ds.Read(CACHE_FOLDER, s_ActiveProject->m_CacheFolderPath, base);
+    ds.Read(SCRIPTS_FOLDER, s_ActiveProject->m_ScriptsFolderPath, base);
+    ds.Read(ASSET_REGISTRY, s_ActiveProject->m_AssetRegistryPath, base);
+    ds.Read(LOGS_FOLDER, s_ActiveProject->m_LogsFolderPath, base);
 
     if (!exists(s_ActiveProject->m_AssetsFolderPath)) {
         LOG_ERRORF("AssetsFolder '{}' does not exist", s_ActiveProject->m_AssetsFolderPath.string());
@@ -82,31 +71,38 @@ auto Project::GenerateProject(fs::path const& path, std::string_view name) -> fs
 
     auto fullPath = path / name;
     try {
-        ordered_json project;
+        YamlSerializer s;
+        s.Initialize();
+
         fs::create_directories(fullPath);
 
-        project["Name"] = name;
-        project[ASSETS_FOLDER] = "Assets";
-        project[CACHE_FOLDER] = "Cache";
-        project[SCRIPTS_FOLDER] = "Scripts";
-        project[ASSET_REGISTRY] = "AssetRegistry.json";
-        project[LOGS_FOLDER] = "Logs";
+        // project["Name"] = name;
+        // project[ASSETS_FOLDER] = "Assets";
+        // project[CACHE_FOLDER] = "Cache";
+        // project[SCRIPTS_FOLDER] = "Scripts";
+        // project[ASSET_REGISTRY] = "AssetRegistry.json";
+        // project[LOGS_FOLDER] = "Logs";
 
-        create_directory(fullPath / project[ASSETS_FOLDER]);
-        create_directory(fullPath / project[CACHE_FOLDER]);
-        create_directory(fullPath / project[SCRIPTS_FOLDER]);
-        create_directory(fullPath / project[LOGS_FOLDER]);
+        s.Write("Name", name);
+        s.Write(ASSETS_FOLDER, "Assets");
+        s.Write(CACHE_FOLDER, "Cache");
+        s.Write(SCRIPTS_FOLDER, "Scripts");
+        s.Write(ASSET_REGISTRY, "AssetRegistry.fsn");
+        s.Write(LOGS_FOLDER, "Logs");
 
-        json assetRegistry;
-        assetRegistry["$Type"] = "AssetRegistry";
-        FileSystem::WriteEntireFile(fullPath / project[ASSET_REGISTRY], assetRegistry.dump(2));
+        create_directory(fullPath / "Assets");
+        create_directory(fullPath / "Cache");
+        create_directory(fullPath / "Scripts");
+        create_directory(fullPath / "Logs");
+
+        FileSystem::WriteEntireFile(fullPath / "AssetRegistry.fsn", "");
 
         std::string nameWithExt(name);
         nameWithExt += ".fsnproj";
 
         auto projectPath = fullPath / nameWithExt;
         LOG_DEBUGF("Writing project file to {}", projectPath);
-        FileSystem::WriteEntireFile(projectPath, project.dump(2));
+        FileSystem::WriteEntireFile(projectPath, s.ToString());
         return projectPath;
     } catch (fs::filesystem_error const& error) {
         LOG_ERRORF("Failed to create directory for project creation: {}", error.what());

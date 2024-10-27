@@ -163,15 +163,19 @@ namespace Fussion {
     // ======================================================
 
     template<typename T>
-    void JsonDeserializer::GenericRead(std::string_view name, T& value)
+    bool JsonDeserializer::GenericRead(std::string_view name, T& value)
     {
         if (m_ObjectStack.empty())
-            return;
+            return false;
         if (m_TypeStack.top() == Type::Array) {
             value = m_ObjectStack.top().at(m_IndexStack.top()++);
         } else {
+            if (!m_ObjectStack.top().contains(name)) {
+                return false;
+            }
             value = m_ObjectStack.top().value(name, value);
         }
+        return true;
     }
 
     JsonDeserializer::JsonDeserializer(std::string const& data)
@@ -192,72 +196,74 @@ namespace Fussion {
 
     void JsonDeserializer::Initialize() { }
 
-    void JsonDeserializer::Read(std::string_view name, s8& value)
+    bool JsonDeserializer::Read(std::string_view name, s8& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s16& value)
+    bool JsonDeserializer::Read(std::string_view name, s16& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s32& value)
+    bool JsonDeserializer::Read(std::string_view name, s32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, s64& value)
+    bool JsonDeserializer::Read(std::string_view name, s64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u8& value)
+    bool JsonDeserializer::Read(std::string_view name, u8& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u16& value)
+    bool JsonDeserializer::Read(std::string_view name, u16& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u32& value)
+    bool JsonDeserializer::Read(std::string_view name, u32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, u64& value)
+    bool JsonDeserializer::Read(std::string_view name, u64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, f32& value)
+    bool JsonDeserializer::Read(std::string_view name, f32& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, f64& value)
+    bool JsonDeserializer::Read(std::string_view name, f64& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, bool& value)
+    bool JsonDeserializer::Read(std::string_view name, bool& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, std::string& value)
+    bool JsonDeserializer::Read(std::string_view name, std::string& value)
     {
-        GenericRead(name, value);
+        return GenericRead(name, value);
     }
 
-    void JsonDeserializer::Read(std::string_view name, ISerializable& object)
+    bool JsonDeserializer::Read(std::string_view name, ISerializable& object)
     {
         if (size_t size; BeginObject(name, size)) {
             object.Deserialize(*this);
             EndObject();
+            return true;
         }
+        return false;
     }
 
     bool JsonDeserializer::BeginObject(std::string_view name, size_t& size)

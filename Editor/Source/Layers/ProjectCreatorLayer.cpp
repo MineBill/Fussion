@@ -8,6 +8,7 @@
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/OS/System.h"
 #include "Fussion/Serialization/JsonSerializer.h"
+#include "Fussion/Serialization/YamlSerializer.h"
 #include "ImGuiHelpers.h"
 
 #include <imgui_internal.h>
@@ -252,11 +253,11 @@ void ProjectCreatorLayer::OnEvent(Event& event)
 
 void ProjectCreatorLayer::Serialize(Serializer& s) const
 {
-    s.BeginArray("projects", m_Projects.size());
+    s.BeginArray("Projects", m_Projects.size());
     for (auto const& project : m_Projects) {
         s.BeginObject("", 2);
-        s.Write("name", project.Name);
-        s.Write("location", project.Location);
+        s.Write("Name", project.Name);
+        s.Write("Location", project.Location);
         s.EndObject();
     }
     s.EndArray();
@@ -265,15 +266,15 @@ void ProjectCreatorLayer::Serialize(Serializer& s) const
 void ProjectCreatorLayer::Deserialize(Deserializer& ds)
 {
     size_t size;
-    ds.BeginArray("projects", size);
+    ds.BeginArray("Projects", size);
     m_Projects.reserve(size);
 
     for (usz i = 0; i < size; ++i) {
         auto& project = m_Projects.emplace_back();
         usz obj_size;
         ds.BeginObject("", obj_size);
-        ds.Read("name", project.Name);
-        ds.Read("location", project.Location);
+        ds.Read("Name", project.Name);
+        ds.Read("Location", project.Location);
         ds.EndObject();
     }
 
@@ -288,41 +289,33 @@ void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
     }
 
     auto project_file = FileSystem::ReadEntireFile(path);
-    auto j = json::parse(*project_file);
+    YamlDeserializer ds(*project_file);
 
-    if (!j.contains("Name")) {
+    if (std::string name; ds.Read("Name", name)) {
+        m_Projects.emplace_back(name, path);
+        SaveProjects();
+    } else {
         LOG_WARN("Project file doesn't contain a name field");
-        return;
     }
-    if (!j["Name"].is_string()) {
-        LOG_WARN("Name field is not a string");
-        return;
-    }
-
-    auto name = j["Name"].get<std::string>();
-
-    m_Projects.emplace_back(name, path);
-
-    SaveProjects();
 }
 
 void ProjectCreatorLayer::SaveProjects() const
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
+    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
 
-    JsonSerializer js;
-    js.Initialize();
-    Serialize(js);
+    YamlSerializer s;
+    s.Initialize();
+    Serialize(s);
 
-    FileSystem::WriteEntireFile(projects_location, js.ToString());
+    FileSystem::WriteEntireFile(projects_location, s.ToString());
 }
 
 void ProjectCreatorLayer::LoadProjects()
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.json";
+    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
 
     if (auto file = FileSystem::ReadEntireFile(projects_location)) {
-        JsonDeserializer ds(*file);
+        YamlDeserializer ds(*file);
         ds.Initialize();
 
         Deserialize(ds);

@@ -57,21 +57,21 @@ namespace Fussion {
         static JsonDeserializer FromJsonObject(nlohmann::json const& json);
 
         virtual void Initialize() override;
-        virtual void Read(std::string_view name, s8& value) override;
-        virtual void Read(std::string_view name, s16& value) override;
-        virtual void Read(std::string_view name, s32& value) override;
-        virtual void Read(std::string_view name, s64& value) override;
-        virtual void Read(std::string_view name, u8& value) override;
-        virtual void Read(std::string_view name, u16& value) override;
-        virtual void Read(std::string_view name, u32& value) override;
-        virtual void Read(std::string_view name, u64& value) override;
-        virtual void Read(std::string_view name, f32& value) override;
-        virtual void Read(std::string_view name, f64& value) override;
-        virtual void Read(std::string_view name, bool& value) override;
+        virtual bool Read(std::string_view name, s8& value) override;
+        virtual bool Read(std::string_view name, s16& value) override;
+        virtual bool Read(std::string_view name, s32& value) override;
+        virtual bool Read(std::string_view name, s64& value) override;
+        virtual bool Read(std::string_view name, u8& value) override;
+        virtual bool Read(std::string_view name, u16& value) override;
+        virtual bool Read(std::string_view name, u32& value) override;
+        virtual bool Read(std::string_view name, u64& value) override;
+        virtual bool Read(std::string_view name, f32& value) override;
+        virtual bool Read(std::string_view name, f64& value) override;
+        virtual bool Read(std::string_view name, bool& value) override;
 
-        virtual void Read(std::string_view name, std::string& value) override;
+        virtual bool Read(std::string_view name, std::string& value) override;
 
-        virtual void Read(std::string_view name, ISerializable& object) override;
+        virtual bool Read(std::string_view name, ISerializable& object) override;
 
         virtual bool BeginObject(std::string_view name, size_t& size) override;
         virtual void EndObject() override;
@@ -82,7 +82,7 @@ namespace Fussion {
 
     private:
         template<typename T>
-        void GenericRead(std::string_view name, T& value);
+        bool GenericRead(std::string_view name, T& value);
 
         enum class Type {
             Array,

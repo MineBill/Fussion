@@ -1,8 +1,8 @@
 ﻿#pragma once
+#include <Fussion/Core/BitFlags.h>
 #include <Fussion/Core/Concepts.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/Serialization/ISerializable.h>
-#include <Fussion/Core/BitFlags.h>
 
 #include <filesystem>
 #include <magic_enum/magic_enum.hpp>
@@ -107,23 +107,23 @@ namespace Fussion {
 
         virtual void Initialize() = 0;
 
-        virtual void Read(std::string_view name, s8& value) = 0;
-        virtual void Read(std::string_view name, s16& value) = 0;
-        virtual void Read(std::string_view name, s32& value) = 0;
-        virtual void Read(std::string_view name, s64& value) = 0;
+        virtual bool Read(std::string_view name, s8& value) = 0;
+        virtual bool Read(std::string_view name, s16& value) = 0;
+        virtual bool Read(std::string_view name, s32& value) = 0;
+        virtual bool Read(std::string_view name, s64& value) = 0;
 
-        virtual void Read(std::string_view name, u8& value) = 0;
-        virtual void Read(std::string_view name, u16& value) = 0;
-        virtual void Read(std::string_view name, u32& value) = 0;
-        virtual void Read(std::string_view name, u64& value) = 0;
+        virtual bool Read(std::string_view name, u8& value) = 0;
+        virtual bool Read(std::string_view name, u16& value) = 0;
+        virtual bool Read(std::string_view name, u32& value) = 0;
+        virtual bool Read(std::string_view name, u64& value) = 0;
 
-        virtual void Read(std::string_view name, f32& value) = 0;
-        virtual void Read(std::string_view name, f64& value) = 0;
+        virtual bool Read(std::string_view name, f32& value) = 0;
+        virtual bool Read(std::string_view name, f64& value) = 0;
 
-        virtual void Read(std::string_view name, bool& value) = 0;
-        virtual void Read(std::string_view name, std::string& value) = 0;
+        virtual bool Read(std::string_view name, bool& value) = 0;
+        virtual bool Read(std::string_view name, std::string& value) = 0;
 
-        virtual void Read(std::string_view name, ISerializable& object) = 0;
+        virtual bool Read(std::string_view name, ISerializable& object) = 0;
 
         virtual bool BeginObject(std::string_view name, size_t& size) = 0;
         virtual void EndObject() = 0;
@@ -131,12 +131,12 @@ namespace Fussion {
         virtual void BeginArray(std::string_view name, size_t& size) = 0;
         virtual void EndArray() = 0;
 
-        void Read(std::string_view name, Vector2& value);
-        void Read(std::string_view name, Vector3& value);
-        void Read(std::string_view name, Vector4& value);
-        void Read(std::string_view name, Color& value);
-        void Read(std::string_view name, Uuid& value);
-        void Read(std::string_view name, std::filesystem::path& p);
+        bool Read(std::string_view name, Vector2& value);
+        bool Read(std::string_view name, Vector3& value);
+        bool Read(std::string_view name, Vector4& value);
+        bool Read(std::string_view name, Color& value);
+        bool Read(std::string_view name, Uuid& value);
+        bool Read(std::string_view name, std::filesystem::path& p, std::filesystem::path const& base = {});
 
         template<typename E>
         requires std::is_enum_v<E>
