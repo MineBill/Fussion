@@ -86,11 +86,11 @@ namespace Fussion {
     {
         BeginObject(name, 0);
         object.Serialize(*this);
-        if (false) {
-            PopObject();
-            return;
-        }
         EndObject();
+    }
+
+    void JsonSerializer::WriteByteArray(std::string_view name, u8 const* ptr, usz size)
+    {
     }
 
     void JsonSerializer::BeginObject(std::string_view name, size_t size, SerdeOptions const& options)

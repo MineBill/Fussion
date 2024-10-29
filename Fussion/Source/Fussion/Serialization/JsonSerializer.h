@@ -24,6 +24,7 @@ namespace Fussion {
         virtual void Write(std::string_view name, std::string_view value) override;
         virtual void Write(std::string_view name, char const* value) override;
         virtual void Write(std::string_view name, ISerializable const& object) override;
+        virtual void WriteByteArray(std::string_view name, u8 const* ptr, usz size) override;
 
         virtual void BeginObject(std::string_view name, size_t size, SerdeOptions const& options = {}) override;
         virtual void EndObject() override;
@@ -38,6 +39,7 @@ namespace Fussion {
         template<typename T>
         void GenericWrite(std::string_view name, T value);
 
+    private:
         enum class Type {
             Array,
             Object,

@@ -50,6 +50,8 @@ namespace Fussion {
 
         virtual void Write(std::string_view name, ISerializable const& object) = 0;
 
+        virtual void WriteByteArray(std::string_view name, u8 const* ptr, usz size) = 0;
+
         virtual void BeginObject(std::string_view name, size_t size, SerdeOptions const& options = {}) = 0;
         virtual void EndObject() = 0;
 

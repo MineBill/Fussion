@@ -1,13 +1,11 @@
 ﻿#pragma once
-#include <Fussion/Serialization/Serializer.h>
-
-#include <yaml-cpp/yaml.h>
-
-#include <stack>
+#include "Fussion/Serialization/Serializer.h"
 
 namespace Fussion {
-    class YamlSerializer final : public Serializer {
+    class BinarySerializer final : public Serializer {
     public:
+        explicit BinarySerializer(std::ostream* out);
+
         virtual void Initialize() override;
         virtual void Write(std::string_view name, s8 value) override;
         virtual void Write(std::string_view name, s16 value) override;
@@ -27,30 +25,17 @@ namespace Fussion {
         virtual void EndObject() override;
         virtual void BeginArray(std::string_view name, size_t size) override;
         virtual void EndArray() override;
-
         virtual void WriteByteArray(std::string_view name, u8 const* ptr, usz size) override;
-
-        std::string ToString();
 
     private:
         template<typename T>
-        void GenericWrite(std::string_view name, T value);
-
-    private:
-        enum class Type {
-            Array,
-            Object,
-        };
-
-        std::stack<Type> m_TypeStack { { Type::Object } };
-        YAML::Emitter m_Emitter {};
+        void WriteGeneric(std::string_view name, T value);
+        std::ostream* m_Out {};
     };
 
-    class YamlDeserializer final : public Deserializer {
+    class BinaryDeserializer final : public Deserializer {
     public:
-        using Deserializer::Read;
-
-        explicit YamlDeserializer(std::string const& data);
+        explicit BinaryDeserializer(std::istream* in);
 
         virtual void Initialize() override;
         virtual bool Read(std::string_view name, s8& value) override;
@@ -75,9 +60,6 @@ namespace Fussion {
     private:
         template<typename T>
         bool GenericRead(std::string_view name, T& value);
-
-        std::stack<YAML::Node> m_Nodes {};
-        std::stack<u32> m_IndexStack {};
+        std::istream* m_In {};
     };
-
 }
