@@ -3,6 +3,8 @@
 #include <Fussion/GPU/GPU.h>
 #include <Fussion/Math/Color.h>
 
+#include <array>
+
 namespace Fussion {
     class Texture2D;
     class PbrMaterial;

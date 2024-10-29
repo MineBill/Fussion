@@ -4,6 +4,7 @@
 #include "Fussion/Math/Color.h"
 #include "Fussion/Math/Vector3.h"
 #include <Fussion/Core/Maybe.h>
+#include <Fussion/Core/Result.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/GPU/Enums.h>
 #include <Fussion/Window.h>
