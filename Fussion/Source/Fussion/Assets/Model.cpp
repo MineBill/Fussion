@@ -1,34 +1,34 @@
-﻿#include "Model.h"
-#include "FussionPCH.h"
+﻿#include "FussionPCH.h"
+#include "Model.h"
 
 #include "GPU/GPU.h"
 #include "Rendering/Renderer.h"
 
 namespace Fussion {
     Mesh::Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset)
-        : Offset(offset),
-          MaterialIndex(material_index)
+        : Offset(offset)
+        , MaterialIndex(material_index)
     {
         (void)shadow_indices;
         Vertices = vertices;
 
         auto& device = Renderer::Device();
 
-        auto vertex_spec = GPU::BufferSpec{
+        auto vertex_spec = GPU::BufferSpec {
             .Label = "Mesh Vertex Buffer"sv,
             .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
             .Size = CAST(u32, Vertices.size() * sizeof(Vertex)),
         };
         VertexBuffer = device.CreateBuffer(vertex_spec);
-        device.WriteBuffer(VertexBuffer, 0, std::span{ Vertices });
+        device.WriteBuffer(VertexBuffer, 0, std::span { Vertices });
 
-        auto index_spec = GPU::BufferSpec{
+        auto index_spec = GPU::BufferSpec {
             .Label = "Index Vertex Buffer"sv,
             .Usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
             .Size = CAST(u32, indices.size() * sizeof(u32)),
         };
         IndexBuffer = device.CreateBuffer(index_spec);
-        device.WriteBuffer(IndexBuffer, 0, std::span{ indices });
+        device.WriteBuffer(IndexBuffer, 0, std::span { indices });
 
         IndexCount = CAST(u32, indices.size());
 
