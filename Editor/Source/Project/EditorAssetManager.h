@@ -1,5 +1,5 @@
 #pragma once
-#include "../Serialization/AssetSerializer.h"
+#include "../Serialization/AssetImporter.h"
 #include "EditorAssetMetadata.h"
 
 #include "Fussion/Assets/Asset.h"
@@ -37,7 +37,7 @@ private:
     std::atomic_bool m_Quit {};
 };
 
-class AssetSerializer;
+class AssetImporter;
 
 class EditorAssetManager final : public Fussion::AssetManagerBase
     , Fussion::ISerializable {
@@ -128,7 +128,7 @@ private:
     Fussion::ThreadProtected<Registry> m_Registry {};
     std::unordered_map<Fsn::AssetHandle, Ref<Fsn::Asset>> m_LoadedAssets {};
 
-    std::unordered_map<Fsn::AssetType, Ptr<AssetSerializer>> m_AssetImporters {};
+    std::unordered_map<Fsn::AssetType, Ptr<AssetImporter>> m_AssetImporters {};
 
     Ptr<Fussion::FileWatcher> m_EditorWatcher {};
 

@@ -6,7 +6,7 @@
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Serialization/Json.h"
 #include "Fussion/Serialization/YamlSerializer.h"
-#include "Serialization/AssetSerializer.h"
+#include "Serialization/AssetImporter.h"
 
 Ptr<Project> Project::s_ActiveProject;
 using namespace Fussion;

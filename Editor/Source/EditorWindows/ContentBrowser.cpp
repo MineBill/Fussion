@@ -6,7 +6,7 @@
 #include "Layers/Editor.h"
 #include "Layers/ImGuiLayer.h"
 #include "Project/Project.h"
-#include "Serialization/AssetSerializer.h"
+#include "Serialization/AssetImporter.h"
 
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"

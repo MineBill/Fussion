@@ -8,7 +8,7 @@
 #include "Fussion/Assets/ShaderAsset.h"
 #include "Fussion/Serialization/YamlSerializer.h"
 #include "Project.h"
-#include "Serialization/AssetSerializer.h"
+#include "Serialization/AssetImporter.h"
 #include "Serialization/MeshImporter.h"
 #include "Serialization/TextureImporter.h"
 
@@ -128,8 +128,8 @@ void WorkerPool::Load(EditorAssetMetadata const& metadata)
 EditorAssetManager::EditorAssetManager()
     : m_EditorWatcher(FileWatcher::Create(fs::current_path() / "Assets" / "Shaders"))
 {
-    m_AssetImporters[AssetType::Texture2D] = MakePtr<TextureSerializer>();
-    m_AssetImporters[AssetType::Model] = MakePtr<MeshSerializer>();
+    m_AssetImporters[AssetType::Texture2D] = MakePtr<TextureImporter>();
+    m_AssetImporters[AssetType::Model] = MakePtr<MeshImporter>();
 
     m_EditorWatcher->AddListener([this](fs::path const& path, FileWatcher::EventType type) {
         if (type == FileWatcher::EventType::FileModified) {

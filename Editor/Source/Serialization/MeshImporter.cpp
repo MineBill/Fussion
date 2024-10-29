@@ -1,4 +1,4 @@
-﻿#include "MeshSerializer.h"
+﻿#include "MeshImporter.h"
 
 #include "EditorPCH.h"
 #include "Project/Project.h"
@@ -68,15 +68,9 @@ namespace Mikktspace {
     }
 }
 
-void MeshSerializer::Save(EditorAssetMetadata metadata, Ref<Asset> const& asset)
+Ref<Asset> MeshImporter::Import(std::filesystem::path const& path)
 {
-    (void)metadata;
-    (void)asset;
-}
-
-Ref<Asset> MeshSerializer::Load(EditorAssetMetadata metadata)
-{
-    auto path = Project::AssetsFolderPath() / metadata.Path;
+    // auto path = Project::AssetsFolderPath() / metadata.Path;
 
     tinygltf::TinyGLTF loader;
     tinygltf::Model model;
