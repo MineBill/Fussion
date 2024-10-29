@@ -31,6 +31,14 @@ namespace Fussion {
     GlfwWindow::GlfwWindow(WindowOptions const& options)
         : m_Options(options)
     {
+        if (auto platform = std::getenv("FUSSION_WINDOW_SYSTEM"); platform != nullptr) {
+            if (std::strcmp(platform, "X11") == 0) {
+                glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+            } else if (std::strcmp(platform, "WAYLAND") == 0) {
+                glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+            }
+        }
+
         if (glfwInit() != GLFW_TRUE) {
             exit(1);
         }

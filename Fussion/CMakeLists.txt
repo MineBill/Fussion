@@ -368,7 +368,12 @@ if (WIN32)
 endif ()
 
 if (UNIX)
-    target_compile_definitions(Fussion PUBLIC OS_LINUX)
+    set(LINUX_DEFINES OS_LINUX)
+    if (GLFW_BUILD_WAYLAND)
+        message("==================== Building with wayland glfw so adding extra thing")
+        list(APPEND LINUX_DEFINES FUSSION_GLFW_WAYLAND)
+    endif ()
+    target_compile_definitions(Fussion PUBLIC ${LINUX_DEFINES})
     target_sources(Fussion PRIVATE
         Platform/Linux/LinuxDialog.cpp
         Platform/Linux/LinuxFileWatcher.cpp
