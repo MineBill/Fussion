@@ -44,7 +44,7 @@ namespace Fussion {
         friend ReflectionRegistry;
 
     public:
-        Transform WorldTransform;
+        Transform WorldTransform {};
         std::string Name { "Entity" };
 
         Entity() = default;

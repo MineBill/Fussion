@@ -290,13 +290,16 @@ namespace Fussion {
         FSN_SERIALIZE_MEMBER(m_Parent);
         FSN_SERIALIZE_MEMBER(WorldTransform);
 
-        ctx.BeginObject("Components", m_Components.size());
+        ctx.BeginArray("Components", m_Components.size());
         for (auto const& [id, component] : m_Components) {
             (void)id;
             auto component_name = component->meta_poly_ptr().get_type().as_pointer().get_data_type().get_metadata().at("Name").as<std::string>();
-            ctx.Write(component_name, *component);
+            ctx.BeginObject("", 0);
+            ctx.Write("$ComponentName", component_name);
+            component->Serialize(ctx);
+            ctx.EndObject();
         }
-        ctx.EndObject();
+        ctx.EndArray();
     }
 
     void Entity::Deserialize(Deserializer& ctx)
@@ -308,16 +311,22 @@ namespace Fussion {
         FSN_DESERIALIZE_MEMBER(WorldTransform);
 
         size_t size;
-        ctx.BeginObject("Components", size);
+
+        ctx.BeginArray("Components", size);
 
         auto registry = meta_hpp::resolve_scope("Components");
-        for (auto const& key : ctx.ReadKeys()) {
-            if (auto klass = registry.get_typedef(key); klass.is_valid()) {
+        for (int i = 0; i < size; i++) {
+            size_t objSize;
+            ctx.BeginObject("", objSize);
+            std::string componentName;
+            ctx.Read("$ComponentName", componentName);
+            if (auto klass = registry.get_typedef(componentName); klass.is_valid()) {
                 auto component = AddComponent(klass.as_class());
-                ctx.Read(key, *component);
+                component->Deserialize(ctx);
             }
+            ctx.EndObject();
         }
-        ctx.EndObject();
+        ctx.EndArray();
     }
 
     void Entity::OnStart()
