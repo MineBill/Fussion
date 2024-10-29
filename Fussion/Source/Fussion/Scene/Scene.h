@@ -82,6 +82,7 @@ namespace Fussion {
         EntityHandle CloneEntity(EntityHandle handle);
 
         auto GetName() const -> std::string const& { return m_Name; }
+        void SetName(std::string const& name) { m_Name = name; }
 
         virtual auto Type() const -> AssetType override { return StaticType(); }
 

@@ -211,7 +211,9 @@ namespace Fussion {
     void Scene::Serialize(Serializer& ctx) const
     {
         FSN_SERIALIZE_MEMBER(m_Name);
-        ctx.BeginArray("Entities", m_Entities.size());
+        auto entitiesCount = m_Entities.size() - 1; // -1 because the root is in the vector
+
+        ctx.BeginArray("Entities", entitiesCount);
         for (auto const& [id, entity] : m_Entities) {
             if (id == 0)
                 continue;
