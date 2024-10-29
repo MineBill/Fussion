@@ -11,6 +11,7 @@ cmake-build-debug/
 .cache/
 **/Generated/
 LivePP/
+Sandbox
 
 # Files
 *.vcxproj

@@ -1,3 +1,5 @@
+set_project("Fussion")
+
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
@@ -52,3 +54,7 @@ includes("Vendor.lua")
 includes("HeaderTool/HeaderTool.lua")
 includes("Fussion/Fussion.lua")
 includes("Editor/Editor.lua")
+
+if os.exists("Sandbox/Sandbox.lua") then
+    includes("Sandbox/Sandbox.lua")
+end
