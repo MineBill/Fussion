@@ -11,7 +11,7 @@
 #include "Fussion/Assets/AssetManager.h"
 #include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/OS/Dialog.h"
-#include <Fussion/Util/TextureImporter.h>
+#include <Fussion/Util/TextureLoader.h>
 
 #include "Fussion/Input/Input.h"
 #include "Fussion/OS/System.h"

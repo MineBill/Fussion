@@ -1,7 +1,7 @@
 ﻿#include "EditorPCH.h"
 #include "EditorStyle.h"
 
-#include <Fussion/Util/TextureImporter.h>
+#include <Fussion/Util/TextureLoader.h>
 
 #include <filesystem>
 
@@ -82,25 +82,25 @@ void EditorStyle::Initialize()
     }
 
     using enum EditorIcon;
-    EditorIcons[Folder] = TextureImporter::LoadTextureFromFile("Assets/Icons/Folder.png").Unwrap();
-    EditorIcons[FolderBack] = TextureImporter::LoadTextureFromFile("Assets/Icons/FolderBack.png").Unwrap();
-    EditorIcons[GenericAsset] = TextureImporter::LoadTextureFromFile("Assets/Icons/GenericAsset.png").Unwrap();
-    EditorIcons[Scene] = TextureImporter::LoadTextureFromFile("Assets/Icons/Scene.png").Unwrap();
-    EditorIcons[Script] = TextureImporter::LoadTextureFromFile("Assets/Icons/Script.png").Unwrap();
-    EditorIcons[PbrMaterial] = TextureImporter::LoadTextureFromFile("Assets/Icons/PbrMaterial.png").Unwrap();
-    EditorIcons[Dots] = TextureImporter::LoadTextureFromFile("Assets/Icons/ThreeDots.png").Unwrap();
-    EditorIcons[Search] = TextureImporter::LoadTextureFromFile("Assets/Icons/Search.png").Unwrap();
+    EditorIcons[Folder] = TextureLoader::LoadTextureFromFile("Assets/Icons/Folder.png").Unwrap();
+    EditorIcons[FolderBack] = TextureLoader::LoadTextureFromFile("Assets/Icons/FolderBack.png").Unwrap();
+    EditorIcons[GenericAsset] = TextureLoader::LoadTextureFromFile("Assets/Icons/GenericAsset.png").Unwrap();
+    EditorIcons[Scene] = TextureLoader::LoadTextureFromFile("Assets/Icons/Scene.png").Unwrap();
+    EditorIcons[Script] = TextureLoader::LoadTextureFromFile("Assets/Icons/Script.png").Unwrap();
+    EditorIcons[PbrMaterial] = TextureLoader::LoadTextureFromFile("Assets/Icons/PbrMaterial.png").Unwrap();
+    EditorIcons[Dots] = TextureLoader::LoadTextureFromFile("Assets/Icons/ThreeDots.png").Unwrap();
+    EditorIcons[Search] = TextureLoader::LoadTextureFromFile("Assets/Icons/Search.png").Unwrap();
 
-    EditorIcons[Error] = TextureImporter::LoadTextureFromFile("Assets/Icons/ErrorIcon.png").Unwrap();
-    EditorIcons[Warning] = TextureImporter::LoadTextureFromFile("Assets/Icons/WarningIcon.png").Unwrap();
-    EditorIcons[Info] = TextureImporter::LoadTextureFromFile("Assets/Icons/InfoIcon.png").Unwrap();
-    EditorIcons[CogWheel] = TextureImporter::LoadTextureFromFile("Assets/Icons/CogWheel.png").Unwrap();
-    EditorIcons[Entity] = TextureImporter::LoadTextureFromFile("Assets/Icons/Entity.png").Unwrap();
+    EditorIcons[Error] = TextureLoader::LoadTextureFromFile("Assets/Icons/ErrorIcon.png").Unwrap();
+    EditorIcons[Warning] = TextureLoader::LoadTextureFromFile("Assets/Icons/WarningIcon.png").Unwrap();
+    EditorIcons[Info] = TextureLoader::LoadTextureFromFile("Assets/Icons/InfoIcon.png").Unwrap();
+    EditorIcons[CogWheel] = TextureLoader::LoadTextureFromFile("Assets/Icons/CogWheel.png").Unwrap();
+    EditorIcons[Entity] = TextureLoader::LoadTextureFromFile("Assets/Icons/Entity.png").Unwrap();
 
-    EditorIcons[Play] = TextureImporter::LoadTextureFromFile("Assets/Icons/PlayButton.png").Unwrap();
-    EditorIcons[Stop] = TextureImporter::LoadTextureFromFile("Assets/Icons/StopButton.png").Unwrap();
-    EditorIcons[Pause] = TextureImporter::LoadTextureFromFile("Assets/Icons/PauseButton.png").Unwrap();
-    EditorIcons[StepFrame] = TextureImporter::LoadTextureFromFile("Assets/Icons/StepFrame.png").Unwrap();
+    EditorIcons[Play] = TextureLoader::LoadTextureFromFile("Assets/Icons/PlayButton.png").Unwrap();
+    EditorIcons[Stop] = TextureLoader::LoadTextureFromFile("Assets/Icons/StopButton.png").Unwrap();
+    EditorIcons[Pause] = TextureLoader::LoadTextureFromFile("Assets/Icons/PauseButton.png").Unwrap();
+    EditorIcons[StepFrame] = TextureLoader::LoadTextureFromFile("Assets/Icons/StepFrame.png").Unwrap();
 }
 
 EditorStyle& EditorStyle::Style()

@@ -5,7 +5,7 @@
 #include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/Core/Application.h"
 #include "Fussion/GPU/Utils.h"
-#include "Fussion/Util/TextureImporter.h"
+#include "Fussion/Util/TextureLoader.h"
 #include "Pipelines/IrradianceIBLGenerator.h"
 
 #include <tracy/Tracy.hpp>
@@ -174,9 +174,9 @@ namespace Fussion {
         material->object_color = Color(1, 1, 1, 1);
         g_Data.DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
 
-        g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_white_texture_png).Unwrap(), "Default White Texture");
-        g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_black_texture_png).Unwrap(), "Default Black Texture");
-        g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureImporter::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
+        g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_white_texture_png).Unwrap(), "Default White Texture");
+        g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_black_texture_png).Unwrap(), "Default Black Texture");
+        g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
 
         GPU::TextureSpec texture_spec {
             .Label = "CubeTexGen::cube_texture"sv,
@@ -203,7 +203,7 @@ namespace Fussion {
             .Aspect = texture_spec.Aspect // TODO: Make configurable
         });
 
-        auto data = TextureImporter::LoadHDRTextureFromMemory(g_white_texture_hdr).Unwrap();
+        auto data = TextureLoader::LoadHDRTextureFromMemory(g_white_texture_hdr).Unwrap();
 
         auto encoder = g_Data.Device.CreateCommandEncoder();
 

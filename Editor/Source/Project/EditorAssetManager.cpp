@@ -9,8 +9,8 @@
 #include "Fussion/Serialization/YamlSerializer.h"
 #include "Project.h"
 #include "Serialization/AssetSerializer.h"
-#include "Serialization/MeshSerializer.h"
-#include "Serialization/TextureSerializer.h"
+#include "Serialization/MeshImporter.h"
+#include "Serialization/TextureImporter.h"
 
 #include <Fussion/OS/FileSystem.h>
 #include <Fussion/Scene/Scene.h>
@@ -49,9 +49,9 @@ WorkerPool::~WorkerPool()
 void WorkerPool::Work(s32 index)
 {
     // NOTE: This probably doesn't hurt much since these are pointers to functions, no data are created.
-    std::map<AssetType, Ptr<AssetSerializer>> asset_serializers {};
-    asset_serializers[AssetType::Texture2D] = MakePtr<TextureSerializer>();
-    asset_serializers[AssetType::Model] = MakePtr<MeshSerializer>();
+    std::map<AssetType, Ptr<AssetImporter>> asset_serializers {};
+    asset_serializers[AssetType::Texture2D] = MakePtr<TextureImporter>();
+    asset_serializers[AssetType::Model] = MakePtr<MeshImporter>();
 
     auto make_asset = [](AssetType type) -> Ref<Asset> {
         switch (type) {

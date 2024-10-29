@@ -9,7 +9,7 @@
 #include "Fussion/Log/Log.h"
 #include "ImGuiHelpers.h"
 #include "Layers/Editor.h"
-#include <Fussion/Util/TextureImporter.h>
+#include <Fussion/Util/TextureLoader.h>
 
 void ConsoleWindow::OnStart() { }
 

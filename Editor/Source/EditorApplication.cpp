@@ -15,7 +15,7 @@
 #include <Fussion/OS/Args.h>
 #include <Fussion/OS/Dialog.h>
 #include <Fussion/Rendering/Renderer.h>
-#include <Fussion/Util/TextureImporter.h>
+#include <Fussion/Util/TextureLoader.h>
 #include <chrono>
 #include <tracy/Tracy.hpp>
 
@@ -46,7 +46,7 @@ void EditorApplication::OnStart()
 
     Project::Initialize();
 
-    auto image = TextureImporter::LoadImageFromMemory({ LOGO32_DATA }).Unwrap();
+    auto image = TextureLoader::LoadImageFromMemory({ LOGO32_DATA }).Unwrap();
     m_Window->SetIcon(image);
 
     g_Imgui = MakePtr<ImGuiLayer>();
