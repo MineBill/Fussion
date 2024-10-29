@@ -4,7 +4,7 @@
 #include <Fussion/Image.h>
 
 namespace Fussion {
-    class TextureImporter {
+    class TextureLoader {
     public:
         static auto LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>;
         static auto LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>;

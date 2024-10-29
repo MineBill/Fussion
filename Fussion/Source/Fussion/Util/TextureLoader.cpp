@@ -1,4 +1,4 @@
-﻿#include "TextureImporter.h"
+﻿#include "TextureLoader.h"
 
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Rendering/Renderer.h"
@@ -7,7 +7,7 @@
 #include "stb_image_write.h"
 
 namespace Fussion {
-    auto TextureImporter::LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>
+    auto TextureLoader::LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>
     {
         Image image {};
         int actual_channels_on_image, w, h;
@@ -27,7 +27,7 @@ namespace Fussion {
         return image;
     }
 
-    auto TextureImporter::LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>
+    auto TextureLoader::LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>
     {
         auto data = FileSystem::ReadEntireFileBinary(path);
         if (!data)
@@ -35,7 +35,7 @@ namespace Fussion {
         return LoadImageFromMemory(*data);
     }
 
-    auto TextureImporter::LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
     {
         auto image = LoadImageFromFile(path);
         if (!image) {
@@ -48,7 +48,7 @@ namespace Fussion {
         return Texture2D::Create(image->Data, metadata);
     }
 
-    auto TextureImporter::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
         auto image = LoadImageFromMemory(data);
         if (!image) {
@@ -61,14 +61,14 @@ namespace Fussion {
         return Texture2D::Create(image->Data, metadata);
     }
 
-    void TextureImporter::SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path)
+    void TextureLoader::SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path)
     {
         (void)texture;
         (void)path;
         UNIMPLEMENTED;
     }
 
-    auto TextureImporter::LoadHDRImageFromMemory(std::span<u8> data) -> Maybe<FloatImage>
+    auto TextureLoader::LoadHDRImageFromMemory(std::span<u8> data) -> Maybe<FloatImage>
     {
         FloatImage image {};
         int actual_channels_on_image, w, h;
@@ -92,7 +92,7 @@ namespace Fussion {
         return image;
     }
 
-    auto TextureImporter::LoadHDRImageFromFile(std::filesystem::path const& path) -> Maybe<FloatImage>
+    auto TextureLoader::LoadHDRImageFromFile(std::filesystem::path const& path) -> Maybe<FloatImage>
     {
         auto data = FileSystem::ReadEntireFileBinary(path);
         if (!data)
@@ -100,7 +100,7 @@ namespace Fussion {
         return LoadHDRImageFromMemory(*data);
     }
 
-    auto TextureImporter::LoadHDRTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::LoadHDRTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
         auto image = LoadHDRImageFromMemory(data);
         if (!image) {
