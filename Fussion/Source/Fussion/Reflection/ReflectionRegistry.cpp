@@ -10,12 +10,6 @@
 #include "Fussion/Scene/Scene.h"
 
 namespace Fussion {
-    ReflectionRegistry::ReflectionRegistry()
-    {
-        Register();
-        RegisterGenerated();
-    }
-
     void ReflectionRegistry::Register()
     {
         using namespace std::literals;
@@ -96,7 +90,7 @@ namespace Fussion {
             .constructor_<>(as_raw_pointer)
             .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap, as_pointer)
             .member_("Format", &Texture2DMetadata::Format, as_pointer);
+
+        RegisterGenerated();
     }
 }
-
-static Fussion::ReflectionRegistry const g_Registrar;

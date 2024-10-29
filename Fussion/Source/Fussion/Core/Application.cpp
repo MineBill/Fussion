@@ -36,6 +36,8 @@ namespace Fussion {
 
     void Application::Run()
     {
+        ReflectionRegistry::Register();
+
         LOG_DEBUG("Initializing application");
         s_Instance = this;
         Log::DefaultLogger()->SetLogLevel(LogLevel::Debug);
