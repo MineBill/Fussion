@@ -8,6 +8,7 @@ Binaries/
 build/
 dist/
 cmake-build-debug/
+cmake-build-*/
 .cache/
 **/Generated/
 LivePP/
