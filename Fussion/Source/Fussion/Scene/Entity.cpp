@@ -295,7 +295,7 @@ namespace Fussion {
             (void)id;
             auto component_name = component->meta_poly_ptr().get_type().as_pointer().get_data_type().get_metadata().at("Name").as<std::string>();
             ctx.BeginObject("", 0);
-            ctx.Write("$ComponentName", component_name);
+            ctx.Write("$Name", component_name);
             component->Serialize(ctx);
             ctx.EndObject();
         }
@@ -319,7 +319,7 @@ namespace Fussion {
             size_t objSize;
             ctx.BeginObject("", objSize);
             std::string componentName;
-            ctx.Read("$ComponentName", componentName);
+            ctx.Read("$Name", componentName);
             if (auto klass = registry.get_typedef(componentName); klass.is_valid()) {
                 auto component = AddComponent(klass.as_class());
                 component->Deserialize(ctx);
