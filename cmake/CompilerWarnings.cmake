@@ -34,6 +34,10 @@ function(
             /w14906 # string literal cast to 'LPWSTR'
             /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
             /permissive- # standards conformance mode for MSVC compiler.
+
+            /wd4514 # unreferenced inline function has been removed
+            /wd5030 # Ignore unrecognised attributes
+            /wd5222 # Ignore unscoped attributes
         )
     endif ()
 
