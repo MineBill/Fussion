@@ -1,0 +1,4 @@
+﻿add_subdirectory(angelscript/sdk/angelscript/projects/cmake)
+add_subdirectory(tracy)
+set(USE_STATIC_MSVC_RUNTIME_LIBRARY OFF)
+add_subdirectory(JoltPhysics/Build)
