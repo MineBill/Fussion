@@ -84,7 +84,6 @@ add_library(Fussion STATIC
     Source/Fussion/OS/Clock.cpp
     Source/Fussion/OS/Args.h
     Source/Fussion/OS/Args.cpp
-    Source/Fussion/meta.hpp/meta_uvalue.hpp
     Source/Fussion/Physics/Physics.h
     Source/Fussion/Physics/Physics.cpp
     Source/Fussion/Scripting/AttributeParser.h

@@ -67,6 +67,7 @@ function(InstallWGPUNative)
         target_link_libraries(wgpu_native INTERFACE
             dl
             pthread
+	    m
         )
     endif ()
 
