@@ -6,7 +6,7 @@
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
 #include <Fussion/Serialization/json.hpp>
-#include <Fussion/meta.hpp/meta_types/class_type.hpp>
+#include <meta.hpp/meta_types/class_type.hpp>
 
 namespace Fussion {
     using json = nlohmann::json;

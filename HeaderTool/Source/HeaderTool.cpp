@@ -489,7 +489,7 @@ int main(int argc, char** argv)
 #define FMT(s, ...) ss << std::format(s, ##__VA_ARGS__) << '\n';
 
     F("// GENERATED FILE -- DO NOT EDIT");
-    F(R"(#include "Fussion/meta.hpp/meta_all.hpp")");
+    F(R"(#include "meta.hpp/meta_all.hpp")");
     F(R"(#include "Fussion/Assets/Asset.h")");
     F(R"(#include "Fussion/Scene/Entity.h")");
     F(R"(#include "Fussion/Math/Color.h")");

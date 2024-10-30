@@ -15,11 +15,17 @@ add_subdirectory(glfw)
 
 set(GLM_ENABLE_CXX_20 ON)
 add_subdirectory(glm)
+
 add_subdirectory(magic_enum)
 add_subdirectory(tinygltf-2.8.23)
+
+set(B_EMBED_SILENCE_DEVMODE_WARNING ON)
 add_subdirectory(embed)
+
 set(YAML_CPP_STATIC_DEFINE ON)
 add_subdirectory(yaml-cpp)
+
+add_subdirectory(meta.hpp)
 
 function(InstallAATC)
     add_library(argparse INTERFACE)

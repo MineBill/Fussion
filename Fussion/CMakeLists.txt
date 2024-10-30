@@ -170,115 +170,6 @@ add_library(Fussion STATIC
     Source/Fussion/Log/Log.cpp
     Source/Fussion/Log/Log.h
 
-    # TODO: Why is this here??
-    Source/Fussion/meta.hpp/meta_uvalue/uvalue.hpp
-    Source/Fussion/meta.hpp/meta_uresult.hpp
-    Source/Fussion/meta.hpp/meta_details.hpp
-    Source/Fussion/meta.hpp/meta_uresult/uresult.hpp
-    Source/Fussion/meta.hpp/meta_ucast.hpp
-    Source/Fussion/meta.hpp/meta_ucast/ucast.hpp
-    Source/Fussion/meta.hpp/meta_types.hpp
-    Source/Fussion/meta.hpp/meta_detail/state_family.hpp
-    Source/Fussion/meta.hpp/meta_detail/base_info.hpp
-    Source/Fussion/meta.hpp/meta_binds.hpp
-    Source/Fussion/meta.hpp/meta_base.hpp
-    Source/Fussion/meta.hpp/meta_binds/void_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/scope_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/reference_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/pointer_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/number_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/nullptr_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/method_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/member_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/function_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/enum_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/class_bind.hpp
-    Source/Fussion/meta.hpp/meta_binds/array_bind.hpp
-    Source/Fussion/meta.hpp/meta_all.hpp
-    Source/Fussion/meta.hpp/meta_base/bitflags.hpp
-    Source/Fussion/meta.hpp/meta_base/base.hpp
-    Source/Fussion/meta.hpp/meta_base/cvref_traits.hpp
-    Source/Fussion/meta.hpp/meta_base/cv_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_family.hpp
-    Source/Fussion/meta.hpp/meta_detail/state_registry.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_kinds.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_registry.hpp
-    Source/Fussion/meta.hpp/meta_types/class_type.hpp
-    Source/Fussion/meta.hpp/meta_types/array_type.hpp
-    Source/Fussion/meta.hpp/meta_types/any_type.hpp
-    Source/Fussion/meta.hpp/meta_states.hpp
-    Source/Fussion/meta.hpp/meta_types/void_type.hpp
-    Source/Fussion/meta.hpp/meta_types/reference_type.hpp
-    Source/Fussion/meta.hpp/meta_types/pointer_type.hpp
-    Source/Fussion/meta.hpp/meta_types/number_type.hpp
-    Source/Fussion/meta.hpp/meta_types/nullptr_type.hpp
-    Source/Fussion/meta.hpp/meta_types/method_type.hpp
-    Source/Fussion/meta.hpp/meta_types/member_type.hpp
-    Source/Fussion/meta.hpp/meta_types/function_type.hpp
-    Source/Fussion/meta.hpp/meta_types/enum_type.hpp
-    Source/Fussion/meta.hpp/meta_types/destructor_type.hpp
-    Source/Fussion/meta.hpp/meta_types/constructor_type.hpp
-    Source/Fussion/meta.hpp/meta_policies.hpp
-    Source/Fussion/meta.hpp/meta_invoke.hpp
-    Source/Fussion/meta.hpp/meta_registry.hpp
-    Source/Fussion/meta.hpp/meta_indices.hpp
-    Source/Fussion/meta.hpp/meta_invoke/invoke.hpp
-    Source/Fussion/meta.hpp/meta_states/destructor.hpp
-    Source/Fussion/meta.hpp/meta_states/constructor.hpp
-    Source/Fussion/meta.hpp/meta_states/argument.hpp
-    Source/Fussion/meta.hpp/meta_states/function.hpp
-    Source/Fussion/meta.hpp/meta_states/evalue.hpp
-    Source/Fussion/meta.hpp/meta_states/member.hpp
-    Source/Fussion/meta.hpp/meta_base/is_in_place_type.hpp
-    Source/Fussion/meta.hpp/meta_base/insert_or_assign.hpp
-    Source/Fussion/meta.hpp/meta_base/inline_vector.hpp
-    Source/Fussion/meta.hpp/meta_base/hash_composer.hpp
-    Source/Fussion/meta.hpp/meta_base/fnv1a_hash.hpp
-    Source/Fussion/meta.hpp/meta_base/fixed_function.hpp
-    Source/Fussion/meta.hpp/meta_base/exceptions.hpp
-    Source/Fussion/meta.hpp/meta_base/nonesuch.hpp
-    Source/Fussion/meta.hpp/meta_base/noncopyable.hpp
-    Source/Fussion/meta.hpp/meta_base/memory_buffer.hpp
-    Source/Fussion/meta.hpp/meta_base/select_overload.hpp
-    Source/Fussion/meta.hpp/meta_base/overloaded.hpp
-    Source/Fussion/meta.hpp/meta_states/method.hpp
-    Source/Fussion/meta.hpp/meta_base/to_underlying.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_sharing.hpp
-    Source/Fussion/meta.hpp/meta_states/scope.hpp
-    Source/Fussion/meta.hpp/meta_states/variable.hpp
-    Source/Fussion/meta.hpp/meta_base/type_list.hpp
-    Source/Fussion/meta.hpp/meta_indices/argument_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/constructor_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/member_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/variable_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/scope_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/method_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/evalue_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/destructor_index.hpp
-    Source/Fussion/meta.hpp/meta_indices/function_index.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/array_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/class_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/constructor_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/destructor_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/enum_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/void_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/reference_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/pointer_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/number_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/nullptr_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/method_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/member_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/type_traits/function_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_utilities/utraits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_utilities/uinst.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_utilities/uarg.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/copy_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/unmap_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/less_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/index_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/equals_traits.hpp
-    Source/Fussion/meta.hpp/meta_detail/value_traits/deref_traits.hpp
-
     Impl/GlfwWindow.cpp
     Impl/GlfwWindow.h
     Source/Fussion/GPU/glfw3webgpu.c
@@ -342,6 +233,7 @@ target_link_libraries(Fussion PUBLIC
     wgpu_native
     Slang
     yaml-cpp::yaml-cpp
+    meta.hpp::meta.hpp
 )
 
 target_include_directories(Fussion

@@ -8,7 +8,7 @@
 
 #include <Fussion/GPU/GPU.h>
 
-#include <Fussion/meta.hpp/meta_all.hpp>
+#include <meta.hpp/meta_all.hpp>
 #include <glm/glm.hpp>
 #include <magic_enum/magic_enum.hpp>
 

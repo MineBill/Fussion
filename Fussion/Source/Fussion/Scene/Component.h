@@ -2,7 +2,7 @@
 #include <Fussion/Core/Types.h>
 #include <Fussion/Rendering/RenderTypes.h>
 #include <Fussion/Serialization/ISerializable.h>
-#include <Fussion/meta.hpp/meta_all.hpp>
+#include <meta.hpp/meta_all.hpp>
 
 #define FSN_DEBUG_DRAW 1
 

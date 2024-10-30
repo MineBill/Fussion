@@ -8,7 +8,7 @@
 #include <Fussion/Log/Log.h>
 
 #include <Fussion/Serialization/json.hpp>
-#include <Fussion/meta.hpp/meta_all.hpp>
+#include <meta.hpp/meta_all.hpp>
 #pragma endregion
 
 #include <Serialization/tiny_gltf.h>

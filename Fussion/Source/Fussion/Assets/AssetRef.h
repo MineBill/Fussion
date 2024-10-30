@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Fussion/Assets/AssetManagerBase.h"
 #include "Fussion/Reflection/ReflectionRegistry.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
+#include "meta.hpp/meta_all.hpp"
 
 namespace Fussion {
     namespace Detail {

@@ -2,7 +2,7 @@
 #include "Fussion/Core/Uuid.h"
 #include "Fussion/Reflection/ReflectionRegistry.h"
 #include "Fussion/Serialization/ISerializable.h"
-#include "Fussion/meta.hpp/meta_all.hpp"
+#include <meta.hpp/meta_all.hpp>
 
 namespace Fussion {
     enum class [[nodiscard]] AssetType {
