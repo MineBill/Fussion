@@ -31,6 +31,14 @@ namespace Fussion {
     GlfwWindow::GlfwWindow(WindowOptions const& options)
         : m_Options(options)
     {
+
+#ifdef OS_LINUX
+        if (auto protocolOverride = std::getenv("FSN_LINUX_X11"); protocolOverride) {
+            LOG_INFO("FSN_LINUX_X11 enabled");
+            glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+        }
+#endif
+
         if (glfwInit() != GLFW_TRUE) {
             exit(1);
         }

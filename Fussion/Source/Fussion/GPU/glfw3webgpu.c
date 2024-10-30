@@ -1,26 +1,26 @@
 /**
  * This is an extension of GLFW for WebGPU, abstracting away the details of
  * OS-specific operations.
- * 
+ *
  * This file is part of the "Learn WebGPU for C++" book.
  *   https://eliemichel.github.io/LearnWebGPU
- * 
+ *
  * Most of this code comes from the wgpu-native triangle example:
  *   https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c
- * 
+ *
  * MIT License
  * Copyright (c) 2022-2023 Elie Michel and the wgpu-native authors
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,51 +35,49 @@
 #include <webgpu/webgpu.h>
 
 #define WGPU_TARGET_MACOS 1
-#define WGPU_TARGET_LINUX_X11 2
+#define WGPU_TARGET_LINUX 2
 #define WGPU_TARGET_WINDOWS 3
-#define WGPU_TARGET_LINUX_WAYLAND 4
 #define WGPU_TARGET_EMSCRIPTEN 5
 
 #if defined(__EMSCRIPTEN__)
-#define WGPU_TARGET WGPU_TARGET_EMSCRIPTEN
+#    define WGPU_TARGET WGPU_TARGET_EMSCRIPTEN
 #elif defined(_WIN32)
-#define WGPU_TARGET WGPU_TARGET_WINDOWS
+#    define WGPU_TARGET WGPU_TARGET_WINDOWS
 #elif defined(__APPLE__)
-#define WGPU_TARGET WGPU_TARGET_MACOS
-#elif defined(_GLFW_WAYLAND)
-#define WGPU_TARGET WGPU_TARGET_LINUX_WAYLAND
+#    define WGPU_TARGET WGPU_TARGET_MACOS
 #else
-#define WGPU_TARGET WGPU_TARGET_LINUX_X11
+#    define WGPU_TARGET WGPU_TARGET_LINUX
 #endif
 
 #if WGPU_TARGET == WGPU_TARGET_MACOS
-#include <Foundation/Foundation.h>
-#include <QuartzCore/CAMetalLayer.h>
+#    include <Foundation/Foundation.h>
+#    include <QuartzCore/CAMetalLayer.h>
 #endif
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <stdlib.h>
 #if WGPU_TARGET == WGPU_TARGET_MACOS
-#define GLFW_EXPOSE_NATIVE_COCOA
-#elif WGPU_TARGET == WGPU_TARGET_LINUX_X11
-#define GLFW_EXPOSE_NATIVE_X11
-#elif WGPU_TARGET == WGPU_TARGET_LINUX_WAYLAND
-#define GLFW_EXPOSE_NATIVE_WAYLAND
+#    define GLFW_EXPOSE_NATIVE_COCOA
+#elif WGPU_TARGET == WGPU_TARGET_LINUX
+#    define GLFW_EXPOSE_NATIVE_X11
+#    define GLFW_EXPOSE_NATIVE_WAYLAND
 #elif WGPU_TARGET == WGPU_TARGET_WINDOWS
-#define GLFW_EXPOSE_NATIVE_WIN32
+#    define GLFW_EXPOSE_NATIVE_WIN32
 #endif
 
 #if !defined(__EMSCRIPTEN__)
-#include <GLFW/glfw3native.h>
+#    include <GLFW/glfw3native.h>
 #endif
 
-WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
+WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window)
+{
 #if WGPU_TARGET == WGPU_TARGET_MACOS
     {
         id metal_layer = [CAMetalLayer layer];
         NSWindow* ns_window = glfwGetCocoaWindow(window);
-        [ns_window.contentView setWantsLayer : YES] ;
-        [ns_window.contentView setLayer : metal_layer] ;
+        [ns_window.contentView setWantsLayer:YES];
+        [ns_window.contentView setLayer:metal_layer];
 
         WGPUSurfaceDescriptorFromMetalLayer fromMetalLayer;
         fromMetalLayer.chain.next = NULL;
@@ -92,8 +90,9 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
 
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
     }
-#elif WGPU_TARGET == WGPU_TARGET_LINUX_X11
-    {
+#elif WGPU_TARGET == WGPU_TARGET_LINUX
+    const char* x11 = getenv("FSN_LINUX_X11");
+    if (x11 != NULL) {
         Display* x11_display = glfwGetX11Display();
         Window x11_window = glfwGetX11Window(window);
 
@@ -108,9 +107,7 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
         surfaceDescriptor.label = NULL;
 
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
-    }
-#elif WGPU_TARGET == WGPU_TARGET_LINUX_WAYLAND
-    {
+    } else {
         struct wl_display* wayland_display = glfwGetWaylandDisplay();
         struct wl_surface* wayland_surface = glfwGetWaylandWindow(window);
 
@@ -125,7 +122,7 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
         surfaceDescriptor.label = NULL;
 
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
-  }
+    }
 #elif WGPU_TARGET == WGPU_TARGET_WINDOWS
     {
         HWND hwnd = glfwGetWin32Window(window);
@@ -157,7 +154,6 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window) {
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
     }
 #else
-#error "Unsupported WGPU_TARGET"
+#    error "Unsupported WGPU_TARGET"
 #endif
 }
-
