@@ -365,7 +365,7 @@ set_target_properties(Catch2 PROPERTIES
 # require C++14
 target_compile_features(Catch2
   PUBLIC
-    cxx_std_14
+    cxx_std_17
 )
 
 configure_file(
