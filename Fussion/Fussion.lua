@@ -1,6 +1,6 @@
 add_requires("wgpu-native")
 add_requires("wgpu-native-custom")
-add_requires("slang 2024.14.2")
+add_requires("slang")
 
 if is_plat("linux") then
     add_requires("libsigcplusplus", "dbus-cxx")
@@ -11,6 +11,8 @@ target("Fussion")
     set_languages("c++23")
     add_ldflags("cl::/debug:fastlink")
     set_warnings("allextra")
+
+    add_extrafiles("Fussion.lua")
 
     add_files (
         "Source/**.cpp",
@@ -57,7 +59,8 @@ target("Fussion")
         "magic_enum",
         "AngelScript",
         "aatc",
-        "TracyClient"
+        "TracyClient",
+        "meta.hpp"
     )
 
     add_rules("HeaderTool")
@@ -65,7 +68,9 @@ target("Fussion")
     set_pcxxheader("Source/FussionPCH.h")
 
     add_defines (
-        "GLM_ENABLE_EXPERIMENTAL"
+        "GLM_ENABLE_EXPERIMENTAL",
+        "IS_XMAKE",
+        { public = true }
     )
 
     add_rules("CompilerFlags")
@@ -83,7 +88,7 @@ target("Fussion")
     elseif is_plat("macos") then
         add_defines("OS_MACOS")
     end
-	
+
 	-- Needed by cpptrace
 	-- TODO: Figure out how to put this in the package declaration.
 	if is_plat("windows") then

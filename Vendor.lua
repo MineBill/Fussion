@@ -87,14 +87,14 @@ package("JoltPhysics")
     on_install(function (package)
         local configs = {}
         table.insert(configs, "-DTARGET_UNIT_TESTS=OFF")
-		table.insert(configs, "-DTARGET_HELLO_WORLD=OFF")
-		table.insert(configs, "-DTARGET_PERFORMANCE_TEST=OFF")
-		table.insert(configs, "-DTARGET_SAMPLES=OFF")
-		table.insert(configs, "-DTARGET_VIEWER=OFF")
-		table.insert(configs, "-DUSE_STATIC_MSVC_RUNTIME_LIBRARY=OFF")
-		table.insert(configs, "-DINTERPROCEDURAL_OPTIMIZATION=OFF")
-		table.insert(configs, "-DUSE_ASSERTS=ON")
-		table.insert(configs, "-DENABLE_ALL_WARNINGS=OFF")
+        table.insert(configs, "-DTARGET_HELLO_WORLD=OFF")
+        table.insert(configs, "-DTARGET_PERFORMANCE_TEST=OFF")
+        table.insert(configs, "-DTARGET_SAMPLES=OFF")
+        table.insert(configs, "-DTARGET_VIEWER=OFF")
+        table.insert(configs, "-DUSE_STATIC_MSVC_RUNTIME_LIBRARY=OFF")
+        table.insert(configs, "-DINTERPROCEDURAL_OPTIMIZATION=OFF")
+        table.insert(configs, "-DUSE_ASSERTS=ON")
+        table.insert(configs, "-DENABLE_ALL_WARNINGS=OFF")
 
         table.insert(configs, "-DCMAKE_BUILD_TYPE=" .. (package:debug() and "Debug" or "Release"))
         table.insert(configs, "-DBUILD_SHARED_LIBS=" .. (package:config("shared") and "ON" or "OFF"))
@@ -102,6 +102,14 @@ package("JoltPhysics")
     end)
 package_end()
 add_requires("JoltPhysics")
+
+target("meta.hpp", function()
+    set_kind "headeronly"
+    set_group "Vendor"
+
+    add_headerfiles("Vendor/meta.hpp/headers/**.hpp")
+    add_sysincludedirs("Vendor/meta.hpp/headers", {public = true})
+end)
 
 target("glm", function()
     set_kind "headeronly"
@@ -160,10 +168,6 @@ target("TracyClient", function()
 
     add_sysincludedirs("Fussion/Vendor/tracy/public", {public = true})
 
-    if is_plat("windows") then
-        -- set_runtimes "MDd"
-    end
-
     add_defines("TRACY_ENABLE", {public = true})
     add_defines("TRACY_ON_DEMAND", {public = true})
 end)
@@ -191,7 +195,7 @@ target("yaml-cpp", function()
 
     add_files("Vendor/yaml-cpp/src/*.cpp")
 
-    add_sysincludedirs("Vendor/yaml-cpp/include", { public = true })
+    add_sysincludedirs("Vendor/yaml-cpp/include", {public = true})
 
     add_defines("YAML_CPP_STATIC_DEFINE", {public = true})
 end)
@@ -258,10 +262,10 @@ package("slang", function()
 
     if is_plat("windows") and is_arch("x64") then
         add_urls("https://github.com/shader-slang/slang/releases/download/v$(version)/slang-$(version)-windows-x86_64.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("2024.14.2", "68b8e480353707cfd043b74939d9f6a12183c9a8dbd09dc2ef0c728de1212c03")
+        add_versions("2024.14.4", "c4410ac09dd86dfcceeb2b2ed494ec976c533b7e18608fad518ec54c4fde8b42")
     elseif is_plat("linux") and is_arch("x86_64") then
         add_urls("https://github.com/shader-slang/slang/releases/download/v$(version)/slang-$(version)-linux-x86_64.zip", {version = function(version) return version:gsub("%+", ".") end})
-        add_versions("2024.14.2", "48c951efd96bd547d96a8a3a8d9160ab5489b8dd5ed71de0e16e135e02a03f6d")
+        add_versions("2024.14.4", "39cf237cff5f15fd28939c3794ef4486da03c6d4958e2e5779cfcce1f03def95")
     end
 
     on_install("windows|x64", "linux|x86_64", function (package)

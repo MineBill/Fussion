@@ -1,4 +1,5 @@
 includes("Vendor/xmake.lua")
+add_requires("slang")
 
 target "Editor"
     set_kind("binary")
@@ -7,6 +8,8 @@ target "Editor"
     set_default(true)
     add_rules("CompilerFlags")
     add_rules("CommonFlags")
+
+    add_extrafiles("Editor.lua")
 
     add_options("Tracy")
 
