@@ -92,3 +92,12 @@ b_embed(Editor Assets/Icons/logo_64.png)
 b_embed(Editor Assets/Icons/logo_512.png)
 
 CopyRuntimeTargets(Editor)
+
+set_target_properties(
+    imgui
+    meshoptimizer
+    PROPERTIES FOLDER
+    Vendor
+)
+
+GroupSourcesByFolder(Editor)

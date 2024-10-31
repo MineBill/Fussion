@@ -5,15 +5,13 @@
 #include <catch2/catch_test_macros.hpp>
 using namespace Fussion;
 
-namespace Catch {
-    template<>
-    struct StringMaker<String> {
-        static std::string convert(String const& value)
-        {
-            return std::string(value.data.ptr, value.Len());
-        }
-    };
-}
+template<>
+struct Catch::StringMaker<String> {
+    static std::string convert(String const& value)
+    {
+        return std::string(value.data.ptr, value.Len());
+    }
+};
 
 // TEST_CASE("String")
 // {
@@ -122,6 +120,7 @@ namespace Catch {
 //         CHECK(trimmed("333  3St. Stream 23 ", " 3") == String("St. Stream 2"));
 //     }
 // }
+
 
 TEST_CASE("String constructor and basic functionality", "[String]")
 {

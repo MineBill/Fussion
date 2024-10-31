@@ -293,3 +293,7 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     VERBATIM
 )
+
+GroupSourcesByFolder(Fussion)
+
+add_subdirectory(Tests)

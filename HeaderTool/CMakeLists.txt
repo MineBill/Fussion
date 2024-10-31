@@ -37,3 +37,12 @@ target_link_libraries(HeaderTool
     tree-sitter-cpp
     Tracy::TracyClient
 )
+
+set_target_properties(
+    tree-sitter
+    tree-sitter-cpp
+    PROPERTIES FOLDER
+    Vendor
+)
+
+GroupSourcesByFolder(HeaderTool)

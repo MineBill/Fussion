@@ -8,6 +8,8 @@ include(cmake/CompilerWarnings.cmake)
 include(cmake/Cache.cmake)
 include(cmake/StandardOptions.cmake)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 function(ApplyCommonCompilerOptions target)
     set_property(TARGET ${target} PROPERTY CXX_STANDARD 23)
 endfunction()
@@ -20,6 +22,12 @@ function(CopyRuntimeTargets target)
             "$<TARGET_RUNTIME_DLLS:${target}>" USES_TERMINAL COMMAND_EXPAND_LISTS
         )
     endif ()
+endfunction()
+
+function(GroupSourcesByFolder target)
+    get_target_property(sources ${target} SOURCES)
+    message("${CMAKE_SOURCE_DIR}/${ARGN}")
+    source_group(TREE "${CMAKE_SOURCE_DIR}/${ARGN}" FILES ${sources})
 endfunction()
 
 TryEnableCache()

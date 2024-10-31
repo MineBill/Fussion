@@ -17,12 +17,16 @@ set(GLM_ENABLE_CXX_20 ON)
 add_subdirectory(glm)
 
 add_subdirectory(magic_enum)
+
+set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF)
 add_subdirectory(tinygltf-2.8.23)
 
 set(B_EMBED_SILENCE_DEVMODE_WARNING ON)
 add_subdirectory(embed)
 
 set(YAML_CPP_STATIC_DEFINE ON)
+set(YAML_CPP_BUILD_TOOLS OFF)
+set(YAML_CPP_BUILD_TESTS OFF)
 add_subdirectory(yaml-cpp)
 
 add_subdirectory(meta.hpp)
@@ -123,3 +127,24 @@ InstallAATC()
 InstallWGPUNative()
 InstallSlang()
 InstallLinuxDeps()
+
+set_target_properties(
+    glm
+    glfw
+    fmt
+    magic_enum
+    tinygltf
+    aatc
+    argparse
+    cpptrace-lib
+    TracyClient
+    angelscript
+    Jolt
+    wgpu_native
+    Slang
+    yaml-cpp
+    meta.hpp
+    Catch2
+    PROPERTIES FOLDER
+    Vendor
+)
