@@ -6,9 +6,9 @@ namespace Fussion::Attributes {
     };
 
     struct [[Attribute]] RangeAttribute {
-        f32 Min {};
-        f32 Max {};
-        f32 Step { 1.0f };
+        f64 Min {};
+        f64 Max {};
+        f64 Step { 1.0f };
     };
 
     struct [[Attribute]] EditorNameAttribute {

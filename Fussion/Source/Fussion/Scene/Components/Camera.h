@@ -17,9 +17,9 @@ namespace Fussion {
             return m_Perspective;
         }
 
-        [[API, Range(0.0f, 10.0f, 0.01f)]]
+        [[API, Range(0.0, 10.0, 0.01)]]
         f32 near { 0.1f };
-        [[API, Range(100.0f, 1000.0f)]]
+        [[API, Range(100.0, 1000.0)]]
         f32 far { 1000.0f };
 
         [[API]]

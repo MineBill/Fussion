@@ -89,6 +89,7 @@ namespace Fussion {
 
     void MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
     {
+        (void)ctx;
     }
 
     Ref<Component> MeshRenderer::Clone()

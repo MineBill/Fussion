@@ -191,7 +191,7 @@ bool InspectorWindow::DrawProperty(meta_hpp::uvalue prop_value, meta_hpp::member
         auto data_ptr = *CAST(void**, prop_value.get_data());
         if (auto range_attr = metadata.find("RangeAttribute"); range_attr != metadata.end()) {
             auto range = range_attr->second.as<Attributes::RangeAttribute>();
-            if (ImGui::DragScalar("", type, data_ptr, range.Step, &range.Min, &range.Max)) {
+            if (ImGui::DragScalar("", type, data_ptr, CAST(f32, range.Step), &range.Min, &range.Max)) {
                 modified = true;
             }
         } else {

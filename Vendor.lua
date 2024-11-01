@@ -103,6 +103,23 @@ package("JoltPhysics")
 package_end()
 add_requires("JoltPhysics")
 
+target("stb", function()
+    set_kind "static"
+    set_languages "c11"
+
+    add_files("Vendor/stb/build.c")
+
+    add_sysincludedirs("Vendor/stb/include", {public = true})
+end)
+
+target("mikktspace", function()
+    set_kind "static"
+    set_languages "c11"
+
+    add_files("Vendor/mikktspace/mikktspace.c")
+    add_sysincludedirs("Vendor/mikktspace", {public = true})
+end)
+
 target("meta.hpp", function()
     set_kind "headeronly"
     set_group "Vendor"

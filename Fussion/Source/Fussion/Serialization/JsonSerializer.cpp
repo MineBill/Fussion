@@ -91,11 +91,15 @@ namespace Fussion {
 
     void JsonSerializer::WriteByteArray(std::string_view name, u8 const* ptr, usz size)
     {
+        (void)name;
+        (void)ptr;
+        (void)size;
     }
 
     void JsonSerializer::BeginObject(std::string_view name, size_t size, SerdeOptions const& options)
     {
         (void)size;
+        (void)options;
         m_ObjectStack.emplace();
         m_Names.emplace(name);
         m_TypeStack.emplace(Type::Object);

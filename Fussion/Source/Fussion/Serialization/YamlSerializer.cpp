@@ -116,6 +116,7 @@ namespace Fussion {
 
     void YamlSerializer::BeginArray(std::string_view name, size_t size)
     {
+        (void)size;
         if (m_TypeStack.top() == Type::Object) {
             m_Emitter << YAML::Key << std::string(name) << YAML::Value;
         }
@@ -131,6 +132,9 @@ namespace Fussion {
 
     void YamlSerializer::WriteByteArray(std::string_view name, u8 const* ptr, usz size)
     {
+        (void)name;
+        (void)ptr;
+        (void)size;
     }
 
     std::string YamlSerializer::ToString()

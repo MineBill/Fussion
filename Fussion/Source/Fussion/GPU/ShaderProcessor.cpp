@@ -368,7 +368,7 @@ namespace Fussion::GPU {
             default:
                 UNIMPLEMENTED;
             }
-            metadata.Uniforms[set][CAST(usz, index)] = resourceUsage;
+            metadata.Uniforms[(u32)set][CAST(size_t, index)] = resourceUsage;
         }
         return metadata;
     }

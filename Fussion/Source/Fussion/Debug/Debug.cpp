@@ -102,14 +102,14 @@ namespace Fussion {
     void Debug::DrawLine(Vector3 start, Vector3 end, f32 time, Color color)
     {
         if (time > 0) {
-            g_DebugData.TimedPoints.emplace_back(start, 0, color);
-            g_DebugData.TimedPoints.emplace_back(end, 0, color);
+            g_DebugData.TimedPoints.emplace_back(start, 0.f, color);
+            g_DebugData.TimedPoints.emplace_back(end, 0.f, color);
 
             g_DebugData.Timers.push_back(time);
             g_DebugData.Timers.push_back(time);
         } else [[likely]] {
-            g_DebugData.Points.emplace_back(start, 0, color);
-            g_DebugData.Points.emplace_back(end, 0, color);
+            g_DebugData.Points.emplace_back(start, 0.f, color);
+            g_DebugData.Points.emplace_back(end, 0.f, color);
         }
     }
 

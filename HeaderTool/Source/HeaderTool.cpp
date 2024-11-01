@@ -1,22 +1,22 @@
-#include "Query.h"
 #include "../../Vendor/magic_enum/include/magic_enum/magic_enum.hpp"
+#include "Query.h"
 
-#include <tree_sitter/api.h>
 #include <tree-sitter-cpp.h>
+#include <tree_sitter/api.h>
 
 #include <tracy/Tracy.hpp>
 
-#include <optional>
-#include <string>
-#include <filesystem>
-#include <fstream>
-#include <format>
-#include <print>
-#include <tree.h>
 #include <algorithm>
-#include <ranges>
 #include <cstring>
+#include <filesystem>
+#include <format>
+#include <fstream>
+#include <optional>
+#include <print>
+#include <ranges>
 #include <set>
+#include <string>
+#include <tree.h>
 
 constexpr auto CLASS_QUERY = R"fennel(
 (
@@ -137,13 +137,13 @@ std::optional<std::string> read_entire_file(std::filesystem::path const& path)
 }
 
 struct Attribute {
-    std::string prefix{};
-    std::string name{};
-    std::string args{};
+    std::string prefix {};
+    std::string name {};
+    std::string args {};
 };
 
 struct ReflectedType {
-    std::unordered_map<std::string, Attribute> attributes{};
+    std::unordered_map<std::string, Attribute> attributes {};
 
     void update_attribute(std::string const& name, std::string const& prefix, std::string const& args)
     {
@@ -151,7 +151,6 @@ struct ReflectedType {
         attributes[name].prefix = prefix;
         if (!args.empty())
             attributes[name].args = args.substr(1, args.size() - 2);
-
     }
 
     bool has_attribute(std::string const& name) const
@@ -163,43 +162,42 @@ struct ReflectedType {
 struct ReflectedClass;
 
 struct ClassMember : ReflectedType {
-    std::string name{};
+    std::string name {};
 
-    TSNode node{};
+    TSNode node {};
 };
 
 struct ClassMethod : ReflectedType {
-    std::string name{};
+    std::string name {};
 
-    TSNode node{};
+    TSNode node {};
 };
 
 struct ReflectedClass : ReflectedType {
-    std::string name{};
-    std::string namespace_{};
+    std::string name {};
+    std::string namespace_ {};
 
-    std::vector<ClassMember> members{};
-    std::vector<ClassMethod> methods{};
+    std::vector<ClassMember> members {};
+    std::vector<ClassMethod> methods {};
 
-    TSNode class_node{};
+    TSNode class_node {};
 
     /// Component classes are a bit special in code generation
     /// so we track them here.
-    bool is_component{};
+    bool is_component {};
 
     std::string qualified_name() const
     {
         return namespace_ + "::" + name;
     }
-
 };
 
 struct Enum {
-    std::string name{};
-    std::string qualified_name{};
-    std::unordered_map<std::string, Attribute> attributes{};
+    std::string name {};
+    std::string qualified_name {};
+    std::unordered_map<std::string, Attribute> attributes {};
 
-    TSNode node{};
+    TSNode node {};
 };
 
 int main(int argc, char** argv)
@@ -215,19 +213,19 @@ int main(int argc, char** argv)
     auto parser = ts_parser_new();
 
     using namespace std::string_view_literals;
-    std::set files_to_ignore{
+    std::set files_to_ignore {
         "stb_image.h"sv,
     };
 
     ts_parser_set_language(parser, tree_sitter_cpp());
 
-    std::unordered_map<std::string, ReflectedClass> attribute_classes{};
-    std::vector<ReflectedClass> classes{};
-    std::vector<Enum> enums{};
+    std::unordered_map<std::string, ReflectedClass> attribute_classes {};
+    std::vector<ReflectedClass> classes {};
+    std::vector<Enum> enums {};
     struct Capture {
-        std::string value{};
+        std::string value {};
 
-        TSNode node{};
+        TSNode node {};
     };
 
     Query class_query(ts_parser_language(parser), CLASS_QUERY);
@@ -235,7 +233,7 @@ int main(int argc, char** argv)
     Query enum_query(ts_parser_language(parser), ENUM_QUERY);
     Query method_query(ts_parser_language(parser), METHOD_QUERY);
 
-    std::set<std::filesystem::path> include_files{};
+    std::set<std::filesystem::path> include_files {};
 
     auto dir = std::filesystem::path("Fussion/Source");
     for (auto const& entry : std::filesystem::recursive_directory_iterator(dir)) {
@@ -257,17 +255,17 @@ int main(int argc, char** argv)
 
         {
             ZoneScopedN("Parse String");
-            tree = ts_parser_parse_string(parser, nullptr, file->data(), file->size());
+            tree = ts_parser_parse_string(parser, nullptr, file->data(), static_cast<uint32_t>(file->size()));
         }
 
-        std::unordered_map<std::string, ReflectedClass> classes_in_file{};
-        std::unordered_map<std::string, Enum> enums_in_file{};
+        std::unordered_map<std::string, ReflectedClass> classes_in_file {};
+        std::unordered_map<std::string, Enum> enums_in_file {};
 
         for (auto match : enum_query.execute(ts_tree_root_node(tree))) {
             ZoneScopedN("Enum Query");
             include_files.insert(path);
 
-            std::unordered_map<std::string, Capture> local_captures{};
+            std::unordered_map<std::string, Capture> local_captures {};
             for (auto i = 0; i < match.capture_count; i++) {
                 auto capture = match.captures[i];
                 auto name = std::string(enum_query.capture_name_for_id(capture.index));
@@ -284,7 +282,7 @@ int main(int argc, char** argv)
 
             auto enum_name = local_captures["name"].value;
             if (!enums_in_file.contains(enum_name)) {
-                enums_in_file[enum_name] = Enum{
+                enums_in_file[enum_name] = Enum {
                     .name = enum_name,
                     .attributes = {},
                     .node = local_captures["enum"].node,
@@ -292,10 +290,8 @@ int main(int argc, char** argv)
                 auto& enum_ = enums_in_file[enum_name];
 
                 for (auto node = ts_node_parent(enum_.node);
-                     !ts_node_is_null(node) &&
-                     !ts_node_is_error(node) &&
-                     !ts_node_is_missing(node);
-                     node = ts_node_parent(node)) {
+                    !ts_node_is_null(node) && !ts_node_is_error(node) && !ts_node_is_missing(node);
+                    node = ts_node_parent(node)) {
 
                     bool is_namespace = strcmp(ts_node_type(node), "namespace_definition") == 0;
                     bool is_class = strcmp(ts_node_type(node), "class_specifier") == 0;
@@ -322,14 +318,13 @@ int main(int argc, char** argv)
 
             enum_.attributes[attr_name].name = attr_name;
             enum_.attributes[attr_name].prefix = local_captures["attr-prefix"].value;
-
         }
 
         for (auto match : class_query.execute(ts_tree_root_node(tree))) {
             ZoneScopedN("Class Query");
             include_files.insert(path);
 
-            std::unordered_map<std::string, Capture> local_captures{};
+            std::unordered_map<std::string, Capture> local_captures {};
             for (auto i = 0; i < match.capture_count; i++) {
                 auto capture = match.captures[i];
                 auto name = std::string(class_query.capture_name_for_id(capture.index));
@@ -346,7 +341,7 @@ int main(int argc, char** argv)
 
             auto class_name = local_captures["class-name"].value;
             if (!classes_in_file.contains(class_name)) {
-                classes_in_file[class_name] = ReflectedClass{
+                classes_in_file[class_name] = ReflectedClass {
                     .name = class_name,
                     .class_node = local_captures["class"].node,
                     .is_component = local_captures.contains("base-class") && local_captures["base-class"].value == "Component",
@@ -363,11 +358,11 @@ int main(int argc, char** argv)
 
         for (auto& klass : classes_in_file | std::views::values) {
 
-            std::unordered_map<std::string, ClassMember> members_in_class{};
-            std::unordered_map<std::string, ClassMethod> methods_in_class{};
+            std::unordered_map<std::string, ClassMember> members_in_class {};
+            std::unordered_map<std::string, ClassMethod> methods_in_class {};
 
             for (auto& match : field_query.execute(klass.class_node)) {
-                std::unordered_map<std::string, Capture> local_captures{};
+                std::unordered_map<std::string, Capture> local_captures {};
                 for (auto i = 0; i < match.capture_count; i++) {
                     auto capture = match.captures[i];
                     auto name = std::string(field_query.capture_name_for_id(capture.index));
@@ -384,7 +379,7 @@ int main(int argc, char** argv)
 
                 auto const& field_name = local_captures["field-name"].value;
                 if (!members_in_class.contains(field_name)) {
-                    members_in_class[field_name] = ClassMember{
+                    members_in_class[field_name] = ClassMember {
                         .name = field_name,
                         .node = local_captures["field"].node,
                     };
@@ -398,7 +393,7 @@ int main(int argc, char** argv)
             }
 
             for (auto& match : method_query.execute(klass.class_node)) {
-                std::unordered_map<std::string, Capture> local_captures{};
+                std::unordered_map<std::string, Capture> local_captures {};
                 for (auto i = 0; i < match.capture_count; i++) {
                     auto capture = match.captures[i];
                     auto name = std::string(method_query.capture_name_for_id(capture.index));
@@ -415,7 +410,7 @@ int main(int argc, char** argv)
 
                 auto const& field_name = local_captures["method-name"].value;
                 if (!methods_in_class.contains(field_name)) {
-                    methods_in_class[field_name] = ClassMethod{
+                    methods_in_class[field_name] = ClassMethod {
                         .name = field_name,
                         .node = local_captures["method"].node,
                     };
@@ -438,10 +433,8 @@ int main(int argc, char** argv)
 
             // Figure out the namespace of the class
             for (auto node = ts_node_parent(klass.class_node);
-                 !ts_node_is_null(node) &&
-                 !ts_node_is_error(node) &&
-                 !ts_node_is_missing(node);
-                 node = ts_node_parent(node)) {
+                !ts_node_is_null(node) && !ts_node_is_error(node) && !ts_node_is_missing(node);
+                node = ts_node_parent(node)) {
 
                 bool is_namespace = strcmp(ts_node_type(node), "namespace_definition") == 0;
                 bool is_class = strcmp(ts_node_type(node), "class_specifier") == 0;
@@ -481,7 +474,10 @@ int main(int argc, char** argv)
     std::stringstream ss;
 
 #define TAB "    "
-#define TAB_N(x) for(int i = 0; i < x; ++i) { ss << TAB; }
+#define TAB_N(x)                  \
+    for (int i = 0; i < x; ++i) { \
+        ss << TAB;                \
+    }
 #define NEW_LINE " \n"
 #define NEW_LINE_SLASH " \\\n"
 #define TAB_NEW_LINE " \t\n"
@@ -499,12 +495,12 @@ int main(int argc, char** argv)
     for (auto const& include : include_files) {
         FMT(R"(#include "{}")", std::filesystem::relative(include, "Fussion/Source").string());
     }
-    // @formatter:off
+
+    // clang-format off
     F("");
 
     TAB_N(0); F("namespace Fussion {");
     TAB_N(1); F("void ReflectionRegistry::RegisterGenerated() {");
-
     TAB_N(2); F("using namespace std::literals;");
     TAB_N(2); F("using namespace Fussion;");
     TAB_N(2); F("namespace meta = meta_hpp;");
@@ -563,7 +559,7 @@ int main(int argc, char** argv)
 
     TAB_N(1); F("}");
     TAB_N(0); F("}");
-    // @formatter:on
+    // clang-format on
 
     // std::ofstream f(output_path);
     // if (!f.is_open()) {
@@ -574,7 +570,7 @@ int main(int argc, char** argv)
     std::string output = ss.str();
 
     if (auto file = read_entire_file(output_path)) {
-        if (std::hash<std::string>{}(output) == std::hash<std::string>{}(*file)) {
+        if (std::hash<std::string> {}(output) == std::hash<std::string> {}(*file)) {
             std::println("Generated code is the same as a previously generated file. Will not write to avoid rebuild.");
             return 0;
         }

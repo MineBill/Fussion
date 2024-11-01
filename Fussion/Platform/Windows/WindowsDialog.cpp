@@ -126,7 +126,10 @@ namespace Fussion::Dialogs {
         }
 
         if (GetOpenFileNameW(&arg)) {
-            auto buffer = std::string(file.begin(), file.end());
+            std::string buffer;
+            std::ranges::transform(file, std::back_inserter(buffer), [](auto c) {
+                return CAST(char, c);
+            });
             // When multiple items are selected, windows returns the containing
             // folder as the first item and then only the names of the selected
             // files, seperated by 0. We assume multiple files and parse the first item

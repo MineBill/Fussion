@@ -7,7 +7,7 @@ target("tree-sitter", function()
         "tree-sitter-0.22.3/lib/src/lib.c"
     )
 
-    add_includedirs(
+    add_sysincludedirs(
         "tree-sitter-0.22.3/lib/src",
         "tree-sitter-0.22.3/lib/include",
         {public = true}
@@ -24,7 +24,7 @@ target("tree-sitter-cpp", function()
         "tree-sitter-cpp/src/scanner.c"
     )
 
-    add_includedirs(
+    add_sysincludedirs(
         "tree-sitter-cpp/bindings/c",
         {public = true}
     )
@@ -39,7 +39,7 @@ target("HeaderTool", function()
 
     set_kind("binary")
     set_languages("c++23")
-    set_warnings("allextra")
+    set_warnings("allextra", "error")
 	set_rundir("$(projectdir)")
 
     add_options("Tracy")

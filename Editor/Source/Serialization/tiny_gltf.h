@@ -1729,8 +1729,8 @@ class TinyGLTF {
 #include "draco/core/decoder_buffer.h"
 #endif
 
-#include "Fussion/Util/stb_image.h"
-#include "Fussion/Util/stb_image_write.h"
+#include "stb_image.h"
+#include "stb_image_write.h"
 
 #ifdef __clang__
 #pragma clang diagnostic pop

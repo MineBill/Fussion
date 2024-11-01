@@ -13,7 +13,7 @@ target "Editor"
 
     add_options("Tracy")
 
-    set_warnings("allextra")
+    set_warnings("allextra", "error")
 
     add_rules("utils.bin2c", {extensions = {".png"}})
     add_files("Assets/Icons/logo_*.png")
@@ -44,7 +44,11 @@ target "Editor"
     add_sysincludedirs("Vendor/imgui")
     add_files("Vendor/imgui/*.cpp")
 
-    add_deps("Fussion", "argparse")
+    add_deps(
+        "Fussion",
+        "argparse",
+        "mikktspace"
+    )
     -- We need an explicit link to glfw here to be able to build the glfw imgui backend.
     add_packages("glfw", "wgpu-native-custom", "meshoptimizer", "slang")
 

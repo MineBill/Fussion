@@ -89,11 +89,11 @@ namespace Fussion {
         auto ctx = asGetActiveContext();
         auto ti = ctx->GetEngine()->GetTypeInfoByDecl("Array<Entity@>");
 
-        auto children = entity->GetChildren();
-        auto arr = CScriptArray::Create(ti, children.size());
-        for (usz i = 0; i < children.size(); ++i) {
+        auto const& children = entity->GetChildren();
+        auto arr = CScriptArray::Create(ti, CAST(asUINT, children.size()));
+        for (size_t i = 0; i < children.size(); ++i) {
             Entity* e = entity->GetScene().GetEntity(children[i]);
-            arr->SetValue(i, &e);
+            arr->SetValue(CAST(asUINT, i), CAST(void*, &e));
         }
         return arr;
     }

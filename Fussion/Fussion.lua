@@ -10,7 +10,7 @@ target("Fussion")
     set_kind("static")
     set_languages("c++23")
     add_ldflags("cl::/debug:fastlink")
-    set_warnings("allextra")
+    set_warnings("allextra", "error")
 
     add_extrafiles("Fussion.lua")
 
@@ -53,7 +53,7 @@ target("Fussion")
         add_packages("libsigcplusplus", "dbus-cxx")
     end
 
-    add_deps("glm", {public = true})
+    add_deps("glm", "stb", {public = true})
     add_deps(
         "yaml-cpp",
         "magic_enum",

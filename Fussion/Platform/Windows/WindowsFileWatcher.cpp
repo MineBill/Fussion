@@ -76,7 +76,6 @@ namespace Fussion {
                 NULL);
 
             u8 buffer[1024];
-            DWORD bytes_returned;
             OVERLAPPED overlapped;
             overlapped.hEvent = CreateEvent(nullptr, FALSE, 0, nullptr);
             ReadDirectoryChangesW(
