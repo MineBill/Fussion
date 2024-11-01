@@ -60,6 +60,9 @@ namespace Fussion::GPU {
             ShaderMetadata Metadata {};
         };
 
+        static void Initialize();
+        static void Shutdown();
+
         /// Loads and compiles a Slang shader.
         /// @param path The path of the shader file.
         static auto CompileSlang(std::filesystem::path const& path) -> Maybe<CompiledShader>;

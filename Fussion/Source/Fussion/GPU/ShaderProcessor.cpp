@@ -280,10 +280,10 @@ namespace Fussion::GPU {
             auto category = var->getCategory();
             auto index = var->getBindingIndex();
             auto set = var->getBindingSpace(CAST(SlangParameterCategory, category));
-            LOG_INFOF("Category: {}", magic_enum::enum_name(category));
-
-            LOG_INFOF("Slang var name: {}", var->getName());
-            LOG_INFOF("\tSet: {} | Binding: {}", set, index);
+            // LOG_INFOF("Category: {}", magic_enum::enum_name(category));
+            //
+            // LOG_INFOF("Slang var name: {}", var->getName());
+            // LOG_INFOF("\tSet: {} | Binding: {}", set, index);
 
             ShaderProcessor::ResourceUsage resourceUsage {
                 .Label = var->getName(),
@@ -373,8 +373,70 @@ namespace Fussion::GPU {
         return metadata;
     }
 
-    Slang::ComPtr<slang::IModule> g_CommonModule;
-    Slang::ComPtr<slang::IGlobalSession> g_GlobalSession {};
+    struct SlangGlobalState {
+        Slang::ComPtr<slang::IModule> CommonModule;
+        Slang::ComPtr<slang::IGlobalSession> GlobalSession {};
+    } g_State;
+
+    void ShaderProcessor::Initialize()
+    {
+        ZoneScoped;
+        using Slang::ComPtr;
+        using namespace slang;
+
+        {
+            ZoneScopedN("Create Global Session");
+            createGlobalSession(g_State.GlobalSession.writeRef());
+        }
+
+        {
+            SessionDesc sessionDesc = {};
+            TargetDesc targetDesc = {};
+            targetDesc.format = SLANG_SPIRV;
+            targetDesc.profile = g_State.GlobalSession->findProfile("spirv_1_6");
+            targetDesc.flags = SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY;
+
+            CompilerOptionEntry entries[] = {
+                { CompilerOptionName::MinimumSlangOptimization, { .intValue0 = 1 } },
+                { CompilerOptionName::ReportDownstreamTime, { .intValue0 = 1 } },
+            };
+            targetDesc.compilerOptionEntries = entries;
+            targetDesc.compilerOptionEntryCount = sizeof(entries) / sizeof(CompilerOptionEntry);
+
+            sessionDesc.targets = &targetDesc;
+            sessionDesc.targetCount = 1;
+            sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
+            sessionDesc.compilerOptionEntries = entries;
+            sessionDesc.compilerOptionEntryCount = sizeof(entries) / sizeof(CompilerOptionEntry);
+
+            auto curr = std::filesystem::current_path();
+            auto shadersFolder = (curr / "Assets" / "Shaders" / "Slang").string();
+            char const* paths[] = { shadersFolder.c_str() };
+            sessionDesc.searchPaths = paths;
+            sessionDesc.searchPathCount = sizeof(paths) / sizeof(char const*);
+
+            ComPtr<ISession> session;
+            SLANG_CHECK(g_State.GlobalSession->createSession(sessionDesc, session.writeRef()));
+
+            auto DiagnoseIfNeeded = [](IBlob* blob) {
+                if (blob != nullptr) {
+                    LOG_WARNF("{}", std::string_view(CAST(char const*, blob->getBufferPointer()), blob->getBufferSize()));
+                }
+            };
+
+            ZoneScopedN("Common Module");
+            ComPtr<IBlob> diagnosticBlob;
+            auto commonSrc = FileSystem::ReadEntireFile("Assets/Shaders/Slang/Common.slang").Unwrap();
+            g_State.CommonModule = session->loadModuleFromSourceString("common", "Assets/Shaders/Slang/Common.slang", commonSrc.data(), diagnosticBlob.writeRef());
+            DiagnoseIfNeeded(diagnosticBlob);
+        }
+    }
+
+    void ShaderProcessor::Shutdown()
+    {
+        g_State.CommonModule->Release();
+        g_State.GlobalSession->Release();
+    }
 
     auto ShaderProcessor::CompileSlang(std::filesystem::path const& path) -> Maybe<CompiledShader>
     {
@@ -382,15 +444,10 @@ namespace Fussion::GPU {
         using Slang::ComPtr;
         using namespace slang;
 
-        if (!g_GlobalSession) {
-            ZoneScopedN("Create Global Session");
-            createGlobalSession(g_GlobalSession.writeRef());
-        }
-
         SessionDesc sessionDesc = {};
         TargetDesc targetDesc = {};
         targetDesc.format = SLANG_SPIRV;
-        targetDesc.profile = g_GlobalSession->findProfile("spirv_1_5");
+        targetDesc.profile = g_State.GlobalSession->findProfile("spirv_1_6");
         targetDesc.flags = SLANG_TARGET_FLAG_GENERATE_SPIRV_DIRECTLY;
 
         CompilerOptionEntry entries[] = {
@@ -413,23 +470,13 @@ namespace Fussion::GPU {
         sessionDesc.searchPathCount = sizeof(paths) / sizeof(char const*);
 
         ComPtr<ISession> session;
-        SLANG_CHECK(g_GlobalSession->createSession(sessionDesc, session.writeRef()));
+        SLANG_CHECK(g_State.GlobalSession->createSession(sessionDesc, session.writeRef()));
 
         auto DiagnoseIfNeeded = [](IBlob* blob) {
             if (blob != nullptr) {
                 LOG_WARNF("{}", std::string_view(CAST(char const*, blob->getBufferPointer()), blob->getBufferSize()));
             }
         };
-
-        if (!g_CommonModule) {
-            ZoneScopedN("Common Module");
-            ComPtr<IBlob> diagnosticBlob;
-            auto commonSrc = FileSystem::ReadEntireFile("Assets/Shaders/Slang/Common.slang").Unwrap();
-            g_CommonModule = session->loadModuleFromSourceString("common", "Assets/Shaders/Slang/Common.slang", commonSrc.data(), diagnosticBlob.writeRef());
-            DiagnoseIfNeeded(diagnosticBlob);
-            if (!g_CommonModule)
-                return None();
-        }
 
         auto source = FileSystem::ReadEntireFile(path).Unwrap();
 
@@ -449,7 +496,7 @@ namespace Fussion::GPU {
         slangModule->findEntryPointByName("FS_Main", fsEntryPoint.writeRef());
 
         std::vector<IComponentType*> componentTypes;
-        componentTypes.push_back(g_CommonModule);
+        componentTypes.push_back(g_State.CommonModule);
         componentTypes.push_back(slangModule);
         componentTypes.push_back(vsEntryPoint);
 

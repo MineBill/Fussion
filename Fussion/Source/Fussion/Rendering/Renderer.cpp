@@ -51,6 +51,7 @@ namespace Fussion {
     void Renderer::Initialize(Window const& window)
     {
         LOG_INFO("Initializing Renderer");
+        GPU::ShaderProcessor::Initialize();
 
         auto instance = GPU::Instance::Create({
             .Backend = GPU::BackendRenderer::Vulkan,
@@ -94,6 +95,7 @@ namespace Fussion {
     void Renderer::Shutdown()
     {
         LOG_DEBUGF("Shutting down Renderer!");
+        GPU::ShaderProcessor::Shutdown();
 
         g_Data.Device.Release();
         g_Data.Adapter.Release();
