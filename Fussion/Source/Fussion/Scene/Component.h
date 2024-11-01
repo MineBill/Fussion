@@ -40,6 +40,9 @@ namespace Fussion {
         virtual void OnDebugDraw([[maybe_unused]] DebugDrawContext& ctx) { }
 #endif
 
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
+
         virtual void OnEnabled() { }
         virtual void OnDisabled() { }
 

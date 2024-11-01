@@ -65,6 +65,8 @@ public:
     auto GetMetadata(std::filesystem::path const& path) const -> Maybe<EditorAssetMetadata>;
     auto GetMetadata(Fsn::AssetHandle handle) const -> EditorAssetMetadata;
     void RegisterAsset(std::filesystem::path const& path, Fussion::AssetType type);
+    /// @param parentDir The parent directory to place the binary asset inside.
+    void ImportAsset(std::filesystem::path const& path, std::filesystem::path const& parentDir);
 
     auto GetRegistry() -> Fussion::ThreadProtected<Registry>& { return m_Registry; }
 
@@ -106,7 +108,6 @@ public:
     }
 
     void SaveAsset(Fussion::AssetHandle handle);
-    void SaveAsset(Ref<Fussion::Asset> const& asset);
 
     void RenameAsset(Fussion::AssetHandle handle, std::string_view new_name);
     void MoveAsset(Fussion::AssetHandle handle, std::filesystem::path const& path);

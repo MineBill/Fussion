@@ -51,6 +51,8 @@ namespace Fussion {
         virtual bool Read(std::string_view name, bool& value) override;
         virtual bool Read(std::string_view name, std::string& value) override;
         virtual bool Read(std::string_view name, ISerializable& object) override;
+        virtual bool ReadByteArray(std::string_view name, u8* ptr, size_t size) override;
+
         virtual bool BeginObject(std::string_view name, size_t& size) override;
         virtual void EndObject() override;
         virtual void BeginArray(std::string_view name, size_t& size) override;
@@ -60,6 +62,7 @@ namespace Fussion {
     private:
         template<typename T>
         bool GenericRead(std::string_view name, T& value);
+
         std::istream* m_In {};
     };
 }

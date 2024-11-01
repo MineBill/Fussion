@@ -123,6 +123,13 @@ namespace Fussion {
         return true;
     }
 
+    bool BinaryDeserializer::ReadByteArray(std::string_view name, u8* ptr, size_t size)
+    {
+        (void)name;
+        m_In->read(TRANSMUTE(char*, ptr), size);
+        return true;
+    }
+
     bool BinaryDeserializer::BeginObject(std::string_view name, size_t& size)
     {
         (void)name;
@@ -134,6 +141,7 @@ namespace Fussion {
 
     void BinaryDeserializer::BeginArray(std::string_view name, size_t& size)
     {
+        (void)name;
         m_In->read(TRANSMUTE(char*, &size), sizeof(size_t));
     }
 

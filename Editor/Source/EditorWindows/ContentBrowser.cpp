@@ -403,18 +403,5 @@ void ContentBrowserWindow::ImportFile(fs::path const& path)
         LOG_WARNF("Invalid name for import file: {}", path.string());
         return;
     }
-    VERIFY(m_FileTypes.contains(path.extension().string()));
-
-    auto name = path.filename().string();
-
-    auto copy_location = m_CurrentPath / name;
-    if (std::error_code err; !fs::copy_file(path, copy_location, fs::copy_options::overwrite_existing, err)) {
-        LOG_WARNF(R"(Failed to copy "{}" to "{}": "{}")", path.string(), copy_location.string(), err.message());
-        return;
-    }
-
-    auto asset_manager = Project::AssetManager();
-
-    auto rel = fs::relative(copy_location, Project::AssetsFolderPath());
-    asset_manager->RegisterAsset(rel, m_FileTypes[path.extension().string().c_str()]);
+    Project::AssetManager()->ImportAsset(path, m_CurrentPath);
 }

@@ -242,6 +242,14 @@ namespace Fussion {
         return false;
     }
 
+    bool YamlDeserializer::ReadByteArray(std::string_view name, u8* ptr, size_t size)
+    {
+        (void)name;
+        (void)ptr;
+        (void)size;
+        return true;
+    }
+
     bool YamlDeserializer::BeginObject(std::string_view name, size_t& size)
     {
         if (m_Nodes.top().IsMap()) {
@@ -294,6 +302,7 @@ namespace Fussion {
     void YamlDeserializer::EndArray()
     {
         m_Nodes.pop();
+        m_IndexStack.pop();
     }
 
     auto YamlDeserializer::ReadKeys() -> std::vector<std::string>

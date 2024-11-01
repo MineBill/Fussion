@@ -3,14 +3,16 @@
 
 #include "GPU/GPU.h"
 #include "Rendering/Renderer.h"
+#include "Serialization/Serializer.h"
 
 namespace Fussion {
     Mesh::Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset)
-        : Offset(offset)
+        : Vertices(vertices)
+        , Indices(indices)
+        , Offset(offset)
         , MaterialIndex(material_index)
     {
         (void)shadow_indices;
-        Vertices = vertices;
 
         auto& device = Renderer::Device();
 
@@ -25,12 +27,12 @@ namespace Fussion {
         auto index_spec = GPU::BufferSpec {
             .Label = "Index Vertex Buffer"sv,
             .Usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
-            .Size = CAST(u32, indices.size() * sizeof(u32)),
+            .Size = CAST(u32, Indices.size() * sizeof(u32)),
         };
         IndexBuffer = device.CreateBuffer(index_spec);
-        device.WriteBuffer(IndexBuffer, 0, std::span { indices });
+        device.WriteBuffer(IndexBuffer, 0, std::span { Indices });
 
-        IndexCount = CAST(u32, indices.size());
+        IndexCount = CAST(u32, Indices.size());
 
         // auto instance_spec = GPU::BufferSpec{
         //     .Label = "Instance Buffer"sv,
@@ -47,5 +49,54 @@ namespace Fussion {
         auto model = MakeRef<Model>();
         model->Meshes = std::move(meshes);
         return model;
+    }
+
+    void Model::Serialize(Serializer& ctx) const
+    {
+        Asset::Serialize(ctx);
+        ctx.BeginArray("Meshes", Meshes.size());
+        for (auto const& mesh : Meshes) {
+            ctx.BeginObject("", 2);
+            ctx.Write("MaterialIndex", mesh.MaterialIndex);
+            ctx.Write("Offset", mesh.Offset);
+            ctx.WriteByteArray("Vertices", TRANSMUTE(u8 const*, mesh.Vertices.data()), mesh.Vertices.size() * sizeof(Vertex));
+            ctx.WriteByteArray("Indices", TRANSMUTE(u8 const*, mesh.Indices.data()), mesh.Indices.size() * sizeof(u32));
+            ctx.EndObject();
+        }
+        ctx.EndArray();
+    }
+
+    void Model::Deserialize(Deserializer& ctx)
+    {
+        Asset::Deserialize(ctx);
+        size_t size;
+        ctx.BeginArray("Meshes", size);
+        // Meshes.resize(size);
+        for (size_t i = 0; i < size; ++i) {
+            size_t objSize;
+            ctx.BeginObject("", objSize);
+
+            s32 materialIndex;
+            Vector3 offset;
+            ctx.Read("MaterialIndex", materialIndex);
+            ctx.Read("Offset", offset);
+
+            size_t verticesSize;
+            std::vector<Vertex> vertices {};
+            ctx.Read("", verticesSize);
+            vertices.resize(verticesSize / sizeof(Vertex));
+            ctx.ReadByteArray("Vertices", TRANSMUTE(u8*, vertices.data()), verticesSize);
+
+            size_t indicesSize;
+            std::vector<u32> indices {};
+            ctx.Read("", indicesSize);
+            indices.resize(indicesSize / sizeof(u32));
+            ctx.ReadByteArray("Indices", TRANSMUTE(u8*, indices.data()), indicesSize);
+
+            ctx.EndObject();
+
+            Meshes.emplace_back(vertices, indices, std::vector<u32> {}, materialIndex, offset);
+        }
+        ctx.EndArray();
     }
 }

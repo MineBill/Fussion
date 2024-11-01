@@ -127,6 +127,8 @@ namespace Fussion {
 
         virtual bool Read(std::string_view name, ISerializable& object) = 0;
 
+        virtual bool ReadByteArray(std::string_view name, u8* ptr, size_t size) = 0;
+
         virtual bool BeginObject(std::string_view name, size_t& size) = 0;
         virtual void EndObject() = 0;
 

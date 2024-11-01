@@ -17,6 +17,7 @@ namespace Fussion {
 
     struct Mesh {
         std::vector<Vertex> Vertices {};
+        std::vector<u32> Indices {};
         Vector3 Offset {};
         BoundingBox Box {};
 
@@ -38,8 +39,10 @@ namespace Fussion {
 
         static Ref<Model> Create(std::vector<Mesh>& meshes);
 
-        virtual AssetType Type() const override { return StaticType(); }
+        virtual void Serialize(Serializer& ctx) const override;
+        virtual void Deserialize(Deserializer& ctx) override;
 
+        virtual AssetType Type() const override { return StaticType(); }
         static AssetType StaticType() { return AssetType::Model; }
     };
 }

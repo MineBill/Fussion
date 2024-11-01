@@ -266,6 +266,14 @@ namespace Fussion {
         return false;
     }
 
+    bool JsonDeserializer::ReadByteArray(std::string_view name, u8* ptr, size_t size)
+    {
+        (void)name;
+        (void)ptr;
+        (void)size;
+        return true;
+    }
+
     bool JsonDeserializer::BeginObject(std::string_view name, size_t& size)
     {
         if (m_TypeStack.top() == Type::Object) {

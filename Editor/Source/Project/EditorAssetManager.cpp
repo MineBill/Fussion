@@ -6,6 +6,7 @@
 #include "Fussion/Assets/Model.h"
 #include "Fussion/Assets/PbrMaterial.h"
 #include "Fussion/Assets/ShaderAsset.h"
+#include "Fussion/Serialization/BinarySerializer.h"
 #include "Fussion/Serialization/YamlSerializer.h"
 #include "Project.h"
 #include "Serialization/AssetImporter.h"
@@ -53,7 +54,9 @@ void WorkerPool::Work(s32 index)
     asset_serializers[AssetType::Texture2D] = MakePtr<TextureImporter>();
     asset_serializers[AssetType::Model] = MakePtr<MeshImporter>();
 
-    auto make_asset = [](AssetType type) -> Ref<Asset> {
+    std::set binaryAssets { AssetType::Model, AssetType::Texture2D };
+
+    auto makeAsset = [](AssetType type) -> Ref<Asset> {
         switch (type) {
         case AssetType::Model:
             return MakeRef<Model>();
@@ -86,19 +89,19 @@ void WorkerPool::Work(s32 index)
         if (task.HasValue()) {
             LOG_INFOF("Worker({}) was notified about a new task: {}", index, task->Path.string());
 
-            if (asset_serializers.contains(task->Type)) {
-                auto asset = asset_serializers[task->Type]->Load(*task);
-                if (asset == nullptr) {
-                    LOG_ERRORF("Failed to load asset {}", task->Path);
-                } else {
-                    asset->SetHandle(task->Handle);
-                    LoadedAssets.Access([&](auto& queue) {
-                        queue.push(asset);
-                    });
-                }
+            auto asset = makeAsset(task->Type);
+            auto fullPath = Project::AssetsFolderPath() / task->Path;
+            if (binaryAssets.contains(task->Type)) {
+                std::ifstream file;
+                file.open(fullPath, std::ios::binary | std::ios::in);
+                BinaryDeserializer ds(&file);
+                asset->Deserialize(ds);
+                asset->SetHandle(task->Handle);
+                LoadedAssets.Access([&](auto& queue) {
+                    queue.push(asset);
+                });
             } else {
-                auto asset = make_asset(task->Type);
-                if (auto json_string = FileSystem::ReadEntireFile(Project::AssetsFolderPath() / task->Path)) {
+                if (auto json_string = FileSystem::ReadEntireFile(fullPath)) {
                     YamlDeserializer ds(*json_string);
                     asset->Deserialize(ds);
                     asset->SetHandle(task->Handle);
@@ -336,6 +339,56 @@ void EditorAssetManager::RegisterAsset(fs::path const& path, AssetType type)
     SaveToFile();
 }
 
+void EditorAssetManager::ImportAsset(std::filesystem::path const& path, std::filesystem::path const& parentDir)
+{
+    // 1. Load asset into memory using the appropriate importer (stb_image, tinyglfy, etc..)
+    if (!path.has_extension() || !path.has_filename()) {
+        LOG_WARNF("Tried importing '{}' which doesn't have an extension. Cannot determine asset type.", path);
+        return;
+    }
+
+    static auto const FileTypes = std::unordered_map<std::string, AssetType> {
+        { ".png", AssetType::Texture2D },
+        { ".jpg", AssetType::Texture2D },
+        { ".jpeg", AssetType::Texture2D },
+        { ".hdr", AssetType::Texture2D },
+
+        { ".glb", AssetType::Model },
+        { ".gltf", AssetType::Model },
+    };
+
+    auto const ext = path.extension().string();
+    if (!FileTypes.contains(ext)) {
+        LOG_ERRORF("Do not have importer for this filetype: {}", ext);
+        return;
+    }
+    auto assetType = FileTypes.at(ext);
+
+    auto asset = m_AssetImporters[assetType]->Import(path);
+
+    // 1.1 Run any extra post-processing steps.
+    (void)0;
+
+    // 2. Save the asset into a binary form in the project.
+    auto name = path.filename();
+    name.replace_extension(".fsn");
+    auto assetPath = parentDir / name;
+    std::ofstream file;
+    file.open(assetPath, std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+        LOG_ERRORF("Could not open file '{}' for writing", assetPath);
+        return;
+    }
+
+    BinarySerializer s(&file);
+    asset->Serialize(s);
+
+    // 3. Register this form in the registry.
+    RegisterAsset(relative(assetPath, Project::AssetsFolderPath()), assetType);
+
+    // NOTE: When the asset is loaded, we load that binary format and do not go through the importer.
+}
+
 void EditorAssetManager::SaveAsset(AssetHandle handle)
 {
     ZoneScoped;
@@ -343,35 +396,14 @@ void EditorAssetManager::SaveAsset(AssetHandle handle)
         return registry[handle];
     });
 
-    if (m_AssetImporters.contains(meta.Type)) {
-        m_AssetImporters[meta.Type]->Save(meta, m_LoadedAssets[handle]);
-        m_LoadedAssets[handle] = m_AssetImporters[meta.Type]->Load(meta);
-        m_LoadedAssets[handle]->SetHandle(handle);
-    } else {
-        // JsonSerializer js;
-        // js.Initialize();
-        //
-        // m_LoadedAssets[handle]->Serialize(js);
-        YamlSerializer ys;
-        ys.Initialize();
+    // FIXME: What about binary assets? Should they be able to be saved?
+    YamlSerializer ys;
+    ys.Initialize();
 
-        m_LoadedAssets[handle]->Serialize(ys);
+    m_LoadedAssets[handle]->Serialize(ys);
 
-        auto path = Project::AssetsFolderPath() / meta.Path;
-        // FileSystem::WriteEntireFile(path, js.ToString());
-        FileSystem::WriteEntireFile(path, ys.ToString());
-    }
-}
-
-void EditorAssetManager::SaveAsset(Ref<Asset> const& asset)
-{
-    auto const handle = asset->GetHandle();
-    m_Registry.Access([&](Registry& registry) {
-        m_AssetImporters[registry[handle].Type]->Save(registry[handle], asset);
-
-        m_LoadedAssets[handle] = m_AssetImporters[registry[handle].Type]->Load(registry[handle]);
-        m_LoadedAssets[handle]->SetHandle(handle);
-    });
+    auto path = Project::AssetsFolderPath() / meta.Path;
+    FileSystem::WriteEntireFile(path, ys.ToString());
 }
 
 void EditorAssetManager::RenameAsset(AssetHandle handle, std::string_view new_name)
