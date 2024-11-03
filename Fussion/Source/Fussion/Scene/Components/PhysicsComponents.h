@@ -39,6 +39,6 @@ namespace Fussion {
         f32 linear_damping{};
         f32 angular_damping{};
     private:
-        u32 m_body_id{};
+        // u32 m_body_id{};
     };
 }

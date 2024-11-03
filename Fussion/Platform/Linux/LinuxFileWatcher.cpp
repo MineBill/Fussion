@@ -15,8 +15,8 @@ namespace Fussion {
     class LinuxFileWatcher final : public FileWatcher {
     public:
         explicit LinuxFileWatcher(std::filesystem::path root)
-            : m_Root(std::move(root))
-            , m_Update { true }
+            : m_Update { true }
+            , m_Root(std::move(root))
         { }
 
         virtual ~LinuxFileWatcher() override
@@ -99,7 +99,7 @@ namespace Fussion {
                             if (!m_Update) {
                                 break;
                             }
-                            if (len == -1 && errno != EAGAIN) {
+                            if (len == cast<size_t>(-1) && errno != EAGAIN) {
                                 LOG_ERRORF("Failed on read");
                                 return;
                             }

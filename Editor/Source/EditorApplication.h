@@ -7,6 +7,15 @@
 namespace fs = std::filesystem;
 
 struct EditorCLI final : argparse::Args {
+    EditorCLI() = default;
+    EditorCLI(EditorCLI const& other)
+    {
+        if (this == &other)
+            return;
+        ProjectPath = other.ProjectPath;
+        CreateProject = other.CreateProject;
+    }
+
     EditorCLI& operator=(EditorCLI const& other)
     {
         ProjectPath = other.ProjectPath;

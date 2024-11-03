@@ -96,20 +96,20 @@ void ViewportWindow::RenderStats() const
             if (ImGui::BeginTabItem("Pipeline Stats")) {
                 EUI::WithEditorFont(EditorFont::MonospaceRegular, [&] {
                     if (ImGui::CollapsingHeader("G-Buffer")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.GbufferStats.VertexShaderInvocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.GbufferStats.FragmentShaderInvocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.GbufferStats.ClipperInvocations);
+                        ImGui::Text("Vertex Shader Invocations   %lu", renderer.PipelineStatistics.GbufferStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %lu", renderer.PipelineStatistics.GbufferStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %lu", renderer.PipelineStatistics.GbufferStats.ClipperInvocations);
                     }
                     if (ImGui::CollapsingHeader("SSAO")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.SSAOStats.VertexShaderInvocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.SSAOStats.FragmentShaderInvocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.SSAOStats.ClipperInvocations);
+                        ImGui::Text("Vertex Shader Invocations   %lu", renderer.PipelineStatistics.SSAOStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %lu", renderer.PipelineStatistics.SSAOStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %lu", renderer.PipelineStatistics.SSAOStats.ClipperInvocations);
                     }
 
                     if (ImGui::CollapsingHeader("PBR")) {
-                        ImGui::Text("Vertex Shader Invocations   %llu", renderer.PipelineStatistics.PBRStats.VertexShaderInvocations);
-                        ImGui::Text("Fragment Shader Invocations %llu", renderer.PipelineStatistics.PBRStats.FragmentShaderInvocations);
-                        ImGui::Text("Clipper Invocations         %llu", renderer.PipelineStatistics.PBRStats.ClipperInvocations);
+                        ImGui::Text("Vertex Shader Invocations   %lu", renderer.PipelineStatistics.PBRStats.VertexShaderInvocations);
+                        ImGui::Text("Fragment Shader Invocations %lu", renderer.PipelineStatistics.PBRStats.FragmentShaderInvocations);
+                        ImGui::Text("Clipper Invocations         %lu", renderer.PipelineStatistics.PBRStats.ClipperInvocations);
                     }
                 });
                 ImGui::EndTabItem();
@@ -375,8 +375,10 @@ void ViewportWindow::OnDraw()
                         switch (m_GizmoMode) {
                         case GizmoMode::Translation:
                             m_Editor->Undo.PushSingle(&entity->WorldTransform.Position, "Gizmo LocalPosition");
+                            [[fallthrough]];
                         case GizmoMode::Rotation:
                             m_Editor->Undo.PushSingle(&entity->WorldTransform.EulerAngles, "Gizmo LocalEulerAngles");
+                            [[fallthrough]];
                         case GizmoMode::Scale:
                             m_Editor->Undo.PushSingle(&entity->WorldTransform.Scale, "Gizmo LocalScale");
                         }
@@ -389,8 +391,10 @@ void ViewportWindow::OnDraw()
                         switch (m_GizmoMode) {
                         case GizmoMode::Translation:
                             m_Editor->Undo.CommitTag("Gizmo LocalPosition");
+                            [[fallthrough]];
                         case GizmoMode::Rotation:
                             m_Editor->Undo.CommitTag("Gizmo LocalEulerAngles");
+                            [[fallthrough]];
                         case GizmoMode::Scale:
                             m_Editor->Undo.CommitTag("Gizmo LocalScale");
                         }

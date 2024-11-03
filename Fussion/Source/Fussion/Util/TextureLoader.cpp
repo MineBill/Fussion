@@ -18,7 +18,7 @@ namespace Fussion {
             return None();
         }
 
-        image.Data.resize(w * h * 4);
+        image.Data.resize(cast<size_t>(w * h * 4));
         std::copy_n(d, w * h * 4, image.Data.data());
 
         image.Width = CAST(u32, w);
@@ -83,7 +83,7 @@ namespace Fussion {
             return None();
         }
 
-        image.Data.resize(w * h * 4);
+        image.Data.resize(cast<size_t>(w * h * 4));
         std::copy_n(image_data, w * h * 4, image.Data.data());
 
         image.Width = CAST(u32, w);

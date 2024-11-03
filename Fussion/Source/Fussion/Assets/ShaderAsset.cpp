@@ -79,8 +79,8 @@ namespace Fussion {
                 GPU::VertexBufferLayout::Create(compiledShader.Metadata.VertexAttributes));
         }
 
-        if (auto pragma = std::ranges::find_if(compiledShader.Metadata.ParsedPragmas, [](GPU::ShaderProcessor::ParsedPragma const& pragma) {
-                return pragma.Key == "topology";
+        if (auto pragma = std::ranges::find_if(compiledShader.Metadata.ParsedPragmas, [](GPU::ShaderProcessor::ParsedPragma const& parsedPragma) {
+                return parsedPragma.Key == "topology";
             });
             pragma != compiledShader.Metadata.ParsedPragmas.end()) {
             if (pragma->Value == "triangles"sv) {

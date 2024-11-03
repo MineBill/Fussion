@@ -65,6 +65,8 @@ add_executable(Editor
     Source/main.cpp
 )
 
+SetTargetWarnings(Editor ON "" "" "")
+
 # Prevents PCH from being included in a C files, which result results in weird errors, as the PCH contains C++ headers.
 set_source_files_properties(Source/Serialization/mikktspace.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 

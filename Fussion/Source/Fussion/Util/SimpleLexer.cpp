@@ -38,7 +38,7 @@ namespace Fussion {
 
     u8 SimpleLexer::Advance()
     {
-        return m_Source.at(m_Index++);
+        return cast<u8>(m_Source.at(cast<size_t>(m_Index++)));
     }
 
     bool SimpleLexer::Match(u8 ch)
@@ -55,14 +55,14 @@ namespace Fussion {
     {
         if (IsAtEnd())
             return '\0';
-        return m_Source.at(m_Index);
+        return cast<u8>(m_Source.at(cast<size_t>(m_Index)));
     }
 
     u8 SimpleLexer::PeekNext() const
     {
         if (m_Index + 1 > m_Source.size())
             return '\0';
-        return m_Source.at(m_Index + 1);
+        return cast<u8>(m_Source.at(cast<size_t>(m_Index + 1)));
     }
 
     void SimpleLexer::PushToken(TokenType type)

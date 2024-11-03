@@ -188,10 +188,10 @@ void Editor::OnUpdate(f32 delta)
             m_PlayScene->OnDebugDraw(DebugDrawContext);
         }
     } break;
-    case PlayState::Paused: {
-    }
-    case PlayState::Detached: {
-    } break;
+    case PlayState::Paused:
+        break;
+    case PlayState::Detached:
+        break;
     }
 
     ImGui::DockSpaceOverViewport();
@@ -581,12 +581,12 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
         data.Message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
         data.Action = Dialogs::MessageAction::YesNoCancel;
         switch (Dialogs::ShowMessageBox(data)) {
-        case Dialogs::MessageButton::No: {
+        case Dialogs::MessageButton::No:
             s_EditorInstance->Save();
-        }
-        case Dialogs::MessageButton::Yes: {
+            break;
+        case Dialogs::MessageButton::Yes:
             LoadScene();
-        } break;
+            break;
         case Dialogs::MessageButton::Cancel:
             break;
         default:

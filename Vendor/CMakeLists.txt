@@ -1,8 +1,8 @@
 include(wgpu-native.cmake)
 
-add_subdirectory(Catch2-3.6.0)
-add_subdirectory(cpptrace-0.6.3)
-add_subdirectory(fmt-11.0.2)
+add_subdirectory(Catch2-3.6.0 SYSTEM)
+add_subdirectory(cpptrace-0.6.3 SYSTEM)
+add_subdirectory(fmt-11.0.2 SYSTEM)
 
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
@@ -11,25 +11,25 @@ if (UNIX)
     set(GLFW_BUILD_X11 ON)
     set(GLFW_BUILD_WAYLAND ON)
 endif ()
-add_subdirectory(glfw)
+add_subdirectory(glfw SYSTEM)
 
 set(GLM_ENABLE_CXX_20 ON)
-add_subdirectory(glm)
+add_subdirectory(glm SYSTEM)
 
-add_subdirectory(magic_enum)
+add_subdirectory(magic_enum SYSTEM)
 
 set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF)
-add_subdirectory(tinygltf-2.8.23)
+add_subdirectory(tinygltf-2.8.23 SYSTEM)
 
 set(B_EMBED_SILENCE_DEVMODE_WARNING ON)
-add_subdirectory(embed)
+add_subdirectory(embed SYSTEM)
 
 set(YAML_CPP_STATIC_DEFINE ON)
 set(YAML_CPP_BUILD_TOOLS OFF)
 set(YAML_CPP_BUILD_TESTS OFF)
-add_subdirectory(yaml-cpp)
+add_subdirectory(yaml-cpp SYSTEM)
 
-add_subdirectory(meta.hpp)
+add_subdirectory(meta.hpp SYSTEM)
 
 function(InstallAngelscriptAddons)
     add_library(angelscript_addons
@@ -147,9 +147,9 @@ endfunction()
 
 function(InstallLinuxDeps)
     if (LINUX)
-        add_subdirectory(libsigcplusplus)
+        add_subdirectory(libsigcplusplus SYSTEM)
         set(BUILD_TESTING OFF)
-        add_subdirectory(dbus-cxx)
+        add_subdirectory(dbus-cxx SYSTEM)
     endif ()
 endfunction()
 

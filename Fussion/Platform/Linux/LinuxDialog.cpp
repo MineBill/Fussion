@@ -27,8 +27,8 @@ namespace Fussion::Dialogs {
         std::string s { buffer };
         std::vector<std::string> strings;
 
-        int pos = 0;
-        for (int i = 0; i < s.size(); ++i) {
+        size_t pos = 0;
+        for (size_t i = 0; i < s.size(); ++i) {
             if (s[i] == ' ') {
                 strings.push_back(s.substr(pos, i - pos));
                 pos = i + 1;
@@ -51,6 +51,7 @@ namespace Fussion::Dialogs {
                                            SL_LogLocation const* location,
                                            SL_LogLevel const level,
                                            char const* log_string) {
+                (void)location;
                 switch (level) {
                 case SL_WARN:
                     LOG_WARNF("DBUS [{}]: {}", logger_name, log_string);
@@ -76,6 +77,7 @@ namespace Fussion::Dialogs {
 
         auto OpenFilePicker(std::vector<FilePickerFilter> const& filters, bool allow_multiple, bool directory = false) -> std::vector<std::filesystem::path>
         {
+            (void)filters;
             std::vector<std::filesystem::path> files {};
 
             std::map<std::string, DBus::Variant> options {};
@@ -207,6 +209,7 @@ namespace Fussion::Dialogs {
 
     MessageButton ShowMessageBox(MessageBox data)
     {
+        (void)data;
         CreateNativeDialog();
 
         return MessageButton::Ok;

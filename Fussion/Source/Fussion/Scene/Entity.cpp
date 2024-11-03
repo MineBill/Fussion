@@ -315,7 +315,7 @@ namespace Fussion {
         ctx.BeginArray("Components", size);
 
         auto registry = meta_hpp::resolve_scope("Components");
-        for (int i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             size_t objSize;
             ctx.BeginObject("", objSize);
             std::string componentName;

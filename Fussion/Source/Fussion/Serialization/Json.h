@@ -6,6 +6,8 @@
 #include <Fussion/Math/Vector3.h>
 #include <Fussion/Math/Vector4.h>
 #include <Fussion/Serialization/json.hpp>
+
+#include <meta.hpp/meta_uvalue/uvalue.hpp>
 #include <meta.hpp/meta_types/class_type.hpp>
 
 namespace Fussion {

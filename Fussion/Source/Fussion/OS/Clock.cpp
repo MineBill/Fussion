@@ -19,6 +19,7 @@ Clock::Clock()
     QueryPerformanceCounter(&integer);
     m_TickCount = integer.QuadPart;
 #elif defined(OS_LINUX)
+    (void)m_ClockFrequency;
     timespec now {};
     clock_gettime(CLOCK_BOOTTIME, &now);
 

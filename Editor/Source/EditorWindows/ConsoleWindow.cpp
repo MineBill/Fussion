@@ -76,6 +76,7 @@ void ConsoleWindow::OnDraw()
                     case Error:
                         if (!m_error_enabled)
                             continue;
+                        [[fallthrough]];
                     case Fatal:
                         text_color = Vector4(1, 0, 0, 1);
                         break;

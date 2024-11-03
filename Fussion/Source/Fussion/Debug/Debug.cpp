@@ -158,8 +158,8 @@ namespace Fussion {
 
         // Draw latitude lines
         for (auto lat = 0; lat < latitude_segments; lat++) {
-            auto lat0 = Math::PI * (-0.5 + (CAST(f32, lat) / CAST(f32, latitude_segments)));
-            auto lat1 = Math::PI * (-0.5 + (CAST(f32, lat + 1) / CAST(f32, latitude_segments)));
+            auto lat0 = cast<f32>(Math::PI) * (-0.5f + CAST(f32, lat) / CAST(f32, latitude_segments));
+            auto lat1 = cast<f32>(Math::PI) * (-0.5f + CAST(f32, lat + 1) / CAST(f32, latitude_segments));
 
             auto z0 = radius * Math::Sin(lat0);
             auto z1 = radius * Math::Sin(lat1);
@@ -168,8 +168,8 @@ namespace Fussion {
             auto r1 = radius * Math::Cos(lat1);
 
             for (auto lon = 0; lon < latitude_segments; lon++) {
-                auto lon0 = 2 * Math::PI * (CAST(f32, lon) / CAST(f32, longitude_segments));
-                auto lon1 = 2 * Math::PI * (CAST(f32, lon + 1) / CAST(f32, longitude_segments));
+                auto lon0 = 2 * cast<f32>(Math::PI) * (CAST(f32, lon) / CAST(f32, longitude_segments));
+                auto lon1 = 2 * cast<f32>(Math::PI) * (CAST(f32, lon + 1) / CAST(f32, longitude_segments));
 
                 auto x0 = Math::Cos(lon0) * r0;
                 auto y0 = Math::Sin(lon0) * r0;
@@ -214,8 +214,8 @@ namespace Fussion {
     {
         g_DebugData.Points.clear();
 
-        for (s32 i = CAST(s32, g_DebugData.TimedPoints.size()) - 1; i >= 0; i--) {
-            auto& timer = g_DebugData.Timers[i];
+        for (s32 i = cast<s32>(g_DebugData.TimedPoints.size()) - 1; i >= 0; i--) {
+            auto& timer = g_DebugData.Timers[cast<size_t>(i)];
             timer -= Time::DeltaTime();
             if (timer <= 0) {
                 g_DebugData.TimedPoints.erase(g_DebugData.TimedPoints.begin() + i);

@@ -55,3 +55,9 @@ Ref<T> MakeRef(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+template<typename T>
+auto cast(auto&& value)
+{
+    return static_cast<T>(value);
+}

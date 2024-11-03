@@ -35,13 +35,13 @@ namespace Fussion {
         (void)name;
         size_t size = value.size();
         m_Out->write(TRANSMUTE(char const*, &size), sizeof(size_t));
-        m_Out->write(value.data(), value.size());
+        m_Out->write(value.data(), cast<std::streamsize>(value.size()));
     }
 
     void BinarySerializer::Write(std::string_view name, char const* value)
     {
         (void)name;
-        m_Out->write(value, std::strlen(value));
+        m_Out->write(value, cast<std::streamsize>(std::strlen(value)));
     }
 
     void BinarySerializer::Write(std::string_view name, ISerializable const& object)
@@ -72,7 +72,7 @@ namespace Fussion {
     {
         (void)name;
         m_Out->write(TRANSMUTE(char const*, &size), sizeof(usz));
-        m_Out->write(TRANSMUTE(char const*, ptr), size);
+        m_Out->write(TRANSMUTE(char const*, ptr), cast<std::streamsize>(size));
     }
 
     /// =================================================
@@ -114,7 +114,7 @@ namespace Fussion {
         size_t size;
         m_In->read(TRANSMUTE(char*, &size), sizeof(size_t));
         value.resize(size);
-        m_In->read(value.data(), size);
+        m_In->read(value.data(), cast<std::streamsize>(size));
         return true;
     }
 
@@ -130,7 +130,7 @@ namespace Fussion {
     bool BinaryDeserializer::ReadByteArray(std::string_view name, u8* ptr, size_t size)
     {
         (void)name;
-        m_In->read(TRANSMUTE(char*, ptr), size);
+        m_In->read(TRANSMUTE(char*, ptr), cast<std::streamsize>(size));
         return true;
     }
 

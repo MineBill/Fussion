@@ -15,6 +15,7 @@ target_link_libraries(FussionTests
     PRIVATE
     Fussion::Core
     Catch2::Catch2
+    meta.hpp::meta.hpp
 )
 
 GroupSourcesByFolder(FussionTests "Fussion/Tests")
