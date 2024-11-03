@@ -6,11 +6,8 @@ add_library(Fussion STATIC
     Source/Fussion/Events/KeyboardEvents.h
     Source/Fussion/Events/Event.h
     Source/Fussion/Events/ApplicationEvents.h
-    Source/Fussion/Util/Util.cpp
     Source/Fussion/Util/TextureLoader.h
     Source/Fussion/Util/TextureLoader.cpp
-    Source/Fussion/Util/stb_image_write.h
-    Source/Fussion/Util/stb_image.h
     Source/Fussion/Util/SimpleParser.h
     Source/Fussion/Util/SimpleParser.cpp
     Source/Fussion/Util/SimpleLexer.h
@@ -66,6 +63,8 @@ add_library(Fussion STATIC
     Source/Fussion/Serialization/nlohmann_json.natvis
     Source/Fussion/Serialization/JsonSerializer.h
     Source/Fussion/Serialization/JsonSerializer.cpp
+    Source/Fussion/Serialization/YamlSerializer.h
+    Source/Fussion/Serialization/YamlSerializer.cpp
     Source/Fussion/Serialization/json.hpp
     Source/Fussion/Serialization/Json.h
     Source/Fussion/Serialization/Json.cpp
@@ -121,8 +120,9 @@ add_library(Fussion STATIC
     Source/Fussion/Scene/Scene.cpp
     Source/Fussion/Scene/Forward.h
     Source/Fussion/Scene/Components/BaseComponents.cpp
-    Source/Fussion/Scene/Component.h
     Source/Fussion/Scene/Components/BaseComponents.h
+    Source/Fussion/Scene/Component.h
+    Source/Fussion/Scene/Component.cpp
     Source/Fussion/Fussion.h
     Source/Fussion/Input/Input.cpp
     Source/Fussion/Image.h
@@ -188,20 +188,20 @@ foreach (file ${Fussion_SOURCES})
     endif ()
 endforeach ()
 
-target_sources(Fussion PRIVATE
-    Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.h
-    Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.cpp
+# target_sources(Fussion PRIVATE
+#     Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.h
+#     Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.cpp
 
-    Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.h
-    Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.cpp
+#     Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.h
+#     Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.cpp
 
-    Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.h
-    Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.cpp
-    Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring_utils.cpp
+#     Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.h
+#     Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.cpp
+#     Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring_utils.cpp
 
-    Vendor/angelscript/sdk/add_on/scriptany/scriptany.h
-    Vendor/angelscript/sdk/add_on/scriptany/scriptany.cpp
-)
+#     Vendor/angelscript/sdk/add_on/scriptany/scriptany.h
+#     Vendor/angelscript/sdk/add_on/scriptany/scriptany.cpp
+# )
 
 set_source_files_properties(Source/Fussion/GPU/glfw3webgpu.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
@@ -228,11 +228,13 @@ target_link_libraries(Fussion PUBLIC
     cpptrace::cpptrace
     TracyClient
     angelscript
+    angelscript_addons
     Jolt
     wgpu_native
     Slang
     yaml-cpp::yaml-cpp
     meta.hpp::meta.hpp
+    stb
 )
 
 target_include_directories(Fussion
@@ -278,7 +280,7 @@ if (UNIX)
     )
 endif ()
 
-SetTargetWarnings(Fussion OFF "" "" "")
+SetTargetWarnings(Fussion ON "" "" "")
 
 b_embed(Fussion Assets/Textures/black_texture.png)
 b_embed(Fussion Assets/Textures/default_normal_map.png)

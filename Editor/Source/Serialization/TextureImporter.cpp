@@ -12,7 +12,6 @@ Ref<Asset> TextureImporter::Import(std::filesystem::path const& path)
     // auto path = Project::AssetsFolderPath() / metadata.Path;
     // auto texture_metadata = std::dynamic_pointer_cast<Texture2DMetadata>(metadata.CustomMetadata);
     Texture2DMetadata texture_metadata;
-
     auto ext = path.extension();
     if (ext == ".hdr") {
         auto [data, width, height] = TextureLoader::LoadHDRImageFromFile(path).Unwrap();

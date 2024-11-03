@@ -31,6 +31,36 @@ add_subdirectory(yaml-cpp)
 
 add_subdirectory(meta.hpp)
 
+function(InstallAngelscriptAddons)
+    add_library(angelscript_addons
+        STATIC
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.h
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptbuilder/scriptbuilder.cpp
+
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.h
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptarray/scriptarray.cpp
+
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.h
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring.cpp
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptstdstring/scriptstdstring_utils.cpp
+
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptany/scriptany.h
+        ../Fussion/Vendor/angelscript/sdk/add_on/scriptany/scriptany.cpp
+    )
+
+    target_include_directories(angelscript_addons
+        SYSTEM PUBLIC
+        ../Fussion/Vendor/angelscript/sdk/add_on
+    )
+
+    target_link_libraries(
+        angelscript_addons
+        PUBLIC
+        angelscript
+    )
+endfunction()
+
+
 function(InstallAATC)
     add_library(argparse INTERFACE)
     target_include_directories(argparse INTERFACE argparse/include)
@@ -75,7 +105,7 @@ function(InstallAATC)
         aatc/source/aatc_container_unordered_set.cpp
     )
 
-    target_include_directories(aatc INTERFACE aatc/source)
+    target_include_directories(aatc SYSTEM INTERFACE aatc/source)
     target_link_libraries(aatc PRIVATE angelscript)
 endfunction()
 
@@ -123,9 +153,31 @@ function(InstallLinuxDeps)
     endif ()
 endfunction()
 
+function(InstallSTB)
+    add_library(stb
+        STATIC
+        stb/build.c
+    )
+
+    target_include_directories(stb SYSTEM PUBLIC stb/include)
+endfunction()
+
+function(InstallMikktspace)
+    add_library(mikktspace
+        STATIC
+        mikktspace/mikktspace.c
+    )
+
+    target_include_directories(mikktspace SYSTEM PUBLIC mikktspace/)
+endfunction()
+
 InstallAATC()
 InstallWGPUNative()
 InstallSlang()
+InstallSTB()
+InstallMikktspace()
+InstallAngelscriptAddons()
+
 InstallLinuxDeps()
 
 set_target_properties(

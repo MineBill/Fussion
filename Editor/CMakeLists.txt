@@ -58,8 +58,6 @@ add_executable(Editor
     Source/Serialization/MeshImporter.h
     Source/Serialization/TextureImporter.cpp
     Source/Serialization/TextureImporter.h
-    Source/Serialization/mikktspace.c
-    Source/Serialization/mikktspace.h
     Source/Serialization/tiny_gltf.h
     Source/Serialization/tiny_gltf_build.cpp
     Source/Undo.cpp
@@ -74,6 +72,8 @@ target_link_libraries(Editor PRIVATE
     Fussion::Core
     imgui
     meshoptimizer
+    mikktspace
+    stb
 )
 
 ApplyCommonCompilerOptions(Editor)

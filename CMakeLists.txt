@@ -26,7 +26,6 @@ endfunction()
 
 function(GroupSourcesByFolder target)
     get_target_property(sources ${target} SOURCES)
-    message("${CMAKE_SOURCE_DIR}/${ARGN}")
     source_group(TREE "${CMAKE_SOURCE_DIR}/${ARGN}" FILES ${sources})
 endfunction()
 
