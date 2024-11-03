@@ -30,7 +30,7 @@ namespace Fussion {
         FSN_DESERIALIZE_MEMBER(GenerateMipmaps);
     }
 
-    Ref<Texture2D> Texture2D::Create(std::span<u8> data, Texture2DMetadata const& metadata)
+    Ref<Texture2D> Texture2D::Create(ReadOnlySpan<u8> data, Texture2DMetadata const& metadata)
     {
         Ref<Texture2D> texture = MakeRef<Texture2D>();
 
@@ -53,14 +53,14 @@ namespace Fussion {
 
         texture->m_Texture = device.CreateTexture(spec);
 
-        device.WriteTexture(texture->m_Texture, data.data(), data.size_bytes(), Vector2::Zero, { metadata.Width, metadata.Height });
+        device.WriteTexture(texture->m_Texture, data.DataPtr(), data.SizeInBytes(), Vector2::Zero, { metadata.Width, metadata.Height });
 
         texture->m_Texture.GenerateMipmaps(device);
 
         return texture;
     }
 
-    Ref<Texture2D> Texture2D::Create(std::span<f32> data, Texture2DMetadata const& metadata)
+    Ref<Texture2D> Texture2D::Create(ReadOnlySpan<f32> data, Texture2DMetadata const& metadata)
     {
         Ref<Texture2D> texture = MakeRef<Texture2D>();
 
@@ -79,7 +79,7 @@ namespace Fussion {
 
         texture->m_Texture = device.CreateTexture(spec);
 
-        device.WriteTexture(texture->m_Texture, data.data(), data.size_bytes(), Vector2::Zero, { metadata.Width, metadata.Height }, 4 * sizeof(f32));
+        device.WriteTexture(texture->m_Texture, data.DataPtr(), data.SizeInBytes(), Vector2::Zero, { metadata.Width, metadata.Height }, 4 * sizeof(f32));
 
         texture->m_Texture.GenerateMipmaps(device);
 

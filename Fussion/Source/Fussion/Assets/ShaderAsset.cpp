@@ -76,7 +76,7 @@ namespace Fussion {
 
         if (!compiledShader.Metadata.VertexAttributes.empty()) {
             spec.Vertex.AttributeLayouts.push_back(
-                GPU::VertexBufferLayout::Create(const_cast<std::vector<GPU::VertexAttribute>&>(compiledShader.Metadata.VertexAttributes)));
+                GPU::VertexBufferLayout::Create(compiledShader.Metadata.VertexAttributes));
         }
 
         if (auto pragma = std::ranges::find_if(compiledShader.Metadata.ParsedPragmas, [](GPU::ShaderProcessor::ParsedPragma const& pragma) {

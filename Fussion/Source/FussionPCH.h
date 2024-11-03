@@ -8,9 +8,9 @@
 
 #include <Fussion/GPU/GPU.h>
 
-#include <meta.hpp/meta_all.hpp>
 #include <glm/glm.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <meta.hpp/meta_all.hpp>
 
 #include <fmt/base.h>
 #include <fmt/compile.h>
@@ -28,6 +28,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <span>
 #include <string>

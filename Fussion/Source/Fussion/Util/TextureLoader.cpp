@@ -7,12 +7,12 @@
 #include "stb_image_write.h"
 
 namespace Fussion {
-    auto TextureLoader::LoadImageFromMemory(std::span<u8> data) -> Maybe<Image>
+    auto TextureLoader::LoadImageFromMemory(ReadOnlySpan<u8> data) -> Maybe<Image>
     {
         Image image {};
         int actual_channels_on_image, w, h;
         stbi_set_flip_vertically_on_load(false);
-        auto* d = stbi_load_from_memory(data.data(), CAST(int, data.size_bytes()), &w, &h, &actual_channels_on_image, 4);
+        auto* d = stbi_load_from_memory(data.DataPtr(), CAST(int, data.SizeInBytes()), &w, &h, &actual_channels_on_image, 4);
         if (d == nullptr) {
             LOG_ERRORF("Failed to load image: {}", stbi_failure_reason());
             return None();
@@ -48,7 +48,7 @@ namespace Fussion {
         return Texture2D::Create(image->Data, metadata);
     }
 
-    auto TextureLoader::LoadTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::LoadTextureFromMemory(ReadOnlySpan<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
         auto image = LoadImageFromMemory(data);
         if (!image) {
@@ -68,7 +68,7 @@ namespace Fussion {
         UNIMPLEMENTED;
     }
 
-    auto TextureLoader::LoadHDRImageFromMemory(std::span<u8> data) -> Maybe<FloatImage>
+    auto TextureLoader::LoadHDRImageFromMemory(ReadOnlySpan<u8> data) -> Maybe<FloatImage>
     {
         FloatImage image {};
         int actual_channels_on_image, w, h;
@@ -76,7 +76,7 @@ namespace Fussion {
         stbi_hdr_to_ldr_gamma(2.2f);
         stbi_hdr_to_ldr_scale(1.0f);
         stbi_set_flip_vertically_on_load(true);
-        f32* image_data = stbi_loadf_from_memory(data.data(), CAST(int, data.size_bytes()), &w, &h, &actual_channels_on_image, 4);
+        f32* image_data = stbi_loadf_from_memory(data.DataPtr(), CAST(int, data.SizeInBytes()), &w, &h, &actual_channels_on_image, 4);
         LOG_INFOF("Actual channels: {}", actual_channels_on_image);
         if (image_data == nullptr) {
             LOG_ERRORF("Failed to load image: {}", stbi_failure_reason());
@@ -100,7 +100,7 @@ namespace Fussion {
         return LoadHDRImageFromMemory(*data);
     }
 
-    auto TextureLoader::LoadHDRTextureFromMemory(std::span<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::LoadHDRTextureFromMemory(ReadOnlySpan<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
         auto image = LoadHDRImageFromMemory(data);
         if (!image) {

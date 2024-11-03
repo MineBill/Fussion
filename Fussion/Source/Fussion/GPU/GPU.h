@@ -5,6 +5,7 @@
 #include "Fussion/Math/Vector3.h"
 #include <Fussion/Core/Maybe.h>
 #include <Fussion/Core/Result.h>
+#include <Fussion/Core/Span.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/GPU/Enums.h>
 #include <Fussion/Window.h>
@@ -466,11 +467,11 @@ namespace Fussion::GPU {
         std::vector<VertexAttribute> Attributes {};
 
         /// @param attributes The list of attributes which comprise a single vertex.
-        static VertexBufferLayout Create(std::span<VertexAttribute> attributes)
+        static VertexBufferLayout Create(ReadOnlySpan<VertexAttribute> attributes)
         {
             VertexBufferLayout self;
             u32 offset = 0;
-            for (auto& attr : attributes) {
+            for (auto attr : attributes) {
                 attr.Offset = offset;
                 self.Attributes.push_back(attr);
 
@@ -782,9 +783,9 @@ namespace Fussion::GPU {
         void WriteBuffer(Buffer const& buffer, u64 offset, void const* data, size_t size) const;
 
         template<typename T>
-        void WriteBuffer(Buffer const& buffer, u64 offset, std::span<T> const& data) const
+        void WriteBuffer(Buffer const& buffer, u64 offset, ReadOnlySpan<T> data) const
         {
-            WriteBuffer(buffer, offset, data.data(), data.size_bytes());
+            WriteBuffer(buffer, offset, data.DataPtr(), data.SizeInBytes());
         }
 
         template<typename T>

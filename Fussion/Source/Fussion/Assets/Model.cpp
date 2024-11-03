@@ -22,7 +22,7 @@ namespace Fussion {
             .Size = CAST(u32, Vertices.size() * sizeof(Vertex)),
         };
         VertexBuffer = device.CreateBuffer(vertex_spec);
-        device.WriteBuffer(VertexBuffer, 0, std::span { Vertices });
+        device.WriteBuffer(VertexBuffer, 0, Vertices);
 
         auto index_spec = GPU::BufferSpec {
             .Label = "Index Vertex Buffer"sv,
@@ -30,7 +30,7 @@ namespace Fussion {
             .Size = CAST(u32, Indices.size() * sizeof(u32)),
         };
         IndexBuffer = device.CreateBuffer(index_spec);
-        device.WriteBuffer(IndexBuffer, 0, std::span { Indices });
+        device.WriteBuffer(IndexBuffer, 0, Indices);
 
         IndexCount = CAST(u32, Indices.size());
 
