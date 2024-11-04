@@ -291,7 +291,6 @@ namespace EUI {
         using ResultType = std::invoke_result_t<Func>;
 
         bool opened = ImGuiStyleBuilder()
-                          .With(ImGuiCol_PopupBg, Color::Orange)
                           .Do([&] {
                               return ImGui::BeginPopupModal(title.data(), params.Opened, params.Flags);
                           });

@@ -33,13 +33,13 @@ namespace Fussion {
     {
 
 #ifdef OS_LINUX
-        if (auto protocolOverride = std::getenv("FSN_LINUX_X11"); protocolOverride) {
-            LOG_INFO("FSN_LINUX_X11 enabled");
+        if (System::GetSystemInfo().WindowingSystem == System::WindowingSystem::X11) {
             glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
         }
 #endif
 
         if (glfwInit() != GLFW_TRUE) {
+            LOG_ERROR("Failed to initialize GLFW");
             exit(1);
         }
 

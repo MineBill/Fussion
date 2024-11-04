@@ -91,7 +91,7 @@ namespace Fussion::Dialogs {
 
             auto requestProxy = m_Connection->create_object_proxy("org.freedesktop.portal.Desktop", responsePath);
             auto request = requestProxy->create_signal<OpenFileResponseFn>("org.freedesktop.portal.Request", "Response");
-            request->connect([this, &files](u32 response, std::map<std::string, DBus::Variant> data) {
+            (void)request->connect([this, &files](u32 response, std::map<std::string, DBus::Variant> data) {
                 if (response == 0) {
                     if (data.contains("uris")) {
                         for (auto const& file : data["uris"].to_vector<std::string>()) {

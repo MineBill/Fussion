@@ -56,6 +56,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <assert.h>
 #include <stdlib.h>
 #if WGPU_TARGET == WGPU_TARGET_MACOS
 #    define GLFW_EXPOSE_NATIVE_COCOA
@@ -91,8 +92,8 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window)
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
     }
 #elif WGPU_TARGET == WGPU_TARGET_LINUX
-    const char* x11 = getenv("FSN_LINUX_X11");
-    if (x11 != NULL) {
+    int plat = glfwGetPlatform();
+    if (plat == GLFW_PLATFORM_X11) {
         Display* x11_display = glfwGetX11Display();
         Window x11_window = glfwGetX11Window(window);
 
@@ -107,7 +108,8 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window)
         surfaceDescriptor.label = NULL;
 
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
-    } else {
+    }
+    if (plat == GLFW_PLATFORM_WAYLAND) {
         struct wl_display* wayland_display = glfwGetWaylandDisplay();
         struct wl_surface* wayland_surface = glfwGetWaylandWindow(window);
 
@@ -123,6 +125,7 @@ WGPUSurface glfwGetWGPUSurface(WGPUInstance instance, GLFWwindow* window)
 
         return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
     }
+    assert(0 && "Unknown platform");
 #elif WGPU_TARGET == WGPU_TARGET_WINDOWS
     {
         HWND hwnd = glfwGetWin32Window(window);

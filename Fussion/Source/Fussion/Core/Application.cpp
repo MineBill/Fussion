@@ -4,6 +4,7 @@
 #include "Fussion/OS/Clock.h"
 #include "Fussion/Rendering/Renderer.h"
 #include "Fussion/Scene/Components/BaseComponents.h"
+#include "OS/System.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Time.h"
 
@@ -37,6 +38,7 @@ namespace Fussion {
     void Application::Run()
     {
         ReflectionRegistry::Register();
+        System::Initialize();
 
         LOG_DEBUG("Initializing application");
         s_Instance = this;

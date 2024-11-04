@@ -63,6 +63,8 @@ add_executable(Editor
     Source/Undo.cpp
     Source/Undo.h
     Source/main.cpp
+    Source/EditorWindows/EngineInfoWindow.cpp
+    Source/EditorWindows/EngineInfoWindow.h
 )
 
 SetTargetWarnings(Editor ON "" "" "")

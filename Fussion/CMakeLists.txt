@@ -75,6 +75,7 @@ add_library(Fussion STATIC
     Source/Fussion/Reflection/PrivateReflection.h
     Source/Fussion/Reflection/Attributes.h
     Source/Fussion/OS/System.h
+    Source/Fussion/OS/System.cpp
     Source/Fussion/OS/FileWatcher.h
     Source/Fussion/OS/FileSystem.h
     Source/Fussion/OS/FileSystem.cpp

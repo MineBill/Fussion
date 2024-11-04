@@ -301,7 +301,7 @@ void ProjectCreatorLayer::AddProject(std::filesystem::path const& path)
 
 void ProjectCreatorLayer::SaveProjects() const
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
+    auto projects_location = System::GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
 
     YamlSerializer s;
     s.Initialize();
@@ -312,7 +312,7 @@ void ProjectCreatorLayer::SaveProjects() const
 
 void ProjectCreatorLayer::LoadProjects()
 {
-    auto projects_location = GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
+    auto projects_location = System::GetKnownFolder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
 
     if (auto file = FileSystem::ReadEntireFile(projects_location)) {
         YamlDeserializer ds(*file);

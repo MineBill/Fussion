@@ -39,7 +39,7 @@ Editor::~Editor() = default;
 
 void Editor::OnStart()
 {
-    Application::Self()->GetWindow().SetTitle(fmt::format("Fussion - {}", Project::Name()));
+    Application::Self()->GetWindow().SetTitle(fmt::format("Fussion Editor - {}", Project::Name()));
     Application::Self()->GetWindow().Maximize();
 
     ZoneScoped;
@@ -51,6 +51,7 @@ void Editor::OnStart()
     m_ContentBrowser = MakePtr<ContentBrowserWindow>(this);
     m_AssetRegistryViewer = MakePtr<AssetRegistryViewer>(this);
     m_RendererReport = MakePtr<RendererReport>(this);
+    m_EngineInfoWindow = MakePtr<EngineInfoWindow>(this);
 
     ScriptingEngine::Self().CompileGameAssembly(Project::ScriptsFolderPath());
     FileSystem::WriteEntireFile(Project::ScriptsFolderPath() / "as.predefined", ScriptingEngine::Self().DumpCurrentTypes().str());
@@ -86,6 +87,9 @@ void Editor::OnStart()
 
     m_ScriptsInspector->OnStart();
     m_ScriptsInspector->Hide();
+
+    m_EngineInfoWindow->OnStart();
+    m_EngineInfoWindow->Hide();
 
     OnBeginPlay += [this] {
         LOG_DEBUG("On Begin Play");
@@ -244,12 +248,18 @@ void Editor::OnUpdate(f32 delta)
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Extra")) {
-            ImGui::Checkbox("Demo Window", &show_demo_window);
+        if (ImGui::BeginMenu("Editor")) {
             if (ImGui::MenuItem("Save Layout")) {
                 ImGui::SaveIniSettingsToDisk("Assets/EditorLayout.ini");
             }
+            ImGui::EndMenu();
+        }
 
+        if (ImGui::BeginMenu("Extra")) {
+            ImGui::Checkbox("Demo Window", &show_demo_window);
+            if (ImGui::MenuItem("Engine Info")) {
+                m_EngineInfoWindow->Show();
+            }
             ImGui::EndMenu();
         }
     }
@@ -353,6 +363,7 @@ void Editor::OnUpdate(f32 delta)
     m_ScriptsInspector->OnDraw();
     m_ContentBrowser->OnDraw();
     m_RendererReport->OnDraw();
+    m_EngineInfoWindow->OnDraw();
 
     if (m_AssetRegistryViewer->IsVisible())
         m_AssetRegistryViewer->OnDraw();

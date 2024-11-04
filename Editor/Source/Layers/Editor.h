@@ -4,6 +4,7 @@
 #include "EditorWindows/AssetWindows/AssetWindow.h"
 #include "EditorWindows/ConsoleWindow.h"
 #include "EditorWindows/ContentBrowser.h"
+#include "EditorWindows/EngineInfoWindow.h"
 #include "EditorWindows/InspectorWindow.h"
 #include "EditorWindows/SceneTreeWindow.h"
 #include "EditorWindows/ScriptsInspector.h"
@@ -126,6 +127,7 @@ private:
 
     Ptr<AssetRegistryViewer> m_AssetRegistryViewer;
     Ptr<ScriptsInspector> m_ScriptsInspector;
+    Ptr<EngineInfoWindow> m_EngineInfoWindow;
 
     std::unordered_map<Fussion::AssetHandle, Ptr<AssetWindow>> m_AssetWindows {};
 
