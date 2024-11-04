@@ -9,13 +9,14 @@
 #include <cstring>
 
 namespace Fussion::Dialogs {
-    auto ShellExecute(std::string const& command) -> std::vector<std::string>
+    auto ShellExecute(std::string const& command) -> std::tuple<int, std::vector<std::string>>
     {
         auto file = popen(command.c_str(), "r");
-        defer(pclose(file));
 
         char buffer[1024] = {};
         fgets(buffer, sizeof(buffer), file);
+
+        auto ret = pclose(file);
 
         // Remove newline
         char* end = buffer;
@@ -35,7 +36,7 @@ namespace Fussion::Dialogs {
             }
         }
 
-        return strings;
+        return { WEXITSTATUS(ret), strings };
     }
 
     using OpenFileFn = DBus::Path(std::string, std::string, std::map<std::string, DBus::Variant>);
