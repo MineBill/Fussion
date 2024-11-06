@@ -103,6 +103,7 @@ namespace Fussion {
 }
 
 #define PANIC(...) Fussion::Panic(__VA_ARGS__)
+#define TODO() PANIC("TODO")
 #define UNIMPLEMENTED PANIC("This code path is unimplemented!")
 #define UNREACHABLE PANIC("Reached unreachable code!")
 

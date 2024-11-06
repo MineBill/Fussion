@@ -28,11 +28,14 @@ namespace Fussion::Dialogs {
     };
 
     enum class MessageType {
+        /// Supports Ok, YesNo and YesNoCancel
         Info,
+        /// Supports Ok, OkCancel, YesNo and YesNoCancel
         Warning,
-        Error,
-
+        /// Supports Ok, YesNo, YesNoCancel
         Question,
+        /// Supports Ok
+        Error,
     };
 
     struct MessageBox {

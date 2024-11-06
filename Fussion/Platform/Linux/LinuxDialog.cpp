@@ -119,7 +119,7 @@ namespace Fussion::Dialogs {
             return OpenFilePicker({}, false, true).at(0);
         }
 
-        virtual void ShowMessageBox(MessageBox box) = 0;
+        virtual MessageButton ShowMessageBox(MessageBox box) = 0;
 
         void SetPath(std::string const& path)
         {
@@ -138,17 +138,122 @@ namespace Fussion::Dialogs {
 
     class KDialog final : public LinuxDialog {
     public:
-        void ShowMessageBox(MessageBox box) override
+        virtual MessageButton ShowMessageBox(MessageBox box) override
         {
-            (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
+            std::string type = "--msgbox";
+
+            switch (box.Type) {
+            case MessageType::Info:
+                switch (box.Action) {
+                case MessageAction::Ok:
+                    [[fallthrough]];
+                case MessageAction::OkCancel:
+                    break;
+                case MessageAction::YesNo:
+                    type = "--yesno";
+                    break;
+                case MessageAction::YesNoCancel:
+                    type = "--yesnocancel";
+                    break;
+                }
+                break;
+            case MessageType::Warning:
+                type = "--continue-label OK --warning";
+                switch (box.Action) {
+                case MessageAction::Ok:
+                    type = "--sorry";
+                    break;
+                case MessageAction::OkCancel:
+                    type += "continuecancel";
+                    break;
+                case MessageAction::YesNo:
+                    type += "yesno";
+                    break;
+                case MessageAction::YesNoCancel:
+                    type += "yesnocancel";
+                    break;
+                }
+                break;
+            case MessageType::Error:
+                switch (box.Action) {
+                case MessageAction::Ok:
+                    type = "--error";
+                    break;
+                case MessageAction::OkCancel:
+                    [[fallthrough]];
+                case MessageAction::YesNo:
+                    [[fallthrough]];
+                case MessageAction::YesNoCancel:
+                    break;
+                }
+                break;
+            case MessageType::Question:
+                switch (box.Action) {
+                case MessageAction::Ok:
+                    [[fallthrough]];
+                case MessageAction::OkCancel:
+                    break;
+                case MessageAction::YesNo:
+                    type = "--yesno";
+                    break;
+                case MessageAction::YesNoCancel:
+                    type = "--yesnocancel";
+                    break;
+                }
+                break;
+            }
+            auto [ret, output] = ShellExecute(std::format(R"({} {} "{}" --title "{}")", m_Path, type, box.Message, box.Title));
+            (void)output;
+
+            switch (box.Action) {
+            case MessageAction::Ok:
+                if (ret == 0) {
+                    return MessageButton::Ok;
+                }
+                break;
+            case MessageAction::OkCancel:
+                switch (ret) {
+                case 0:
+                    return MessageButton::Ok;
+                case 1:
+                    return MessageButton::Cancel;
+                default:
+                    break;
+                }
+                break;
+            case MessageAction::YesNo:
+                switch (ret) {
+                case 0:
+                    return MessageButton::Yes;
+                case 1:
+                    return MessageButton::No;
+                default:
+                    break;
+                }
+                break;
+            case MessageAction::YesNoCancel:
+                switch (ret) {
+                case 0:
+                    return MessageButton::Yes;
+                case 1:
+                    return MessageButton::No;
+                case 2:
+                    return MessageButton::Cancel;
+                default:
+                    break;
+                }
+                break;
+            }
+            return MessageButton::Ok;
         }
     };
 
-    class Zenity : public LinuxDialog {
+    class Zenity final : public LinuxDialog {
     public:
-        void ShowMessageBox(MessageBox box) override
+        virtual MessageButton ShowMessageBox(MessageBox box) override
         {
-            (void)ShellExecute(std::format("{} --msgbox \"{}\"", m_Path, box.Message));
+            (void)box;
+            return MessageButton::Ok;
         }
     };
 
@@ -156,7 +261,7 @@ namespace Fussion::Dialogs {
         Ptr<LinuxDialog> g_NativeDialog { nullptr };
     }
 
-    auto get_binary_location(char const* name) -> std::optional<std::filesystem::path>
+    auto GetBinaryLocation(char const* name) -> std::optional<std::filesystem::path>
     {
         auto file = popen(std::format("/usr/bin/env whereis {}", name).c_str(), "r");
         defer(pclose(file));
@@ -177,8 +282,8 @@ namespace Fussion::Dialogs {
     {
         if (g_NativeDialog)
             return;
-        auto kdialog = get_binary_location("kdialog");
-        auto zenity = get_binary_location("zenity");
+        auto kdialog = GetBinaryLocation("kdialog");
+        auto zenity = GetBinaryLocation("zenity");
         LOG_DEBUGF("kdialog @ '{}'", kdialog.value_or("None").string());
         LOG_DEBUGF("zenity @ '{}'", zenity.value_or("None").string());
 
@@ -213,7 +318,7 @@ namespace Fussion::Dialogs {
         (void)data;
         CreateNativeDialog();
 
-        return MessageButton::Ok;
+        return g_NativeDialog->ShowMessageBox(data);
     }
 
     auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
