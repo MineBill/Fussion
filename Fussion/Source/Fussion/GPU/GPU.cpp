@@ -165,7 +165,7 @@ namespace Fussion::GPU {
     MipMapPipeline g_MipMapPipeline;
 
     // Utility function to retrieve the adapter without callbacks.
-    WGPUAdapter request_adapter_sync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
+    WGPUAdapter RequestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const* options)
     {
         struct UserData {
             WGPUAdapter adapter;
@@ -1436,7 +1436,7 @@ namespace Fussion::GPU {
             .compatibleSurface = CAST(WGPUSurface, surface.Handle),
             .powerPreference = ToWGPU(opt.PowerPreference),
         };
-        auto adapter = request_adapter_sync(CAST(WGPUInstance, Handle), &options);
+        auto adapter = RequestAdapterSync(CAST(WGPUInstance, Handle), &options);
         return Adapter { adapter };
     }
 
