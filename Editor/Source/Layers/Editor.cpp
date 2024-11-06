@@ -6,7 +6,6 @@
 #include "EditorWindows/AssetWindows/MaterialWindow.h"
 #include "EditorWindows/AssetWindows/Texture2DWindow.h"
 #include "EditorWindows/RendererReport.h"
-#include "Fussion/Math/BoundingBox.h"
 #include "Fussion/Serialization/YamlSerializer.h"
 
 #include <Fussion/Assets/AssetRef.h>
@@ -193,7 +192,7 @@ void Editor::OnUpdate(f32 delta)
         }
     } break;
     case PlayState::Paused:
-        break;
+        [[fallthrough]];
     case PlayState::Detached:
         break;
     }
@@ -413,8 +412,7 @@ void Editor::OnEvent(Event& event)
         if (m_SceneWindow->IsFocused() && !m_ViewportWindow->IsFocused() && e.Key == Keys::D && e.Mods.test(KeyMod::Control)) {
             for (auto const& [entity, nothing] : m_SceneWindow->GetSelection()) {
                 (void)nothing;
-                auto new_handle = m_ActiveScene->CloneEntity(entity);
-                if (new_handle != EntityHandle::Invalid) {
+                if (auto new_handle = m_ActiveScene->CloneEntity(entity); new_handle != EntityHandle::Invalid) {
                     auto* new_entity = m_ActiveScene->GetEntity(new_handle);
                     new_entity->Name += " (Clone)";
                 }
@@ -435,7 +433,7 @@ void Editor::OnEvent(Event& event)
                 Application::Self()->Quit();
                 break;
             case Dialogs::MessageButton::No:
-                break;
+                [[fallthrough]];
             case Dialogs::MessageButton::Cancel:
                 break;
             }
@@ -499,7 +497,9 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
         render_editor_view(m_ActiveScene);
     } break;
     case PlayState::Detached:
+        [[fallthrough]];
     case PlayState::Playing:
+        [[fallthrough]];
     case PlayState::Paused: {
         auto camera = m_PlayScene->FindFirstComponent<Camera>();
 
@@ -523,7 +523,9 @@ void Editor::SetPlayState(PlayState new_state)
             break;
         // noop
         case PlayState::Editing:
+            [[fallthrough]];
         case PlayState::Paused:
+            [[fallthrough]];
         case PlayState::Detached:
             return;
         }
@@ -561,9 +563,9 @@ void Editor::SetPlayState(PlayState new_state)
     case PlayState::Detached:
         switch (new_state) {
         case PlayState::Editing:
-            break;
+            [[fallthrough]];
         case PlayState::Playing:
-            break;
+            [[fallthrough]];
         case PlayState::Paused:
             break;
         case PlayState::Detached:
