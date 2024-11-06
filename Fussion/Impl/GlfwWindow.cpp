@@ -131,7 +131,7 @@ namespace Fussion {
                 me->m_EventCallback(event);
             } break;
             default:
-                UNREACHABLE;
+                UNREACHABLE();
             }
         });
 
@@ -167,7 +167,7 @@ namespace Fussion {
                 me->m_EventCallback(event);
             } break;
             default:
-                UNREACHABLE;
+                UNREACHABLE();
             }
         });
 

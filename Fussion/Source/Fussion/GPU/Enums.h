@@ -178,7 +178,7 @@ namespace Fussion::GPU {
         case Mat4:
             return 4 * 4;
         }
-        UNREACHABLE;
+        UNREACHABLE();
     }
 
     enum class VertexStepMode {

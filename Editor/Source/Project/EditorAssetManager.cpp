@@ -67,7 +67,7 @@ void WorkerPool::Work(s32 index)
         case AssetType::Texture2D:
             return MakeRef<Texture2D>();
         default:
-            UNREACHABLE;
+            UNREACHABLE();
         }
     };
 

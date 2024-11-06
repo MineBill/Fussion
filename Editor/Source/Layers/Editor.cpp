@@ -621,7 +621,7 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
         case Dialogs::MessageButton::Cancel:
             break;
         default:
-            UNIMPLEMENTED;
+            TODO();
         }
     } else {
         LoadScene();

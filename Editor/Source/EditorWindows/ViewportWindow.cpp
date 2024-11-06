@@ -33,7 +33,7 @@ ImGuizmo::MODE GizmoSpaceToImGuizmo(ViewportWindow::GizmoSpace space)
     case ViewportWindow::GizmoSpace::World:
         return ImGuizmo::WORLD;
     }
-    UNREACHABLE;
+    UNREACHABLE();
 }
 
 ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
@@ -46,7 +46,7 @@ ImGuizmo::OPERATION GizmoModeToImGuizmo(ViewportWindow::GizmoMode mode)
     case ViewportWindow::GizmoMode::Scale:
         return ImGuizmo::SCALE;
     }
-    UNREACHABLE;
+    UNREACHABLE();
 }
 
 void ViewportWindow::RenderStats() const

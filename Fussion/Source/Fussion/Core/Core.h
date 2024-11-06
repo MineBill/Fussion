@@ -49,7 +49,7 @@ namespace Fussion {
     // Panic functions!
     // Panic is implemented as a function to take advantage of the [[noreturn]] attribute
     // and make compilers/tools shut up about not returning from a function when using
-    // the UNREACHABLE macro(which panics with a message).
+    // the UNREACHABLE() macro(which panics with a message).
     // Give this code:
     /*
      * int ConvertFromEnum(EnumType arg) {
@@ -61,7 +61,7 @@ namespace Fussion {
      *     default:
      *     break;
      *     }
-     *     UNREACHABLE;
+     *     UNREACHABLE();
      * }
      *
      * In this case, compilers will warn about the missing return, but we know that will never
@@ -104,8 +104,7 @@ namespace Fussion {
 
 #define PANIC(...) Fussion::Panic(__VA_ARGS__)
 #define TODO() PANIC("TODO")
-#define UNIMPLEMENTED PANIC("This code path is unimplemented!")
-#define UNREACHABLE PANIC("Reached unreachable code!")
+#define UNREACHABLE() PANIC("Reached unreachable code!")
 
 #define DEFER_1(x, y) x##y
 #define DEFER_2(x, y) DEFER_1(x, y)

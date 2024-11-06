@@ -65,7 +65,7 @@ namespace Fussion {
     {
         (void)texture;
         (void)path;
-        UNIMPLEMENTED;
+        TODO();
     }
 
     auto TextureLoader::LoadHDRImageFromMemory(ReadOnlySpan<u8> data) -> Maybe<FloatImage>

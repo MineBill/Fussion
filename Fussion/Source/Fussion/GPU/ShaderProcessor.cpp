@@ -148,7 +148,7 @@ namespace Fussion::GPU {
                 //     }
                 //     break;
             default:
-                UNIMPLEMENTED;
+                TODO();
             }
         } else {
             switch (typeReflection->getScalarType()) { // NOLINT(clang-diagnostic-switch-enum)
@@ -157,10 +157,10 @@ namespace Fussion::GPU {
             case slang::TypeReflection::Float32:
                 return ElementType::Float;
             default:
-                UNIMPLEMENTED;
+                TODO();
             }
         }
-        UNREACHABLE;
+        UNREACHABLE();
     }
 
     ShaderProcessor::ShaderMetadata ReflectSlang(
@@ -364,9 +364,9 @@ namespace Fussion::GPU {
                 };
                 break;
             case TypeReflection::Kind::ShaderStorageBuffer:
-                UNIMPLEMENTED;
+                TODO();
             default:
-                UNIMPLEMENTED;
+                TODO();
             }
             metadata.Uniforms[(u32)set][CAST(size_t, index)] = resourceUsage;
         }
