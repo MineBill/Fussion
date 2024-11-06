@@ -13,6 +13,8 @@
 
 #include <imgui_internal.h>
 
+#define PADDED(x, y) ImGui::SetCursorPos(ImGui::GetCursorPos() + Vector2(x, y));
+
 using namespace Fussion;
 
 void ProjectCreatorLayer::OnStart()
@@ -44,200 +46,220 @@ void ProjectCreatorLayer::OnUpdate(f32 delta)
         }
     } request;
 
-    EUI::Window("Window", [&] {
-        ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::RegularHuge]);
-        ImGuiH::Text("Project Creator");
-        ImGui::PopFont();
+    EUI::Window(
+        "Window",
+        [&] {
+            ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::RegularHuge]);
+            ImGuiH::Text("Project Creator");
+            ImGui::PopFont();
 
-        ImGui::Separator();
+            ImGui::Separator();
 
-        constexpr auto width = 150;
-        auto avail_width = ImGui::GetContentRegionAvail().x;
+            constexpr auto width = 150;
+            auto avail_width = ImGui::GetContentRegionAvail().x;
 
 #pragma region Side Panel Buttons
-        ImGui::BeginChild("Buttons", Vector2 { width, 0 }, 0, ImGuiWindowFlags_NoSavedSettings);
+            ImGui::BeginChild("Buttons", Vector2 { width, 0 }, 0, ImGuiWindowFlags_NoSavedSettings);
 
-        constexpr auto padding = 20.f;
-        constexpr auto button_width = width - padding;
-        ImGui::SetCursorPosX(padding / 2.f);
-        ImGui::SetCursorPosY(padding / 2.f);
-        EUI::Button("New", [&] {
-            m_OpenNewProjectPopup = true;
-        },
-            { .Style = ButtonStyleProjectCreator, .Size = Vector2 { button_width, 0 } });
+            constexpr auto padding = 20.f;
+            constexpr auto button_width = width - padding;
+            ImGui::SetCursorPosX(padding / 2.f);
+            ImGui::SetCursorPosY(padding / 2.f);
+            EUI::Button(
+                "New",
+                [&] {
+                    m_OpenNewProjectPopup = true;
+                },
+                { .Style = ButtonStyleProjectCreator, .Size = Vector2 { button_width, 0 } }
+            );
 
-        ImGui::SetCursorPosX(padding / 2.f);
-        EUI::Button("Import", [&] {
-            m_OpenImportProjectPopup = true;
-        },
-            { .Style = ButtonStyleProjectCreator, .Size = Vector2 { button_width, 0 } });
-        ImGui::EndChild();
+            ImGui::SetCursorPosX(padding / 2.f);
+            EUI::Button(
+                "Import",
+                [&] {
+                    m_OpenImportProjectPopup = true;
+                },
+                { .Style = ButtonStyleProjectCreator, .Size = Vector2 { button_width, 0 } }
+            );
+            ImGui::EndChild();
 #pragma endregion
 
-        ImGui::SameLine();
+            ImGui::SameLine();
 
-        ImGui::BeginChild("Content", Vector2 { avail_width - width - ImGui::GetStyle().FramePadding.x * 2, 0 }, ImGuiChildFlags_Border);
-        if (ImGui::BeginTabBar("MyTabBar")) {
+            ImGui::BeginChild("Content", Vector2 { avail_width - width - ImGui::GetStyle().FramePadding.x * 2, 0 }, ImGuiChildFlags_Border);
+            if (ImGui::BeginTabBar("MyTabBar")) {
 
-            if (ImGui::BeginTabItem("Projects")) {
-                ImGui::BeginChild("scrolling_region");
+                if (ImGui::BeginTabItem("Projects")) {
+                    ImGui::BeginChild("scrolling_region");
 
-                for (auto const& project : m_Projects) {
-                    auto list = ImGui::GetWindowDrawList();
-                    list->ChannelsSplit(2);
-                    list->ChannelsSetCurrent(1);
-#define PADDED(x, y) ImGui::SetCursorPos(ImGui::GetCursorPos() + Vector2(x, y));
+                    for (auto const& project : m_Projects) {
+                        auto list = ImGui::GetWindowDrawList();
+                        list->ChannelsSplit(2);
+                        list->ChannelsSetCurrent(1);
 
-                    auto start = ImGui::GetCursorScreenPos();
+                        auto start = ImGui::GetCursorScreenPos();
 
-                    ImGui::BeginGroup();
-                    PADDED(5, 5);
+                        ImGui::BeginGroup();
+                        PADDED(5, 5);
 
-                    EUI::WithEditorFont(EditorFont::RegularBig, [&] {
-                        ImGui::TextUnformatted(project.Name.c_str());
+                        EUI::WithEditorFont(EditorFont::RegularBig, [&] {
+                            ImGui::TextUnformatted(project.Name.c_str());
+                        });
+
+                        PADDED(5, 5);
+                        EUI::WithEditorFont(EditorFont::RegularSmall, [&] {
+                            ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
+                            defer(ImGui::PopStyleColor());
+
+                            ImGui::TextUnformatted(project.Location.string().c_str());
+                        });
+
+                        ImGui::EndGroup();
+
+                        auto end = ImGui::GetCursorScreenPos();
+                        end.x += ImGui::GetContentRegionAvail().x - 5.f;
+
+                        list->ChannelsSetCurrent(0);
+
+                        ImGui::SetCursorScreenPos(start);
+                        ImGui::Dummy(end - start);
+                        if (ImGui::IsItemHovered() || ImGui::IsItemFocused()) {
+                            list->AddRectFilled(start, end, 0xFF383838, 5);
+                        }
+                        if (ImGui::IsItemClicked()) {
+                            request.Set(project.Location);
+                        }
+                        list->ChannelsMerge();
+
+                        ImGui::Separator();
+                        ImGui::Spacing();
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
+            ImGui::EndChild();
+
+            if (m_OpenNewProjectPopup) {
+                ImGui::OpenPopup("New Project");
+                m_OpenNewProjectPopup = false;
+            }
+
+            if (m_OpenImportProjectPopup) {
+                ImGui::OpenPopup("Import Project");
+                m_OpenImportProjectPopup = false;
+            }
+
+            auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            auto size = Vector2(viewport->Size) / 2.0f;
+            ImGui::SetNextWindowSize(size);
+            ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
+            EUI::ModalWindow(
+                "New Project",
+                [&] {
+                    ImGui::Separator();
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(10, 10));
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, Color::Transparent);
+                    ImGui::BeginChild("awd", { 0, size.y - 75 });
+                    static std::string project_name;
+                    if (EUI::Property("Project Name", &project_name)) {
+                        m_ProjectNameValidated = !project_name.empty() && !StringUtils::IsWhitespace(project_name);
+                    }
+
+                    static std::string project_folder;
+
+                    EUI::Property("Project Folder", [] {
+                        EUI::Button("Select", [] {
+                            project_folder = Dialogs::ShowDirectoryPicker().string();
+                        },
+                                    { .Style = ButtonStyleViewportButton });
+
+                        ImGui::SameLine();
+
+                        ImGui::InputText("", &project_folder);
                     });
 
-                    PADDED(5, 5);
-                    EUI::WithEditorFont(EditorFont::RegularSmall, [&] {
-                        ImGui::PushStyleColor(ImGuiCol_Text, Color::Gray);
-                        defer(ImGui::PopStyleColor());
+                    ImGui::Spacing();
 
-                        ImGui::TextUnformatted(project.Location.string().c_str());
-                    });
-
-                    ImGui::EndGroup();
-
-                    auto end = ImGui::GetCursorScreenPos();
-                    end.x += ImGui::GetContentRegionAvail().x - 5.f;
-
-                    list->ChannelsSetCurrent(0);
-
-                    ImGui::SetCursorScreenPos(start);
-                    ImGui::Dummy(end - start);
-                    if (ImGui::IsItemHovered() || ImGui::IsItemFocused()) {
-                        list->AddRectFilled(start, end, 0xFF383838, 5);
+                    if (!m_ProjectNameValidated || project_folder.empty()) {
+                        ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::Bold]);
+                        defer(ImGui::PopFont());
+                        ImGui::Text("Invalid project name and/or folder.");
                     }
-                    if (ImGui::IsItemClicked()) {
-                        request.Set(project.Location);
-                    }
-                    list->ChannelsMerge();
+
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
 
                     ImGui::Separator();
-                    ImGui::Spacing();
-                }
-                ImGui::EndChild();
 
-                ImGui::EndTabItem();
-            }
+                    EUI::Button(
+                        "Cancel",
+                        [] {
+                            ImGui::CloseCurrentPopup();
+                        },
+                        { .Style = ButtonStyleProjectCreator }
+                    );
+                    ImGui::SameLine();
 
-            ImGui::EndTabBar();
-        }
-        ImGui::EndChild();
+                    if (!m_ProjectNameValidated)
+                        ImGui::BeginDisabled();
 
-        if (m_OpenNewProjectPopup) {
-            ImGui::OpenPopup("New Project");
-            m_OpenNewProjectPopup = false;
-        }
+                    EUI::Button(
+                        "Create",
+                        [&] {
+                            auto path = EditorApplication::CreateProject(fs::path(project_folder), project_name);
+                            AddProject(path);
 
-        if (m_OpenImportProjectPopup) {
-            ImGui::OpenPopup("Import Project");
-            m_OpenImportProjectPopup = false;
-        }
+                            request.Set(path);
+                            ImGui::CloseCurrentPopup();
+                        },
+                        { .Style = ButtonStyleProjectCreator }
+                    );
 
-        auto flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        auto size = Vector2(viewport->Size) / 2.0f;
-        ImGui::SetNextWindowSize(size);
-        ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::ModalWindow("New Project", [&] {
-            ImGui::Separator();
-
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2(10, 10));
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, Color::Transparent);
-            ImGui::BeginChild("awd", { 0, size.y - 75 });
-            static std::string project_name;
-            if (EUI::Property("Project Name", &project_name)) {
-                m_ProjectNameValidated = !project_name.empty() && !StringUtils::IsWhitespace(project_name);
-            }
-
-            static std::string project_folder;
-
-            EUI::Property("Project Folder", [] {
-                EUI::Button("Select", [] {
-                    project_folder = Dialogs::ShowDirectoryPicker().string();
+                    if (!m_ProjectNameValidated)
+                        ImGui::EndDisabled();
                 },
-                    { .Style = ButtonStyleViewportButton });
+                { .Flags = flags }
+            );
 
-                ImGui::SameLine();
+            ImGui::SetNextWindowSize(size);
+            ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
+            EUI::ModalWindow(
+                "Import Project",
+                [&] {
+                    static std::string project_path;
+                    EUI::Property("Project Folder", [] {
+                        EUI::Button("Select", [] {
+                            auto file = Dialogs::ShowFilePicker(Dialogs::FilePickerFilter {
+                                .name = "Project File",
+                                .file_patterns = { "*.fsnproj" } });
 
-                ImGui::InputText("", &project_folder);
-            });
+                            project_path = file[0].string();
+                        },
+                                    { .Style = ButtonStyleViewportButton });
+                        ImGui::SameLine();
+                        ImGui::InputText("", &project_path);
+                    });
 
-            ImGui::Spacing();
-
-            if (!m_ProjectNameValidated || project_folder.empty()) {
-                ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::Bold]);
-                defer(ImGui::PopFont());
-                ImGui::Text("Invalid project name and/or folder.");
-            }
-
-            ImGui::EndChild();
-            ImGui::PopStyleVar();
-            ImGui::PopStyleColor();
-
-            ImGui::Separator();
-
-            EUI::Button("Cancel", [] {
-                ImGui::CloseCurrentPopup();
-            },
-                { .Style = ButtonStyleProjectCreator });
-            ImGui::SameLine();
-
-            if (!m_ProjectNameValidated)
-                ImGui::BeginDisabled();
-
-            EUI::Button("Create", [&] {
-                auto path = EditorApplication::CreateProject(fs::path(project_folder), project_name);
-                AddProject(path);
-
-                request.Set(path);
-                ImGui::CloseCurrentPopup();
-            },
-                { .Style = ButtonStyleProjectCreator });
-
-            if (!m_ProjectNameValidated)
-                ImGui::EndDisabled();
-        },
-            { .Flags = flags });
-
-        ImGui::SetNextWindowSize(size);
-        ImGui::SetNextWindowPos(Vector2(viewport->WorkPos) + size / 2.0f);
-        EUI::ModalWindow("Import Project", [&] {
-            static std::string project_path;
-            EUI::Property("Project Folder", [] {
-                EUI::Button("Select", [] {
-                    auto file = Dialogs::ShowFilePicker(Dialogs::FilePickerFilter {
-                        .name = "Project File",
-                        .file_patterns = { "*.fsnproj" } });
-
-                    project_path = file[0].string();
+                    if (ImGui::Button("Cancel")) {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Import")) {
+                        AddProject(project_path);
+                        ImGui::CloseCurrentPopup();
+                    }
                 },
-                    { .Style = ButtonStyleViewportButton });
-                ImGui::SameLine();
-                ImGui::InputText("", &project_path);
-            });
-
-            if (ImGui::Button("Cancel")) {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Import")) {
-                AddProject(project_path);
-                ImGui::CloseCurrentPopup();
-            }
+                { .Flags = flags }
+            );
         },
-            { .Flags = flags });
-    },
-        { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {}, .UseChild = false });
+        { .Style = WindowStyleCreator, .Flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings, .Size = {}, .UseChild = false }
+    );
 
     if (request.Requested) {
         EditorApplication::CreateEditorFromProjectCreator(request.Path);

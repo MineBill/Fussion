@@ -139,15 +139,17 @@ namespace Fussion::GPU {
             //       other race condition fun stuff.
 
             for (u32 i = 1; i < m_TargetMipLevels; ++i) {
-                m_Views.emplace_back(m_RenderTexture.CreateView({ .Label = "View"sv,
-                    .Usage = m_RenderTexture.Spec.Usage,
-                    .Dimension = TextureViewDimension::D2,
-                    .Format = m_RenderTexture.Spec.Format,
-                    .BaseMipLevel = i,
-                    .MipLevelCount = 1,
-                    .BaseArrayLayer = 0,
-                    .ArrayLayerCount = 1,
-                    .Aspect = m_RenderTexture.Spec.Aspect }));
+                m_Views.emplace_back(m_RenderTexture.CreateView(
+                    { .Label = "View"sv,
+                      .Usage = m_RenderTexture.Spec.Usage,
+                      .Dimension = TextureViewDimension::D2,
+                      .Format = m_RenderTexture.Spec.Format,
+                      .BaseMipLevel = i,
+                      .MipLevelCount = 1,
+                      .BaseArrayLayer = 0,
+                      .ArrayLayerCount = 1,
+                      .Aspect = m_RenderTexture.Spec.Aspect }
+                ));
             }
         }
 
@@ -174,7 +176,7 @@ namespace Fussion::GPU {
         wgpuInstanceRequestAdapter(
             instance, options,
             [](WGPURequestAdapterStatus status, WGPUAdapter adapter, char const* message,
-                void* p_user_data) {
+               void* p_user_data) {
                 auto user_data = static_cast<UserData*>(p_user_data);
 
                 if (status == WGPURequestAdapterStatus_Success) {
@@ -184,7 +186,8 @@ namespace Fussion::GPU {
                 }
                 user_data->request_ended = true;
             },
-            &user_data);
+            &user_data
+        );
 
         return user_data.adapter;
     }
@@ -200,7 +203,7 @@ namespace Fussion::GPU {
         wgpuAdapterRequestDevice(
             adapter, descriptor,
             [](WGPURequestDeviceStatus status, WGPUDevice device, char const* message,
-                void* p_user_data) {
+               void* p_user_data) {
                 auto user_data = static_cast<UserData*>(p_user_data);
 
                 if (status == WGPURequestDeviceStatus_Success) {
@@ -210,7 +213,8 @@ namespace Fussion::GPU {
                 }
                 user_data->request_ended = true;
             },
-            &user_data);
+            &user_data
+        );
 
         return user_data.device;
     }
@@ -458,8 +462,9 @@ namespace Fussion::GPU {
             As<WGPURenderPassEncoder>(),
             index,
             CAST(WGPUBindGroup, group.Handle),
-            0,        // TODO: Make configurable
-            nullptr); // TODO: Make configurable
+            0, // TODO: Make configurable
+            nullptr // TODO: Make configurable
+        );
     }
 
     void RenderPassEncoder::SetVertexBuffer(u32 slot, BufferSlice const& slice) const
@@ -490,7 +495,8 @@ namespace Fussion::GPU {
             instances.stop,
             indices.start,
             0,
-            instances.start);
+            instances.start
+        );
     }
 
     void RenderPassEncoder::BeginPipelineStatisticsQuery(QuerySet const& set, u32 index) const
@@ -613,7 +619,8 @@ namespace Fussion::GPU {
         u32 from_mip_level,
         u32 to_mip_level,
         u32 from_array_index,
-        u32 to_array_index) const
+        u32 to_array_index
+    ) const
     {
         WGPUImageCopyTexture source {
             .nextInChain = nullptr,
@@ -642,14 +649,16 @@ namespace Fussion::GPU {
         QuerySet const& set,
         Range<u32> query_range,
         Buffer const& destination,
-        u64 destination_offset) const
+        u64 destination_offset
+    ) const
     {
         wgpuCommandEncoderResolveQuerySet(
             CAST(WGPUCommandEncoder, handle),
             set.As<WGPUQuerySet>(),
             query_range.start, query_range.count(),
             destination.As<WGPUBuffer>(),
-            destination_offset);
+            destination_offset
+        );
     }
 
     void CommandEncoder::PushDebugGroup(String const& name) const
@@ -789,7 +798,7 @@ namespace Fussion::GPU {
                            },
                            [](auto&&) {},
                        },
-                entry.Resource);
+                       entry.Resource);
 
             return wgpu_entry;
         });
@@ -822,18 +831,17 @@ namespace Fussion::GPU {
                                    .hasDynamicOffset = buffer.HasDynamicOffset,
                                };
 
-                               wgpu_entry.buffer.type = std::visit(overloaded {
-                                                                       [&](BufferBindingType::Uniform const&) {
-                                                                           return WGPUBufferBindingType_Uniform;
-                                                                       },
-                                                                       [&](BufferBindingType::Storage const& storage) {
-                                                                           if (storage.ReadOnly) {
-                                                                               return WGPUBufferBindingType_ReadOnlyStorage;
-                                                                           }
-                                                                           return WGPUBufferBindingType_Storage;
-                                                                       },
-                                                                       [](auto&&) { return WGPUBufferBindingType_Undefined; } },
-                                   buffer.Type);
+                               wgpu_entry.buffer.type = std::visit(overloaded { [&](BufferBindingType::Uniform const&) {
+                                                                                   return WGPUBufferBindingType_Uniform;
+                                                                               },
+                                                                                [&](BufferBindingType::Storage const& storage) {
+                                                                                    if (storage.ReadOnly) {
+                                                                                        return WGPUBufferBindingType_ReadOnlyStorage;
+                                                                                    }
+                                                                                    return WGPUBufferBindingType_Storage;
+                                                                                },
+                                                                                [](auto&&) { return WGPUBufferBindingType_Undefined; } },
+                                                                   buffer.Type);
 
                                if (buffer.MinBindingSize) {
                                    wgpu_entry.buffer.minBindingSize = *buffer.MinBindingSize;
@@ -848,24 +856,23 @@ namespace Fussion::GPU {
                                    .viewDimension = ToWGPU(texture.ViewDimension),
                                    .multisampled = texture.MultiSampled,
                                };
-                               wgpu_entry.texture.sampleType = std::visit(overloaded {
-                                                                              [](TextureSampleType::Float const& flt) {
-                                                                                  if (flt.Filterable) {
-                                                                                      return WGPUTextureSampleType_Float;
-                                                                                  }
-                                                                                  return WGPUTextureSampleType_UnfilterableFloat;
-                                                                              },
-                                                                              [](TextureSampleType::Depth const&) {
-                                                                                  return WGPUTextureSampleType_Depth;
-                                                                              },
-                                                                              [](TextureSampleType::SInt const&) {
-                                                                                  return WGPUTextureSampleType_Sint;
-                                                                              },
-                                                                              [](TextureSampleType::UInt const&) {
-                                                                                  return WGPUTextureSampleType_Uint;
-                                                                              },
-                                                                              [](auto&&) { return WGPUTextureSampleType_Undefined; } },
-                                   texture.SampleType);
+                               wgpu_entry.texture.sampleType = std::visit(overloaded { [](TextureSampleType::Float const& flt) {
+                                                                                          if (flt.Filterable) {
+                                                                                              return WGPUTextureSampleType_Float;
+                                                                                          }
+                                                                                          return WGPUTextureSampleType_UnfilterableFloat;
+                                                                                      },
+                                                                                       [](TextureSampleType::Depth const&) {
+                                                                                           return WGPUTextureSampleType_Depth;
+                                                                                       },
+                                                                                       [](TextureSampleType::SInt const&) {
+                                                                                           return WGPUTextureSampleType_Sint;
+                                                                                       },
+                                                                                       [](TextureSampleType::UInt const&) {
+                                                                                           return WGPUTextureSampleType_Uint;
+                                                                                       },
+                                                                                       [](auto&&) { return WGPUTextureSampleType_Undefined; } },
+                                                                          texture.SampleType);
                            },
                            [&](BindingType::StorageTexture const& storage_texture) {
                                wgpu_entry.storageTexture = {
@@ -880,7 +887,7 @@ namespace Fussion::GPU {
                            },
                            [](auto&&) {},
                        },
-                entry.Type);
+                       entry.Type);
 
             return wgpu_entry;
         });
@@ -944,7 +951,7 @@ namespace Fussion::GPU {
                            extras.pipelineStatisticCount = pipeline_statistic_names.size();
                        },
                    },
-            spec.Type);
+                   spec.Type);
 
         auto set = wgpuDeviceCreateQuerySet(CAST(WGPUDevice, Handle), &desc);
         return QuerySet(set, spec);
@@ -989,7 +996,7 @@ namespace Fussion::GPU {
                                    },
                                    [](auto&&) {},
                                },
-            spec.Type);
+                               spec.Type);
 
         auto module = wgpuDeviceCreateShaderModule(CAST(WGPUDevice, Handle), &desc);
 
@@ -1191,7 +1198,8 @@ namespace Fussion::GPU {
         Vector2 const& origin,
         Vector2 const& size,
         u32 bytes_per_pixel,
-        u32 mip_level) const
+        u32 mip_level
+    ) const
     {
         WGPUImageCopyTexture copy_texture {
             .nextInChain = nullptr,

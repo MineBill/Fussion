@@ -1,13 +1,18 @@
 ---
+BreakAfterAttributes: Leave
+AlignAfterOpenBracket: BlockIndent
+AllowAllArgumentsOnNextLine: true
+BracedInitializerIndentWidth: 4
+BinPackArguments: true
 AlignEscapedNewlines: Left
 AlignTrailingComments:
-    Kind: Always
-    OverEmptyLines: 0
+  Kind: Always
+  OverEmptyLines: 0
 Cpp11BracedListStyle: false
 BasedOnStyle: WebKit
 BraceWrapping:
-    AfterFunction: true
-    SplitEmptyFunction: false
+  AfterFunction: true
+  SplitEmptyFunction: false
 BreakBeforeBraces: Custom
 BreakBeforeInheritanceComma: true
 BreakConstructorInitializers: BeforeComma

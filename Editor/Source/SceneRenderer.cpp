@@ -150,7 +150,8 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         sample = Vector3(
             random(generator) * 2.0 - 1.0,
             random(generator) * 2.0 - 1.0,
-            random(generator));
+            random(generator)
+        );
         sample.Normalize();
 
         auto scale = CAST(f32, i++) / 64.0f;
@@ -167,7 +168,8 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         noise = Vector4(
             random(generator) * 2.0 - 1.0,
             random(generator) * 2.0 - 1.0,
-            0.0, 1.0);
+            0.0, 1.0
+        );
     }
 
     Renderer::Device().WriteTexture(
@@ -176,7 +178,8 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         16 * sizeof(Vector4),
         Vector2::Zero,
         Vector2 { 4, 4 },
-        sizeof(Vector4));
+        sizeof(Vector4)
+    );
 
     Options = UniformBuffer<PostProcessing::SSAO>::Create(Renderer::Device(), "SSAO Options"sv);
 

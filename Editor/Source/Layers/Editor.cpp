@@ -290,10 +290,13 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSetCurrent(1);
 
         auto& style = EditorStyle::Style();
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Play], [this] {
-            SetPlayState(PlayState::Playing);
-        },
-            { .Size = Vector2 { height, height }, .Disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing });
+        EUI::ImageButton(
+            style.EditorIcons[EditorIcon::Play],
+            [this] {
+                SetPlayState(PlayState::Playing);
+            },
+            { .Size = Vector2 { height, height }, .Disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing }
+        );
 
         auto min = ImGui::GetItemRectMin();
 
@@ -301,24 +304,33 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Stop], [this] {
-            SetPlayState(PlayState::Editing);
-        },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
+        EUI::ImageButton(
+            style.EditorIcons[EditorIcon::Stop],
+            [this] {
+                SetPlayState(PlayState::Editing);
+            },
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+        );
 
         ImGui::SameLine();
 
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Pause], [this] {
-            SetPlayState(PlayState::Paused);
-        },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
+        EUI::ImageButton(
+            style.EditorIcons[EditorIcon::Pause],
+            [this] {
+                SetPlayState(PlayState::Paused);
+            },
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+        );
 
         ImGui::SameLine();
 
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [] {
-            ImGui::OpenPopup("Toolbar::Options");
-        },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing });
+        EUI::ImageButton(
+            style.EditorIcons[EditorIcon::Dots],
+            [] {
+                ImGui::OpenPopup("Toolbar::Options");
+            },
+            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+        );
 
         EUI::Popup("Toolbar::Options", [&] {
             if (ImGui::MenuItem("Detach")) {
@@ -339,7 +351,7 @@ void Editor::OnUpdate(f32 delta)
 
         list->ChannelsMerge();
     },
-        { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
+                { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
     if (state == PlayState::Playing) {
         ImGui::PopStyleColor();
     }
@@ -446,7 +458,8 @@ void Editor::OnEvent(Event& event)
 void Editor::OnDraw(GPU::CommandEncoder& encoder)
 {
     auto render_editor_view = [&](Ref<Scene> const& scene) {
-        m_SceneRenderer.Render(encoder,
+        m_SceneRenderer.Render(
+            encoder,
             {
                 .camera = RenderCamera {
                     .perspective = m_Camera.Perspective(),
@@ -459,11 +472,13 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
                 },
                 .scene = scene.get(),
             },
-            false);
+            false
+        );
     };
     auto render_game_view = [&](Camera const& camera) {
         auto entity = camera.GetOwner();
-        m_SceneRenderer.Render(encoder,
+        m_SceneRenderer.Render(
+            encoder,
             {
                 .camera = RenderCamera {
                     .perspective = camera.GetPerspective(),
@@ -476,7 +491,8 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
                 },
                 .scene = m_PlayScene.get(),
             },
-            true);
+            true
+        );
     };
     switch (m_PlayState) {
     case PlayState::Editing: {

@@ -51,7 +51,8 @@ namespace Fussion::Dialogs {
                                            char const* logger_name,
                                            SL_LogLocation const* location,
                                            SL_LogLevel const level,
-                                           char const* log_string) {
+                                           char const* log_string
+                                       ) {
                 (void)location;
                 switch (level) {
                 case SL_WARN:
@@ -327,7 +328,7 @@ namespace Fussion::Dialogs {
                                   .name = std::string(name),
                                   .file_patterns = supported_files,
                               },
-            allow_multiple);
+                              allow_multiple);
     }
 
     auto ShowFilePicker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>

@@ -61,10 +61,12 @@ namespace Fussion {
         });
 
         auto surface = instance.GetSurface(&window);
-        auto adapter = instance.GetAdapter(surface,
+        auto adapter = instance.GetAdapter(
+            surface,
             {
                 .PowerPreference = GPU::DevicePower::HighPerformance,
-            });
+            }
+        );
 
         GPU::DeviceSpec spec {
             .Label = String("Device"),
