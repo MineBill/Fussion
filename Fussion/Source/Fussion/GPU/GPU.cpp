@@ -190,7 +190,7 @@ namespace Fussion::GPU {
     }
 
     // Utility function to retrieve the device without callbacks.
-    WGPUDevice request_device_sync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor)
+    WGPUDevice RequestDeviceSync(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor)
     {
         struct UserData {
             WGPUDevice device;
@@ -1259,7 +1259,7 @@ namespace Fussion::GPU {
             },
         };
 
-        auto device = Device { request_device_sync(CAST(WGPUAdapter, Handle), &desc) };
+        auto device = Device { RequestDeviceSync(CAST(WGPUAdapter, Handle), &desc) };
 
         // TODO: Is there a better way to put this?
         g_MipMapPipeline.Initialize(device);
