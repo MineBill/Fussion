@@ -679,8 +679,7 @@ namespace Fussion::GPU {
     struct CommandEncoder {
         HandleT handle {};
 
-        [[nodiscard]]
-        auto BeginRendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
+        [[nodiscard]] auto BeginRendering(RenderPassSpec const& spec) const -> RenderPassEncoder;
         auto Finish() -> CommandBuffer;
 
         void CopyBufferToBuffer(Buffer const& from, u64 from_offset, Buffer const& to, u64 to_offset, u64 size) const;
@@ -836,13 +835,20 @@ namespace Fussion::GPU {
             Vector2 Size {};
         };
 
+        struct Capabilities {
+            std::vector<PresentMode> AvailablePresentModes {};
+            std::vector<TextureFormat> AvailableSurfaceFormats {};
+        };
+
         HandleT Handle {};
         TextureFormat Format {};
 
         void Release() const;
 
-        void Configure(Device const& device, Adapter adapter, Config const& config);
-        auto GetNextView() const -> Result<TextureView, Error>;
+        Capabilities GetCapabilities(Adapter adapter) const;
+        void Configure(Device const& device, TextureFormat surface_format, Config const& config);
+
+        [[nodiscard]] auto GetNextView() const -> Result<TextureView, Error>;
         void Present() const;
     };
 
@@ -857,7 +863,7 @@ namespace Fussion::GPU {
 
         void Release() const;
 
-        auto GetAdapter(Surface surface, AdapterOptions const& opt = {}) const -> Adapter;
+        auto GetAdapter(Surface const& surface, AdapterOptions const& opt = {}) const -> Adapter;
 
         // TODO: Make this take a reference.
         auto GetSurface(Window const* window) const -> Surface;

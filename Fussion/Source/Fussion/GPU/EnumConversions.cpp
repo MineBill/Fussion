@@ -503,7 +503,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto from_wgpu(WGPUErrorType type) -> ErrorType
+    auto FromWGPU(WGPUErrorType type) -> ErrorType
     {
         switch (type) {
             using enum ErrorType;
@@ -726,7 +726,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto from_wgpu(WGPUTextureFormat format) -> TextureFormat
+    auto FromWGPU(WGPUTextureFormat format) -> TextureFormat
     {
         switch (format) {
             using enum TextureFormat;
@@ -928,7 +928,7 @@ namespace Fussion::GPU {
         UNREACHABLE;
     }
 
-    auto from_wgpu(WGPUBufferMapState state) -> MapState
+    auto FromWGPU(WGPUBufferMapState state) -> MapState
     {
         switch (state) {
         case WGPUBufferMapState_Unmapped:
@@ -940,5 +940,22 @@ namespace Fussion::GPU {
         default:
             UNREACHABLE;
         }
+    }
+
+    auto FromWGPU(WGPUPresentMode mode) -> PresentMode
+    {
+        switch (mode) {
+        case WGPUPresentMode_Fifo:
+            return PresentMode::Fifo;
+        case WGPUPresentMode_FifoRelaxed:
+            return PresentMode::FifoRelaxed;
+        case WGPUPresentMode_Immediate:
+            return PresentMode::Immediate;
+        case WGPUPresentMode_Mailbox:
+            return PresentMode::Mailbox;
+        case WGPUPresentMode_Force32:
+            break;
+        }
+        UNREACHABLE;
     }
 }

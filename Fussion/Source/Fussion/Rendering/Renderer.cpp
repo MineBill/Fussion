@@ -45,6 +45,9 @@ namespace Fussion {
         GPU::Surface Surface {};
         bool HasPipelineStatistics {};
 
+        GPU::PresentMode PresentMode {};
+        GPU::TextureFormat SurfaceFormat {};
+
         IrradianceIBLGenerator IrradianceGenerator;
     } g_Data;
 
@@ -80,7 +83,32 @@ namespace Fussion {
 
         g_Data.WindowSize = window.Size();
 
-        surface.Configure(device, adapter, { .Mode = GPU::PresentMode::Fifo, .Size = g_Data.WindowSize });
+        auto caps = surface.GetCapabilities(adapter);
+        VERIFY(!caps.AvailableSurfaceFormats.empty());
+        g_Data.SurfaceFormat = caps.AvailableSurfaceFormats[0];
+
+        std::array present_modes {
+            GPU::PresentMode::Immediate,
+            GPU::PresentMode::FifoRelaxed,
+            GPU::PresentMode::Fifo,
+            GPU::PresentMode::Mailbox,
+        };
+
+        Maybe<GPU::PresentMode> present_mode;
+        for (auto const& mode : present_modes) {
+            if (std::ranges::contains(caps.AvailablePresentModes, mode)) {
+                present_mode = mode;
+                break;
+            }
+        }
+        g_Data.PresentMode = present_mode.ValueOr(caps.AvailablePresentModes[0]);
+        LOG_INFOF("Choosing '{}' present mode", magic_enum::enum_name(g_Data.PresentMode));
+
+        if (!std::ranges::contains(caps.AvailablePresentModes, GPU::PresentMode::Immediate)) {
+            g_Data.PresentMode = caps.AvailablePresentModes[0];
+        }
+
+        surface.Configure(device, g_Data.SurfaceFormat, { .Mode = g_Data.PresentMode, .Size = g_Data.WindowSize });
 
         g_Data.Device = device;
         g_Data.Adapter = adapter;
@@ -140,7 +168,7 @@ namespace Fussion {
         g_Data.SkipRender = false;
 
         g_Data.WindowSize = new_size;
-        g_Data.Surface.Configure(g_Data.Device, g_Data.Adapter, { .Mode = GPU::PresentMode::Immediate, .Size = new_size });
+        g_Data.Surface.Configure(g_Data.Device, g_Data.SurfaceFormat, { .Mode = g_Data.PresentMode, .Size = new_size });
     }
 
     auto Renderer::Device() -> GPU::Device&

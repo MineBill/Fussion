@@ -1282,12 +1282,31 @@ namespace Fussion::GPU {
         wgpuSurfaceRelease(CAST(WGPUSurface, Handle));
     }
 
-    void Surface::Configure(Device const& device, Adapter adapter, Config const& config)
+    Surface::Capabilities Surface::GetCapabilities(Adapter adapter) const
     {
         WGPUSurfaceCapabilities caps {};
         wgpuSurfaceGetCapabilities(CAST(WGPUSurface, Handle), CAST(WGPUAdapter, adapter.Handle), &caps);
-        VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
-        LOG_DEBUGF("Configuring surface with format: {}", magic_enum::enum_name(caps.formats[0]));
+
+        Capabilities ret {};
+        ret.AvailablePresentModes.reserve(caps.presentModeCount);
+        for (size_t i = 0; i < caps.presentModeCount; i++) {
+            ret.AvailablePresentModes.push_back(FromWGPU(caps.presentModes[i]));
+        }
+
+        ret.AvailableSurfaceFormats.reserve(caps.formatCount);
+        for (size_t i = 0; i < caps.formatCount; i++) {
+            ret.AvailableSurfaceFormats.push_back(FromWGPU(caps.formats[i]));
+        }
+        return ret;
+    }
+
+    void Surface::Configure(Device const& device, TextureFormat surface_format, Config const& config)
+    {
+        Format = surface_format;
+        // WGPUSurfaceCapabilities caps {};
+        // wgpuSurfaceGetCapabilities(CAST(WGPUSurface, Handle), CAST(WGPUAdapter, adapter.Handle), &caps);
+        // VERIFY(caps.formatCount >= 1, "Surface without formats?!!!");
+        // LOG_DEBUGF("Configuring surface with format: {}", magic_enum::enum_name(caps.formats[0]));
 
         WGPUSurfaceConfigurationExtras extras {
             .chain = WGPUChainedStruct {
@@ -1299,7 +1318,7 @@ namespace Fussion::GPU {
         WGPUSurfaceConfiguration conf {
             .nextInChain = &extras.chain,
             .device = CAST(WGPUDevice, device.Handle),
-            .format = caps.formats[0], // TODO: Check this properly
+            .format = ToWGPU(Format),
             .usage = WGPUTextureUsage_RenderAttachment,
             .viewFormatCount = 0,
             .viewFormats = nullptr,
@@ -1309,8 +1328,6 @@ namespace Fussion::GPU {
             .presentMode = ToWGPU(config.Mode),
         };
         wgpuSurfaceConfigure(CAST(WGPUSurface, Handle), &conf);
-
-        Format = from_wgpu(caps.formats[0]);
     }
 
     auto Surface::GetNextView() const -> Result<TextureView, Error>
@@ -1429,7 +1446,7 @@ namespace Fussion::GPU {
         }
     }
 
-    auto Instance::GetAdapter(Surface surface, AdapterOptions const& opt) const -> Adapter
+    auto Instance::GetAdapter(Surface const& surface, AdapterOptions const& opt) const -> Adapter
     {
         WGPURequestAdapterOptions options {
             .nextInChain = nullptr,
