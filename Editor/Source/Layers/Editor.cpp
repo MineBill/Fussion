@@ -414,8 +414,9 @@ void Editor::OnEvent(Event& event)
     dispatcher.Dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
         if (m_ActiveScene != nullptr && m_ActiveScene->IsDirty()) {
             Dialogs::MessageBox data {};
+            data.Type = Dialogs::MessageType::Question;
             data.Message = "The current scene has unsaved modifications. Are you sure you want to quit?";
-            data.Action = Dialogs::MessageAction::OkCancel;
+            data.Action = Dialogs::MessageAction::YesNoCancel;
             switch (Dialogs::ShowMessageBox(data)) {
             case Dialogs::MessageButton::Ok:
             case Dialogs::MessageButton::Yes:
@@ -589,6 +590,7 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
     };
     if (s_EditorInstance->m_ActiveScene != nullptr && s_EditorInstance->m_ActiveScene->IsDirty()) {
         Dialogs::MessageBox data {};
+        data.Type = Dialogs::MessageType::Question;
         data.Message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
         data.Action = Dialogs::MessageAction::YesNoCancel;
         switch (Dialogs::ShowMessageBox(data)) {
