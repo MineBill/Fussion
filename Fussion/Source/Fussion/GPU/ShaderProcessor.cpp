@@ -53,7 +53,8 @@ namespace Fussion::GPU {
         std::string const& source_code,
         std::string& out_vertex,
         std::string& out_fragment,
-        std::vector<ShaderProcessor::ParsedPragma>& parsed_pragmas)
+        std::vector<ShaderProcessor::ParsedPragma>& parsed_pragmas
+    )
     {
         std::istringstream is(source_code);
 
@@ -166,7 +167,8 @@ namespace Fussion::GPU {
     ShaderProcessor::ShaderMetadata ReflectSlang(
         slang::ProgramLayout* programReflection,
         slang::IEntryPoint* vsEntryPoint,
-        slang::IEntryPoint* fsEntryPoint)
+        slang::IEntryPoint* fsEntryPoint
+    )
     {
         ZoneScoped;
         using Slang::ComPtr;
@@ -368,11 +370,12 @@ namespace Fussion::GPU {
             default:
                 TODO();
             }
-            metadata.Uniforms[(u32)set][CAST(size_t, index)] = resourceUsage;
+            metadata.Uniforms[cast<u32>(set)][cast<size_t>(index)] = resourceUsage;
         }
         return metadata;
     }
 
+    // FIXME: Crashes when freed
     struct SlangGlobalState {
         Slang::ComPtr<slang::IModule> CommonModule;
         Slang::ComPtr<slang::IGlobalSession> GlobalSession {};
@@ -512,7 +515,8 @@ namespace Fussion::GPU {
                 componentTypes.data(),
                 CAST(SlangInt, componentTypes.size()),
                 composedProgram.writeRef(),
-                diagnosticsBlob.writeRef());
+                diagnosticsBlob.writeRef()
+            );
             DiagnoseIfNeeded(diagnosticsBlob);
             SLANG_CHECK(result);
         }
@@ -532,7 +536,8 @@ namespace Fussion::GPU {
             ZoneScopedN("VS Entry Point Code");
             ComPtr<IBlob> diagnosticsBlob;
             SlangResult result = linkedProgram->getEntryPointCode(
-                0, 0, spirvBlob.writeRef(), diagnosticsBlob.writeRef());
+                0, 0, spirvBlob.writeRef(), diagnosticsBlob.writeRef()
+            );
             DiagnoseIfNeeded(diagnosticsBlob);
             SLANG_CHECK(result);
 
@@ -547,7 +552,8 @@ namespace Fussion::GPU {
             ZoneScopedN("FS Entry Point Code");
             ComPtr<IBlob> diagnosticsBlob;
             SlangResult result = linkedProgram->getEntryPointCode(
-                1, 0, fsSpirvBlob.writeRef(), diagnosticsBlob.writeRef());
+                1, 0, fsSpirvBlob.writeRef(), diagnosticsBlob.writeRef()
+            );
             DiagnoseIfNeeded(diagnosticsBlob);
             SLANG_CHECK(result);
 
