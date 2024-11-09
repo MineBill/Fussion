@@ -11,11 +11,11 @@
 Ptr<Project> Project::s_active_project;
 using namespace Fussion;
 
-constexpr auto ASSETS_FOLDER = "AssetsFolder";
-constexpr auto CACHE_FOLDER = "CacheFolder";
-constexpr auto SCRIPTS_FOLDER = "ScriptsFolder";
-constexpr auto ASSET_REGISTRY = "AssetRegistry";
-constexpr auto LOGS_FOLDER = "Logs";
+constexpr auto ASSETS_FOLDER_KEY = "AssetsFolder";
+constexpr auto CACHE_FOLDER_KEY = "CacheFolder";
+constexpr auto SCRIPTS_FOLDER_KEY = "ScriptsFolder";
+constexpr auto ASSET_REGISTRY_KEY = "AssetRegistry";
+constexpr auto LOGS_FOLDER_KEY = "Logs";
 
 void Project::initialize()
 {
@@ -41,11 +41,11 @@ bool Project::load(fs::path const& path)
 
     ds.read("Name", s_active_project->m_name);
 
-    ds.read(ASSETS_FOLDER, s_active_project->m_assets_folder_path, base);
-    ds.read(CACHE_FOLDER, s_active_project->m_cache_folder_path, base);
-    ds.read(SCRIPTS_FOLDER, s_active_project->m_scripts_folder_path, base);
-    ds.read(ASSET_REGISTRY, s_active_project->m_asset_registry_path, base);
-    ds.read(LOGS_FOLDER, s_active_project->m_logs_folder_path, base);
+    ds.read(ASSETS_FOLDER_KEY, s_active_project->m_assets_folder_path, base);
+    ds.read(CACHE_FOLDER_KEY, s_active_project->m_cache_folder_path, base);
+    ds.read(SCRIPTS_FOLDER_KEY, s_active_project->m_scripts_folder_path, base);
+    ds.read(ASSET_REGISTRY_KEY, s_active_project->m_asset_registry_path, base);
+    ds.read(LOGS_FOLDER_KEY, s_active_project->m_logs_folder_path, base);
 
     if (!exists(s_active_project->m_assets_folder_path)) {
         LOG_ERRORF("AssetsFolder '{}' does not exist", s_active_project->m_assets_folder_path.string());
@@ -76,19 +76,12 @@ auto Project::generate_project(fs::path const& path, std::string_view name) -> f
 
         fs::create_directories(fullPath);
 
-        // project["Name"] = name;
-        // project[ASSETS_FOLDER] = "Assets";
-        // project[CACHE_FOLDER] = "Cache";
-        // project[SCRIPTS_FOLDER] = "Scripts";
-        // project[ASSET_REGISTRY] = "AssetRegistry.json";
-        // project[LOGS_FOLDER] = "Logs";
-
         s.write("Name", name);
-        s.write(ASSETS_FOLDER, "Assets");
-        s.write(CACHE_FOLDER, "Cache");
-        s.write(SCRIPTS_FOLDER, "Scripts");
-        s.write(ASSET_REGISTRY, "AssetRegistry.fsn");
-        s.write(LOGS_FOLDER, "Logs");
+        s.write(ASSETS_FOLDER_KEY, "Assets");
+        s.write(CACHE_FOLDER_KEY, "Cache");
+        s.write(SCRIPTS_FOLDER_KEY, "Scripts");
+        s.write(ASSET_REGISTRY_KEY, "AssetRegistry.fsn");
+        s.write(LOGS_FOLDER_KEY, "Logs");
 
         create_directory(fullPath / "Assets");
         create_directory(fullPath / "Cache");

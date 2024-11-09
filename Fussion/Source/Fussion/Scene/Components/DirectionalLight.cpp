@@ -22,10 +22,10 @@ namespace Fussion {
     {
         (void)ctx;
 
-        auto start = m_owner->transform.Position;
+        auto start = m_owner->transform.position;
         auto end = start + m_owner->transform.forward();
         Debug::draw_line(start, end, 0.0f, Color::Green);
-        Debug::draw_cube(end, m_owner->transform.EulerAngles, Vector3::One * 0.1f);
+        Debug::draw_cube(end, m_owner->transform.euler_angles, Vector3::One * 0.1f);
     }
 
     void DirectionalLight::on_draw(RenderContext& context)
@@ -36,26 +36,26 @@ namespace Fussion {
         context.directional_lights.push_back(GPUDirectionalLight {
             {
                 .direction = Vector4 { -m_owner->transform.forward() },
-                .light_color = LightColor,
-                .brightness = Brightness,
+                .light_color = light_color,
+                .brightness = brightness,
             },
-            SplitLambda,
+            split_lambda,
         });
     }
 
     void DirectionalLight::serialize(Serializer& ctx) const
     {
         Component::serialize(ctx);
-        FSN_SERIALIZE_MEMBER(LightColor);
-        FSN_SERIALIZE_MEMBER(SplitLambda);
-        FSN_SERIALIZE_MEMBER(Brightness);
+        FSN_SERIALIZE_MEMBER(light_color);
+        FSN_SERIALIZE_MEMBER(split_lambda);
+        FSN_SERIALIZE_MEMBER(brightness);
     }
 
     void DirectionalLight::deserialize(Deserializer& ctx)
     {
         Component::deserialize(ctx);
-        FSN_DESERIALIZE_MEMBER(LightColor);
-        FSN_DESERIALIZE_MEMBER(SplitLambda);
-        FSN_DESERIALIZE_MEMBER(Brightness);
+        FSN_DESERIALIZE_MEMBER(light_color);
+        FSN_DESERIALIZE_MEMBER(split_lambda);
+        FSN_DESERIALIZE_MEMBER(brightness);
     }
 }

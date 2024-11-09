@@ -482,7 +482,7 @@ void Editor::on_draw(GPU::CommandEncoder& encoder)
                     .perspective = camera.perspective(),
                     .view = inverse(entity->world_matrix()),
                     .rotation = entity->transform.rotation_matrix(),
-                    .position = entity->transform.Position,
+                    .position = entity->transform.position,
                     .near = camera.near,
                     .far = camera.far,
                     .direction = entity->transform.forward(),

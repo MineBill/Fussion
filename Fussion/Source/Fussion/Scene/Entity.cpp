@@ -11,47 +11,47 @@
 namespace Fussion {
     Mat4 Transform::matrix() const
     {
-        auto scale_mat = glm::scale(Mat4(1.0), CAST(glm::vec3, this->Scale));
-        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        auto scale_mat = glm::scale(Mat4(1.0), CAST(glm::vec3, this->scale));
+        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
         return translation_mat * rotation_matrix() * scale_mat;
     }
 
     Mat4 Transform::rotation_matrix() const
     {
         return glm::eulerAngleYXZ(
-            glm::radians(EulerAngles.y),
-            glm::radians(EulerAngles.x),
-            glm::radians(EulerAngles.z));
+            glm::radians(euler_angles.y),
+            glm::radians(euler_angles.x),
+            glm::radians(euler_angles.z));
     }
 
     Mat4 Transform::as_camera_matrix() const
     {
-        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, Position));
+        auto translation_mat = glm::translate(Mat4(1.0), CAST(glm::vec3, position));
         return glm::inverse(rotation_matrix()) * glm::inverse(translation_mat);
     }
 
     Vector3 Transform::forward() const
     {
         auto rotation_mat = glm::mat3(glm::eulerAngleYXZ(
-            glm::radians(EulerAngles.y),
-            glm::radians(EulerAngles.x),
-            glm::radians(EulerAngles.z)));
+            glm::radians(euler_angles.y),
+            glm::radians(euler_angles.x),
+            glm::radians(euler_angles.z)));
 
         return rotation_mat * Vector3::Forward;
     }
 
     void Transform::serialize(Serializer& ctx) const
     {
-        FSN_SERIALIZE_MEMBER(Position);
-        FSN_SERIALIZE_MEMBER(EulerAngles);
-        FSN_SERIALIZE_MEMBER(Scale);
+        FSN_SERIALIZE_MEMBER(position);
+        FSN_SERIALIZE_MEMBER(euler_angles);
+        FSN_SERIALIZE_MEMBER(scale);
     }
 
     void Transform::deserialize(Deserializer& ctx)
     {
-        FSN_DESERIALIZE_MEMBER(Position);
-        FSN_DESERIALIZE_MEMBER(EulerAngles);
-        FSN_DESERIALIZE_MEMBER(Scale);
+        FSN_DESERIALIZE_MEMBER(position);
+        FSN_DESERIALIZE_MEMBER(euler_angles);
+        FSN_DESERIALIZE_MEMBER(scale);
     }
 
     Entity::Entity(Entity const& other)

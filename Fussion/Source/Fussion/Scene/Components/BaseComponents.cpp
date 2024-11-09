@@ -15,7 +15,7 @@ namespace Fussion {
         if (!context.render_flags.test(RenderState::LightCollection))
             return;
         auto light = GPUPointLight {
-            .position = m_owner->transform.Position,
+            .position = m_owner->transform.position,
             .light_color = Color::White,
             .radius = radius,
         };
@@ -41,9 +41,9 @@ namespace Fussion {
         (void)ctx;
 
         if (draw_type == Type::Box) {
-            Debug::draw_cube(m_owner->transform.Position, m_owner->transform.EulerAngles, Vector3::One * size);
+            Debug::draw_cube(m_owner->transform.position, m_owner->transform.euler_angles, Vector3::One * size);
         } else if (draw_type == Type::Sphere) {
-            Debug::draw_sphere(m_owner->transform.Position, m_owner->transform.EulerAngles, size);
+            Debug::draw_sphere(m_owner->transform.position, m_owner->transform.euler_angles, size);
         }
     }
 
@@ -63,7 +63,7 @@ namespace Fussion {
 
     void BallSpawner::on_update(f32 delta)
     {
-        m_owner->transform.Position.x += delta * speed;
+        m_owner->transform.position.x += delta * speed;
     }
 
     void BallSpawner::spawn()
@@ -73,7 +73,7 @@ namespace Fussion {
                 auto new_entity = m_owner->scene().create_entity("Test", m_owner->handle());
                 auto mr = new_entity->add_component<MeshRenderer>();
                 mr->ModelAsset = model;
-                new_entity->transform.Position = Vector3(x, Math::sin((x + y) / 50.0f), y);
+                new_entity->transform.position = Vector3(x, Math::sin((x + y) / 50.0f), y);
 
                 auto mat = make_ref<PbrMaterial>();
                 mat->object_color = Color::Red;

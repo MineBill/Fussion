@@ -280,13 +280,13 @@ bool InspectorWindow::draw_entity(Entity& e)
 
     ImGuiHelpers::begin_group_panel("Transform", Vector2(0, 0), style.fonts[EditorFont::BoldSmall]);
     ImGui::TextUnformatted("Position");
-    modified |= ImGuiHelpers::drag_vec3("##position", &e.transform.Position, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
+    modified |= ImGuiHelpers::drag_vec3("##position", &e.transform.position, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
 
     ImGui::TextUnformatted("Euler Angles");
-    modified |= ImGuiHelpers::drag_vec3("##euler_angles", &e.transform.EulerAngles, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
+    modified |= ImGuiHelpers::drag_vec3("##euler_angles", &e.transform.euler_angles, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
 
     ImGui::TextUnformatted("Scale");
-    modified |= ImGuiHelpers::drag_vec3("##scale", &e.transform.Scale, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
+    modified |= ImGuiHelpers::drag_vec3("##scale", &e.transform.scale, 0.01f, 0.f, 0.f, "%.2f", style.fonts[EditorFont::Bold], style.fonts[EditorFont::RegularSmall]);
     ImGuiHelpers::end_group_panel();
 
     for (auto const& component : e.components() | std::views::values) {

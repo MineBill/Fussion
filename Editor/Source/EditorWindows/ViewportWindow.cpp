@@ -367,20 +367,20 @@ void ViewportWindow::on_draw()
                         glm::value_ptr(m), nullptr, Input::is_key_down(Keys::LeftControl) ? snap.raw : nullptr)) {
                     ImGuizmo::DecomposeMatrixToComponents(
                         glm::value_ptr(m),
-                        entity->transform.Position.raw,
-                        entity->transform.EulerAngles.raw,
-                        entity->transform.Scale.raw);
+                        entity->transform.position.raw,
+                        entity->transform.euler_angles.raw,
+                        entity->transform.scale.raw);
                     if (!gizmo_activated) {
                         gizmo_activated = true;
                         switch (m_gizmo_mode) {
                         case GizmoMode::Translation:
-                            m_editor->undo.push_single(&entity->transform.Position, "Gizmo LocalPosition");
+                            m_editor->undo.push_single(&entity->transform.position, "Gizmo LocalPosition");
                             [[fallthrough]];
                         case GizmoMode::Rotation:
-                            m_editor->undo.push_single(&entity->transform.EulerAngles, "Gizmo LocalEulerAngles");
+                            m_editor->undo.push_single(&entity->transform.euler_angles, "Gizmo LocalEulerAngles");
                             [[fallthrough]];
                         case GizmoMode::Scale:
-                            m_editor->undo.push_single(&entity->transform.Scale, "Gizmo LocalScale");
+                            m_editor->undo.push_single(&entity->transform.scale, "Gizmo LocalScale");
                         }
                     }
 

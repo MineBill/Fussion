@@ -15,9 +15,9 @@ namespace Fussion {
 
     struct Transform final : ISerializable {
 
-        Vector3 Position {};
-        Vector3 EulerAngles {};
-        Vector3 Scale { 1, 1, 1 };
+        Vector3 position {};
+        Vector3 euler_angles {};
+        Vector3 scale { 1, 1, 1 };
 
         [[nodiscard]]
         Mat4 matrix() const;

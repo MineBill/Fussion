@@ -380,9 +380,9 @@ namespace Fussion {
         r = m_script_engine->RegisterObjectBehaviour("Mat4", asBEHAVE_CONSTRUCT, "void f(float)", asFUNCTION(mat4_constructor_single), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
 
         r = m_script_engine->RegisterObjectType("Transform", sizeof(Transform), asOBJ_VALUE | asOBJ_POD | asGetTypeTraits<Transform>()); VERIFY(r >= 0);
-        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 Position", asOFFSET(Transform, Position)); VERIFY(r >= 0);
-        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 EulerAngles", asOFFSET(Transform, EulerAngles)); VERIFY(r >= 0);
-        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 Scale", asOFFSET(Transform, Scale)); VERIFY(r >= 0);
+        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 Position", asOFFSET(Transform, position)); VERIFY(r >= 0);
+        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 EulerAngles", asOFFSET(Transform, euler_angles)); VERIFY(r >= 0);
+        r = m_script_engine->RegisterObjectProperty("Transform", "Vector3 Scale", asOFFSET(Transform, scale)); VERIFY(r >= 0);
         r = m_script_engine->RegisterObjectBehaviour("Transform", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(transform_constructor), asCALL_CDECL_OBJLAST); VERIFY(r >= 0);
         r = m_script_engine->RegisterObjectMethod("Transform", "Vector3 get_Forward() const property", asMETHODPR(Transform, forward, () const, Vector3), asCALL_THISCALL); VERIFY(r >= 0);
 
