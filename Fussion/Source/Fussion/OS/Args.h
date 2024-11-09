@@ -3,11 +3,11 @@
 namespace Fussion {
     class Args {
     public:
-        static void Collect(int argc, char** argv);
+        static void collect(int argc, char** argv);
 
-        static int Argc();
-        static char** Argv();
+        static int argc();
+        static char** argv();
 
-        static std::string const& AsSingleLine();
+        static std::string const& as_single_line();
     };
 }

@@ -16,23 +16,23 @@
 #include "Fussion/GPU/EnumConversions.h"
 #include "Fussion/Rendering/Renderer.h"
 
-void ImGuiLayer::LoadFonts()
+void ImGuiLayer::load_fonts()
 {
     auto& io = ImGui::GetIO();
-    auto& style = EditorStyle::Style();
+    auto& style = EditorStyle::style();
     using enum EditorFont;
-    style.Fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
-    style.Fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
-    style.Fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
-    style.Fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
-    style.Fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
-    style.Fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
-    style.Fonts[MonospaceRegular] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/JetBrainsMono-Regular.ttf", 15.0f);
+    style.fonts[RegularNormal] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 15.0f);
+    style.fonts[RegularBig] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 18.0f);
+    style.fonts[RegularSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 13.0f);
+    style.fonts[RegularHuge] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Regular.ttf", 24.0f);
+    style.fonts[Bold] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 15.0f);
+    style.fonts[BoldSmall] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/Inter-Bold.ttf", 12.0f);
+    style.fonts[MonospaceRegular] = io.Fonts->AddFontFromFileTTF("Assets/Fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
-    io.FontDefault = style.Fonts[RegularNormal];
+    io.FontDefault = style.fonts[RegularNormal];
 }
 
-void ImGuiLayer::Initialize()
+void ImGuiLayer::initialize()
 {
     ZoneScoped;
     using namespace Fussion;
@@ -48,27 +48,27 @@ void ImGuiLayer::Initialize()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-    auto window = CAST(GLFWwindow*, Application::Self()->GetWindow().NativeHandle());
+    auto window = CAST(GLFWwindow*, Application::self()->window().native_handle());
 
     ImGui_ImplGlfw_InitForOther(window, true);
 
     ImGui_ImplWGPU_InitInfo info {};
-    info.Device = Renderer::Device().As<WGPUDevice>();
-    info.RenderTargetFormat = ToWGPU(Renderer::Surface().Format);
+    info.Device = Renderer::device().As<WGPUDevice>();
+    info.RenderTargetFormat = ToWGPU(Renderer::surface().Format);
     ImGui_ImplWGPU_Init(&info);
 
-    SetupImGuiStyle();
-    LoadFonts();
+    setup_imgui_style();
+    load_fonts();
 }
 
-void ImGuiLayer::OnStart() { }
+void ImGuiLayer::on_start() { }
 
-void ImGuiLayer::OnUpdate(f32 delta)
+void ImGuiLayer::on_update(f32 delta)
 {
     (void)delta;
 }
 
-void ImGuiLayer::Begin()
+void ImGuiLayer::begin()
 {
     ZoneScoped;
     ImGui_ImplGlfw_NewFrame();
@@ -77,7 +77,7 @@ void ImGuiLayer::Begin()
     ImGuizmo::BeginFrame();
 }
 
-void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
+void ImGuiLayer::end(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
 {
     ZoneScoped;
     ImGui::Render();
@@ -89,12 +89,12 @@ void ImGuiLayer::End(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
         // ImGui::SetCurrentContext(ctx);
     }
 
-    if (encoder.HasValue()) {
+    if (encoder.has_value()) {
         ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->As<WGPURenderPassEncoder>());
     }
 }
 
-void ImGuiLayer::SetupImGuiStyle()
+void ImGuiLayer::setup_imgui_style()
 {
     // Fork of Photoshop style from ImThemes
     ImGuiStyle& style = ImGui::GetStyle();
@@ -132,12 +132,12 @@ void ImGuiLayer::SetupImGuiStyle()
     style.WindowMenuButtonPosition = ImGuiDir_Right;
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
 
-    constexpr Color foreground = Color::FromHex(0x313131FF);
-    constexpr Color background = Color::FromHex(0x212121FF);
-    constexpr Color frame = Color::FromHex(0x212121FF);
+    constexpr Color foreground = Color::from_hex(0x313131FF);
+    constexpr Color background = Color::from_hex(0x212121FF);
+    constexpr Color frame = Color::from_hex(0x212121FF);
     constexpr Color popup = foreground;
-    constexpr Color button = Color::FromHex(0x454545FF);
-    constexpr Color textColor = Color::FromHex(0xe7e7e7FF);
+    constexpr Color button = Color::from_hex(0x454545FF);
+    constexpr Color textColor = Color::from_hex(0xe7e7e7FF);
 
     ImVec4* colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = textColor;
@@ -148,30 +148,30 @@ void ImGuiLayer::SetupImGuiStyle()
     colors[ImGuiCol_Border] = background;
     colors[ImGuiCol_BorderShadow] = Color::Transparent;
     colors[ImGuiCol_FrameBg] = frame;
-    colors[ImGuiCol_FrameBgHovered] = frame.Lighten(0.1f);
-    colors[ImGuiCol_FrameBgActive] = frame.Lighten(0.2f);
+    colors[ImGuiCol_FrameBgHovered] = frame.lighten(0.1f);
+    colors[ImGuiCol_FrameBgActive] = frame.lighten(0.2f);
     colors[ImGuiCol_TitleBg] = background;
     colors[ImGuiCol_TitleBgActive] = background;
     colors[ImGuiCol_TitleBgCollapsed] = background;
     colors[ImGuiCol_MenuBarBg] = background;
     colors[ImGuiCol_ScrollbarBg] = button;
     colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.27f, 0.27f, 0.27f, 1.00f);
-    colors[ImGuiCol_ScrollbarGrabHovered] = button.Lighten(0.02f);
-    colors[ImGuiCol_ScrollbarGrabActive] = button.Lighten(0.02f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = button.lighten(0.02f);
+    colors[ImGuiCol_ScrollbarGrabActive] = button.lighten(0.02f);
     colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_SliderGrab] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
     colors[ImGuiCol_SliderGrabActive] = ImVec4(1.00f, 0.39f, 0.00f, 1.00f);
     colors[ImGuiCol_Button] = button;
-    colors[ImGuiCol_ButtonHovered] = button.Lighten(0.02f);
-    colors[ImGuiCol_ButtonActive] = button.Lighten(0.02f);
+    colors[ImGuiCol_ButtonHovered] = button.lighten(0.02f);
+    colors[ImGuiCol_ButtonActive] = button.lighten(0.02f);
     colors[ImGuiCol_Header] = button;
-    colors[ImGuiCol_HeaderHovered] = button.Lighten(0.02f);
-    colors[ImGuiCol_HeaderActive] = button.Darken(0.02f);
+    colors[ImGuiCol_HeaderHovered] = button.lighten(0.02f);
+    colors[ImGuiCol_HeaderActive] = button.darken(0.02f);
     colors[ImGuiCol_Separator] = button;
-    colors[ImGuiCol_SeparatorHovered] = button.Lighten(0.02f);
-    colors[ImGuiCol_SeparatorActive] = button.Darken(0.02f);
+    colors[ImGuiCol_SeparatorHovered] = button.lighten(0.02f);
+    colors[ImGuiCol_SeparatorActive] = button.darken(0.02f);
     colors[ImGuiCol_Tab] = background;
-    colors[ImGuiCol_TabHovered] = foreground.Lighten(0.1f);
+    colors[ImGuiCol_TabHovered] = foreground.lighten(0.1f);
     colors[ImGuiCol_TabActive] = foreground;
     colors[ImGuiCol_TabUnfocused] = background;
     colors[ImGuiCol_TabUnfocusedActive] = foreground;

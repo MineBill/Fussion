@@ -11,9 +11,9 @@
 #include "Layers/Editor.h"
 #include <Fussion/Util/TextureLoader.h>
 
-void ConsoleWindow::OnStart() { }
+void ConsoleWindow::on_start() { }
 
-void ConsoleWindow::OnDraw()
+void ConsoleWindow::on_draw()
 {
     ZoneScoped;
     // auto const& entries = Editor::inst().log_entries();
@@ -21,16 +21,16 @@ void ConsoleWindow::OnDraw()
     // std::ranges::copy(entries, std::back_inserter(m_log_entries));
 
     if (ImGui::Begin("Console")) {
-        m_IsFocused = ImGui::IsWindowFocused();
+        m_is_focused = ImGui::IsWindowFocused();
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(5, 5));
 
-        auto& style = EditorStyle::Style();
-        ImGuiH::ImageToggleButton("##info_toggle", style.EditorIcons[EditorIcon::Info]->GetTexture().View, m_info_enable, Vector2(15, 15));
+        auto& style = EditorStyle::style();
+        ImGuiH::image_toggle_button("##info_toggle", style.editor_icons[EditorIcon::Info]->texture().View, m_info_enable, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##warn_toggle", style.EditorIcons[EditorIcon::Warning]->GetTexture().View, m_warning_enabled, Vector2(15, 15));
+        ImGuiH::image_toggle_button("##warn_toggle", style.editor_icons[EditorIcon::Warning]->texture().View, m_warning_enabled, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::ImageToggleButton("##error_toggle", style.EditorIcons[EditorIcon::Error]->GetTexture().View, m_error_enabled, Vector2(15, 15));
+        ImGuiH::image_toggle_button("##error_toggle", style.editor_icons[EditorIcon::Error]->texture().View, m_error_enabled, Vector2(15, 15));
 
         ImGui::PopStyleVar();
 
@@ -58,9 +58,9 @@ void ConsoleWindow::OnDraw()
         ImGui::Separator();
         if (ImGui::BeginChild("##console_content")) {
             for (auto const& entry : m_log_entries) {
-                if (entry.Message.find(search_term) != std::string::npos) {
+                if (entry.message.find(search_term) != std::string::npos) {
                     Vector4 text_color {};
-                    switch (entry.Level) {
+                    switch (entry.level) {
                         using enum Fsn::LogLevel;
                     case Debug:
                     case Info:
@@ -82,7 +82,7 @@ void ConsoleWindow::OnDraw()
                         break;
                     }
                     ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-                    ImGui::TextUnformatted(std::format("[{}]: {}", magic_enum::enum_name(entry.Level), entry.Message).c_str());
+                    ImGui::TextUnformatted(std::format("[{}]: {}", magic_enum::enum_name(entry.level), entry.message).c_str());
                     ImGui::PopStyleColor();
 
                     if (m_auto_scroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {

@@ -17,13 +17,13 @@
 #define WSTRING(x) std::wstring { (x).begin(), (x).end() };
 
 namespace Fussion::Dialogs {
-    MessageButton ShowMessageBox(MessageBox data)
+    MessageButton show_message_box(MessageBox data)
     {
-        std::wstring const w_message = WSTRING(data.Message);
-        std::wstring const w_title = WSTRING(data.Title);
+        std::wstring const w_message = WSTRING(data.message);
+        std::wstring const w_title = WSTRING(data.title);
 
         UINT a = MB_OK;
-        switch (data.Action) {
+        switch (data.action) {
         case MessageAction::Ok:
             a = MB_OK;
             break;
@@ -38,7 +38,7 @@ namespace Fussion::Dialogs {
             break;
         }
 
-        switch (data.Type) {
+        switch (data.type) {
         case MessageType::Info:
             a |= MB_ICONINFORMATION;
             break;
@@ -55,7 +55,7 @@ namespace Fussion::Dialogs {
 
         a |= MB_SYSTEMMODAL;
 
-        auto handle = glfwGetWin32Window(TRANSMUTE(GLFWwindow*, Application::Self()->GetWindow().NativeHandle()));
+        auto handle = glfwGetWin32Window(TRANSMUTE(GLFWwindow*, Application::self()->window().native_handle()));
         int answer = MessageBoxW(handle, w_message.c_str(), w_title.c_str(), a);
         switch (answer) {
         case IDOK:
@@ -72,23 +72,23 @@ namespace Fussion::Dialogs {
         return MessageButton::Cancel;
     }
 
-    auto ShowFilePicker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto show_file_picker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        return ShowFilePicker(FilePickerFilter {
+        return show_file_picker(FilePickerFilter {
                                   .name = std::string(name),
                                   .file_patterns = supported_files,
                               },
             allow_multiple);
     }
 
-    auto ShowFilePicker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto show_file_picker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        return ShowFilePicker(std::vector { filter }, allow_multiple);
+        return show_file_picker(std::vector { filter }, allow_multiple);
     }
 
-    auto ShowFilePicker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
+    auto show_file_picker(std::vector<FilePickerFilter> const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
-        auto handle = glfwGetWin32Window(CAST(GLFWwindow*, Application::Self()->GetWindow().NativeHandle()));
+        auto handle = glfwGetWin32Window(CAST(GLFWwindow*, Application::self()->window().native_handle()));
         VERIFY(handle != nullptr);
 
         std::wstring file;
@@ -97,12 +97,12 @@ namespace Fussion::Dialogs {
         using namespace std::string_literals;
         std::string filter_string;
 
-        for (auto const& [Name, FilePatterns] : filter) {
-            filter_string += Name + "\0"s;
+        for (auto const& [name, file_patterns] : filter) {
+            filter_string += name + "\0"s;
 
-            for (size_t i = 0; i < FilePatterns.size(); i++) {
-                filter_string += FilePatterns[i];
-                if (FilePatterns.size() > 1 && i < FilePatterns.size() - 1) {
+            for (size_t i = 0; i < file_patterns.size(); i++) {
+                filter_string += file_patterns[i];
+                if (file_patterns.size() > 1 && i < file_patterns.size() - 1) {
                     filter_string += ";"s;
                 }
             }
@@ -166,7 +166,7 @@ namespace Fussion::Dialogs {
         return {};
     }
 
-    std::filesystem::path ShowDirectoryPicker(std::filesystem::path const& base)
+    std::filesystem::path show_directory_picker(std::filesystem::path const& base)
     {
         // TODO: base path is currently ignored.
         (void)base;
@@ -192,7 +192,7 @@ namespace Fussion::Dialogs {
         return "";
     }
 
-    void OpenDirectory(std::filesystem::path const& path)
+    void open_directory(std::filesystem::path const& path)
     {
         ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
     }

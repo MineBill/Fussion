@@ -25,42 +25,42 @@ namespace Fussion {
         ScriptInstance(ScriptInstance const& other);
         ScriptInstance& operator=(ScriptInstance const& other);
 
-        bool IsValid() const { return m_Instance != nullptr; }
+        bool is_valid() const { return m_script_instance != nullptr; }
 
-        asIScriptObject* Instance() const { return m_Instance; }
-        ScriptClass* GetScriptClass() const { return m_ScriptClass; }
+        asIScriptObject* instance() const { return m_script_instance; }
+        ScriptClass* script_class() const { return m_script_class; }
 
-        void CallMethod(std::string_view name, std::initializer_list<std::any> args);
-
-        template<typename T>
-        void SetProperty(std::string const& name, T& value);
+        void call_method(std::string_view name, std::initializer_list<std::any> args);
 
         template<typename T>
-        T* As()
+        void set_property(std::string const& name, T& value);
+
+        template<typename T>
+        T* as()
         {
-            return TRANSMUTE(T*, m_Instance->GetAddressOfProperty(0));
+            return TRANSMUTE(T*, m_script_instance->GetAddressOfProperty(0));
         }
 
     private:
-        void OnScriptException();
+        void on_script_exception();
 
-        ScriptClass* m_ScriptClass { nullptr };
-        asIScriptObject* m_Instance { nullptr };
+        ScriptClass* m_script_class { nullptr };
+        asIScriptObject* m_script_instance { nullptr };
 
         asIScriptContext* m_context { nullptr };
     };
 
     struct ScriptProperty : HasAttribute {
-        u32 Index {};
-        std::string Name {};
-        bool IsPrivate {};
-        bool IsProtected {};
-        asETypeIdFlags TypeID {};
+        u32 index {};
+        std::string name {};
+        bool is_private {};
+        bool is_protected {};
+        asETypeIdFlags type_id {};
 
-        int Offset {};
-        bool IsReference {};
+        int offset {};
+        bool is_reference {};
 
-        Uuid ID {};
+        Uuid id {};
     };
 
     class ScriptClass : public HasAttribute {
@@ -68,11 +68,11 @@ namespace Fussion {
         ScriptClass() = default;
         explicit ScriptClass(asITypeInfo* type);
 
-        auto Name() -> std::string const& { return m_Name; }
+        auto name() -> std::string const& { return m_Name; }
 
-        auto CreateInstance() -> ScriptInstance;
+        auto create_instance() -> ScriptInstance;
 
-        auto CreateInstanceWith(auto&& func) -> ScriptInstance
+        auto create_instance_with(auto&& func) -> ScriptInstance
         {
             auto ctx = m_Type->GetEngine()->CreateContext();
             defer(ctx->Release());
@@ -89,27 +89,27 @@ namespace Fussion {
             return {};
         }
 
-        auto GetMethod(std::string const& name) -> asIScriptFunction*;
+        auto method_from_name(std::string const& name) -> asIScriptFunction*;
 
         [[nodiscard]]
-        auto GetTypeInfo() const -> asITypeInfo*
+        auto type_info() const -> asITypeInfo*
         {
             return m_Type;
         }
 
         [[nodiscard]]
-        auto GetProperties() const -> std::unordered_map<std::string, ScriptProperty>
+        auto properties() const -> std::unordered_map<std::string, ScriptProperty>
         {
             return m_Properties;
         }
 
         [[nodiscard]]
-        auto GetMethods() -> std::unordered_map<std::string, asIScriptFunction*>&;
+        auto methods() -> std::unordered_map<std::string, asIScriptFunction*>&;
 
-        bool DerivesFrom(std::string const& name) const;
+        bool derives_from(std::string const& name) const;
 
-        void Reload(asITypeInfo* type_info);
-        auto GetProperty(std::string const& name) -> ScriptProperty;
+        void reload(asITypeInfo* type_info);
+        auto property_from_name(std::string const& name) -> ScriptProperty;
 
     private:
         std::unordered_map<std::string, asIScriptFunction*> m_Methods {};
@@ -124,14 +124,14 @@ namespace Fussion {
     };
 
     template<typename T>
-    void ScriptInstance::SetProperty(std::string const& name, T& value)
+    void ScriptInstance::set_property(std::string const& name, T& value)
     {
-        auto prop = m_ScriptClass->GetProperty(name);
-        auto type_name = m_Instance->GetObjectType()->GetName();
+        auto prop = m_script_class->property_from_name(name);
+        auto type_name = m_script_instance->GetObjectType()->GetName();
         LOG_DEBUGF("NAME: {}", type_name);
-        auto ptr = m_Instance->GetAddressOfProperty(prop.Index);
+        auto ptr = m_script_instance->GetAddressOfProperty(prop.index);
 
-        Mem::Copy(ptr, &value, sizeof(T));
+        Mem::copy(ptr, &value, sizeof(T));
     }
 
     class ScriptAssembly {
@@ -140,16 +140,16 @@ namespace Fussion {
     public:
         explicit ScriptAssembly(asIScriptModule* module);
 
-        auto GetClass(std::string const& name) -> Maybe<ScriptClass*>;
+        auto klass(std::string const& name) -> Maybe<ScriptClass*>;
 
-        auto GetAllClasses() -> std::unordered_map<std::string, ScriptClass>& { return m_Classes; }
-        auto GetClassesOfType(std::string const& type) -> std::vector<ScriptClass*>;
-        void Reload(asIScriptModule* module);
+        auto all_classes() -> std::unordered_map<std::string, ScriptClass>& { return m_classes; }
+        auto classes_of_type(std::string const& type) -> std::vector<ScriptClass*>;
+        void reload(asIScriptModule* module);
 
     private:
-        std::unordered_map<std::string, ScriptClass> m_Classes {};
-        asIScriptModule* m_Module { nullptr };
-        std::string m_Name {};
+        std::unordered_map<std::string, ScriptClass> m_classes {};
+        asIScriptModule* m_module { nullptr };
+        std::string m_name {};
 
         friend ScriptingEngine;
     };

@@ -47,22 +47,22 @@ namespace Fussion {
         { }
 
         [[nodiscard]]
-        Real Length() const;
+        Real length() const;
 
         [[nodiscard]]
-        Real LengthSquared() const;
+        Real length_squared() const;
 
         [[nodiscard]]
-        Real DistanceTo(Vector2 const& other) const;
+        Real distance_to(Vector2 const& other) const;
 
         [[nodiscard]]
-        Real DistanceToSquared(Vector2 const& other) const;
+        Real distance_to_squared(Vector2 const& other) const;
 
         [[nodiscard]]
-        bool IsZero() const;
+        bool is_zero() const;
 
         [[nodiscard]]
-        f32 Aspect() const;
+        f32 aspect() const;
 
         constexpr Real& operator[](std::size_t i)
         {
@@ -154,10 +154,10 @@ namespace Fussion {
             return { x, y };
         }
 
-        static Vector2 Clamp(Vector2 self, Vector2 const& min, Vector2 const& max);
-        static Vector2 Max(Vector2 const& min, Vector2 const& max);
-        static Vector2 Min(Vector2 const& min, Vector2 const& max);
-        static Vector2 Abs(Vector2 const& vector2);
+        static Vector2 clamp(Vector2 self, Vector2 const& min, Vector2 const& max);
+        static Vector2 max(Vector2 const& min, Vector2 const& max);
+        static Vector2 min(Vector2 const& min, Vector2 const& max);
+        static Vector2 abs(Vector2 const& vector2);
 
         static Vector2 const Zero;
         static Vector2 const One;

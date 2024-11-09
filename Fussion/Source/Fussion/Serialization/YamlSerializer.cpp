@@ -4,157 +4,157 @@
 
 namespace Fussion {
     template<typename T>
-    void YamlSerializer::GenericWrite(std::string_view name, T value)
+    void YamlSerializer::generic_write(std::string_view name, T value)
     {
-        switch (m_TypeStack.top()) {
+        switch (m_type_stack.top()) {
         case Type::Object:
-            m_Emitter << YAML::Key << std::string(name);
-            m_Emitter << YAML::Value << value;
+            m_emitter << YAML::Key << std::string(name);
+            m_emitter << YAML::Value << value;
             break;
         case Type::Array:
-            m_Emitter << value;
+            m_emitter << value;
             break;
         }
     }
 
     void YamlSerializer::Initialize()
     {
-        m_Emitter << YAML::BeginMap;
-        m_TypeStack.push(Type::Object);
+        m_emitter << YAML::BeginMap;
+        m_type_stack.push(Type::Object);
     }
 
-    void YamlSerializer::Write(std::string_view name, s8 value)
+    void YamlSerializer::write(std::string_view name, s8 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, s16 value)
+    void YamlSerializer::write(std::string_view name, s16 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, s32 value)
+    void YamlSerializer::write(std::string_view name, s32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, s64 value)
+    void YamlSerializer::write(std::string_view name, s64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, u8 value)
+    void YamlSerializer::write(std::string_view name, u8 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, u16 value)
+    void YamlSerializer::write(std::string_view name, u16 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, u32 value)
+    void YamlSerializer::write(std::string_view name, u32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, u64 value)
+    void YamlSerializer::write(std::string_view name, u64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, f32 value)
+    void YamlSerializer::write(std::string_view name, f32 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, f64 value)
+    void YamlSerializer::write(std::string_view name, f64 value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, bool value)
+    void YamlSerializer::write(std::string_view name, bool value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, std::string_view value)
+    void YamlSerializer::write(std::string_view name, std::string_view value)
     {
-        GenericWrite(name, std::string(value));
+        generic_write(name, std::string(value));
     }
 
-    void YamlSerializer::Write(std::string_view name, char const* value)
+    void YamlSerializer::write(std::string_view name, char const* value)
     {
-        GenericWrite(name, value);
+        generic_write(name, value);
     }
 
-    void YamlSerializer::Write(std::string_view name, ISerializable const& object)
+    void YamlSerializer::write(std::string_view name, ISerializable const& object)
     {
-        BeginObject(name, 0);
-        object.Serialize(*this);
-        EndObject();
+        begin_object(name, 0);
+        object.serialize(*this);
+        end_object();
     }
 
-    void YamlSerializer::BeginObject(std::string_view name, size_t size, SerdeOptions const& options)
+    void YamlSerializer::begin_object(std::string_view name, size_t size, SerdeOptions const& options)
     {
         (void)size;
-        if (m_TypeStack.top() == Type::Object) {
-            m_Emitter << YAML::Key << std::string(name) << YAML::Value;
+        if (m_type_stack.top() == Type::Object) {
+            m_emitter << YAML::Key << std::string(name) << YAML::Value;
         }
         if (options.test(SerdeOption::Compact)) {
-            m_Emitter << YAML::Flow;
+            m_emitter << YAML::Flow;
         }
-        m_Emitter << YAML::BeginMap;
-        m_TypeStack.push(Type::Object);
+        m_emitter << YAML::BeginMap;
+        m_type_stack.push(Type::Object);
     }
 
-    void YamlSerializer::EndObject()
+    void YamlSerializer::end_object()
     {
-        m_Emitter << YAML::EndMap;
-        m_TypeStack.pop();
+        m_emitter << YAML::EndMap;
+        m_type_stack.pop();
     }
 
-    void YamlSerializer::BeginArray(std::string_view name, size_t size)
+    void YamlSerializer::begin_array(std::string_view name, size_t size)
     {
         (void)size;
-        if (m_TypeStack.top() == Type::Object) {
-            m_Emitter << YAML::Key << std::string(name) << YAML::Value;
+        if (m_type_stack.top() == Type::Object) {
+            m_emitter << YAML::Key << std::string(name) << YAML::Value;
         }
-        m_Emitter << YAML::BeginSeq;
-        m_TypeStack.push(Type::Array);
+        m_emitter << YAML::BeginSeq;
+        m_type_stack.push(Type::Array);
     }
 
-    void YamlSerializer::EndArray()
+    void YamlSerializer::end_array()
     {
-        m_Emitter << YAML::EndSeq;
-        m_TypeStack.pop();
+        m_emitter << YAML::EndSeq;
+        m_type_stack.pop();
     }
 
-    void YamlSerializer::WriteByteArray(std::string_view name, u8 const* ptr, usz size)
+    void YamlSerializer::write_byte_array(std::string_view name, u8 const* ptr, usz size)
     {
         (void)name;
         (void)ptr;
         (void)size;
     }
 
-    std::string YamlSerializer::ToString()
+    std::string YamlSerializer::to_string()
     {
-        m_Emitter << YAML::EndMap;
-        m_TypeStack.pop();
-        return m_Emitter.c_str();
+        m_emitter << YAML::EndMap;
+        m_type_stack.pop();
+        return m_emitter.c_str();
     }
 
     template<typename T>
-    bool YamlDeserializer::GenericRead(std::string_view name, T& value)
+    bool YamlDeserializer::generic_read(std::string_view name, T& value)
     {
-        if (m_Nodes.top().IsMap()) {
-            auto& node = m_Nodes.top();
+        if (m_nodes.top().IsMap()) {
+            auto& node = m_nodes.top();
             if (!node[std::string(name)]) {
                 return false;
             }
             value = node[std::string(name)].as<T>();
-        } else if (m_Nodes.top().IsSequence()) {
-            value = m_Nodes.top()[m_IndexStack.top()++].as<T>();
+        } else if (m_nodes.top().IsSequence()) {
+            value = m_nodes.top()[m_index_stack.top()++].as<T>();
         } else {
             LOG_WARNF("Unknown type");
             return false;
@@ -166,87 +166,87 @@ namespace Fussion {
     {
         try {
             YAML::Node node = YAML::Load(data.c_str());
-            m_Nodes.push(std::move(node));
+            m_nodes.push(std::move(node));
         } catch (YAML::ParserException const& e) {
             LOG_ERRORF("Yaml exception: {}", e.what());
         }
     }
 
-    void YamlDeserializer::Initialize()
+    void YamlDeserializer::initialize()
     {
     }
 
-    bool YamlDeserializer::Read(std::string_view name, s8& value)
+    bool YamlDeserializer::read(std::string_view name, s8& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, s16& value)
+    bool YamlDeserializer::read(std::string_view name, s16& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, s32& value)
+    bool YamlDeserializer::read(std::string_view name, s32& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, s64& value)
+    bool YamlDeserializer::read(std::string_view name, s64& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, u8& value)
+    bool YamlDeserializer::read(std::string_view name, u8& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, u16& value)
+    bool YamlDeserializer::read(std::string_view name, u16& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, u32& value)
+    bool YamlDeserializer::read(std::string_view name, u32& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, u64& value)
+    bool YamlDeserializer::read(std::string_view name, u64& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, f32& value)
+    bool YamlDeserializer::read(std::string_view name, f32& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, f64& value)
+    bool YamlDeserializer::read(std::string_view name, f64& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, bool& value)
+    bool YamlDeserializer::read(std::string_view name, bool& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, std::string& value)
+    bool YamlDeserializer::read(std::string_view name, std::string& value)
     {
-        return GenericRead(name, value);
+        return generic_read(name, value);
     }
 
-    bool YamlDeserializer::Read(std::string_view name, ISerializable& object)
+    bool YamlDeserializer::read(std::string_view name, ISerializable& object)
     {
-        if (size_t size; BeginObject(name, size)) {
-            object.Deserialize(*this);
-            EndObject();
+        if (size_t size; begin_object(name, size)) {
+            object.deserialize(*this);
+            end_object();
             return true;
         }
         return false;
     }
 
-    bool YamlDeserializer::ReadByteArray(std::string_view name, u8* ptr, size_t size)
+    bool YamlDeserializer::read_byte_array(std::string_view name, u8* ptr, size_t size)
     {
         (void)name;
         (void)ptr;
@@ -254,26 +254,26 @@ namespace Fussion {
         return true;
     }
 
-    bool YamlDeserializer::BeginObject(std::string_view name, size_t& size)
+    bool YamlDeserializer::begin_object(std::string_view name, size_t& size)
     {
-        if (m_Nodes.top().IsMap()) {
+        if (m_nodes.top().IsMap()) {
             // TODO: use string_view
-            if (!m_Nodes.top()[std::string(name)]) {
+            if (!m_nodes.top()[std::string(name)]) {
                 size = 0;
                 return false;
             }
 
-            auto node = m_Nodes.top()[std::string(name)];
+            auto node = m_nodes.top()[std::string(name)];
             VERIFY(node.IsMap());
             size = node.size();
 
-            m_Nodes.push(std::move(node));
-        } else if (m_Nodes.top().IsSequence()) {
-            auto node = m_Nodes.top()[m_IndexStack.top()++];
+            m_nodes.push(std::move(node));
+        } else if (m_nodes.top().IsSequence()) {
+            auto node = m_nodes.top()[m_index_stack.top()++];
             VERIFY(node.IsMap());
             size = node.size();
 
-            m_Nodes.push(std::move(node));
+            m_nodes.push(std::move(node));
         } else {
             PANIC("Unknown node type");
         }
@@ -281,42 +281,42 @@ namespace Fussion {
         return true;
     }
 
-    void YamlDeserializer::EndObject()
+    void YamlDeserializer::end_object()
     {
-        m_Nodes.pop();
+        m_nodes.pop();
     }
 
-    void YamlDeserializer::BeginArray(std::string_view name, size_t& size)
+    void YamlDeserializer::begin_array(std::string_view name, size_t& size)
     {
-        if (m_Nodes.top().IsMap()) {
+        if (m_nodes.top().IsMap()) {
             // TODO: use string_view
-            m_Nodes.push(m_Nodes.top()[std::string(name)]);
-        } else if (m_Nodes.top().IsSequence()) {
-            m_Nodes.push(m_Nodes.top()[m_IndexStack.top()++]);
+            m_nodes.push(m_nodes.top()[std::string(name)]);
+        } else if (m_nodes.top().IsSequence()) {
+            m_nodes.push(m_nodes.top()[m_index_stack.top()++]);
         } else {
             size = 0;
             return;
         }
-        VERIFY(m_Nodes.top().IsSequence());
+        VERIFY(m_nodes.top().IsSequence());
 
-        size = m_Nodes.top().size();
-        m_IndexStack.emplace(0);
+        size = m_nodes.top().size();
+        m_index_stack.emplace(0);
     }
 
-    void YamlDeserializer::EndArray()
+    void YamlDeserializer::end_array()
     {
-        m_Nodes.pop();
-        m_IndexStack.pop();
+        m_nodes.pop();
+        m_index_stack.pop();
     }
 
-    auto YamlDeserializer::ReadKeys() -> std::vector<std::string>
+    auto YamlDeserializer::keys() -> std::vector<std::string>
     {
-        if (m_Nodes.top().IsNull())
+        if (m_nodes.top().IsNull())
             return {};
-        VERIFY(m_Nodes.top().IsMap());
+        VERIFY(m_nodes.top().IsMap());
         std::vector<std::string> keys {};
 
-        for (auto aaa : m_Nodes.top()) {
+        for (auto aaa : m_nodes.top()) {
             keys.push_back(aaa.first.Scalar());
         }
         return keys;

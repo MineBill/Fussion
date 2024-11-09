@@ -7,12 +7,12 @@ namespace Fussion {
         COMPONENT_DEFAULT(Camera)
 
 #if FSN_DEBUG_DRAW
-        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
-        virtual void OnUpdate(f32 delta) override;
+        virtual void on_update(f32 delta) override;
 
         [[nodiscard]]
-        auto GetPerspective() const -> Mat4
+        auto perspective() const -> Mat4
         {
             return m_Perspective;
         }
@@ -25,9 +25,9 @@ namespace Fussion {
         [[API]]
         f32 fov { 50.0f };
 
-        virtual auto Clone() -> Ref<Component> override;
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual auto clone() -> Ref<Component> override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     private:
         Mat4 m_Perspective { 1.0f };

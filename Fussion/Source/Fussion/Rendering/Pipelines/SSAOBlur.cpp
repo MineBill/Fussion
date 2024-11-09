@@ -9,7 +9,7 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    void SSAOBlur::Init(Vector2 const& size)
+    void SSAOBlur::init(Vector2 const& size)
     {
         // std::array entries {
         //     GPU::BindGroupLayoutEntry {
@@ -40,10 +40,10 @@ namespace Fussion {
         // m_BindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
 
         constexpr auto path = "Assets/Shaders/Slang/Effects/Blur.slang";
-        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).unwrap();
         compiledShader.Metadata.UseDepth = false;
-        auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { Format });
-        m_Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        auto shader = make_ref<ShaderAsset>(compiledShader, std::vector { Format });
+        m_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
 
         GPU::TextureSpec rt_spec {
             .Label = "SSAOBlur::RenderTarget"sv,
@@ -54,8 +54,8 @@ namespace Fussion {
             .SampleCount = 1,
             .Aspect = GPU::TextureAspect::All,
         };
-        m_RenderTarget = Renderer::Device().CreateTexture(rt_spec);
-        m_RenderTarget.InitializeView();
+        m_render_target = Renderer::device().CreateTexture(rt_spec);
+        m_render_target.InitializeView();
 
         GPU::SamplerSpec sampler_spec {
             .label = "SSAOBlur::Sampler"sv,
@@ -67,16 +67,16 @@ namespace Fussion {
             .MipMapFilter = GPU::FilterMode::Linear,
         };
 
-        m_Sampler = Renderer::Device().CreateSampler(sampler_spec);
+        m_sampler = Renderer::device().CreateSampler(sampler_spec);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
                 .Binding = 0,
-                .Resource = m_RenderTarget.View,
+                .Resource = m_render_target.View,
             },
             GPU::BindGroupEntry {
                 .Binding = 1,
-                .Resource = m_Sampler,
+                .Resource = m_sampler,
             },
         };
 
@@ -85,13 +85,13 @@ namespace Fussion {
             .Entries = bind_group_entries
         };
 
-        m_BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bgSpec);
+        m_bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bgSpec);
     }
 
-    void SSAOBlur::Resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)
+    void SSAOBlur::resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)
     {
-        m_BindGroup.Release();
-        m_RenderTarget.Release();
+        m_bind_group.Release();
+        m_render_target.Release();
 
         std::array bgEntries {
             GPU::BindGroupEntry {
@@ -100,7 +100,7 @@ namespace Fussion {
             },
             GPU::BindGroupEntry {
                 .Binding = 1,
-                .Resource = m_Sampler,
+                .Resource = m_sampler,
             },
         };
 
@@ -109,8 +109,8 @@ namespace Fussion {
             .Entries = bgEntries
         };
 
-        auto shader = m_Shader.Get();
-        m_BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
+        auto shader = m_shader.get();
+        m_bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
 
         GPU::TextureSpec rt_spec {
             .Label = "SSAOBlur::RenderTarget"sv,
@@ -121,17 +121,17 @@ namespace Fussion {
             .SampleCount = 1,
             .Aspect = GPU::TextureAspect::All,
         };
-        m_RenderTarget = Renderer::Device().CreateTexture(rt_spec);
+        m_render_target = Renderer::device().CreateTexture(rt_spec);
     }
 
-    void SSAOBlur::Render(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end)
+    void SSAOBlur::render(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end)
     {
         ZoneScopedN("SSAO::Blur");
 
         using namespace GPU;
         std::array color_attachments {
             RenderPassColorAttachment {
-                .View = m_RenderTarget.View,
+                .View = m_render_target.View,
                 .LoadOp = LoadOp::Clear,
                 .StoreOp = StoreOp::Store,
                 .ClearColor = Color::Indigo,
@@ -150,9 +150,9 @@ namespace Fussion {
         };
         auto rp = encoder.BeginRendering(spec);
 
-        auto shader = m_Shader.Get();
-        rp.SetPipeline(shader->Pipeline());
-        rp.SetBindGroup(m_BindGroup, 0);
+        auto shader = m_shader.get();
+        rp.SetPipeline(shader->pipeline());
+        rp.SetBindGroup(m_bind_group, 0);
         rp.Draw({ 0, 6 }, { 0, 1 });
 
         rp.End();

@@ -53,48 +53,48 @@ namespace Fussion {
 
     IrradianceIBLGenerator::~IrradianceIBLGenerator()
     {
-        m_BindGroup.Release();
+        m_bind_group.Release();
     }
 
     constexpr auto EQUIRECT_TO_CUBE_MAP_PATH = "Assets/Shaders/Slang/EquirectToCubeMap.slang";
     constexpr auto CUBEMAP_CONVOLUTION_PATH = "Assets/Shaders/Slang/CubeMapConvolution.slang";
 
-    void IrradianceIBLGenerator::Initialize()
+    void IrradianceIBLGenerator::init()
     {
         ZoneScoped;
         using namespace GPU;
         {
-            auto compiled = ShaderProcessor::CompileSlang(EQUIRECT_TO_CUBE_MAP_PATH).Unwrap();
+            auto compiled = ShaderProcessor::CompileSlang(EQUIRECT_TO_CUBE_MAP_PATH).unwrap();
             compiled.Metadata.UseDepth = false;
 
-            m_CubeMapGeneratorShader = MakeRef<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
+            m_cube_map_generator_shader = make_ref<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
         }
 
         {
-            auto compiled = ShaderProcessor::CompileSlang(CUBEMAP_CONVOLUTION_PATH).Unwrap();
+            auto compiled = ShaderProcessor::CompileSlang(CUBEMAP_CONVOLUTION_PATH).unwrap();
             compiled.Metadata.UseDepth = false;
 
-            m_CubeMapConvolutionShader = MakeRef<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
+            m_cube_map_convolution_shader = make_ref<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
         }
 
-        m_Sampler = Renderer::Device().CreateSampler({
+        m_sampler = Renderer::device().CreateSampler({
             .label = "sampler"sv,
             .AddressModeU = AddressMode::ClampToEdge,
             .AddressModeV = AddressMode::ClampToEdge,
             .AddressModeW = AddressMode::ClampToEdge,
         });
 
-        m_CubeVertexBuffer = Renderer::Device().CreateBuffer({
+        m_cube_vertex_buffer = Renderer::device().CreateBuffer({
             .Label = "Cube Verts"sv,
             .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
             .Size = 36 * sizeof(Vector3),
             .Mapped = false,
         });
 
-        Renderer::Device().WriteBuffer<Vector3>(m_CubeVertexBuffer, 0, CUBE_VERTICES);
+        Renderer::device().WriteBuffer<Vector3>(m_cube_vertex_buffer, 0, CUBE_VERTICES);
 
         auto perspective = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-        m_CaptureViews = {
+        m_capture_views = {
             perspective * lookAt(glm::vec3 { 0.0f, 0.0f, 0.0f }, glm::vec3 { -1.0f, 0.0f, 0.0f }, glm::vec3 { 0.0f, 1.0f, 0.0f }),
             perspective * lookAt(glm::vec3 { 0.0f, 0.0f, 0.0f }, glm::vec3 { 1.0f, 0.0f, 0.0f }, glm::vec3 { 0.0f, 1.0f, 0.0f }),
             perspective * lookAt(glm::vec3 { 0.0f, 0.0f, 0.0f }, glm::vec3 { 0.0f, 1.0f, 0.0f }, glm::vec3 { 0.0f, 0.0f, -1.0f }),
@@ -117,38 +117,38 @@ namespace Fussion {
                 .GenerateMipMaps = false,
             };
 
-            m_RenderTextures[i] = Renderer::Device().CreateTexture(rt_spec);
+            m_render_textures[i] = Renderer::device().CreateTexture(rt_spec);
 
-            m_PerFaceViewData[i] = UniformBuffer<ViewData>::Create(Renderer::Device());
-            m_PerFaceViewData[i].Data.View = m_CaptureViews[i];
-            m_PerFaceViewData[i].Flush();
+            m_per_face_view_data[i] = UniformBuffer<ViewData>::create(Renderer::device());
+            m_per_face_view_data[i].Data.view = m_capture_views[i];
+            m_per_face_view_data[i].flush();
         }
     }
 
-    auto IrradianceIBLGenerator::Generate(GPU::Texture const& inputTexture) -> GPU::Texture
+    auto IrradianceIBLGenerator::generate(GPU::Texture const& inputTexture) -> GPU::Texture
     {
         ZoneScoped;
         // GPU::Utils::RenderDoc::StartCapture();
-        auto encoder = Renderer::Device().CreateCommandEncoder();
+        auto encoder = Renderer::device().CreateCommandEncoder();
 
         encoder.PushDebugGroup("Cubemap");
-        auto texture = GenerateCubemap(encoder, inputTexture);
+        auto texture = generate_cubemap(encoder, inputTexture);
         encoder.PopDebugGroup();
 
         encoder.PushDebugGroup("Convolution");
-        auto convoluted_texture = GenerateConvolutedCubemap(encoder, texture);
+        auto convoluted_texture = generate_convoluted_cubemap(encoder, texture);
         encoder.PopDebugGroup();
 
-        Renderer::Device().SubmitCommandBuffer(encoder.Finish());
+        Renderer::device().SubmitCommandBuffer(encoder.Finish());
         encoder.Release();
         // GPU::Utils::RenderDoc::EndCapture();
 
-        m_BindGroup.Release();
-        m_ConvBindGroup.Release();
+        m_bind_group.Release();
+        m_conv_bind_group.Release();
         return convoluted_texture;
     }
 
-    auto IrradianceIBLGenerator::GenerateCubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture
+    auto IrradianceIBLGenerator::generate_cubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture
     {
         ZoneScoped;
         using namespace GPU;
@@ -165,7 +165,7 @@ namespace Fussion {
             .InitializeView = false,
         };
 
-        auto texture = Renderer::Device().CreateTexture(texture_spec);
+        auto texture = Renderer::device().CreateTexture(texture_spec);
         texture.View = texture.CreateView({
             .Label = "View"sv,
             .Usage = texture_spec.Usage,
@@ -183,9 +183,9 @@ namespace Fussion {
                 BindGroupEntry {
                     .Binding = 0,
                     .Resource = BufferBinding {
-                        .TargetBuffer = m_PerFaceViewData[i].Buffer(),
+                        .TargetBuffer = m_per_face_view_data[i].buffer(),
                         .Offset = 0,
-                        .Size = m_PerFaceViewData[i].Size(),
+                        .Size = m_per_face_view_data[i].size(),
                     },
                 },
                 BindGroupEntry {
@@ -194,11 +194,11 @@ namespace Fussion {
                 },
                 BindGroupEntry {
                     .Binding = 2,
-                    .Resource = m_Sampler,
+                    .Resource = m_sampler,
                 }
             };
 
-            m_BindGroup = Renderer::Device().CreateBindGroup(m_CubeMapGeneratorShader->GetBindGroupLayout(0).Unwrap(),
+            m_bind_group = Renderer::device().CreateBindGroup(m_cube_map_generator_shader->get_bind_group_layout_for(0).unwrap(),
                 {
                     .Label = "CubeTexGen::bind_group"sv,
                     .Entries = entries,
@@ -206,7 +206,7 @@ namespace Fussion {
 
             std::array attachments {
                 RenderPassColorAttachment {
-                    .View = m_RenderTextures[i].View,
+                    .View = m_render_textures[i].View,
                     .LoadOp = LoadOp::Clear,
                     .StoreOp = StoreOp::Store,
                     .ClearColor = Color::Black,
@@ -218,9 +218,9 @@ namespace Fussion {
             };
             auto pass = encoder.BeginRendering(spec);
 
-            pass.SetPipeline(m_CubeMapGeneratorShader->Pipeline());
-            pass.SetBindGroup(m_BindGroup, 0);
-            pass.SetVertexBuffer(0, m_CubeVertexBuffer);
+            pass.SetPipeline(m_cube_map_generator_shader->pipeline());
+            pass.SetBindGroup(m_bind_group, 0);
+            pass.SetVertexBuffer(0, m_cube_vertex_buffer);
 
             pass.Draw({ 0, 36 }, { 0, 1 });
 
@@ -229,13 +229,13 @@ namespace Fussion {
         }
 
         for (u32 i = 0; i < 6; ++i) {
-            encoder.CopyTextureToTexture(m_RenderTextures[i], texture, { 512, 512 }, 0, 0, 0, i);
+            encoder.CopyTextureToTexture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
         }
 
         return texture;
     }
 
-    auto IrradianceIBLGenerator::GenerateConvolutedCubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture
+    auto IrradianceIBLGenerator::generate_convoluted_cubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture
     {
         ZoneScoped;
         using namespace GPU;
@@ -252,7 +252,7 @@ namespace Fussion {
             .InitializeView = false,
         };
 
-        auto texture = Renderer::Device().CreateTexture(texture_spec);
+        auto texture = Renderer::device().CreateTexture(texture_spec);
         texture.View = texture.CreateView({
             .Label = "View"sv,
             .Usage = texture_spec.Usage,
@@ -270,9 +270,9 @@ namespace Fussion {
                 BindGroupEntry {
                     .Binding = 0,
                     .Resource = BufferBinding {
-                        .TargetBuffer = m_PerFaceViewData[i].Buffer(),
+                        .TargetBuffer = m_per_face_view_data[i].buffer(),
                         .Offset = 0,
-                        .Size = m_PerFaceViewData[i].Size(),
+                        .Size = m_per_face_view_data[i].size(),
                     },
                 },
                 BindGroupEntry {
@@ -281,11 +281,11 @@ namespace Fussion {
                 },
                 BindGroupEntry {
                     .Binding = 2,
-                    .Resource = m_Sampler,
+                    .Resource = m_sampler,
                 }
             };
 
-            m_ConvBindGroup = Renderer::Device().CreateBindGroup(m_CubeMapConvolutionShader->GetBindGroupLayout(0).Unwrap(),
+            m_conv_bind_group = Renderer::device().CreateBindGroup(m_cube_map_convolution_shader->get_bind_group_layout_for(0).unwrap(),
                 {
                     .Label = "CubeTexGen::bind_group"sv,
                     .Entries = entries,
@@ -293,7 +293,7 @@ namespace Fussion {
 
             std::array attachments {
                 RenderPassColorAttachment {
-                    .View = m_RenderTextures[i].View,
+                    .View = m_render_textures[i].View,
                     .LoadOp = LoadOp::Clear,
                     .StoreOp = StoreOp::Store,
                     .ClearColor = Color::Black,
@@ -305,9 +305,9 @@ namespace Fussion {
             };
             auto pass = encoder.BeginRendering(spec);
 
-            pass.SetPipeline(m_CubeMapConvolutionShader->Pipeline());
-            pass.SetBindGroup(m_ConvBindGroup, 0);
-            pass.SetVertexBuffer(0, m_CubeVertexBuffer);
+            pass.SetPipeline(m_cube_map_convolution_shader->pipeline());
+            pass.SetBindGroup(m_conv_bind_group, 0);
+            pass.SetVertexBuffer(0, m_cube_vertex_buffer);
 
             pass.Draw({ 0, 36 }, { 0, 1 });
 
@@ -316,7 +316,7 @@ namespace Fussion {
         }
 
         for (u32 i = 0; i < 6; ++i) {
-            encoder.CopyTextureToTexture(m_RenderTextures[i], texture, { 512, 512 }, 0, 0, 0, i);
+            encoder.CopyTextureToTexture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
         }
 
         return texture;

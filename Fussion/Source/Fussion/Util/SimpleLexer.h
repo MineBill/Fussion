@@ -51,39 +51,39 @@ namespace Fussion {
         explicit Token(TokenType type, Cursor cursor = {});
         Token(TokenType type, ValueType const& value, Cursor cursor = {});
 
-        std::string ToString() const;
-        [[nodiscard]] TokenType Type() const { return m_Type; }
-        [[nodiscard]] ValueType Value() const { return m_Value; }
-        [[nodiscard]] Cursor GetCursor() const { return m_Cursor; }
+        std::string to_string() const;
+        [[nodiscard]] TokenType type() const { return m_type; }
+        [[nodiscard]] ValueType value() const { return m_value; }
+        [[nodiscard]] Cursor cursor() const { return m_cursor; }
 
     private:
-        Cursor m_Cursor {};
-        TokenType m_Type {};
-        ValueType m_Value {};
+        Cursor m_cursor {};
+        TokenType m_type {};
+        ValueType m_value {};
     };
 
     class SimpleLexer {
     public:
         explicit SimpleLexer(std::string const& source);
 
-        std::vector<Token> Scan();
+        std::vector<Token> scan();
 
     private:
-        u8 Advance();
-        bool Match(u8 ch);
-        u8 Peek() const;
-        u8 PeekNext() const;
-        void PushToken(TokenType type);
-        void PushToken(TokenType type, ValueType value);
-        void ScanToken();
-        bool IsAtEnd() const;
-        void ParseString();
-        void ParseNumber();
-        void ParseIdentifier();
+        u8 advance();
+        bool match(u8 ch);
+        u8 peek() const;
+        u8 peek_next() const;
+        void push_token(TokenType type);
+        void push_token(TokenType type, ValueType value);
+        void scan_token();
+        bool is_at_end() const;
+        void parse_string();
+        void parse_number();
+        void parse_identifier();
 
-        u32 m_Index { 0 };
-        Cursor m_Cursor {};
-        std::string m_Source {};
-        std::vector<Token> m_Tokens {};
+        u32 m_index { 0 };
+        Cursor m_cursor {};
+        std::string m_source {};
+        std::vector<Token> m_tokens {};
     };
 }

@@ -5,6 +5,6 @@ namespace Fussion::Scripting {
     public:
         virtual ~Attribute() { }
 
-        virtual std::string ToString() = 0;
+        virtual std::string to_string() = 0;
     };
 }

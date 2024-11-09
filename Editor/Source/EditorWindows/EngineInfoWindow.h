@@ -5,5 +5,5 @@ class EngineInfoWindow : public EditorWindow {
 public:
     EDITOR_WINDOW(EngineInfoWindow)
 
-    virtual void OnDraw() override;
+    virtual void on_draw() override;
 };

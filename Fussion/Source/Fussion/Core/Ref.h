@@ -5,11 +5,11 @@
 namespace Fussion {
     class RefCounted {
     public:
-        void AddRef();
+        void add_ref();
 
-        void Release();
+        void release();
 
-        u32 RefCount() const;
+        u32 ref_count() const;
 
     protected:
         virtual ~RefCounted() = default;
@@ -22,48 +22,48 @@ namespace Fussion {
     class RefPtr {
     public:
         RefPtr()
-            : m_Ptr(nullptr)
+            : m_ptr(nullptr)
         {
         }
 
         RefPtr(T* obj)
-            : m_Ptr(obj)
+            : m_ptr(obj)
         {
-            if (m_Ptr) {
-                m_Ptr->AddRef();
+            if (m_ptr) {
+                m_ptr->add_ref();
             }
         }
 
         RefPtr(RefPtr const& other)
-            : m_Ptr(other.m_Ptr)
+            : m_ptr(other.m_ptr)
         {
-            if (m_Ptr) {
-                m_Ptr->AddRef();
+            if (m_ptr) {
+                m_ptr->add_ref();
             }
         }
 
         RefPtr(RefPtr&& other) noexcept
-            : m_Ptr(other.m_Ptr)
+            : m_ptr(other.m_ptr)
         {
-            other.m_Ptr = nullptr;
+            other.m_ptr = nullptr;
         }
 
         ~RefPtr()
         {
-            if (m_Ptr) {
-                m_Ptr->Release();
+            if (m_ptr) {
+                m_ptr->release();
             }
         }
 
         RefPtr& operator=(RefPtr const& other)
         {
             if (this != &other) {
-                if (m_Ptr) {
-                    m_Ptr->Release();
+                if (m_ptr) {
+                    m_ptr->release();
                 }
-                m_Ptr = other.m_Ptr;
-                if (m_Ptr) {
-                    m_Ptr->AddRef();
+                m_ptr = other.m_ptr;
+                if (m_ptr) {
+                    m_ptr->add_ref();
                 }
             }
             return *this;
@@ -72,26 +72,26 @@ namespace Fussion {
         RefPtr& operator=(RefPtr&& other) noexcept
         {
             if (this != &other) {
-                if (m_Ptr) {
-                    m_Ptr->Release();
+                if (m_ptr) {
+                    m_ptr->release();
                 }
-                m_Ptr = other.m_Ptr;
-                other.m_Ptr = nullptr;
+                m_ptr = other.m_ptr;
+                other.m_ptr = nullptr;
             }
             return *this;
         }
 
-        T* operator->() const { return m_Ptr; }
-        T& operator*() const { return *m_Ptr; }
+        T* operator->() const { return m_ptr; }
+        T& operator*() const { return *m_ptr; }
 
-        T* Leak() const { return m_Ptr; }
+        T* leak() const { return m_ptr; }
 
     private:
-        T* m_Ptr;
+        T* m_ptr;
     };
 
     template<std::derived_from<RefCounted> T, typename... Args>
-    RefPtr<T> MakeRefPtr(Args&&... args)
+    RefPtr<T> make_ref_ptr(Args&&... args)
     {
         T* obj = new T(std::forward<Args>(args)...);
         return RefPtr<T>(obj);
@@ -100,7 +100,7 @@ namespace Fussion {
 }
 
 #if defined(FSN_CORE_USE_GLOBALLY)
-using Fussion::MakeRefPtr;
+using Fussion::make_ref_ptr;
 using Fussion::RefCounted;
 using Fussion::RefPtr;
 #endif

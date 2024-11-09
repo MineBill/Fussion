@@ -32,40 +32,40 @@ WorkerPool::WorkerPool()
     u32 max_threads = 1;
 #endif
     LOG_INFOF("Creating {} worker threads for background asset loading.", max_threads);
-    m_Quit = false;
+    m_quit = false;
     for (u32 i = 0; i < max_threads; i++) {
-        m_Workers.emplace_back(&WorkerPool::Work, this, i);
+        m_workers.emplace_back(&WorkerPool::work, this, i);
     }
 }
 
 WorkerPool::~WorkerPool()
 {
-    m_Quit = true;
-    m_ConditionVariable.notify_all();
-    for (auto& worker : m_Workers) {
+    m_quit = true;
+    m_condition_variable.notify_all();
+    for (auto& worker : m_workers) {
         worker.join();
     }
 }
 
-void WorkerPool::Work(s32 index)
+void WorkerPool::work(s32 index)
 {
     // NOTE: This probably doesn't hurt much since these are pointers to functions, no data are created.
     std::map<AssetType, Ptr<AssetImporter>> asset_serializers {};
-    asset_serializers[AssetType::Texture2D] = MakePtr<TextureImporter>();
-    asset_serializers[AssetType::Model] = MakePtr<MeshImporter>();
+    asset_serializers[AssetType::Texture2D] = make_ptr<TextureImporter>();
+    asset_serializers[AssetType::Model] = make_ptr<MeshImporter>();
 
     std::set binaryAssets { AssetType::Model, AssetType::Texture2D };
 
     auto makeAsset = [](AssetType type) -> Ref<Asset> {
         switch (type) {
         case AssetType::Model:
-            return MakeRef<Model>();
+            return make_ref<Model>();
         case AssetType::PbrMaterial:
-            return MakeRef<PbrMaterial>();
+            return make_ref<PbrMaterial>();
         case AssetType::Scene:
-            return MakeRef<Scene>();
+            return make_ref<Scene>();
         case AssetType::Texture2D:
-            return MakeRef<Texture2D>();
+            return make_ref<Texture2D>();
         default:
             UNREACHABLE();
         }
@@ -76,65 +76,65 @@ void WorkerPool::Work(s32 index)
     while (true) {
         Maybe<EditorAssetMetadata> task;
         {
-            std::unique_lock lock(m_Mutex);
+            std::unique_lock lock(m_mutex);
 
-            m_ConditionVariable.wait(lock, [this] { return !m_Tasks.empty() || m_Quit; });
+            m_condition_variable.wait(lock, [this] { return !m_tasks.empty() || m_quit; });
 
-            if (!m_Tasks.empty()) {
-                task = m_Tasks.front();
-                m_Tasks.pop();
+            if (!m_tasks.empty()) {
+                task = m_tasks.front();
+                m_tasks.pop();
             }
         }
 
-        if (task.HasValue()) {
-            LOG_INFOF("Worker({}) was notified about a new task: {}", index, task->Path.string());
+        if (task.has_value()) {
+            LOG_INFOF("Worker({}) was notified about a new task: {}", index, task->path.string());
 
-            auto asset = makeAsset(task->Type);
-            auto fullPath = Project::AssetsFolderPath() / task->Path;
-            if (binaryAssets.contains(task->Type)) {
+            auto asset = makeAsset(task->type);
+            auto fullPath = Project::assets_folder_path() / task->path;
+            if (binaryAssets.contains(task->type)) {
                 std::ifstream file;
                 file.open(fullPath, std::ios::binary | std::ios::in);
                 BinaryDeserializer ds(&file);
-                asset->Deserialize(ds);
-                asset->SetHandle(task->Handle);
-                LoadedAssets.Access([&](auto& queue) {
+                asset->deserialize(ds);
+                asset->set_handle(task->handle);
+                loaded_assets.access([&](auto& queue) {
                     queue.push(asset);
                 });
             } else {
-                if (auto json_string = FileSystem::ReadEntireFile(fullPath)) {
+                if (auto json_string = FileSystem::read_entire_file(fullPath)) {
                     YamlDeserializer ds(*json_string);
-                    asset->Deserialize(ds);
-                    asset->SetHandle(task->Handle);
-                    LoadedAssets.Access([&](auto& queue) {
+                    asset->deserialize(ds);
+                    asset->set_handle(task->handle);
+                    loaded_assets.access([&](auto& queue) {
                         queue.push(asset);
                     });
                 }
             }
         }
 
-        if (m_Quit) {
+        if (m_quit) {
             break;
         }
     }
 }
 
-void WorkerPool::Load(EditorAssetMetadata const& metadata)
+void WorkerPool::load_asset(EditorAssetMetadata const& metadata)
 {
     {
-        std::lock_guard lock(m_Mutex);
-        m_Tasks.push(metadata);
+        std::lock_guard lock(m_mutex);
+        m_tasks.push(metadata);
     }
 
-    m_ConditionVariable.notify_one();
+    m_condition_variable.notify_one();
 }
 
 EditorAssetManager::EditorAssetManager()
-    : m_EditorWatcher(FileWatcher::Create(fs::current_path() / "Assets" / "Shaders"))
+    : m_editor_watcher(FileWatcher::create(fs::current_path() / "Assets" / "Shaders"))
 {
-    m_AssetImporters[AssetType::Texture2D] = MakePtr<TextureImporter>();
-    m_AssetImporters[AssetType::Model] = MakePtr<MeshImporter>();
+    m_asset_importers[AssetType::Texture2D] = make_ptr<TextureImporter>();
+    m_asset_importers[AssetType::Model] = make_ptr<MeshImporter>();
 
-    m_EditorWatcher->AddListener([this](fs::path const& path, FileWatcher::EventType type) {
+    m_editor_watcher->add_listener([this](fs::path const& path, FileWatcher::EventType type) {
         if (type == FileWatcher::EventType::FileModified) {
             LOG_DEBUGF("Editor file changed: {} type: {}", path.string(), magic_enum::enum_name(type));
             using namespace std::chrono_literals;
@@ -142,17 +142,17 @@ EditorAssetManager::EditorAssetManager()
             std::this_thread::sleep_for(50ms);
             using namespace std::string_literals;
             auto const full_path = fs::path("Assets") / "Shaders"s / path;
-            auto meta = GetMetadata(full_path);
-            if (meta.IsEmpty()) {
+            auto meta = get_metadata(full_path);
+            if (meta.is_empty()) {
                 return;
             }
-            switch (meta->Type) {
+            switch (meta->type) {
             case AssetType::Shader: {
-                auto shader = GetAsset(meta->Handle, AssetType::Shader)->As<ShaderAsset>();
-                auto result = GPU::ShaderProcessor::CompileSlang(meta->Path);
+                auto shader = get_asset(meta->handle, AssetType::Shader)->as<ShaderAsset>();
+                auto result = GPU::ShaderProcessor::CompileSlang(meta->path);
                 if (result) {
-                    result->Metadata = shader->GetMetadata();
-                    *shader = ShaderAsset(*result, shader->GetColorTargetFormats());
+                    result->Metadata = shader->metadata();
+                    *shader = ShaderAsset(*result, shader->color_target_formats());
                 }
             } break;
             default:
@@ -160,110 +160,110 @@ EditorAssetManager::EditorAssetManager()
             }
         }
     });
-    m_EditorWatcher->Start();
+    m_editor_watcher->start();
 }
 
 EditorAssetManager::~EditorAssetManager() = default;
 
-Asset* EditorAssetManager::GetAsset(AssetHandle handle, AssetType type)
+Asset* EditorAssetManager::get_asset(AssetHandle handle, AssetType type)
 {
     // VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}. Could it be that you are referencing a virtual asset?", handle);
     ZoneScoped;
-    if (!IsAssetLoaded(handle)) {
-        if (IsAssetLoading(handle)) {
+    if (!is_asset_loaded(handle)) {
+        if (is_asset_loading(handle)) {
             return nullptr;
         }
-        LoadAsset(handle, type);
+        load_asset(handle, type);
         return nullptr;
     }
-    return m_LoadedAssets[handle].get();
+    return m_loaded_assets[handle].get();
 }
 
-auto EditorAssetManager::GetAsset(std::string const& path, AssetType type) -> Asset*
+auto EditorAssetManager::get_asset(std::string const& path, AssetType type) -> Asset*
 {
     // TODO: This is wrong, GetAsset will call functions that will try to lock the registry
     // while we already have it locked.
-    return m_Registry.Access([&](Registry const& registry) -> Asset* {
+    return m_registry.access([&](Registry const& registry) -> Asset* {
         for (auto const& [handle, asset] : registry) {
-            if (asset.Path == path && asset.Type == type) {
-                return GetAsset(handle, type);
+            if (asset.path == path && asset.type == type) {
+                return get_asset(handle, type);
             }
         }
         return nullptr;
     });
 }
 
-bool EditorAssetManager::IsAssetLoaded(AssetHandle handle)
+bool EditorAssetManager::is_asset_loaded(AssetHandle handle)
 {
-    CheckForLoadedAssets();
-    return m_Registry.Access([&](Registry const& registry) {
+    check_for_loaded_assets();
+    return m_registry.access([&](Registry const& registry) {
         auto const& metadata = registry.at(handle);
-        return metadata.LoadState == AssetLoadState::Loaded;
+        return metadata.load_state == AssetLoadState::Loaded;
     });
 }
 
-bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
+bool EditorAssetManager::is_asset_handle_valid(AssetHandle handle) const
 {
-    return m_Registry.Access([&](Registry const& registry) {
+    return m_registry.access([&](Registry const& registry) {
         return registry.contains(handle);
     });
 }
 
-bool EditorAssetManager::IsAssetVirtual(AssetHandle handle)
+bool EditorAssetManager::is_asset_virtual(AssetHandle handle)
 {
-    return m_Registry.Access([&](Registry const& registry) {
+    return m_registry.access([&](Registry const& registry) {
         if (!registry.contains(handle))
             return false;
-        return registry.at(handle).IsVirtual;
+        return registry.at(handle).is_virtual;
     });
 }
 
-AssetHandle EditorAssetManager::CreateVirtualAsset(Ref<Asset> const& asset, std::string_view name, fs::path const& path)
+AssetHandle EditorAssetManager::create_virtual_asset(Ref<Asset> const& asset, std::string_view name, fs::path const& path)
 {
     auto const handle = AssetHandle();
-    m_Registry.Access([&](Registry& registry) {
+    m_registry.access([&](Registry& registry) {
         registry[handle] = EditorAssetMetadata {
-            .Type = asset->Type(),
-            .Path = path,
-            .Name = std::string(name),
-            .IsVirtual = true,
-            .DontSerialize = true,
-            .LoadState = AssetLoadState::Loaded,
-            .Handle = handle,
+            .type = asset->type(),
+            .path = path,
+            .name = std::string(name),
+            .is_virtual = true,
+            .dont_serialize = true,
+            .load_state = AssetLoadState::Loaded,
+            .handle = handle,
         };
     });
-    m_LoadedAssets[handle] = asset;
+    m_loaded_assets[handle] = asset;
 
     return handle;
 }
 
-AssetMetadata* EditorAssetManager::GetAssetMetadata(AssetHandle handle)
+AssetMetadata* EditorAssetManager::get_asset_metadata(AssetHandle handle)
 {
-    if (!IsAssetHandleValid(handle))
+    if (!is_asset_handle_valid(handle))
         return nullptr;
 
-    return m_Registry.Access([&](Registry& registry) {
-        return registry[handle].CustomMetadata.get();
+    return m_registry.access([&](Registry& registry) {
+        return registry[handle].custom_metadata.get();
     });
 }
 
-bool EditorAssetManager::IsAssetLoading(AssetHandle handle)
+bool EditorAssetManager::is_asset_loading(AssetHandle handle)
 {
-    return m_Registry.Access([&](Registry const& registry) {
+    return m_registry.access([&](Registry const& registry) {
         auto const& metadata = registry.at(handle);
-        return metadata.LoadState == AssetLoadState::Loading;
+        return metadata.load_state == AssetLoadState::Loading;
     });
 }
 
-bool EditorAssetManager::IsPathAnAsset(fs::path const& path, bool include_virtual) const
+bool EditorAssetManager::is_path_an_asset(fs::path const& path, bool include_virtual) const
 {
     ZoneScoped;
-    return m_Registry.Access([&](Registry const& registry) {
+    return m_registry.access([&](Registry const& registry) {
         for (auto const& [id, metadata] : registry) {
             (void)id;
-            if (!include_virtual && metadata.IsVirtual)
+            if (!include_virtual && metadata.is_virtual)
                 continue;
-            if (metadata.Path == path) {
+            if (metadata.path == path) {
                 return true;
             }
         }
@@ -271,13 +271,13 @@ bool EditorAssetManager::IsPathAnAsset(fs::path const& path, bool include_virtua
     });
 }
 
-Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(fs::path const& path) const
+Maybe<EditorAssetMetadata> EditorAssetManager::get_metadata(fs::path const& path) const
 {
     ZoneScoped;
-    return m_Registry.Access([&](Registry const& registry) -> EditorAssetMetadata {
+    return m_registry.access([&](Registry const& registry) -> EditorAssetMetadata {
         for (auto const& [id, metadata] : registry) {
             (void)id;
-            if (metadata.Path == path) {
+            if (metadata.path == path) {
                 return metadata;
             }
         }
@@ -285,10 +285,10 @@ Maybe<EditorAssetMetadata> EditorAssetManager::GetMetadata(fs::path const& path)
     });
 }
 
-EditorAssetMetadata EditorAssetManager::GetMetadata(AssetHandle handle) const
+EditorAssetMetadata EditorAssetManager::get_metadata(AssetHandle handle) const
 {
-    if (IsAssetHandleValid(handle)) {
-        return m_Registry.Access([&](Registry const& registry) {
+    if (is_asset_handle_valid(handle)) {
+        return m_registry.access([&](Registry const& registry) {
             return registry.at(handle);
         });
     }
@@ -300,7 +300,7 @@ auto metadata_for_asset(AssetType type) -> Ref<AssetMetadata>
     using enum AssetType;
     switch (type) {
     case Texture2D: {
-        return MakeRef<Texture2DMetadata>();
+        return make_ref<Texture2DMetadata>();
     }
     default:
         break;
@@ -308,15 +308,15 @@ auto metadata_for_asset(AssetType type) -> Ref<AssetMetadata>
     return nullptr;
 }
 
-void EditorAssetManager::RegisterAsset(fs::path const& path, AssetType type)
+void EditorAssetManager::register_asset(fs::path const& path, AssetType type)
 {
     ZoneScoped;
     if (type == AssetType::Invalid) {
         LOG_WARNF("Ignoring Invalid asset type.");
         return;
     }
-    m_Registry.Access([&](Registry& registry) {
-        auto pos = std::ranges::find_if(registry, [&path](auto entry) -> bool { return entry.second.Path == path; });
+    m_registry.access([&](Registry& registry) {
+        auto pos = std::ranges::find_if(registry, [&path](auto entry) -> bool { return entry.second.path == path; });
         if (pos != registry.end()) {
             LOG_ERRORF("Cannot register asset at path '{}', another asset lives there", path.string());
             return;
@@ -326,20 +326,20 @@ void EditorAssetManager::RegisterAsset(fs::path const& path, AssetType type)
 
         Uuid id;
         registry[id] = EditorAssetMetadata {
-            .Type = type,
-            .Path = path,
-            .Name = path.filename().string(),
-            .IsVirtual = false,
-            .DontSerialize = false,
-            .Handle = id,
-            .CustomMetadata = metadata_for_asset(type),
+            .type = type,
+            .path = path,
+            .name = path.filename().string(),
+            .is_virtual = false,
+            .dont_serialize = false,
+            .handle = id,
+            .custom_metadata = metadata_for_asset(type),
         };
     });
 
-    SaveToFile();
+    save_to_file();
 }
 
-void EditorAssetManager::ImportAsset(std::filesystem::path const& path, std::filesystem::path const& parentDir)
+void EditorAssetManager::import_asset(std::filesystem::path const& path, std::filesystem::path const& parentDir)
 {
     // 1. Load asset into memory using the appropriate importer (stb_image, tinyglfy, etc..)
     if (!path.has_extension() || !path.has_filename()) {
@@ -364,7 +364,7 @@ void EditorAssetManager::ImportAsset(std::filesystem::path const& path, std::fil
     }
     auto assetType = FileTypes.at(ext);
 
-    auto asset = m_AssetImporters[assetType]->Import(path);
+    auto asset = m_asset_importers[assetType]->Import(path);
 
     // 1.1 Run any extra post-processing steps.
     (void)0;
@@ -381,18 +381,18 @@ void EditorAssetManager::ImportAsset(std::filesystem::path const& path, std::fil
     }
 
     BinarySerializer s(&file);
-    asset->Serialize(s);
+    asset->serialize(s);
 
     // 3. Register this form in the registry.
-    RegisterAsset(relative(assetPath, Project::AssetsFolderPath()), assetType);
+    register_asset(relative(assetPath, Project::assets_folder_path()), assetType);
 
     // NOTE: When the asset is loaded, we load that binary format and do not go through the importer.
 }
 
-void EditorAssetManager::SaveAsset(AssetHandle handle)
+void EditorAssetManager::save_asset(AssetHandle handle)
 {
     ZoneScoped;
-    auto meta = m_Registry.Access([&](Registry& registry) {
+    auto meta = m_registry.access([&](Registry& registry) {
         return registry[handle];
     });
 
@@ -400,26 +400,26 @@ void EditorAssetManager::SaveAsset(AssetHandle handle)
     YamlSerializer ys;
     ys.Initialize();
 
-    m_LoadedAssets[handle]->Serialize(ys);
+    m_loaded_assets[handle]->serialize(ys);
 
-    auto path = Project::AssetsFolderPath() / meta.Path;
-    FileSystem::WriteEntireFile(path, ys.ToString());
+    auto path = Project::assets_folder_path() / meta.path;
+    FileSystem::write_entire_file(path, ys.to_string());
 }
 
-void EditorAssetManager::RenameAsset(AssetHandle handle, std::string_view new_name)
+void EditorAssetManager::rename_asset(AssetHandle handle, std::string_view new_name)
 {
     ZoneScoped;
-    m_Registry.Access([&](Registry& registry) {
+    m_registry.access([&](Registry& registry) {
         if (!registry.contains(handle))
             return;
 
         auto& meta = registry[handle];
-        auto old_path = Project::AssetsFolderPath() / meta.Path;
-        auto new_path = Project::AssetsFolderPath() / (meta.Path.has_parent_path() ? meta.Path.parent_path() : "") / new_name;
+        auto old_path = Project::assets_folder_path() / meta.path;
+        auto new_path = Project::assets_folder_path() / (meta.path.has_parent_path() ? meta.path.parent_path() : "") / new_name;
         LOG_DEBUGF("Renaming asset: '{}' -> '{}'", old_path, new_path);
 
         if (auto pos = std::ranges::find_if(registry, [&new_path](std::pair<AssetHandle, EditorAssetMetadata> const& pair) {
-                return pair.second.Path == relative(new_path, Project::AssetsFolderPath());
+                return pair.second.path == relative(new_path, Project::assets_folder_path());
             });
             pos != registry.end()) {
             LOG_ERRORF("Rename will overwrite existing asset, aborting.");
@@ -428,14 +428,14 @@ void EditorAssetManager::RenameAsset(AssetHandle handle, std::string_view new_na
 
         try {
             fs::rename(old_path, new_path);
-            meta.Name = new_name;
-            meta.Path = relative(new_path, Project::AssetsFolderPath());
+            meta.name = new_name;
+            meta.path = relative(new_path, Project::assets_folder_path());
         } catch (fs::filesystem_error& error) {
             LOG_ERRORF("Failed to rename asset: {}", error.what());
         }
     });
 
-    SaveToFile();
+    save_to_file();
 }
 
 auto deserialize_custom_metadata(json const& j, AssetType type) -> Ref<AssetMetadata>
@@ -444,10 +444,10 @@ auto deserialize_custom_metadata(json const& j, AssetType type) -> Ref<AssetMeta
     using enum AssetType;
     switch (type) {
     case Texture2D: {
-        auto meta = MakeRef<Texture2DMetadata>();
-        JsonDeserializer ds = JsonDeserializer::FromJsonObject(j);
+        auto meta = make_ref<Texture2DMetadata>();
+        JsonDeserializer ds = JsonDeserializer::from_json_object(j);
 
-        ds.Read("CustomMetadata", *meta);
+        ds.read("CustomMetadata", *meta);
         return meta;
     }
     default:
@@ -456,13 +456,13 @@ auto deserialize_custom_metadata(json const& j, AssetType type) -> Ref<AssetMeta
     return nullptr;
 }
 
-void EditorAssetManager::SaveToFile()
+void EditorAssetManager::save_to_file()
 {
     ZoneScoped;
     YamlSerializer s;
     s.Initialize();
 
-    Serialize(s);
+    serialize(s);
     // s.Write("$Type", "AssetRegistry");
     // // json j = {
     // //     { "$Type", "AssetRegistry" },
@@ -504,16 +504,16 @@ void EditorAssetManager::SaveToFile()
     //     s.EndArray();
     //
     // });
-    FileSystem::WriteEntireFile(Project::AssetRegistryPath(), s.ToString());
+    FileSystem::write_entire_file(Project::asset_registry_path(), s.to_string());
 }
 
-void EditorAssetManager::LoadFromFile()
+void EditorAssetManager::load_from_file()
 {
     ZoneScoped;
-    auto const data = FileSystem::ReadEntireFile(Project::AssetRegistryPath());
+    auto const data = FileSystem::read_entire_file(Project::asset_registry_path());
 
     YamlDeserializer ds(*data);
-    Deserialize(ds);
+    deserialize(ds);
     // try {
     //     auto j = json::parse(*data);
     //     auto file_type = j["$Type"].get<std::string>();
@@ -546,120 +546,120 @@ void EditorAssetManager::LoadFromFile()
     // }
 }
 
-void EditorAssetManager::RefreshAsset(AssetHandle handle)
+void EditorAssetManager::refresh_asset(AssetHandle handle)
 {
-    if (!IsAssetHandleValid(handle) || !IsAssetLoaded(handle))
+    if (!is_asset_handle_valid(handle) || !is_asset_loaded(handle))
         return;
 
-    SaveAsset(handle);
+    save_asset(handle);
 }
 
-void EditorAssetManager::MoveAsset(AssetHandle handle, fs::path const& path)
+void EditorAssetManager::move_asset(AssetHandle handle, fs::path const& path)
 {
-    m_Registry.Access([&](Registry& registry) {
+    m_registry.access([&](Registry& registry) {
         if (!registry.contains(handle) || !fs::is_directory(path) || !fs::exists(path)) {
             return;
         }
 
         auto& meta = registry[handle];
 
-        auto filename = meta.Path.filename();
-        auto new_path = Project::AssetsFolderPath() / path / filename;
+        auto filename = meta.path.filename();
+        auto new_path = Project::assets_folder_path() / path / filename;
         LOG_INFOF("Moving asset '{}' -> '{}'", filename, new_path);
 
         try {
-            fs::rename(Project::AssetsFolderPath() / meta.Path, new_path);
-            meta.Path = relative(new_path, Project::AssetsFolderPath());
+            fs::rename(Project::assets_folder_path() / meta.path, new_path);
+            meta.path = relative(new_path, Project::assets_folder_path());
         } catch (fs::filesystem_error& error) {
             LOG_ERRORF("Failed to move asset: {}", error.what());
         }
     });
 
-    SaveToFile();
+    save_to_file();
 }
 
-void EditorAssetManager::CheckForLoadedAssets()
+void EditorAssetManager::check_for_loaded_assets()
 {
-    m_WorkerPool.LoadedAssets.Access([this](std::queue<Ref<Asset>>& queue) {
+    m_worker_pool.loaded_assets.access([this](std::queue<Ref<Asset>>& queue) {
         while (!queue.empty()) {
             auto asset = queue.front();
             queue.pop();
 
-            auto handle = asset->GetHandle();
-            m_LoadedAssets[handle] = asset;
+            auto handle = asset->handle();
+            m_loaded_assets[handle] = asset;
 
-            m_Registry.Access([&](Registry& registry) {
-                registry[handle].LoadState = AssetLoadState::Loaded;
+            m_registry.access([&](Registry& registry) {
+                registry[handle].load_state = AssetLoadState::Loaded;
             });
         }
     });
 }
 
-void EditorAssetManager::Serialize(Serializer& ctx) const
+void EditorAssetManager::serialize(Serializer& ctx) const
 {
-    ISerializable::Serialize(ctx);
+    ISerializable::serialize(ctx);
 
-    m_Registry.Access([&](Registry const& registry) {
-        ctx.BeginArray("Assets", registry.size());
+    m_registry.access([&](Registry const& registry) {
+        ctx.begin_array("Assets", registry.size());
         for (auto const& metadata : registry | std::views::values) {
-            if (metadata.IsVirtual || metadata.DontSerialize)
+            if (metadata.is_virtual || metadata.dont_serialize)
                 continue;
-            ctx.BeginObject("", 0);
-            ctx.Write("Name", metadata.Name);
-            ctx.Write("Handle", metadata.Handle);
-            ctx.Write("Type", metadata.Type);
-            ctx.Write("Path", metadata.Path);
+            ctx.begin_object("", 0);
+            ctx.write("Name", metadata.name);
+            ctx.write("Handle", metadata.handle);
+            ctx.write("Type", metadata.type);
+            ctx.write("Path", metadata.path);
 
-            if (metadata.CustomMetadata != nullptr) {
-                ctx.Write("CustomMetadata", *metadata.CustomMetadata);
+            if (metadata.custom_metadata != nullptr) {
+                ctx.write("CustomMetadata", *metadata.custom_metadata);
             }
-            ctx.EndObject();
+            ctx.end_object();
         }
-        ctx.EndArray();
+        ctx.end_array();
     });
 }
 
-void EditorAssetManager::Deserialize(Deserializer& ctx)
+void EditorAssetManager::deserialize(Deserializer& ctx)
 {
-    ISerializable::Deserialize(ctx);
+    ISerializable::deserialize(ctx);
     size_t size;
-    ctx.BeginArray("Assets", size);
-    m_Registry.Access([&](Registry& registry) {
+    ctx.begin_array("Assets", size);
+    m_registry.access([&](Registry& registry) {
         registry.reserve(size);
 
         for (size_t i = 0; i < size; i++) {
             size_t _s;
-            ctx.BeginObject("", _s);
+            ctx.begin_object("", _s);
 
             EditorAssetMetadata metadata {};
-            ctx.Read("Name", metadata.Name);
-            ctx.Read("Handle", metadata.Handle);
-            ctx.Read("Type", metadata.Type);
-            ctx.Read("Path", metadata.Path);
+            ctx.read("Name", metadata.name);
+            ctx.read("Handle", metadata.handle);
+            ctx.read("Type", metadata.type);
+            ctx.read("Path", metadata.path);
 
-            switch (metadata.Type) {
+            switch (metadata.type) {
             case AssetType::Texture2D: {
-                auto meta = MakeRef<Texture2DMetadata>();
-                ctx.Read("CustomMetadata", *meta);
-                metadata.CustomMetadata = meta;
+                auto meta = make_ref<Texture2DMetadata>();
+                ctx.read("CustomMetadata", *meta);
+                metadata.custom_metadata = meta;
             } break;
             default:
                 break;
             }
 
-            registry[metadata.Handle] = metadata;
+            registry[metadata.handle] = metadata;
 
-            ctx.EndObject();
+            ctx.end_object();
         }
     });
-    ctx.EndArray();
+    ctx.end_array();
 }
 
-void EditorAssetManager::LoadAsset(AssetHandle handle, AssetType type)
+void EditorAssetManager::load_asset(AssetHandle handle, AssetType type)
 {
     LOG_DEBUGF("LoadAsset[{}, {}]", handle, magic_enum::enum_name(type));
-    m_Registry.Access([&](Registry& registry) {
-        registry[handle].LoadState = AssetLoadState::Loading;
+    m_registry.access([&](Registry& registry) {
+        registry[handle].load_state = AssetLoadState::Loading;
 #if 0
         auto metadata = registry[handle];
         // ??
@@ -673,7 +673,7 @@ void EditorAssetManager::LoadAsset(AssetHandle handle, AssetType type)
 
         LOG_DEBUGF("Loaded asset '{}' from '{}' of type '{}'", CAST(u64, handle), metadata.Path.string(), magic_enum::enum_name(metadata.Type));
 #else
-        m_WorkerPool.Load(registry[handle]);
+        m_worker_pool.load_asset(registry[handle]);
 #endif
     });
 }

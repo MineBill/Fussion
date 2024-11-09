@@ -15,24 +15,24 @@ namespace Fussion {
     class LinuxFileWatcher final : public FileWatcher {
     public:
         explicit LinuxFileWatcher(std::filesystem::path root)
-            : m_Update { true }
-            , m_Root(std::move(root))
+            : m_update { true }
+            , m_root(std::move(root))
         { }
 
         virtual ~LinuxFileWatcher() override
         {
-            m_Update = false;
-            m_Thread.join();
+            m_update = false;
+            m_thread.join();
         }
 
-        virtual void AddListener(std::function<CallbackType> listener) override
+        virtual void add_listener(std::function<CallbackType> listener) override
         {
-            m_Listeners.Subscribe(listener);
+            m_listeners.subscribe(listener);
         }
 
-        virtual void Start() override
+        virtual void start() override
         {
-            m_Thread = std::thread(&LinuxFileWatcher::Work, this);
+            m_thread = std::thread(&LinuxFileWatcher::work, this);
         }
 
     private:
@@ -43,42 +43,42 @@ namespace Fussion {
             | IN_DELETE
             | IN_CLOSE_WRITE;
 
-        void AddWatch(std::filesystem::path const& path, u32 mask)
+        void add_watch(std::filesystem::path const& path, u32 mask)
         {
-            int wd = inotify_add_watch(m_FD, path.string().c_str(), mask);
+            int wd = inotify_add_watch(m_fd, path.string().c_str(), mask);
             if (wd == -1) {
                 LOG_ERRORF("Cannot watch file: {}", strerror(errno));
                 return;
             }
-            m_WatchDescriptors[wd] = WatchData {
-                .Path = path,
+            m_watch_descriptors[wd] = WatchData {
+                .path = path,
             };
         }
 
-        void Work()
+        void work()
         {
-            m_FD = inotify_init1(IN_NONBLOCK);
-            if (m_FD == -1) {
+            m_fd = inotify_init1(IN_NONBLOCK);
+            if (m_fd == -1) {
                 LOG_ERRORF("Failed to initialize inotify");
                 return;
             }
 
-            AddWatch(m_Root, IN_WATCH_MASK);
-            for (auto const& p : std::filesystem::recursive_directory_iterator(m_Root)) {
+            add_watch(m_root, IN_WATCH_MASK);
+            for (auto const& p : std::filesystem::recursive_directory_iterator(m_root)) {
                 if (p.is_directory()) {
-                    AddWatch(p.path(), IN_WATCH_MASK);
+                    add_watch(p.path(), IN_WATCH_MASK);
                 }
             }
 
             pollfd pollFd {
-                .fd = m_FD,
+                .fd = m_fd,
                 .events = POLLIN,
                 .revents = {}
             };
 
-            while (m_Update) {
+            while (m_update) {
                 auto pollNum = poll(&pollFd, 1, 1);
-                if (!m_Update) {
+                if (!m_update) {
                     return;
                 }
                 if (pollNum == -1) {
@@ -92,11 +92,11 @@ namespace Fussion {
                 if (pollNum > 0) {
                     if (pollFd.revents & POLLIN) {
                         inotify_event const* event;
-                        while (m_Update) {
+                        while (m_update) {
                             char buf[4096]
                                 __attribute__((aligned(__alignof__(inotify_event))));
-                            usz const len = read(m_FD, buf, sizeof(buf));
-                            if (!m_Update) {
+                            usz const len = read(m_fd, buf, sizeof(buf));
+                            if (!m_update) {
                                 break;
                             }
                             if (len == cast<size_t>(-1) && errno != EAGAIN) {
@@ -114,22 +114,22 @@ namespace Fussion {
 
                                 /* Print event type. */
                                 if (event->mask & IN_CREATE) {
-                                    auto path = m_WatchDescriptors[event->wd].Path / event->name;
+                                    auto path = m_watch_descriptors[event->wd].path / event->name;
                                     auto type = EventType::FileAdded;
                                     // Start monitoring new directories
                                     if (event->mask & IN_ISDIR) {
                                         type = EventType::DirAdded;
-                                        AddWatch(path, IN_WATCH_MASK);
+                                        add_watch(path, IN_WATCH_MASK);
                                     }
-                                    m_Listeners.Fire(path, type);
+                                    m_listeners.fire(path, type);
                                 }
                                 if (event->mask & IN_CLOSE_WRITE) {
-                                    m_Listeners.Fire(m_WatchDescriptors[event->wd].RelativeTo(event->name), EventType::FileModified);
+                                    m_listeners.fire(m_watch_descriptors[event->wd].relative_to(event->name), EventType::FileModified);
                                 }
                                 if (event->mask & IN_MOVED_TO) {
-                                    if (m_PreviousEvent.Mask & IN_MOVED_FROM) {
-                                        if (m_WatchDescriptors[event->wd].Path == m_WatchDescriptors[m_PreviousEvent.WD].Path) {
-                                            m_Listeners.Fire(m_WatchDescriptors[event->wd].RelativeTo(event->name), EventType::FileRenamed);
+                                    if (m_previous_event.mask & IN_MOVED_FROM) {
+                                        if (m_watch_descriptors[event->wd].path == m_watch_descriptors[m_previous_event.wd].path) {
+                                            m_listeners.fire(m_watch_descriptors[event->wd].relative_to(event->name), EventType::FileRenamed);
                                         } else {
                                             // LOG_DEBUGF("File moved from {} to {}",
                                             //     m_WatchDescriptors[m_PreviousEvent.WD].RelativeTo(m_PreviousEvent.Name),
@@ -138,16 +138,16 @@ namespace Fussion {
                                     }
                                 }
                                 if (event->mask & IN_DELETE) {
-                                    auto path = m_WatchDescriptors[event->wd].Path / event->name;
+                                    auto path = m_watch_descriptors[event->wd].path / event->name;
                                     auto type = EventType::FileDeleted;
                                     if (event->mask & IN_ISDIR) {
                                         type = EventType::DirDeleted;
-                                        AddWatch(path, IN_WATCH_MASK);
+                                        add_watch(path, IN_WATCH_MASK);
                                     }
-                                    m_Listeners.Fire(path, type);
+                                    m_listeners.fire(path, type);
                                 }
 
-                                m_PreviousEvent = INotifyEvent(event);
+                                m_previous_event = INotifyEvent(event);
                             }
                         }
                     }
@@ -156,44 +156,44 @@ namespace Fussion {
         }
 
         struct INotifyEvent {
-            int WD {};     /* Watch descriptor.  */
-            u32 Mask {};   /* Watch mask.  */
-            u32 Cookie {}; /* Cookie to synchronize two events.  */
-            std::string Name {};
+            int wd {};     /* Watch descriptor.  */
+            u32 mask {};   /* Watch mask.  */
+            u32 cookie {}; /* Cookie to synchronize two events.  */
+            std::string name {};
 
             INotifyEvent() = default;
             explicit INotifyEvent(inotify_event const* event)
-                : WD(event->wd)
-                , Mask(event->mask)
-                , Cookie(event->cookie)
-                , Name(event->name, event->len)
+                : wd(event->wd)
+                , mask(event->mask)
+                , cookie(event->cookie)
+                , name(event->name, event->len)
             { }
-        } m_PreviousEvent;
+        } m_previous_event;
 
-        std::atomic<bool> m_Update {};
-        std::thread m_Thread;
-        std::filesystem::path m_Root {};
-        Delegate<CallbackType> m_Listeners;
+        std::atomic<bool> m_update {};
+        std::thread m_thread;
+        std::filesystem::path m_root {};
+        Delegate<CallbackType> m_listeners;
 
-        int m_FD {};
+        int m_fd {};
         struct WatchData {
-            std::filesystem::path Path;
+            std::filesystem::path path;
 
-            std::string RelativeTo(char const* name) const
+            std::string relative_to(char const* name) const
             {
-                return Path / name;
+                return path / name;
             }
 
-            [[nodiscard]] std::string RelativeTo(std::string const& name) const
+            [[nodiscard]] std::string relative_to(std::string const& name) const
             {
-                return Path / name;
+                return path / name;
             }
         };
-        std::unordered_map<int, WatchData> m_WatchDescriptors {};
+        std::unordered_map<int, WatchData> m_watch_descriptors {};
     };
 
-    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root)
+    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root)
     {
-        return MakePtr<LinuxFileWatcher>(root);
+        return make_ptr<LinuxFileWatcher>(root);
     }
 }

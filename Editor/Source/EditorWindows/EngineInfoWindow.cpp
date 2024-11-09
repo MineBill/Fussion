@@ -16,12 +16,12 @@ static void HelpMarker(char const* desc)
     }
 }
 
-void EngineInfoWindow::OnDraw()
+void EngineInfoWindow::on_draw()
 {
-    if (!IsVisible())
+    if (!is_visible())
         return;
 
-    EUI::Window("Engine Info", [&] {
+    EUI::window("Engine Info", [&] {
         ImGui::BeginTable("awdawd", 2);
         ImGui::TableNextColumn();
 
@@ -34,20 +34,20 @@ void EngineInfoWindow::OnDraw()
 #endif
         ImGui::TableNextColumn();
 
-        auto const& info = Fussion::System::GetSystemInfo();
+        auto const& info = Fussion::System::system_info();
 
         ImGui::Text("Window System");
         ImGui::SameLine(); HelpMarker("This is the window system the Editor uses and might not reflect the actual system used by the desktop environment");
         ImGui::TableNextColumn();
-        ImGui::Text("%s", magic_enum::enum_name(info.WindowingSystem).data());
+        ImGui::Text("%s", magic_enum::enum_name(info.windowing_system).data());
         ImGui::TableNextColumn();
 
         ImGui::Text("Desktop Environment");
         ImGui::TableNextColumn();
-        ImGui::Text("%s", magic_enum::enum_name(info.Desktop).data());
+        ImGui::Text("%s", magic_enum::enum_name(info.desktop).data());
         ImGui::TableNextColumn();
 
         ImGui::EndTable();
     },
-        { .Opened = &m_IsVisible });
+        { .opened = &m_is_visible });
 }

@@ -12,7 +12,7 @@ namespace Fussion::Math {
     constexpr f64 F64_EPSILON = 2.2204460492503131e-016;
 
     template<ScalarType T>
-    constexpr auto Min(T first, T second)
+    constexpr auto min(T first, T second)
     {
         if (first < second)
             return first;
@@ -20,16 +20,16 @@ namespace Fussion::Math {
     }
 
     template<ScalarType First, ScalarType Second, ScalarType... T>
-    constexpr auto Min(First first, Second second, T... rest) -> First
+    constexpr auto min(First first, Second second, T... rest) -> First
     {
-        auto min_rest = Min(second, rest...);
+        auto min_rest = min(second, rest...);
         if (first < min_rest)
             return first;
         return min_rest;
     }
 
     template<ScalarType T>
-    constexpr auto Max(T first, T second)
+    constexpr auto max(T first, T second)
     {
         if (first > second)
             return first;
@@ -37,16 +37,16 @@ namespace Fussion::Math {
     }
 
     template<ScalarType First, ScalarType Second, ScalarType... T>
-    constexpr auto Max(First first, Second second, T... rest) -> First
+    constexpr auto max(First first, Second second, T... rest) -> First
     {
-        auto max_rest = Max(second, rest...);
+        auto max_rest = max(second, rest...);
         if (first > max_rest)
             return first;
         return max_rest;
     }
 
     template<ScalarType T>
-    constexpr auto Clamp(T value, T min, T max)
+    constexpr auto clamp(T value, T min, T max)
     {
         if (value < min)
             value = min;
@@ -56,7 +56,7 @@ namespace Fussion::Math {
     }
 
     template<std::floating_point Real>
-    constexpr bool IsZero(Real value)
+    constexpr bool is_zero(Real value)
     {
         if constexpr (std::is_same_v<Real, f32>) {
             return value <= F32_EPSILON;
@@ -65,57 +65,57 @@ namespace Fussion::Math {
         }
     }
 
-    constexpr auto Abs(ScalarType auto value)
+    constexpr auto abs(ScalarType auto value)
     {
         if (value < 0)
             return -value;
         return value;
     }
 
-    auto Sin(ScalarType auto value) -> decltype(value)
+    auto sin(ScalarType auto value) -> decltype(value)
     {
         return std::sin(value);
     }
 
-    auto Cos(ScalarType auto value) -> decltype(value)
+    auto cos(ScalarType auto value) -> decltype(value)
     {
         return std::cos(value);
     }
 
-    auto Lerp(ScalarType auto a, ScalarType auto b, ScalarType auto t)
+    auto lerp(ScalarType auto a, ScalarType auto b, ScalarType auto t)
     {
         return a + (b - a) * t;
     }
 
     template<ScalarType T>
-    auto Pow(T value, T power) -> decltype(value)
+    auto pow(T value, T power) -> decltype(value)
     {
         return std::pow(value, power);
     }
 
-    constexpr auto Sqrt(ScalarType auto value)
+    constexpr auto sqrt(ScalarType auto value)
     {
         return std::sqrt(value);
     }
 
-    constexpr auto Floor(ScalarType auto value)
+    constexpr auto floor(ScalarType auto value)
     {
-        return CAST(decltype(value), CAST(s32, value));
+        return cast<decltype(value)>(cast<s32>(value));
     }
 
-    constexpr auto FloorSigned(ScalarType auto value)
+    constexpr auto floor_signed(ScalarType auto value)
     {
-        if (value >= 0 || CAST(s32, value) == value) {
-            return CAST(s32, value);
+        if (value >= 0 || cast<s32>(value) == value) {
+            return cast<s32>(value);
         }
-        return CAST(s32, value) - 1;
+        return cast<s32>(value) - 1;
     }
 
-    auto FloorLog2(s32 value) -> s32;
-    auto FloorLog2(s64 value) -> s64;
+    auto floor_log2(s32 value) -> s32;
+    auto floor_log2(s64 value) -> s64;
 
-    auto CountLeadingZeros(u32 value) -> u32;
-    auto CountLeadingZeros(u64 value) -> u64;
+    auto count_leading_zeros(u32 value) -> u32;
+    auto count_leading_zeros(u64 value) -> u64;
 
-    auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
+    auto get_frustum_corners_world_space(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>;
 }

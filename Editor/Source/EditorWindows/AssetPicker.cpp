@@ -9,16 +9,16 @@
 
 void AssetPicker::Update()
 {
-    if (m_Show) {
+    if (m_show) {
         ImGui::OpenPopup("Asset Picker");
-        m_Show = false;
+        m_show = false;
     }
 
-    bool was_open = m_Opened;
+    bool was_open = m_opened;
 
     auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
-    EUI::ModalWindow("Asset Picker", [&] {
-        ImGuiH::Text("Please pick an asset for '{}':", m_Member.get_name());
+    EUI::modal_window("Asset Picker", [&] {
+        ImGuiH::text("Please pick an asset for '{}':", m_member.get_name());
 
         ImGui::Separator();
 
@@ -31,51 +31,51 @@ void AssetPicker::Update()
 
         ImGui::Columns(columns, nullptr, true);
 
-        auto& style = EditorStyle::Style();
-        for (auto const& [handle, name, virt] : m_Entries) {
+        auto& style = EditorStyle::style();
+        for (auto const& [handle, name, virt] : m_entries) {
             Vector2 size(thumbnail_size, thumbnail_size);
 
-            Fussion::Texture2D* texture = style.EditorIcons[EditorIcon::GenericAsset].get();
-            if (m_Type == Fussion::AssetType::Texture2D) {
-                auto asset = Fussion::AssetManager::GetAsset<Fussion::Texture2D>(handle);
-                if (auto ptr = asset.Get()) {
+            Fussion::Texture2D* texture = style.editor_icons[EditorIcon::GenericAsset].get();
+            if (m_type == Fussion::AssetType::Texture2D) {
+                auto asset = Fussion::AssetManager::get_asset<Fussion::Texture2D>(handle);
+                if (auto ptr = asset.get()) {
                     texture = ptr;
                 }
             }
-            size.x = texture->GetMetadata().Aspect() * size.y;
+            size.x = texture->metadata().aspect() * size.y;
 
-            EUI::ImageButton(texture->GetTexture().View, [&] {
-                m_Member.set(m_Instance, handle);
+            EUI::image_button(texture->texture().View, [&] {
+                m_member.set(m_instance, handle);
                 // TODO: Call notify methods, if available.
-                m_Opened = false;
+                m_opened = false;
             },
-                { .Size = size });
+                { .size = size });
 
             ImGui::TextUnformatted(name.data());
             ImGui::NextColumn();
         }
     },
-        { .Flags = flags, .Opened = &m_Opened });
+        { .flags = flags, .opened = &m_opened });
 
-    if (was_open && !m_Opened) {
-        m_Entries.clear();
+    if (was_open && !m_opened) {
+        m_entries.clear();
     }
 }
 
 void AssetPicker::Show(meta_hpp::member const& member, meta_hpp::uvalue const& instance, Fussion::AssetType type)
 {
-    m_Show = true;
-    m_Member = member;
-    m_Type = type;
-    m_Opened = true;
-    m_Instance = instance.copy();
+    m_show = true;
+    m_member = member;
+    m_type = type;
+    m_opened = true;
+    m_instance = instance.copy();
 
-    auto& registry = Project::AssetManager()->GetRegistry();
+    auto& registry = Project::asset_manager()->registry();
 
-    registry.Access([&](EditorAssetManager::Registry const& reg) {
+    registry.access([&](EditorAssetManager::Registry const& reg) {
         for (auto const& [handle, metadata] : reg) {
-            if (metadata.Type == type) {
-                m_Entries.push_back({ handle, metadata.Name, metadata.IsVirtual });
+            if (metadata.type == type) {
+                m_entries.push_back({ handle, metadata.name, metadata.is_virtual });
             }
         }
     });

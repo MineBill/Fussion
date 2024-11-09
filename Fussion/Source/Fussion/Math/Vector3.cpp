@@ -4,24 +4,24 @@
 #include "Math.h"
 
 namespace Fussion {
-    Vector3::Real Vector3::LengthSquared() const
+    Vector3::Real Vector3::length_squared() const
     {
         return x * x + y * y + z * z;
     }
 
-    Vector3::Real Vector3::Length() const
+    Vector3::Real Vector3::length() const
     {
-        return std::sqrt(LengthSquared());
+        return std::sqrt(length_squared());
     }
 
-    Vector3 Vector3::Normalized() const
+    Vector3 Vector3::normalized() const
     {
-        return *this / Length();
+        return *this / length();
     }
 
-    void Vector3::Normalize()
+    void Vector3::normalize()
     {
-        *this = this->Normalized();
+        *this = this->normalized();
     }
 
     Vector3 Vector3::operator+(Vector3 const& other) const
@@ -70,7 +70,7 @@ namespace Fussion {
 
     bool operator==(Vector3 const& lhs, Vector3 const& rhs)
     {
-        return Math::IsZero(Math::Abs(lhs.x - rhs.x)) && Math::IsZero(Math::Abs(lhs.y - rhs.y)) && Math::IsZero(Math::Abs(lhs.z - rhs.z));
+        return Math::is_zero(Math::abs(lhs.x - rhs.x)) && Math::is_zero(Math::abs(lhs.y - rhs.y)) && Math::is_zero(Math::abs(lhs.z - rhs.z));
     }
 
     bool operator!=(Vector3 const& lhs, Vector3 const& rhs)

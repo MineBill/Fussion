@@ -5,13 +5,13 @@ namespace Fussion::Mem {
     struct TempAllocator {
         TempAllocator()
         {
-            m_base_ptr = Mem::Alloc(1'000'000, Mem::GetHeapAllocator());
+            m_base_ptr = Mem::alloc(1'000'000, Mem::GetHeapAllocator());
         }
 
         auto allocator() -> Allocator
         {
             return {
-                .AllocProc = [](usz size, void* data, std::source_location const&) -> void* {
+                .alloc_proc = [](usz size, void* data, std::source_location const&) -> void* {
                     // auto self = TRANSMUTE(TempAllocator*, data);
                     // if (self->m_offset + size >= self->m_buffer.length) {
                     //     self->m_offset = 0;
@@ -28,7 +28,7 @@ namespace Fussion::Mem {
                     self->m_offset = (ptr - TRANSMUTE(uintptr_t, self->m_base_ptr)) + size;
                     return TRANSMUTE(void*, ptr);
                 },
-                .DeallocProc = [](void*, void*, std::source_location const&) {},
+                .dealloc_proc = [](void*, void*, std::source_location const&) {},
                 .data = this,
             };
         }
@@ -44,8 +44,8 @@ namespace Fussion::Mem {
     }
 
     thread_local Allocator HEAP_ALLOCATOR = {
-        .AllocProc = [](usz size, void*, std::source_location const&) { return ::malloc(size); },
-        .DeallocProc = [](void* ptr, void*, std::source_location const&) { ::free(ptr); },
+        .alloc_proc = [](usz size, void*, std::source_location const&) { return ::malloc(size); },
+        .dealloc_proc = [](void* ptr, void*, std::source_location const&) { ::free(ptr); },
         .data = nullptr
     };
 
@@ -72,12 +72,12 @@ namespace Fussion::Mem {
         return ptr;
     }
 
-    void Copy(void* dst, void const* src, usz length)
+    void copy(void* dst, void const* src, usz length)
     {
         std::memcpy(dst, src, length);
     }
 
-    s32 Compare(void const* first, void const* second, usz length)
+    s32 compare(void const* first, void const* second, usz length)
     {
         return std::memcmp(first, second, length);
     }

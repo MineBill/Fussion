@@ -13,23 +13,23 @@
 #pragma comment(lib, "Advapi32.lib")
 
 namespace Fussion {
-    void System::Initialize() {}
+    void System::initialize() {}
 
-    System::Info System::GetSystemInfo()
+    System::Info System::system_info()
     {
         Info info {};
-        info.Type = SystemType::Windows;
-        info.Desktop = Desktop::Windows;
-        info.WindowingSystem = WindowingSystem::Windows;
+        info.type = SystemType::Windows;
+        info.desktop = Desktop::Windows;
+        info.windowing_system = WindowingSystem::Windows;
         return info;
     }
 
-    bool System::PrefersDark()
+    bool System::prefers_dark()
     {
-        return !PrefersLight();
+        return !prefers_light();
     }
 
-    bool System::PrefersLight()
+    bool System::prefers_light()
     {
         // based on https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 
@@ -56,7 +56,7 @@ namespace Fussion {
         return i == 1;
     }
 
-    auto System::GetKnownFolder(KnownFolders folder) -> std::filesystem::path
+    auto System::get_known_folder(KnownFolders folder) -> std::filesystem::path
     {
         GUID folder_id;
         switch (folder) {
@@ -79,7 +79,7 @@ namespace Fussion {
         return {};
     }
 
-    bool System::ConsoleSupportsColor()
+    bool System::does_console_support_color()
     {
         auto console = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD mode;

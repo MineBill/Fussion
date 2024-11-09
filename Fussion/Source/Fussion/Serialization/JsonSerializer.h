@@ -10,34 +10,34 @@ namespace Fussion {
 
         virtual void Initialize() override;
 
-        virtual void Write(std::string_view name, s8 value) override;
-        virtual void Write(std::string_view name, s16 value) override;
-        virtual void Write(std::string_view name, s32 value) override;
-        virtual void Write(std::string_view name, s64 value) override;
-        virtual void Write(std::string_view name, u8 value) override;
-        virtual void Write(std::string_view name, u16 value) override;
-        virtual void Write(std::string_view name, u32 value) override;
-        virtual void Write(std::string_view name, u64 value) override;
-        virtual void Write(std::string_view name, f32 value) override;
-        virtual void Write(std::string_view name, f64 value) override;
-        virtual void Write(std::string_view name, bool value) override;
-        virtual void Write(std::string_view name, std::string_view value) override;
-        virtual void Write(std::string_view name, char const* value) override;
-        virtual void Write(std::string_view name, ISerializable const& object) override;
-        virtual void WriteByteArray(std::string_view name, u8 const* ptr, usz size) override;
+        virtual void write(std::string_view name, s8 value) override;
+        virtual void write(std::string_view name, s16 value) override;
+        virtual void write(std::string_view name, s32 value) override;
+        virtual void write(std::string_view name, s64 value) override;
+        virtual void write(std::string_view name, u8 value) override;
+        virtual void write(std::string_view name, u16 value) override;
+        virtual void write(std::string_view name, u32 value) override;
+        virtual void write(std::string_view name, u64 value) override;
+        virtual void write(std::string_view name, f32 value) override;
+        virtual void write(std::string_view name, f64 value) override;
+        virtual void write(std::string_view name, bool value) override;
+        virtual void write(std::string_view name, std::string_view value) override;
+        virtual void write(std::string_view name, char const* value) override;
+        virtual void write(std::string_view name, ISerializable const& object) override;
+        virtual void write_byte_array(std::string_view name, u8 const* ptr, usz size) override;
 
-        virtual void BeginObject(std::string_view name, size_t size, SerdeOptions const& options = {}) override;
-        virtual void EndObject() override;
-        virtual void BeginArray(std::string_view name, size_t size) override;
-        virtual void EndArray() override;
+        virtual void begin_object(std::string_view name, size_t size, SerdeOptions const& options = {}) override;
+        virtual void end_object() override;
+        virtual void begin_array(std::string_view name, size_t size) override;
+        virtual void end_array() override;
 
-        void PopObject();
+        void pop_object();
 
-        std::string ToString();
+        std::string to_string();
 
     private:
         template<typename T>
-        void GenericWrite(std::string_view name, T value);
+        void generic_write(std::string_view name, T value);
 
     private:
         enum class Type {
@@ -45,10 +45,10 @@ namespace Fussion {
             Object,
         };
 
-        std::stack<Type> m_TypeStack { { Type::Object } };
-        std::stack<std::string> m_Names {};
-        std::stack<u32> m_IndexStack {};
-        std::stack<nlohmann::ordered_json> m_ObjectStack {};
+        std::stack<Type> m_type_stack { { Type::Object } };
+        std::stack<std::string> m_names {};
+        std::stack<u32> m_index_stack {};
+        std::stack<nlohmann::ordered_json> m_object_stack {};
     };
 
     class JsonDeserializer final : public Deserializer {
@@ -56,36 +56,36 @@ namespace Fussion {
         JsonDeserializer() = default;
         explicit JsonDeserializer(std::string const& data);
 
-        static JsonDeserializer FromJsonObject(nlohmann::json const& json);
+        static JsonDeserializer from_json_object(nlohmann::json const& json);
 
-        virtual void Initialize() override;
-        virtual bool Read(std::string_view name, s8& value) override;
-        virtual bool Read(std::string_view name, s16& value) override;
-        virtual bool Read(std::string_view name, s32& value) override;
-        virtual bool Read(std::string_view name, s64& value) override;
-        virtual bool Read(std::string_view name, u8& value) override;
-        virtual bool Read(std::string_view name, u16& value) override;
-        virtual bool Read(std::string_view name, u32& value) override;
-        virtual bool Read(std::string_view name, u64& value) override;
-        virtual bool Read(std::string_view name, f32& value) override;
-        virtual bool Read(std::string_view name, f64& value) override;
-        virtual bool Read(std::string_view name, bool& value) override;
+        virtual void initialize() override;
+        virtual bool read(std::string_view name, s8& value) override;
+        virtual bool read(std::string_view name, s16& value) override;
+        virtual bool read(std::string_view name, s32& value) override;
+        virtual bool read(std::string_view name, s64& value) override;
+        virtual bool read(std::string_view name, u8& value) override;
+        virtual bool read(std::string_view name, u16& value) override;
+        virtual bool read(std::string_view name, u32& value) override;
+        virtual bool read(std::string_view name, u64& value) override;
+        virtual bool read(std::string_view name, f32& value) override;
+        virtual bool read(std::string_view name, f64& value) override;
+        virtual bool read(std::string_view name, bool& value) override;
 
-        virtual bool Read(std::string_view name, std::string& value) override;
+        virtual bool read(std::string_view name, std::string& value) override;
 
-        virtual bool Read(std::string_view name, ISerializable& object) override;
-        virtual bool ReadByteArray(std::string_view name, u8* ptr, size_t size) override;
+        virtual bool read(std::string_view name, ISerializable& object) override;
+        virtual bool read_byte_array(std::string_view name, u8* ptr, size_t size) override;
 
-        virtual bool BeginObject(std::string_view name, size_t& size) override;
-        virtual void EndObject() override;
-        virtual void BeginArray(std::string_view name, size_t& size) override;
-        virtual void EndArray() override;
+        virtual bool begin_object(std::string_view name, size_t& size) override;
+        virtual void end_object() override;
+        virtual void begin_array(std::string_view name, size_t& size) override;
+        virtual void end_array() override;
 
-        virtual auto ReadKeys() -> std::vector<std::string> override;
+        virtual auto keys() -> std::vector<std::string> override;
 
     private:
         template<typename T>
-        bool GenericRead(std::string_view name, T& value);
+        bool m_generic_read(std::string_view name, T& value);
 
     private:
         enum class Type {
@@ -93,9 +93,9 @@ namespace Fussion {
             Object,
         };
 
-        std::stack<Type> m_TypeStack { { Type::Object } };
-        std::stack<std::string> m_Names {};
-        std::stack<u32> m_IndexStack {};
-        std::stack<nlohmann::ordered_json> m_ObjectStack {};
+        std::stack<Type> m_type_stack { { Type::Object } };
+        std::stack<std::string> m_names {};
+        std::stack<u32> m_index_stack {};
+        std::stack<nlohmann::ordered_json> m_object_stack {};
     };
 }

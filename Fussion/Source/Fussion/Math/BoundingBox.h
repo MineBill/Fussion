@@ -3,18 +3,18 @@
 
 namespace Fussion {
     struct BoundingBox {
-        Vector3 Min {}, Max {};
+        Vector3 min {}, max {};
 
         BoundingBox() = default;
         explicit BoundingBox(Vector3 const& center);
 
-        void IncludePoint(Vector3 const& point);
-        void Include(BoundingBox const& box);
-        Vector3 Center() const;
+        void add_point(Vector3 const& point);
+        void add_box(BoundingBox const& box);
+        Vector3 center() const;
 
-        BoundingBox Translated(Vector3 const& point) const;
-        BoundingBox Transformed(Mat4 const& matrix) const;
+        BoundingBox translated(Vector3 const& point) const;
+        BoundingBox transformed(Mat4 const& matrix) const;
 
-        auto GetCorners() const -> std::array<Vector3, 8>;
+        auto corners() const -> std::array<Vector3, 8>;
     };
 }

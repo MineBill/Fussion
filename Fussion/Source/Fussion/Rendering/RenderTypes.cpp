@@ -5,27 +5,27 @@
 
 namespace Fussion {
 
-    void RenderContext::AddRenderObject(RenderObject const& obj)
+    void RenderContext::add_render_object(RenderObject const& obj)
     {
         ZoneScoped;
-        size_t index = RenderObjects.size();
-        RenderObjects.push_back(obj);
+        size_t index = render_objects.size();
+        render_objects.push_back(obj);
 
-        MeshRenderLists[obj.Material][obj.VertexBuffer.Handle].push_back(index);
+        mesh_render_lists[obj.material][obj.vertex_buffer.Handle].push_back(index);
     }
 
-    void RenderContext::Reset()
+    void RenderContext::reset()
     {
-        RenderObjects.clear();
-        DirectionalLights.clear();
+        render_objects.clear();
+        directional_lights.clear();
 
-        for (auto& map : MeshRenderLists) {
+        for (auto& map : mesh_render_lists) {
             for (auto& list : map.second) {
                 list.second.clear();
             }
         }
 
-        PostProcessingSettings.UseSSAO = false;
-        EnvironmentMap = nullptr;
+        post_processing_settings.use_ssao = false;
+        environment_texture = nullptr;
     }
 }

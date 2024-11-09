@@ -22,22 +22,22 @@ namespace Fussion {
         explicit ShaderAsset(GPU::ShaderProcessor::CompiledShader const& compiledShader, std::vector<GPU::TextureFormat> colorTargetFormats);
         virtual ~ShaderAsset() override;
 
-        GPU::RenderPipeline Pipeline() const { return m_Pipeline; }
+        GPU::RenderPipeline pipeline() const { return m_pipeline; }
 
         /// Returns a bind group layout by set.
         // NOTE: What about creating an enum { Global, Scene, Object }, instead of using an index?
-        auto GetBindGroupLayout(u32 index) -> Maybe<GPU::BindGroupLayout>;
-        auto GetColorTargetFormats() const -> std::vector<GPU::TextureFormat> { return m_ColorTargetFormats; }
-        auto GetMetadata() const -> GPU::ShaderProcessor::ShaderMetadata const& { return m_Metadata; }
+        auto get_bind_group_layout_for(u32 index) -> Maybe<GPU::BindGroupLayout>;
+        auto color_target_formats() const -> std::vector<GPU::TextureFormat> { return m_color_target_formats; }
+        auto metadata() const -> GPU::ShaderProcessor::ShaderMetadata const& { return m_metadata; }
 
-        static AssetType StaticType() { return AssetType::Shader; }
-        virtual AssetType Type() const override { return StaticType(); }
+        static AssetType static_type() { return AssetType::Shader; }
+        virtual AssetType type() const override { return static_type(); }
 
     private:
-        std::unordered_map<u32, GPU::BindGroupLayout> m_BindGroupLayouts {};
-        GPU::RenderPipeline m_Pipeline {};
-        GPU::ShaderProcessor::ShaderMetadata m_Metadata {};
+        std::unordered_map<u32, GPU::BindGroupLayout> m_bind_group_layouts {};
+        GPU::RenderPipeline m_pipeline {};
+        GPU::ShaderProcessor::ShaderMetadata m_metadata {};
 
-        std::vector<GPU::TextureFormat> m_ColorTargetFormats {};
+        std::vector<GPU::TextureFormat> m_color_target_formats {};
     };
 }

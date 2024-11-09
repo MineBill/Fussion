@@ -20,7 +20,7 @@ namespace Fussion {
         using namespace GPU;
         auto shader_src = ShaderProcessor::ProcessFile(
             "Assets/Shaders/WGSL/CubeSkybox.wgsl")
-                              .Unwrap();
+                              .unwrap();
 
         ShaderModuleSpec shader_spec {
             .Label = "CubeSkybox::Shader"sv,
@@ -31,7 +31,7 @@ namespace Fussion {
             .FragmentEntryPoint = "fs_main",
         };
 
-        m_shader = Renderer::Device().CreateShaderModule(shader_spec);
+        m_shader = Renderer::device().CreateShaderModule(shader_spec);
 
         std::vector bgl_entries {
             BindGroupLayoutEntry {
@@ -57,7 +57,7 @@ namespace Fussion {
             .Label = "poop"sv,
             .Entries = bgl_entries
         };
-        m_bind_group_layout = Renderer::Device().CreateBindGroupLayout(bgl_spec);
+        m_bind_group_layout = Renderer::device().CreateBindGroupLayout(bgl_spec);
 
         layouts.push_back(m_bind_group_layout);
 
@@ -65,7 +65,7 @@ namespace Fussion {
             .Label = "asdasd"sv,
             .BindGroupLayouts = layouts,
         };
-        auto layout = Renderer::Device().CreatePipelineLayout(layout_spec);
+        auto layout = Renderer::device().CreatePipelineLayout(layout_spec);
 
         std::array attributes {
             VertexAttribute {
@@ -106,9 +106,9 @@ namespace Fussion {
             },
         };
 
-        m_pipeline = Renderer::Device().CreateRenderPipeline(m_shader, m_shader, spec);
+        m_pipeline = Renderer::device().CreateRenderPipeline(m_shader, m_shader, spec);
 
-        m_sampler = Renderer::Device().CreateSampler({
+        m_sampler = Renderer::device().CreateSampler({
             .label = "sampler"sv,
         });
 
@@ -157,14 +157,14 @@ namespace Fussion {
             Vector3(-0.5f, -0.5f, 0.5f),  // Top-left
         };
 
-        m_cube_vertices = Renderer::Device().CreateBuffer({
+        m_cube_vertices = Renderer::device().CreateBuffer({
             .Label = "Cube Verts"sv,
             .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
             .Size = 36 * sizeof(Vector3),
             .Mapped = false,
         });
 
-        Renderer::Device().WriteBuffer<Vector3>(m_cube_vertices, 0, vertices);
+        Renderer::device().WriteBuffer<Vector3>(m_cube_vertices, 0, vertices);
     }
 
     void CubeSkybox::execute(GPU::RenderPassEncoder& pass)
@@ -217,7 +217,7 @@ namespace Fussion {
             }
         };
 
-        m_bind_group = Renderer::Device().CreateBindGroup(m_bind_group_layout,
+        m_bind_group = Renderer::device().CreateBindGroup(m_bind_group_layout,
             {
                 .Label = "asdasd"sv,
                 .Entries = entries,

@@ -9,23 +9,23 @@
 
 using namespace Fussion;
 
-void Texture2DWindow::OnDraw(f32 delta)
+void Texture2DWindow::on_draw(f32 delta)
 {
     (void)delta;
 
-    auto settings = AssetManager::GetAssetMetadata<Texture2DMetadata>(m_AssetHandle);
+    auto settings = AssetManager::get_asset_metadata<Texture2DMetadata>(m_asset_handle);
     VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
 
     bool flip = true;
-    if (!GPU::IsHDR(settings->Format)) {
+    if (!GPU::IsHDR(settings->format)) {
         flip = false;
         ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
         {
-            auto modified = EUI::Property("Is Normal Map", &settings->IsNormalMap);
-            modified |= EUI::Property("Format", &settings->Format);
-            modified |= EUI::Property("Generate Mipmaps", &settings->GenerateMipmaps);
+            auto modified = EUI::property("Is Normal Map", &settings->is_normal_map);
+            modified |= EUI::property("Format", &settings->format);
+            modified |= EUI::property("Generate Mipmaps", &settings->generate_mipmaps);
             if (modified) {
-                Project::AssetManager()->RefreshAsset(m_AssetHandle);
+                Project::asset_manager()->refresh_asset(m_asset_handle);
             }
         }
         ImGui::EndChild();
@@ -33,35 +33,35 @@ void Texture2DWindow::OnDraw(f32 delta)
         ImGui::SameLine();
     }
 
-    auto asset = AssetManager::GetAsset<Texture2D>(m_AssetHandle);
-    if (!asset.IsLoaded()) {
+    auto asset = AssetManager::get_asset<Texture2D>(m_asset_handle);
+    if (!asset.is_loaded()) {
         ImGui::TextUnformatted("Texture is null");
         ImGui::EndChild();
         return;
     }
-    auto texture = asset.Get();
-    auto& metadata = texture->GetMetadata();
+    auto texture = asset.get();
+    auto& metadata = texture->metadata();
     Vector2 availableSize = ImGui::GetContentRegionAvail();
 
-    Vector2 textureSize = Vector2(metadata.Width, metadata.Height);
-    Vector2 screenSize = textureSize * m_Scale;
+    Vector2 textureSize = Vector2(metadata.width, metadata.height);
+    Vector2 screenSize = textureSize * m_scale;
     Vector2 viewSizeUv = availableSize / screenSize;
     Vector2 viewSize = availableSize;
-    Vector2 uv0 = m_PanPosition - viewSizeUv * 0.5f;
-    Vector2 uv1 = m_PanPosition + viewSizeUv * 0.5f;
+    Vector2 uv0 = m_pan_position - viewSizeUv * 0.5f;
+    Vector2 uv1 = m_pan_position + viewSizeUv * 0.5f;
 
     if (screenSize.x < availableSize.x) {
-        viewSize.x = Math::Floor(screenSize.x);
+        viewSize.x = Math::floor(screenSize.x);
         uv0.x = 0;
         uv1.x = 1;
-        m_PanPosition.x = 0.5f;
+        m_pan_position.x = 0.5f;
     }
 
     if (screenSize.y < availableSize.y) {
-        viewSize.y = Math::Floor(screenSize.y);
+        viewSize.y = Math::floor(screenSize.y);
         uv0.y = 0;
         uv1.y = 1;
-        m_PanPosition.y = 0.5f;
+        m_pan_position.y = 0.5f;
     }
 
     if (flip) {
@@ -72,28 +72,28 @@ void Texture2DWindow::OnDraw(f32 delta)
     ImGui::BeginChild("texture_preview", availableSize, 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     {
         ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
-        ImGui::Image(texture->GetTexture().View, viewSize, uv0, uv1);
+        ImGui::Image(texture->texture().View, viewSize, uv0, uv1);
         auto& io = ImGui::GetIO();
 
         bool hovered = ImGui::IsWindowHovered();
-        if (!m_IsDragging && hovered && io.MouseClicked[ImGuiMouseButton_Left]) {
-            m_IsDragging = true;
-        } else if (m_IsDragging) {
+        if (!m_is_dragging && hovered && io.MouseClicked[ImGuiMouseButton_Left]) {
+            m_is_dragging = true;
+        } else if (m_is_dragging) {
             ImVec2 uvDelta = io.MouseDelta * viewSizeUv / viewSize;
-            m_PanPosition -= Vector2(uvDelta);
-            Vector2 abs = Vector2::Abs(viewSizeUv);
-            m_PanPosition = Vector2::Max(m_PanPosition - abs * 0.5f, Vector2::Zero) + abs * 0.5f;
-            m_PanPosition = Vector2::Min(m_PanPosition + abs * 0.5f, Vector2::One) - abs * 0.5f;
+            m_pan_position -= Vector2(uvDelta);
+            Vector2 abs = Vector2::abs(viewSizeUv);
+            m_pan_position = Vector2::max(m_pan_position - abs * 0.5f, Vector2::Zero) + abs * 0.5f;
+            m_pan_position = Vector2::min(m_pan_position + abs * 0.5f, Vector2::One) - abs * 0.5f;
         }
 
-        if (m_IsDragging && (io.MouseReleased[ImGuiMouseButton_Left] || !io.MouseDown[ImGuiMouseButton_Left])) {
-            m_IsDragging = false;
+        if (m_is_dragging && (io.MouseReleased[ImGuiMouseButton_Left] || !io.MouseDown[ImGuiMouseButton_Left])) {
+            m_is_dragging = false;
         }
 
         if (hovered && io.MouseWheel != 0) {
             constexpr auto minimumGridSize = 4;
-            float zoomRate = m_ZoomRate;
-            float scale = m_Scale.y;
+            float zoomRate = m_zoom_rate;
+            float scale = m_scale.y;
             float prevScale = scale;
 
             bool keepTexelSizeRegular = scale > minimumGridSize;
@@ -109,7 +109,7 @@ void Texture2DWindow::OnDraw(f32 delta)
                 if (keepTexelSizeRegular) {
                     // See comment above. We're doing a floor this time to make
                     // sure the scale always changes when scrolling
-                    scale = CAST(f32, Math::FloorSigned(scale));
+                    scale = CAST(f32, Math::floor_signed(scale));
                 }
             }
             /* To make it easy to get back to 1:1 size we ensure that we stop
@@ -117,10 +117,10 @@ void Texture2DWindow::OnDraw(f32 delta)
             if ((prevScale < 1 && scale > 1) || (prevScale > 1 && scale < 1)) {
                 scale = 1;
             }
-            m_Scale = Vector2(metadata.Aspect() * scale, scale);
+            m_scale = Vector2(metadata.aspect() * scale, scale);
         }
     }
     ImGui::EndChild();
 }
 
-void Texture2DWindow::OnSave() { }
+void Texture2DWindow::on_save() { }

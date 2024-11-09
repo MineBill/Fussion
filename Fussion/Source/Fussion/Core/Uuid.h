@@ -7,20 +7,20 @@ namespace Fussion {
     public:
         Uuid();
         explicit Uuid(u64 id)
-            : m_ID(id)
+            : m_id(id)
         { }
 
         operator u64() const
         {
-            return m_ID;
+            return m_id;
         }
 
-        bool IsValid() const { return m_ID == 0; }
+        bool is_valid() const { return m_id == 0; }
 
         static Uuid Invalid;
 
     private:
-        u64 m_ID {};
+        u64 m_id {};
     };
 }
 

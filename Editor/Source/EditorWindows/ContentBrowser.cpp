@@ -22,101 +22,101 @@
 using namespace Fussion;
 namespace fs = std::filesystem;
 
-void ContentBrowserWindow::NamePopup::Show(std::function<void(std::string)> const& callback)
+void ContentBrowserWindow::NamePopup::show(std::function<void(std::string)> const& callback)
 {
-    m_Callback = callback;
-    m_Show = true;
-    m_Opened = true;
+    m_callback = callback;
+    m_show = true;
+    m_opened = true;
 }
 
-void ContentBrowserWindow::NamePopup::Update()
+void ContentBrowserWindow::NamePopup::update()
 {
-    if (m_Show) {
+    if (m_show) {
         ImGui::OpenPopup("NamePicker");
-        m_Show = false;
+        m_show = false;
     }
 
-    bool was_opened = m_Opened;
+    bool was_opened = m_opened;
     auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
-    EUI::ModalWindow("NamePicker", [&] {
-        ImGuiH::Text("Please pick a name:");
+    EUI::modal_window("NamePicker", [&] {
+        ImGuiH::text("Please pick a name:");
         ImGui::Separator();
 
         // Set the keyboard focus here once, when the window first appears.
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
             ImGui::SetKeyboardFocusHere(0);
 
-        if (ImGui::InputText("##input", &m_Name)) {
-            m_ShowError = Project::AssetManager()->IsPathAnAsset(m_Name, false);
+        if (ImGui::InputText("##input", &m_name)) {
+            m_show_error = Project::asset_manager()->is_path_an_asset(m_name, false);
         }
 
-        if (m_ShowError) {
-            ImGui::Image(EditorStyle::Style().EditorIcons[EditorIcon::Error]->GetTexture().View, Vector2(16, 16));
+        if (m_show_error) {
+            ImGui::Image(EditorStyle::style().editor_icons[EditorIcon::Error]->texture().View, Vector2(16, 16));
             ImGui::SameLine();
             ImGui::TextUnformatted("Item already exists");
         }
 
-        EUI::Button("Accept", [this] {
-            Accept();
+        EUI::button("Accept", [this] {
+            accept();
         },
-            { .Disabled = m_ShowError });
+            { .disabled = m_show_error });
         ImGui::SameLine();
-        EUI::Button("Cancel", [&] {
-            m_Opened = false;
+        EUI::button("Cancel", [&] {
+            m_opened = false;
 
             // Prevent m_Callback from being called.
             was_opened = false;
         });
 
-        if (Input::IsKeyPressed(Keys::Enter)) {
-            Accept();
+        if (Input::is_key_pressed(Keys::Enter)) {
+            accept();
         }
     },
-        { .Flags = flags, .Opened = &m_Opened });
+        { .flags = flags, .opened = &m_opened });
 
-    if (was_opened && !m_Opened) {
-        m_Callback(m_Name);
-        m_Callback = nullptr;
-        m_Name.clear();
+    if (was_opened && !m_opened) {
+        m_callback(m_name);
+        m_callback = nullptr;
+        m_name.clear();
     }
 }
 
-void ContentBrowserWindow::NamePopup::Accept()
+void ContentBrowserWindow::NamePopup::accept()
 {
-    if (!m_ShowError) {
-        m_Opened = false;
+    if (!m_show_error) {
+        m_opened = false;
     }
 }
 
-void ContentBrowserWindow::OnStart()
+void ContentBrowserWindow::on_start()
 {
-    m_Root = Project::AssetsFolderPath();
-    ChangeDirectory(m_Root);
+    m_root = Project::assets_folder_path();
+    change_directory(m_root);
 
-    m_FileTypes[".png"] = AssetType::Texture2D;
-    m_FileTypes[".jpg"] = AssetType::Texture2D;
-    m_FileTypes[".jpeg"] = AssetType::Texture2D;
-    m_FileTypes[".glb"] = AssetType::Model;
-    m_FileTypes[".gltf"] = AssetType::Model;
-    m_FileTypes[".hdr"] = AssetType::Texture2D;
+    m_file_types[".png"] = AssetType::Texture2D;
+    m_file_types[".jpg"] = AssetType::Texture2D;
+    m_file_types[".jpeg"] = AssetType::Texture2D;
+    m_file_types[".glb"] = AssetType::Model;
+    m_file_types[".gltf"] = AssetType::Model;
+    m_file_types[".hdr"] = AssetType::Texture2D;
 
-    m_ImportFilter.name = "Supported Asset Files";
-    for (auto const& file_type : m_FileTypes | std::views::keys) {
-        m_ImportFilter.file_patterns.push_back(std::format("*{}", file_type));
+    m_import_filter.name = "Supported Asset Files";
+    for (auto const& file_type : m_file_types | std::views::keys) {
+        m_import_filter.file_patterns.push_back(std::format("*{}", file_type));
     }
 }
 
-void ContentBrowserWindow::OnDraw()
+void ContentBrowserWindow::on_draw()
 {
-    EUI::Window("Content", [&] {
-        m_IsFocused = ImGui::IsWindowFocused();
-        m_NamePopup.Update();
+    EUI::window("Content", [&] {
+        m_is_focused = ImGui::IsWindowFocused();
+        m_name_popup.update();
 
-        EUI::Button("Import", [&] {
-            for (auto const& path : Fussion::Dialogs::ShowFilePicker(m_ImportFilter, true)) {
-                ImportFile(path);
+        EUI::button("Import", [&] {
+            for (auto const& path : Fussion::Dialogs::show_file_picker(m_import_filter, true)) {
+                import_file(path);
             }
-            RefreshContents();
+            refresh_contents();
         });
         ImGui::SameLine();
         ImGui::Spacing();
@@ -124,7 +124,7 @@ void ContentBrowserWindow::OnDraw()
         ImGui::Spacing();
         ImGui::SameLine();
 
-        ImGuiH::Text("Path: {}", m_RelativeToRootStringPath);
+        ImGuiH::text("Path: {}", m_relative_to_root_string_path);
 
         ImGui::SameLine();
         auto width = ImGui::GetContentRegionAvail().x - (16 * 2 + ImGui::GetStyle().FramePadding.x);
@@ -132,19 +132,19 @@ void ContentBrowserWindow::OnDraw()
 
         ImGui::SameLine();
 
-        auto& style = EditorStyle::Style();
-        EUI::ImageButton(style.EditorIcons[EditorIcon::Dots], [&] {
+        auto& style = EditorStyle::style();
+        EUI::image_button(style.editor_icons[EditorIcon::Dots], [&] {
             ImGui::OpenPopup("ContentBrowserOptions");
         },
-            { .Size = Vector2 { 16, 16 } });
+            { .size = Vector2 { 16, 16 } });
         if (ImGui::BeginItemTooltip()) {
             ImGui::TextUnformatted("Press to view content browser options.");
             ImGui::EndTooltip();
         }
 
-        EUI::Popup("ContentBrowserOptions", [&] {
-            EUI::Property("Padding", &m_Padding, EUI::PropTypeRange { .Min = 2, .Max = 32 });
-            EUI::Property("Thumbnail Size", &m_ThumbnailSize, EUI::PropTypeRange { .Min = 16, .Max = 128 });
+        EUI::popup("ContentBrowserOptions", [&] {
+            EUI::property("Padding", &m_padding, EUI::PropTypeRange { .Min = 2, .Max = 32 });
+            EUI::property("Thumbnail Size", &m_thumbnail_size, EUI::PropTypeRange { .Min = 16, .Max = 128 });
         });
 
         ImGui::Separator();
@@ -154,27 +154,27 @@ void ContentBrowserWindow::OnDraw()
         if (ImGui::BeginPopupContextWindow()) {
             if (ImGui::BeginMenu("New")) {
                 if (ImGui::MenuItem("Folder")) {
-                    m_NamePopup.Show([this](std::string const& name) {
+                    m_name_popup.show([this](std::string const& name) {
                         std::error_code ec;
-                        if (!std::filesystem::create_directories(m_CurrentPath / name, ec)) {
+                        if (!std::filesystem::create_directories(m_current_path / name, ec)) {
                             LOG_ERRORF("Failed to create directoried: {}", ec.message());
                         }
-                        RefreshContents();
+                        refresh_contents();
                     });
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Scene")) {
-                    m_NamePopup.Show([this](std::string const& name) {
-                        auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
-                        Project::AssetManager()->CreateAsset<Scene>(path);
-                        RefreshContents();
+                    m_name_popup.show([this](std::string const& name) {
+                        auto path = fs::relative(m_current_path, m_root) / (name + ".fsn");
+                        Project::asset_manager()->create_asset<Scene>(path);
+                        refresh_contents();
                     });
                 }
                 if (ImGui::MenuItem("PbrMaterial")) {
-                    m_NamePopup.Show([this](std::string const& name) {
-                        auto path = fs::relative(m_CurrentPath, m_Root) / (name + ".fsn");
-                        Project::AssetManager()->CreateAsset<PbrMaterial>(path);
-                        RefreshContents();
+                    m_name_popup.show([this](std::string const& name) {
+                        auto path = fs::relative(m_current_path, m_root) / (name + ".fsn");
+                        Project::asset_manager()->create_asset<PbrMaterial>(path);
+                        refresh_contents();
                     });
                 }
 
@@ -182,12 +182,12 @@ void ContentBrowserWindow::OnDraw()
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Show in file explorer")) {
-                Dialogs::OpenDirectory(m_CurrentPath);
+                Dialogs::open_directory(m_current_path);
             }
             ImGui::EndPopup();
         }
 
-        auto item_size = m_Padding + m_ThumbnailSize + CAST(s32, ImGui::GetStyle().FramePadding.x);
+        auto item_size = m_padding + m_thumbnail_size + CAST(s32, ImGui::GetStyle().FramePadding.x);
         auto columns = CAST(s32, ImGui::GetContentRegionAvail().x / item_size);
         if (columns <= 0)
             columns = 1;
@@ -198,17 +198,17 @@ void ContentBrowserWindow::OnDraw()
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
             ImGui::PushStyleColor(ImGuiCol_Button, Vector4(1.0f, 1.0f, 1.0, 0.1f));
 
-            if (m_CurrentPath != m_Root) {
-                Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
+            if (m_current_path != m_root) {
+                Vector2 size(m_thumbnail_size, m_thumbnail_size);
                 ImGui::TableNextColumn();
                 EUI::ImGuiStyleBuilder()
-                    .With(ImGuiStyleVar_FrameRounding, 2.0f)
-                    .With(ImGuiCol_Button, Color::Transparent)
-                    .Do([&] {
-                        ImGui::ImageButton(style.EditorIcons[EditorIcon::FolderBack]->GetTexture().View, size);
+                    .with(ImGuiStyleVar_FrameRounding, 2.0f)
+                    .with(ImGuiCol_Button, Color::Transparent)
+                    .build([&] {
+                        ImGui::ImageButton(style.editor_icons[EditorIcon::FolderBack]->texture().View, size);
                     });
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                    ChangeDirectory(m_CurrentPath.parent_path());
+                    change_directory(m_current_path.parent_path());
                 }
                 ImGui::TextWrapped("..");
             }
@@ -216,80 +216,80 @@ void ContentBrowserWindow::OnDraw()
             // Used to signal a refresh of the content folder,
             // to prevent modifying m_Entries while looping.
             bool refresh { false };
-            ImGui::PushFont(EditorStyle::Style().Fonts[EditorFont::BoldSmall]);
+            ImGui::PushFont(EditorStyle::style().fonts[EditorFont::BoldSmall]);
 
             Maybe<std::filesystem::path> requested_directory_change;
             for (auto& entry : m_Entries) {
-                ImGui::PushID(entry.Path.c_str());
+                ImGui::PushID(entry.path.c_str());
                 defer(ImGui::PopID());
-                Vector2 size(m_ThumbnailSize, m_ThumbnailSize);
+                Vector2 size(m_thumbnail_size, m_thumbnail_size);
 
                 ImGui::TableNextColumn();
-                if (entry.IsDirectory) {
+                if (entry.is_directory) {
                     EUI::ImGuiStyleBuilder()
-                        .With(ImGuiStyleVar_FrameRounding, 2.0f)
-                        .With(ImGuiCol_Button, Color::Transparent)
-                        .Do([&] {
-                            ImGui::ImageButton(style.EditorIcons[EditorIcon::Folder]->GetTexture().View, size);
+                        .with(ImGuiStyleVar_FrameRounding, 2.0f)
+                        .with(ImGuiCol_Button, Color::Transparent)
+                        .build([&] {
+                            ImGui::ImageButton(style.editor_icons[EditorIcon::Folder]->texture().View, size);
                         });
                     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                        requested_directory_change = entry.Path;
+                        requested_directory_change = entry.path;
                         break;
                     }
 
                     if (ImGui::BeginDragDropTarget()) {
                         if (auto payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ASSET"); payload) {
                             auto handle = *CAST(AssetHandle*, payload->Data);
-                            Project::AssetManager()->MoveAsset(handle, entry.Path);
+                            Project::asset_manager()->move_asset(handle, entry.path);
                             refresh = true;
                         }
                         ImGui::EndDragDropTarget();
                     }
                 } else {
-                    Texture2D* texture = style.EditorIcons[EditorIcon::GenericAsset].get();
-                    switch (entry.Type) {
+                    Texture2D* texture = style.editor_icons[EditorIcon::GenericAsset].get();
+                    switch (entry.type) {
                     case AssetType::Invalid:
                     case AssetType::Image:
                     case AssetType::Texture:
                     case AssetType::HDRTexture:
                     case AssetType::Model:
                     case AssetType::Shader: {
-                        texture = style.EditorIcons[EditorIcon::GenericAsset].get();
+                        texture = style.editor_icons[EditorIcon::GenericAsset].get();
                     } break;
                     case AssetType::Script: {
-                        texture = style.EditorIcons[EditorIcon::Script].get();
+                        texture = style.editor_icons[EditorIcon::Script].get();
                     } break;
                     case AssetType::PbrMaterial: {
-                        texture = style.EditorIcons[EditorIcon::PbrMaterial].get();
+                        texture = style.editor_icons[EditorIcon::PbrMaterial].get();
                     } break;
                     case AssetType::Scene: {
-                        texture = style.EditorIcons[EditorIcon::Scene].get();
+                        texture = style.editor_icons[EditorIcon::Scene].get();
                     } break;
                     case AssetType::Texture2D: {
                         // TODO: Use a thumbnail cache
-                        auto asset = AssetManager::GetAsset<Texture2D>(entry.Metadata.Handle);
-                        texture = asset.Get();
+                        auto asset = AssetManager::get_asset<Texture2D>(entry.metadata.handle);
+                        texture = asset.get();
                         if (texture == nullptr) {
-                            texture = style.EditorIcons[EditorIcon::GenericAsset].get();
+                            texture = style.editor_icons[EditorIcon::GenericAsset].get();
                         }
                         // size.x = texture->GetMetadata().Aspect() * size.y;
                     } break;
                     }
 
-                    if (m_Selection.contains(entry.ID)) {
+                    if (m_Selection.contains(entry.id)) {
                         ImGui::PushStyleColor(ImGuiCol_Button, Color::Coral);
                     }
 
                     EUI::ImGuiStyleBuilder()
-                        .With(ImGuiStyleVar_FrameRounding, 2.0f)
-                        .With(ImGuiCol_Button, m_Selection.contains(entry.ID) ? Color::FromHex(ACCENT_COLOR) : Color::Transparent)
-                        .With(ImGuiCol_ButtonHovered, Color::FromHex(ACCENT_COLOR).Lighten(0.05f), m_Selection.contains(entry.ID))
-                        .With(ImGuiCol_ButtonActive, Color::FromHex(ACCENT_COLOR).Darken(0.05f), m_Selection.contains(entry.ID))
-                        .Do([&] {
-                            ImGui::ImageButton(texture->GetTexture().View, size);
+                        .with(ImGuiStyleVar_FrameRounding, 2.0f)
+                        .with(ImGuiCol_Button, m_Selection.contains(entry.id) ? Color::from_hex(ACCENT_COLOR) : Color::Transparent)
+                        .with(ImGuiCol_ButtonHovered, Color::from_hex(ACCENT_COLOR).lighten(0.05f), m_Selection.contains(entry.id))
+                        .with(ImGuiCol_ButtonActive, Color::from_hex(ACCENT_COLOR).darken(0.05f), m_Selection.contains(entry.id))
+                        .build([&] {
+                            ImGui::ImageButton(texture->texture().View, size);
                         });
 
-                    if (m_Selection.contains(entry.ID)) {
+                    if (m_Selection.contains(entry.id)) {
                         ImGui::PopStyleColor();
                     }
 
@@ -297,10 +297,10 @@ void ContentBrowserWindow::OnDraw()
                     ImGui::PopFont();
                     if (ImGui::BeginPopupContextItem()) {
                         if (ImGui::MenuItem("Open")) {
-                            m_Editor->OpenAsset(entry.Metadata.Handle);
+                            m_editor->open_asset(entry.metadata.handle);
                         }
                         if (ImGui::MenuItem("Rename")) {
-                            entry.Renaming = true;
+                            entry.renaming = true;
                         }
                         ImGui::EndPopup();
                     }
@@ -308,37 +308,37 @@ void ContentBrowserWindow::OnDraw()
 
                     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                         m_Selection.clear();
-                        m_Selection.insert(entry.ID);
+                        m_Selection.insert(entry.id);
                     }
                     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
-                        m_Editor->OpenAsset(entry.Metadata.Handle);
+                        m_editor->open_asset(entry.metadata.handle);
                     }
                     if (ImGui::BeginDragDropSource()) {
-                        ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.Metadata.Handle, sizeof(AssetHandle));
+                        ImGui::SetDragDropPayload("CONTENT_BROWSER_ASSET", &entry.metadata.handle, sizeof(AssetHandle));
                         ImGui::EndDragDropSource();
                     }
                 }
 
                 // Name label
-                if (entry.Renaming) {
-                    if (ImGui::InputText("", &entry.Name, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                        entry.Renaming = false;
-                        if (!entry.Name.empty()) {
-                            Project::AssetManager()->RenameAsset(entry.ID, entry.Name);
+                if (entry.renaming) {
+                    if (ImGui::InputText("", &entry.name, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        entry.renaming = false;
+                        if (!entry.name.empty()) {
+                            Project::asset_manager()->rename_asset(entry.id, entry.name);
                         }
                         refresh = true;
                     }
                 } else {
-                    ImGui::TextWrapped("%s", entry.Name.c_str());
+                    ImGui::TextWrapped("%s", entry.name.c_str());
                 }
             }
 
-            if (requested_directory_change.HasValue()) {
-                ChangeDirectory(*requested_directory_change);
+            if (requested_directory_change.has_value()) {
+                change_directory(*requested_directory_change);
             }
 
             if (refresh) {
-                RefreshContents();
+                refresh_contents();
             }
             ImGui::EndTable();
         }
@@ -352,34 +352,34 @@ void ContentBrowserWindow::OnDraw()
 
 // path cannot be a ref because it will point to an entry in m_Entries,
 // which we clear before using it.
-void ContentBrowserWindow::ChangeDirectory(fs::path const& path) // NOLINT(performance-unnecessary-value-param)
+void ContentBrowserWindow::change_directory(fs::path const& path) // NOLINT(performance-unnecessary-value-param)
 {
-    m_CurrentPath = path;
-    m_RelativeToRoot = fs::relative(m_CurrentPath, m_Root);
-    m_RelativeToRootStringPath = m_RelativeToRoot.string();
+    m_current_path = path;
+    m_relative_to_root = fs::relative(m_current_path, m_root);
+    m_relative_to_root_string_path = m_relative_to_root.string();
 
     m_Selection.clear();
     m_Entries.clear();
     for (auto const& entry : fs::directory_iterator(path)) {
-        auto entry_path = fs::relative(entry.path(), Project::AssetsFolderPath());
-        auto metadata = Project::AssetManager()->GetMetadata(entry_path);
-        if (metadata.HasValue() || entry.is_directory()) {
-            auto meta = metadata.ValueOr({});
+        auto entry_path = fs::relative(entry.path(), Project::assets_folder_path());
+        auto metadata = Project::asset_manager()->get_metadata(entry_path);
+        if (metadata.has_value() || entry.is_directory()) {
+            auto meta = metadata.value_or({});
             m_Entries.push_back(Entry {
-                .ID = meta.Handle,
-                .Path = entry.path(),
-                .StringPath = entry.path().string(),
-                .Name = entry.path().filename().string(),
-                .IsDirectory = entry.is_directory(),
-                .Type = meta.Type,
-                .Metadata = meta,
+                .id = meta.handle,
+                .path = entry.path(),
+                .string_path = entry.path().string(),
+                .name = entry.path().filename().string(),
+                .is_directory = entry.is_directory(),
+                .type = meta.type,
+                .metadata = meta,
             });
         }
     }
 
     std::ranges::sort(m_Entries, [](Entry const& a, Entry const& b) {
-        if (a.IsDirectory || b.IsDirectory) {
-            return a.IsDirectory && !b.IsDirectory;
+        if (a.is_directory || b.is_directory) {
+            return a.is_directory && !b.is_directory;
         }
 
         auto to_lowercase = [](std::string const& str) {
@@ -388,20 +388,20 @@ void ContentBrowserWindow::ChangeDirectory(fs::path const& path) // NOLINT(perfo
             return result;
         };
 
-        return std::ranges::lexicographical_compare(to_lowercase(a.Name), to_lowercase(b.Name));
+        return std::ranges::lexicographical_compare(to_lowercase(a.name), to_lowercase(b.name));
     });
 }
 
-void ContentBrowserWindow::RefreshContents()
+void ContentBrowserWindow::refresh_contents()
 {
-    ChangeDirectory(m_CurrentPath);
+    change_directory(m_current_path);
 }
 
-void ContentBrowserWindow::ImportFile(fs::path const& path)
+void ContentBrowserWindow::import_file(fs::path const& path)
 {
     if (!path.has_filename()) {
         LOG_WARNF("Invalid name for import file: {}", path.string());
         return;
     }
-    Project::AssetManager()->ImportAsset(path, m_CurrentPath);
+    Project::asset_manager()->import_asset(path, m_current_path);
 }

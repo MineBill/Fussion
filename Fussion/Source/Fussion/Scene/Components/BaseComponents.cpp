@@ -8,78 +8,78 @@
 #include "Serialization/Serializer.h"
 
 namespace Fussion {
-    void PointLight::OnUpdate(f32) { }
+    void PointLight::on_update(f32) { }
 
-    void PointLight::OnDraw(RenderContext& context)
+    void PointLight::on_draw(RenderContext& context)
     {
-        if (!context.RenderFlags.test(RenderState::LightCollection))
+        if (!context.render_flags.test(RenderState::LightCollection))
             return;
         auto light = GPUPointLight {
-            .Position = m_Owner->WorldTransform.Position,
-            .LightColor = Color::White,
-            .Radius = radius,
+            .position = m_owner->transform.Position,
+            .light_color = Color::White,
+            .radius = radius,
         };
-        context.PointLights.push_back(light);
+        context.point_lights.push_back(light);
     }
 
-    void PointLight::Serialize(Serializer& ctx) const
+    void PointLight::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
+        Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(offset);
         FSN_SERIALIZE_MEMBER(radius);
     }
 
-    void PointLight::Deserialize(Deserializer& ctx)
+    void PointLight::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
+        Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(offset);
         FSN_DESERIALIZE_MEMBER(radius);
     }
 
-    void DebugDrawer::OnDebugDraw(DebugDrawContext& ctx)
+    void DebugDrawer::on_debug_draw(DebugDrawContext& ctx)
     {
         (void)ctx;
 
         if (draw_type == Type::Box) {
-            Debug::DrawCube(m_Owner->WorldTransform.Position, m_Owner->WorldTransform.EulerAngles, Vector3::One * size);
+            Debug::draw_cube(m_owner->transform.Position, m_owner->transform.EulerAngles, Vector3::One * size);
         } else if (draw_type == Type::Sphere) {
-            Debug::DrawSphere(m_Owner->WorldTransform.Position, m_Owner->WorldTransform.EulerAngles, size);
+            Debug::draw_sphere(m_owner->transform.Position, m_owner->transform.EulerAngles, size);
         }
     }
 
-    void DebugDrawer::Serialize(Serializer& ctx) const
+    void DebugDrawer::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
+        Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(size);
         FSN_SERIALIZE_MEMBER(draw_type);
     }
 
-    void DebugDrawer::Deserialize(Deserializer& ctx)
+    void DebugDrawer::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
+        Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(size);
         FSN_DESERIALIZE_MEMBER(draw_type);
     }
 
-    void BallSpawner::OnUpdate(f32 delta)
+    void BallSpawner::on_update(f32 delta)
     {
-        m_Owner->WorldTransform.Position.x += delta * speed;
+        m_owner->transform.Position.x += delta * speed;
     }
 
     void BallSpawner::spawn()
     {
         for (u32 x = 0; x < 10; ++x) {
             for (u32 y = 0; y < 10; ++y) {
-                auto new_entity = m_Owner->GetScene().CreateEntity("Test", m_Owner->GetHandle());
-                auto mr = new_entity->AddComponent<MeshRenderer>();
+                auto new_entity = m_owner->scene().create_entity("Test", m_owner->handle());
+                auto mr = new_entity->add_component<MeshRenderer>();
                 mr->ModelAsset = model;
-                new_entity->WorldTransform.Position = Vector3(x, Math::Sin((x + y) / 50.0f), y);
+                new_entity->transform.Position = Vector3(x, Math::sin((x + y) / 50.0f), y);
 
-                auto mat = MakeRef<PbrMaterial>();
+                auto mat = make_ref<PbrMaterial>();
                 mat->object_color = Color::Red;
                 mat->roughness = CAST(f32, x) / 10.0f;
                 mat->metallic = CAST(f32, y) / 10.0f;
-                auto mat_ref = AssetManager::CreateVirtualAssetRef<PbrMaterial>(mat);
+                auto mat_ref = AssetManager::create_virtual_asset_ref<PbrMaterial>(mat);
 
                 mr->Materials.push_back(mat_ref);
             }
@@ -88,44 +88,44 @@ namespace Fussion {
 
     void BallSpawner::clear()
     {
-        auto children = m_Owner->GetChildren();
+        auto children = m_owner->children();
         for (auto child : children) {
-            m_Owner->GetScene().DestroyEntity(child);
+            m_owner->scene().destroy_entity(child);
         }
     }
 
-    void BallSpawner::Serialize(Serializer& ctx) const
+    void BallSpawner::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
+        Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(speed);
     }
 
-    void BallSpawner::Deserialize(Deserializer& ctx)
+    void BallSpawner::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
+        Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(speed);
     }
 
-    void Environment::OnDraw(RenderContext& context)
+    void Environment::on_draw(RenderContext& context)
     {
-        if (!context.RenderFlags.test(RenderState::LightCollection))
+        if (!context.render_flags.test(RenderState::LightCollection))
             return;
 
-        context.PostProcessingSettings.UseSSAO = UseSSAO;
-        context.PostProcessingSettings.SSAOData.Radius = SSAORadius;
-        context.PostProcessingSettings.SSAOData.Bias = SSAOBias;
-        context.PostProcessingSettings.SSAOData.NoiseScale = SSAONoiseScale;
+        context.post_processing_settings.use_ssao = UseSSAO;
+        context.post_processing_settings.ssao_data.radius = SSAORadius;
+        context.post_processing_settings.ssao_data.bias = SSAOBias;
+        context.post_processing_settings.ssao_data.noise_scale = SSAONoiseScale;
 
-        context.PostProcessingSettings.TonemappingSettings.Gamma = TMGamma;
-        context.PostProcessingSettings.TonemappingSettings.Exposure = TMExposure;
-        context.PostProcessingSettings.TonemappingSettings.Mode = CAST(u32, TMMode);
+        context.post_processing_settings.tonemapping_settings.gamma = TMGamma;
+        context.post_processing_settings.tonemapping_settings.exposure = TMExposure;
+        context.post_processing_settings.tonemapping_settings.mode = CAST(u32, TMMode);
 
-        context.EnvironmentMap = EnvironmentMap.Get();
+        context.environment_texture = EnvironmentMap.get();
     }
 
-    void Environment::Serialize(Serializer& ctx) const
+    void Environment::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
+        Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(UseSSAO);
         FSN_SERIALIZE_MEMBER(SSAOBias);
         FSN_SERIALIZE_MEMBER(SSAONoiseScale);
@@ -137,9 +137,9 @@ namespace Fussion {
         FSN_SERIALIZE_MEMBER(EnvironmentMap);
     }
 
-    void Environment::Deserialize(Deserializer& ctx)
+    void Environment::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
+        Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(UseSSAO);
         FSN_DESERIALIZE_MEMBER(SSAOBias);
         FSN_DESERIALIZE_MEMBER(SSAONoiseScale);

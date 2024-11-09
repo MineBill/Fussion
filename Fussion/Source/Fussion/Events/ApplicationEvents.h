@@ -18,23 +18,23 @@ namespace Fussion {
         EVENT(WindowResized)
 
         explicit WindowResized(int w, int h)
-            : Width(w)
-            , Height(h)
+            : width(w)
+            , height(h)
         { }
 
-        s32 Width { 0 };
-        s32 Height { 0 };
+        s32 width { 0 };
+        s32 height { 0 };
     };
 
     class WindowMoved final : public Event {
     public:
         EVENT(WindowMoved)
         explicit WindowMoved(unsigned new_x, unsigned new_y)
-            : X(new_x)
-            , Y(new_y)
+            : x(new_x)
+            , y(new_y)
         { }
 
-        u32 X { 0 }, Y { 0 };
+        u32 x { 0 }, y { 0 };
     };
 
     class WindowMinimized final : public Event {

@@ -12,12 +12,12 @@ namespace Fussion::Mem {
         using AllocationProc = void* (*)(usz size, void*, std::source_location const&);
         using DeallocationProc = void (*)(void* ptr, void*, std::source_location const&);
 
-        AllocationProc AllocProc {
+        AllocationProc alloc_proc {
             [](usz, void*, std::source_location const&) -> void* {
                 PANIC("Tried to allocate memory from an uninitialized allocators");
             }
         };
-        DeallocationProc DeallocProc {
+        DeallocationProc dealloc_proc {
             [](void*, void*, std::source_location const&) {
                 PANIC("Tried to deallocate from an uninitialized allocator");
             }
@@ -31,59 +31,63 @@ namespace Fussion::Mem {
 
     uintptr_t AlignForward(uintptr_t ptr, size_t alignment);
 
-    inline void* Alloc(
+    inline void* alloc(
         usz size,
         Allocator const& allocator,
-        std::source_location const& loc = std::source_location::current())
+        std::source_location const& loc = std::source_location::current()
+    )
     {
-        return allocator.AllocProc(size, allocator.data, loc);
+        return allocator.alloc_proc(size, allocator.data, loc);
     }
 
-    inline void Free(
+    inline void free(
         void* ptr,
         Allocator const& allocator,
-        std::source_location const& loc = std::source_location::current())
+        std::source_location const& loc = std::source_location::current()
+    )
     {
-        allocator.DeallocProc(ptr, allocator.data, loc);
+        allocator.dealloc_proc(ptr, allocator.data, loc);
     }
 
-    void Copy(void* dst, void const* src, size_t length);
-    s32 Compare(void const* first, void const* second, size_t length);
+    void copy(void* dst, void const* src, size_t length);
+    s32 compare(void const* first, void const* second, size_t length);
 
     template<typename T>
-    Slice<T> Alloc(
+    Slice<T> alloc(
         usz size,
         Allocator const& allocator,
-        std::source_location const& loc = std::source_location::current())
+        std::source_location const& loc = std::source_location::current()
+    )
     {
-        return Slice<T>(CAST(T*, Alloc(size * sizeof(T), allocator, loc)), size);
+        return Slice<T>(CAST(T*, alloc(size * sizeof(T), allocator, loc)), size);
     }
 
     template<typename T>
-    T* Alloc(Allocator const& allocator, std::source_location const& loc = std::source_location::current())
+    T* alloc(Allocator const& allocator, std::source_location const& loc = std::source_location::current())
     {
-        return CAST(T*, Alloc(sizeof(T), allocator, loc));
+        return CAST(T*, alloc(sizeof(T), allocator, loc));
     }
 
     template<typename T>
-    void Free(
+    void free(
         Slice<T>& slice,
         Allocator const& allocator,
-        std::source_location const& loc = std::source_location::current())
+        std::source_location const& loc = std::source_location::current()
+    )
     {
         slice.length = 0;
-        allocator.DeallocProc(slice.ptr, allocator.data, loc);
+        allocator.dealloc_proc(slice.ptr, allocator.data, loc);
     }
 
     template<typename T>
-    void Copy(Slice<T> const& dst, Slice<T> const& src)
+    void copy(Slice<T> const& dst, Slice<T> const& src)
     {
         VERIFY(dst.length >= src.length, "dst: {}, src: {}", dst.length, src.length);
-        Mem::Copy(dst.ptr, src.ptr, src.length * sizeof(T));
+        Mem::copy(dst.ptr, src.ptr, src.length * sizeof(T));
     }
 
     template<typename T>
-    s32 Compare(Slice<T> const& first, Slice<T> const& second)
+    s32 compare(Slice<T> const& first, Slice<T> const& second)
     {
         if (first.length < second.length) {
             return -1;
@@ -91,6 +95,6 @@ namespace Fussion::Mem {
         if (first.length > second.length) {
             return 1;
         }
-        return Compare(first.ptr, second.ptr, first.length);
+        return compare(first.ptr, second.ptr, first.length);
     }
 }

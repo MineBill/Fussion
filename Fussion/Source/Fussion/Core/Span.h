@@ -6,38 +6,38 @@ namespace Fussion {
     class Span {
     public:
         constexpr Span(T* ptr, size_t length) noexcept
-            : m_Ptr(ptr)
-            , m_Length(length)
+            : m_ptr(ptr)
+            , m_length(length)
         { }
 
         template<SpanCompatible<T> Rng>
         constexpr explicit(false) Span(Rng&& range) noexcept
-            : m_Ptr(range.data())
-            , m_Length(range.size())
+            : m_ptr(range.data())
+            , m_length(range.size())
         { }
 
         template<size_t Size>
         constexpr explicit(false) Span(T (&arr)[Size]) noexcept
-            : m_Ptr(arr)
-            , m_Length(Size)
+            : m_ptr(arr)
+            , m_length(Size)
         { }
 
         constexpr Span(Span const& other) noexcept
-            : m_Ptr(other.m_Ptr)
-            , m_Length(other.m_Length)
+            : m_ptr(other.m_ptr)
+            , m_length(other.m_length)
         { }
 
         constexpr Span(Span&& other) noexcept
-            : m_Ptr(other.m_Ptr)
-            , m_Length(other.m_Length)
+            : m_ptr(other.m_ptr)
+            , m_length(other.m_length)
         { }
 
         constexpr Span& operator=(Span const& other)
         {
             if (this == &other)
                 return *this;
-            m_Ptr = other.m_Ptr;
-            m_Length = other.m_Length;
+            m_ptr = other.m_ptr;
+            m_length = other.m_length;
             return *this;
         }
 
@@ -45,49 +45,49 @@ namespace Fussion {
         {
             if (this == &other)
                 return *this;
-            m_Ptr = other.m_Ptr;
-            m_Length = other.m_Length;
+            m_ptr = other.m_ptr;
+            m_length = other.m_length;
             return *this;
         }
 
         T& operator[](size_t index) const
         {
-            VERIFY(index < m_Length);
-            return m_Ptr[index];
+            VERIFY(index < m_length);
+            return m_ptr[index];
         }
 
-        size_t Length() const
+        size_t size() const
         {
-            return m_Length;
+            return m_length;
         }
 
-        size_t SizeInBytes() const
+        size_t size_in_bytes() const
         {
-            return m_Length * sizeof(std::remove_cvref_t<T>);
+            return m_length * sizeof(std::remove_cvref_t<T>);
         }
 
-        T* DataPtr() const
+        T* data() const
         {
-            return m_Ptr;
+            return m_ptr;
         }
 
         template<typename Y>
         bool operator==(Span<Y> const& other) const
         {
-            if (other.m_Length != m_Length)
+            if (other.m_length != m_length)
                 return false;
-            for (size_t i = 0; i < m_Length; ++i) {
-                if (m_Ptr[i] != other[i])
+            for (size_t i = 0; i < m_length; ++i) {
+                if (m_ptr[i] != other[i])
                     return false;
             }
             return false;
         }
 
-        Span SubSlice(size_t start, size_t end)
+        Span slice(size_t start, size_t end)
         {
             VERIFY(start <= end, "start: {}, end: {}", start, end);
-            VERIFY(end < m_Length);
-            return Span(m_Ptr + start, end - start);
+            VERIFY(end < m_length);
+            return Span(m_ptr + start, end - start);
         }
 
         struct Iterator {
@@ -142,17 +142,17 @@ namespace Fussion {
 
         Iterator begin()
         {
-            return Iterator(m_Ptr);
+            return Iterator(m_ptr);
         }
 
         Iterator end()
         {
-            return Iterator(m_Ptr + m_Length);
+            return Iterator(m_ptr + m_length);
         }
 
     private:
-        T* m_Ptr {};
-        size_t m_Length {};
+        T* m_ptr {};
+        size_t m_length {};
     };
 
     template<typename T>

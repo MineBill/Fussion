@@ -500,7 +500,7 @@ int main(int argc, char** argv)
     F("");
 
     TAB_N(0); F("namespace Fussion {");
-    TAB_N(1); F("void ReflectionRegistry::RegisterGenerated() {");
+    TAB_N(1); F("void ReflectionRegistry::register_generated() {");
     TAB_N(2); F("using namespace std::literals;");
     TAB_N(2); F("using namespace Fussion;");
     TAB_N(2); F("namespace meta = meta_hpp;");

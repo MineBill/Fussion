@@ -11,25 +11,25 @@ namespace Fussion {
 
         /// Initialize the HDR pipeline.
         /// @param output_format The format of the view this pipeline will render to.
-        void Init(Vector2 size, GPU::TextureFormat output_format);
+        void init(Vector2 size, GPU::TextureFormat output_format);
 
-        void Resize(Vector2 size);
-        void Render(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context);
+        void resize(Vector2 size);
+        void render(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context);
 
-        auto GetView() -> GPU::TextureView&;
+        auto view() -> GPU::TextureView&;
 
     private:
-        GPU::ShaderModule m_Shader {};
-        GPU::BindGroupLayout m_BindGroupLayout {};
-        GPU::BindGroup m_BindGroup {};
+        GPU::ShaderModule m_shader {};
+        GPU::BindGroupLayout m_bind_group_layout {};
+        GPU::BindGroup m_bind_group {};
 
-        GPU::BindGroupLayout m_SettingsBgl {};
-        GPU::BindGroup m_SettingsBg {};
+        GPU::BindGroupLayout m_settings_bgl {};
+        GPU::BindGroup m_settings_bg {};
 
-        GPU::RenderPipeline m_Pipeline {};
-        GPU::Texture m_RenderTexture {};
-        GPU::Sampler m_Sampler {};
+        GPU::RenderPipeline m_pipeline {};
+        GPU::Texture m_render_texture {};
+        GPU::Sampler m_sampler {};
 
-        UniformBuffer<PostProcessing::Tonemapping> m_TonemappingBuffer {};
+        UniformBuffer<PostProcessing::Tonemapping> m_tonemapping_buffer {};
     };
 }

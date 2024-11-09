@@ -8,11 +8,11 @@ namespace Fussion {
         friend Application;
 
     public:
-        static f32 DeltaTime();
-        static f32 SmoothDeltaTime();
+        static f32 delta_time();
+        static f32 smooth_delta_time();
 
     private:
-        static void SetDeltaTime(f32 delta_time);
-        static f32 m_DeltaTime;
+        static void set_delta_time(f32 delta_time);
+        static f32 m_delta_time;
     };
 }

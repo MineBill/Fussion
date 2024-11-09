@@ -9,21 +9,21 @@ namespace Fussion {
         COMPONENT_DEFAULT(ScriptComponent);
 
         [[API]]
-        std::string ClassName {};
+        std::string class_name {};
 
-        virtual void OnStart() override;
-        virtual void OnUpdate(f32) override;
+        virtual void on_start() override;
+        virtual void on_update(f32) override;
 
-        virtual void OnDestroy() override;
+        virtual void on_destroy() override;
 
         void test() const;
 
-        virtual auto Clone() -> Ref<Component> override;
+        virtual auto clone() -> Ref<Component> override;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     private:
-        ScriptInstance m_Instance {};
+        ScriptInstance m_instance {};
     };
 }

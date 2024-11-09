@@ -23,17 +23,17 @@ namespace Fussion {
     Keys glfw_key_to_fussion(int key);
     MouseButton GlfwMouseButtonToFussion(int glfw_mouse_button);
 
-    Window* Window::Create(WindowOptions const& options)
+    Window* Window::create(WindowOptions const& options)
     {
         return new GlfwWindow(options);
     }
 
     GlfwWindow::GlfwWindow(WindowOptions const& options)
-        : m_Options(options)
+        : m_options(options)
     {
 
 #ifdef OS_LINUX
-        if (System::GetSystemInfo().WindowingSystem == System::WindowingSystem::X11) {
+        if (System::system_info().windowing_system == System::WindowingSystem::X11) {
             glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
         }
 #endif
@@ -55,13 +55,13 @@ namespace Fussion {
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_Window = glfwCreateWindow(options.InitialWidth, options.InitialHeight, options.InitialTitle.c_str(), nullptr, nullptr);
+        m_window = glfwCreateWindow(options.initial_width, options.initial_height, options.initial_title.c_str(), nullptr, nullptr);
 
         if (options.Flags.test(WindowFlag::Centered)) {
             auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            GlfwWindow::SetPosition({ CAST(f32, mode->width) / 2.0 - CAST(f32, options.InitialWidth) / 2.0,
-                CAST(f32, mode->height) / 2.0 - CAST(f32, options.InitialHeight) / 2.0 });
+            GlfwWindow::set_position({ CAST(f32, mode->width) / 2.0 - CAST(f32, options.initial_width) / 2.0,
+                CAST(f32, mode->height) / 2.0 - CAST(f32, options.initial_height) / 2.0 });
         }
 
 #if OS_WINDOWS
@@ -74,28 +74,28 @@ namespace Fussion {
 
         if (glfwRawMouseMotionSupported()) {
             LOG_INFO("Enabling raw mouse motion");
-            glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+            glfwSetInputMode(m_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
         }
 
-        glfwSetWindowUserPointer(m_Window, this);
+        glfwSetWindowUserPointer(m_window, this);
 
-        glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
             auto event = WindowCloseRequest();
-            me->m_EventCallback(event);
+            me->m_event_callback(event);
         });
 
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
-            me->m_Width = CAST(u32, width);
-            me->m_Height = CAST(u32, height);
+            me->m_width = CAST(u32, width);
+            me->m_height = CAST(u32, height);
             auto event = WindowResized(width, height);
-            me->m_EventCallback(event);
+            me->m_event_callback(event);
         });
 
-        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int glfw_key, int, int action, int mods) {
+        glfwSetKeyCallback(m_window, [](GLFWwindow* window, int glfw_key, int, int action, int mods) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr) // NOLINT(bugprone-lambda-function-name)
 
@@ -120,35 +120,35 @@ namespace Fussion {
             switch (action) {
             case GLFW_RELEASE: {
                 OnKeyReleased event(key, key_mods);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             case GLFW_PRESS: {
                 OnKeyPressed event(key, key_mods);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             case GLFW_REPEAT: {
                 OnKeyDown event(key, key_mods);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             default:
                 UNREACHABLE();
             }
         });
 
-        glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, f64 x, f64 y) {
+        glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "")
 
-            auto rel_x = x - me->m_OldX;
-            auto rel_y = y - me->m_OldY;
-            me->m_OldX = CAST(f32, x);
-            me->m_OldY = CAST(f32, y);
+            auto rel_x = x - me->m_old_x;
+            auto rel_y = y - me->m_old_y;
+            me->m_old_x = CAST(f32, x);
+            me->m_old_y = CAST(f32, y);
 
             auto event = MouseMoved(x, y, rel_x, rel_y);
-            me->m_EventCallback(event);
+            me->m_event_callback(event);
         });
 
-        glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int) {
+        glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "")
 
@@ -156,140 +156,140 @@ namespace Fussion {
             switch (action) {
             case GLFW_RELEASE: {
                 MouseButtonReleased event(mouse_button);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             case GLFW_PRESS: {
                 MouseButtonPressed event(mouse_button);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             case GLFW_REPEAT: {
                 MouseButtonDown event(mouse_button);
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             } break;
             default:
                 UNREACHABLE();
             }
         });
 
-        glfwSetWindowMaximizeCallback(m_Window, [](GLFWwindow* window, int maximized) {
+        glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow* window, int maximized) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (maximized == 1) {
-                me->m_IsMinimized = false;
+                me->m_is_minimized = false;
                 WindowMaximized event;
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             }
         });
 
-        glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int minimized) {
+        glfwSetWindowIconifyCallback(m_window, [](GLFWwindow* window, int minimized) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             if (minimized == 1) {
-                me->m_IsMinimized = true;
+                me->m_is_minimized = true;
                 WindowMinimized event;
-                me->m_EventCallback(event);
+                me->m_event_callback(event);
             }
         });
 
-        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, f64 x, f64 y) {
+        glfwSetScrollCallback(m_window, [](GLFWwindow* window, f64 x, f64 y) {
             auto me = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
             VERIFY(me != nullptr, "") // NOLINT(bugprone-lambda-function-name)
 
             MouseWheelMoved event(CAST(f32, x), CAST(f32, y));
-            me->m_EventCallback(event);
+            me->m_event_callback(event);
         });
     }
 
     GlfwWindow::~GlfwWindow()
     {
-        glfwDestroyWindow(m_Window);
+        glfwDestroyWindow(m_window);
         glfwTerminate();
     }
 
-    void GlfwWindow::Update()
+    void GlfwWindow::update()
     {
         ZoneScopedN("Window Update");
         glfwPollEvents();
     }
 
-    bool GlfwWindow::ShouldClose()
+    bool GlfwWindow::should_close()
     {
-        return glfwWindowShouldClose(m_Window);
+        return glfwWindowShouldClose(m_window);
     }
 
-    void GlfwWindow::SetTitle(std::string const& title)
+    void GlfwWindow::set_title(std::string const& title)
     {
-        if (m_IsMinimized)
+        if (m_is_minimized)
             return;
-        glfwSetWindowTitle(m_Window, title.c_str());
+        glfwSetWindowTitle(m_window, title.c_str());
     }
 
-    void GlfwWindow::SetEventCallback(EventFnType const callback)
+    void GlfwWindow::set_event_callback(EventFnType const callback)
     {
-        m_EventCallback = callback;
+        m_event_callback = callback;
     }
 
-    void GlfwWindow::SetMouseMode(MouseMode mode) const
+    void GlfwWindow::set_mouse_mode(MouseMode mode) const
     {
         switch (mode) {
         case MouseMode::Unlocked: {
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         } break;
         case MouseMode::Locked: {
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         } break;
         case MouseMode::Confined: {
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
         } break;
         }
     }
 
-    u32 GlfwWindow::Height() const
+    u32 GlfwWindow::height() const
     {
         s32 height;
-        glfwGetFramebufferSize(m_Window, nullptr, &height);
+        glfwGetFramebufferSize(m_window, nullptr, &height);
         return CAST(u32, height);
     }
 
-    u32 GlfwWindow::Width() const
+    u32 GlfwWindow::width() const
     {
         s32 width;
-        glfwGetFramebufferSize(m_Window, &width, nullptr);
+        glfwGetFramebufferSize(m_window, &width, nullptr);
         return CAST(u32, width);
     }
 
-    void* GlfwWindow::NativeHandle() const
+    void* GlfwWindow::native_handle() const
     {
-        return m_Window;
+        return m_window;
     }
 
-    void GlfwWindow::SetPosition(Vector2 position) const
+    void GlfwWindow::set_position(Vector2 position) const
     {
-        glfwSetWindowPos(m_Window, CAST(s32, position.x), CAST(s32, position.y));
+        glfwSetWindowPos(m_window, CAST(s32, position.x), CAST(s32, position.y));
     }
 
-    auto GlfwWindow::GetPosition() const -> Vector2
+    auto GlfwWindow::position() const -> Vector2
     {
         s32 x, y;
-        glfwGetWindowPos(m_Window, &x, &y);
+        glfwGetWindowPos(m_window, &x, &y);
         return { x, y };
     }
 
-    void GlfwWindow::SetIcon(Image const& image)
+    void GlfwWindow::set_icon(Image const& image)
     {
         GLFWimage glfw_image;
-        glfw_image.pixels = const_cast<Image&>(image).Data.data();
-        glfw_image.height = image.Height;
-        glfw_image.width = image.Width;
+        glfw_image.pixels = const_cast<Image&>(image).data.data();
+        glfw_image.height = image.height;
+        glfw_image.width = image.width;
 
-        glfwSetWindowIcon(m_Window, 1, &glfw_image);
+        glfwSetWindowIcon(m_window, 1, &glfw_image);
     }
 
-    void GlfwWindow::Maximize()
+    void GlfwWindow::maximize()
     {
-        glfwMaximizeWindow(m_Window);
+        glfwMaximizeWindow(m_window);
     }
 
     Keys glfw_key_to_fussion(int key)

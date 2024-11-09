@@ -12,58 +12,56 @@ namespace Fussion {
 
     public:
         explicit constexpr Maybe()
-            : m_Value(nullptr)
+            : m_value(nullptr)
         {
         }
         constexpr Maybe(None)
-            : m_Value(nullptr)
+            : m_value(nullptr)
         {
         }
 
-        constexpr ~Maybe() { Reset(); }
+        constexpr ~Maybe() { reset(); }
 
         constexpr Maybe(T const& _value)
-            : m_Value(new(m_Storage) T(_value))
+            : m_value(new(m_storage) T(_value))
         {
         }
 
         constexpr Maybe(T&& _value)
-            : m_Value(new(m_Storage) T(std::move(_value)))
+            : m_value(new(m_storage) T(std::move(_value)))
         {
         }
 
         constexpr Maybe& operator=(T const& _value)
         {
-            Reset();
-            m_Value = new (m_Storage) T(_value);
+            reset();
+            m_value = new (m_storage) T(_value);
             return *this;
         }
 
         constexpr Maybe& operator=(T&& _value)
         {
-            Reset();
-            m_Value = new (m_Storage) T(std::move(_value));
+            reset();
+            m_value = new (m_storage) T(std::move(_value));
             return *this;
         }
 
         constexpr Maybe(Maybe const& _other)
-            : m_Value(_other ? new(m_Storage) T(*_other) : nullptr)
+            : m_value(_other ? new(m_storage) T(*_other) : nullptr)
         {
         }
 
         constexpr Maybe(Maybe&& _other) noexcept
-            : m_Value(_other
-                      ? new(m_Storage) T(std::move(*_other))
-                      : nullptr)
+            : m_value(_other ? new(m_storage) T(std::move(*_other)) : nullptr)
         {
         }
 
         constexpr Maybe& operator=(Maybe const& _other)
         {
             if (&_other != this) {
-                Reset();
+                reset();
                 if (_other) {
-                    m_Value = new (m_Storage) T(*_other);
+                    m_value = new (m_storage) T(*_other);
                 }
             }
             return *this;
@@ -72,73 +70,73 @@ namespace Fussion {
         constexpr Maybe& operator=(Maybe&& _other) noexcept
         {
             if (&_other != this) {
-                Reset();
+                reset();
                 if (_other) {
-                    m_Value = new (m_Storage) T(std::move(*_other));
+                    m_value = new (m_storage) T(std::move(*_other));
                 }
             }
             return *this;
         }
 
-        constexpr void Reset()
+        constexpr void reset()
         {
-            if (m_Value) {
-                m_Value->~T();
+            if (m_value) {
+                m_value->~T();
             }
-            m_Value = nullptr;
+            m_value = nullptr;
         }
 
         constexpr T& operator*()
         {
-            VERIFY(m_Value, "Tried to access empty Maybe");
-            return *m_Value;
+            VERIFY(m_value, "Tried to access empty Maybe");
+            return *m_value;
         }
 
         constexpr T const& operator*() const
         {
-            VERIFY(m_Value, "Tried to access empty Maybe");
-            return *m_Value;
+            VERIFY(m_value, "Tried to access empty Maybe");
+            return *m_value;
         }
 
         constexpr T* operator->()
         {
-            VERIFY(m_Value, "Tried to access empty Maybe");
-            return m_Value;
+            VERIFY(m_value, "Tried to access empty Maybe");
+            return m_value;
         }
 
         constexpr T const* operator->() const
         {
-            VERIFY(m_Value, "Tried to access empty Maybe");
-            return m_Value;
+            VERIFY(m_value, "Tried to access empty Maybe");
+            return m_value;
         }
 
-        constexpr T& Unwrap() const
+        constexpr T& unwrap() const
         {
-            VERIFY(m_Value, "Tried to access empty Maybe");
-            return *m_Value;
+            VERIFY(m_value, "Tried to access empty Maybe");
+            return *m_value;
         }
 
-        constexpr T ValueOr(T const& default_value) const
+        constexpr T value_or(T const& default_value) const
         {
-            return m_Value ? *m_Value : default_value;
+            return m_value ? *m_value : default_value;
         }
 
-        constexpr bool HasValue() const { return m_Value != nullptr; }
-        constexpr bool IsEmpty() const { return m_Value == nullptr; }
+        constexpr bool has_value() const { return m_value != nullptr; }
+        constexpr bool is_empty() const { return m_value == nullptr; }
 
-        constexpr bool operator!() const { return m_Value == nullptr; }
+        constexpr bool operator!() const { return m_value == nullptr; }
 
         constexpr explicit operator bool() const
         {
-            return HasValue();
+            return has_value();
         }
 
         constexpr friend bool operator==(Maybe const& a, Maybe const& b)
         {
-            if (a.IsEmpty() && b.IsEmpty()) {
+            if (a.is_empty() && b.is_empty()) {
                 return true;
             }
-            if (a.HasValue() && b.HasValue()) {
+            if (a.has_value() && b.has_value()) {
                 return *a == *b;
             }
             return false;
@@ -150,8 +148,8 @@ namespace Fussion {
         }
 
     private:
-        T* m_Value;
-        alignas(alignof(T)) char m_Storage[sizeof(T)];
+        T* m_value;
+        alignas(alignof(T)) char m_storage[sizeof(T)];
     };
 }
 

@@ -42,32 +42,32 @@ namespace Fussion {
     class WindowsFileWatcher final : public FileWatcher {
     public:
         explicit WindowsFileWatcher(std::filesystem::path const& path)
-            : m_Update { true }
-            , m_Root(path)
+            : m_update { true }
+            , m_root(path)
         { }
 
         virtual ~WindowsFileWatcher() override
         {
-            m_Update = false;
-            m_Thread.join();
-            FindCloseChangeNotification(m_WatchHandle);
+            m_update = false;
+            m_thread.join();
+            FindCloseChangeNotification(m_watch_handle);
         }
 
-        virtual void AddListener(std::function<CallbackType> cb) override
+        virtual void add_listener(std::function<CallbackType> cb) override
         {
-            m_Listeners += cb;
+            m_listeners += cb;
         }
 
-        virtual void Start() override
+        virtual void start() override
         {
-            m_Thread = std::thread(&WindowsFileWatcher::Work, this);
+            m_thread = std::thread(&WindowsFileWatcher::Work, this);
         }
 
     private:
-        void Work()
+        void work()
         {
-            // m_WatchHandle = FindFirstChangeNotificationW(m_Root.wstring().c_str(), true, NotifyFlags);
-            m_WatchHandle = CreateFile(m_Root.string().c_str(),
+            // m_watch_handle = FindFirstChangeNotificationW(m_root.wstring().c_str(), true, NotifyFlags);
+            m_watch_handle = CreateFile(m_root.string().c_str(),
                 FILE_LIST_DIRECTORY,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                 NULL,
@@ -79,7 +79,7 @@ namespace Fussion {
             OVERLAPPED overlapped;
             overlapped.hEvent = CreateEvent(nullptr, FALSE, 0, nullptr);
             ReadDirectoryChangesW(
-                m_WatchHandle,
+                m_watch_handle,
                 buffer, sizeof(buffer),
                 true,
                 NotifyFlags,
@@ -87,12 +87,12 @@ namespace Fussion {
                 &overlapped,
                 nullptr);
 
-            while (m_Update) {
+            while (m_update) {
                 auto status = WaitForSingleObject(overlapped.hEvent, INFINITE);
                 switch (status) {
                 case WAIT_OBJECT_0: {
                     DWORD bytes_transferred;
-                    GetOverlappedResult(m_WatchHandle, &overlapped, &bytes_transferred, FALSE);
+                    GetOverlappedResult(m_watch_handle, &overlapped, &bytes_transferred, FALSE);
 
                     auto fileInfo = TRANSMUTE(FILE_NOTIFY_INFORMATION*, buffer);
 
@@ -101,7 +101,7 @@ namespace Fussion {
                         name.shrink_to_fit();
                         std::filesystem::path path { name };
 
-                        m_Listeners.Fire(path, WindowsFileActionToEventType(fileInfo->Action));
+                        m_listeners.fire(path, WindowsFileActionToEventType(fileInfo->Action));
 
                         if (fileInfo->NextEntryOffset) {
                             *((uint8_t**)&fileInfo) += fileInfo->NextEntryOffset;
@@ -111,14 +111,14 @@ namespace Fussion {
                     }
 
                     ReadDirectoryChangesW(
-                        m_WatchHandle,
+                        m_watch_handle,
                         buffer, sizeof(buffer),
                         true,
                         NotifyFlags,
                         nullptr,
                         &overlapped,
                         nullptr);
-                    // if (!ReadDirectoryChangesW(m_WatchHandle, buffer, sizeof(buffer), true, NotifyFlags, &bytes_returned, nullptr, nullptr)) {
+                    // if (!ReadDirectoryChangesW(m_watch_handle, buffer, sizeof(buffer), true, NotifyFlags, &bytes_returned, nullptr, nullptr)) {
                     //     LOG_ERRORF("ReadDirectoryChangesW failed: {}", GetLastError());
                     //     re       turn;
                     // }
@@ -127,11 +127,11 @@ namespace Fussion {
                     // // file_info->Action
                     //
                     // {
-                    //     std::scoped_lock lock(m_Mutex);
+                    //     std::scoped_lock lock(m_mutex);
                     //
-                    //     m_Listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
+                    //     m_listeners.Fire(path, WindowsFileActionToEventType(file_info->Action));
                     // }
-                    // FindNextChangeNotification(m_WatchHandle);
+                    // FindNextChangeNotification(m_watch_handle);
                 } break;
                 case WAIT_TIMEOUT:
 
@@ -143,17 +143,17 @@ namespace Fussion {
             }
         }
 
-        std::atomic<bool> m_Update;
-        HANDLE m_WatchHandle {};
-        std::thread m_Thread;
-        std::filesystem::path m_Root {};
-        Delegate<CallbackType> m_Listeners;
-        std::mutex m_Mutex {};
+        std::atomic<bool> m_update;
+        HANDLE m_watch_handle {};
+        std::thread m_thread;
+        std::filesystem::path m_root {};
+        Delegate<CallbackType> m_listeners;
+        std::mutex m_mutex {};
     };
 
-    Ptr<FileWatcher> FileWatcher::Create(std::filesystem::path root)
+    Ptr<FileWatcher> FileWatcher::create(std::filesystem::path root)
     {
-        return MakePtr<WindowsFileWatcher>(root);
+        return make_ptr<WindowsFileWatcher>(root);
     }
 
 }

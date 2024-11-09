@@ -4,24 +4,24 @@
 #include "Math.h"
 
 namespace Fussion {
-    Vector2::Real Vector2::Length() const
+    Vector2::Real Vector2::length() const
     {
-        return Math::Abs(Math::Sqrt(x * x + y * y));
+        return Math::abs(Math::sqrt(x * x + y * y));
     }
 
-    Vector2::Real Vector2::LengthSquared() const
+    Vector2::Real Vector2::length_squared() const
     {
         return x * x + y * y;
     }
 
-    Vector2::Real Vector2::DistanceTo(Vector2 const& other) const
+    Vector2::Real Vector2::distance_to(Vector2 const& other) const
     {
-        return (*this - other).Length();
+        return (*this - other).length();
     }
 
-    Vector2::Real Vector2::DistanceToSquared(Vector2 const& other) const
+    Vector2::Real Vector2::distance_to_squared(Vector2 const& other) const
     {
-        return (*this - other).LengthSquared();
+        return (*this - other).length_squared();
     }
 
     Vector2 Vector2::operator+(Vector2 const& right) const
@@ -44,40 +44,40 @@ namespace Fussion {
         return { x / right.x, y / right.y };
     }
 
-    Vector2 Vector2::Clamp(Vector2 self, Vector2 const& min, Vector2 const& max)
+    Vector2 Vector2::clamp(Vector2 self, Vector2 const& min, Vector2 const& max)
     {
-        self.x = Math::Clamp(self.x, min.x, max.x);
-        self.y = Math::Clamp(self.y, min.y, max.y);
+        self.x = Math::clamp(self.x, min.x, max.x);
+        self.y = Math::clamp(self.y, min.y, max.y);
         return self;
     }
 
-    Vector2 Vector2::Max(Vector2 const& min, Vector2 const& max)
+    Vector2 Vector2::max(Vector2 const& min, Vector2 const& max)
     {
         Vector2 v;
-        v.x = Math::Max(min.x, max.x);
-        v.y = Math::Max(min.y, max.y);
+        v.x = Math::max(min.x, max.x);
+        v.y = Math::max(min.y, max.y);
         return v;
     }
 
-    Vector2 Vector2::Min(Vector2 const& min, Vector2 const& max)
+    Vector2 Vector2::min(Vector2 const& min, Vector2 const& max)
     {
         Vector2 v;
-        v.x = Math::Min(min.x, max.x);
-        v.y = Math::Min(min.y, max.y);
+        v.x = Math::min(min.x, max.x);
+        v.y = Math::min(min.y, max.y);
         return v;
     }
 
-    Vector2 Vector2::Abs(Vector2 const& vector2)
+    Vector2 Vector2::abs(Vector2 const& vector2)
     {
         Vector2 v;
-        v.x = Math::Abs(vector2.x);
-        v.y = Math::Abs(vector2.y);
+        v.x = Math::abs(vector2.x);
+        v.y = Math::abs(vector2.y);
         return v;
     }
 
     bool operator==(Vector2 const& lhs, Vector2 const& rhs)
     {
-        return Math::IsZero(Math::Abs(lhs.x - rhs.x)) && Math::IsZero(Math::Abs(lhs.y - rhs.y));
+        return Math::is_zero(Math::abs(lhs.x - rhs.x)) && Math::is_zero(Math::abs(lhs.y - rhs.y));
     }
 
     bool operator!=(Vector2 const& lhs, Vector2 const& rhs)
@@ -85,12 +85,12 @@ namespace Fussion {
         return !(lhs == rhs);
     }
 
-    bool Vector2::IsZero() const
+    bool Vector2::is_zero() const
     {
-        return Math::IsZero(x) && Math::IsZero(y);
+        return Math::is_zero(x) && Math::is_zero(y);
     }
 
-    f32 Vector2::Aspect() const
+    f32 Vector2::aspect() const
     {
         return x / y;
     }

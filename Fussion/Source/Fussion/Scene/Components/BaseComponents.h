@@ -11,16 +11,16 @@ namespace Fussion {
         COMPONENT_DEFAULT(PointLight)
         COMPONENT_DEFAULT_COPY(PointLight)
 
-        virtual void OnUpdate(f32 delta) override;
-        virtual void OnDraw(RenderContext& context) override;
+        virtual void on_update(f32 delta) override;
+        virtual void on_draw(RenderContext& context) override;
 
         [[API]]
         f32 radius { 10.0f };
         [[API]]
         Vector3 offset {};
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] DebugDrawer final : public Component {
@@ -34,15 +34,15 @@ namespace Fussion {
         COMPONENT_DEFAULT_COPY(DebugDrawer)
 
 #if FSN_DEBUG_DRAW
-        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
 
         Type draw_type { Type::Box };
 
         f32 size { 0.0f };
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] BallSpawner final : public Component {
@@ -50,7 +50,7 @@ namespace Fussion {
         COMPONENT_DEFAULT(BallSpawner)
         COMPONENT_DEFAULT_COPY(BallSpawner)
 
-        virtual void OnUpdate(f32 delta) override;
+        virtual void on_update(f32 delta) override;
 
         [[API]]
         f32 speed { 0.1f };
@@ -63,8 +63,8 @@ namespace Fussion {
         [[API, EditorButton("Clear")]]
         void clear();
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 
     class [[API]] Environment final : public Component {
@@ -78,7 +78,7 @@ namespace Fussion {
             Reinhard = 2,
         };
 
-        virtual void OnDraw(RenderContext& context) override;
+        virtual void on_draw(RenderContext& context) override;
 
         [[API, EditorRegion("SSAO"), EditorName("SSAO")]]
         bool UseSSAO {};
@@ -104,8 +104,8 @@ namespace Fussion {
         [[API, EditorName("Env Map")]]
         AssetRef<Texture2D> EnvironmentMap;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
     };
 }
 

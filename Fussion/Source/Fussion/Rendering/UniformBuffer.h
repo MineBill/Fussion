@@ -7,16 +7,16 @@ namespace Fussion {
     template<typename T>
     class UniformBuffer {
         explicit UniformBuffer(GPU::Device const& device, Maybe<std::string_view> const& label)
-            : m_Device(device)
+            : m_device(device)
         {
             auto buffer_spec = GPU::BufferSpec {
-                .Label = label.ValueOr("Uniform Buffer<T>"),
+                .Label = label.value_or("Uniform Buffer<T>"),
                 .Usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
                 .Size = sizeof(T),
                 .Mapped = false,
             };
 
-            m_Buffer = m_Device.CreateBuffer(buffer_spec);
+            m_buffer = m_device.CreateBuffer(buffer_spec);
         }
 
     public:
@@ -24,32 +24,32 @@ namespace Fussion {
 
         UniformBuffer() = default;
 
-        static UniformBuffer Create(GPU::Device const& device, Maybe<std::string_view> label = None())
+        static UniformBuffer create(GPU::Device const& device, Maybe<std::string_view> label = None())
         {
             return UniformBuffer(device, label);
         }
 
-        void Flush()
+        void flush()
         {
             ZoneScopedN("Uniform Buffer Flush");
-            VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            VERIFY(m_buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
 
-            m_Device.WriteBuffer(m_Buffer, 0, &Data, sizeof(T));
+            m_device.WriteBuffer(m_buffer, 0, &Data, sizeof(T));
         }
 
-        static size_t Size() { return TypeSize; }
+        static size_t size() { return TypeSize; }
 
-        GPU::Buffer const& Buffer() const
+        GPU::Buffer const& buffer() const
         {
-            VERIFY(m_Buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
-            return m_Buffer;
+            VERIFY(m_buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            return m_buffer;
         }
 
         T Data {};
 
     private:
-        GPU::Buffer m_Buffer {};
+        GPU::Buffer m_buffer {};
 
-        GPU::Device m_Device {};
+        GPU::Device m_device {};
     };
 }

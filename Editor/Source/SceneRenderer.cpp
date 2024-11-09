@@ -29,19 +29,19 @@ constexpr GPU::TextureFormat SSAO_NOISE_TEXTURE_FORMAT = GPU::TextureFormat::RGB
 
 void BeginPipelineStatisticsQuery(GPU::RenderPassEncoder const& encoder, GPU::QuerySet const& set, u32 index)
 {
-    if (Renderer::HasPipelineStatistics()) {
+    if (Renderer::supports_pipeline_statistics()) {
         encoder.BeginPipelineStatisticsQuery(set, index);
     }
 }
 
 void EndPipelineStatisticsQuery(GPU::RenderPassEncoder const& encoder)
 {
-    if (Renderer::HasPipelineStatistics()) {
+    if (Renderer::supports_pipeline_statistics()) {
         encoder.EndPipelineStatisticsQuery();
     }
 }
 
-void GBuffer::Init(Vector2 const& size)
+void GBuffer::init(Vector2 const& size)
 {
     GPU::TextureSpec spec {
         .Label = "GBuffer::position"sv,
@@ -52,25 +52,25 @@ void GBuffer::Init(Vector2 const& size)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    PositionRT = Renderer::Device().CreateTexture(spec);
+    position_rt = Renderer::device().CreateTexture(spec);
 
     spec.Label = "GBuffer::normal"sv;
-    NormalRT = Renderer::Device().CreateTexture(spec);
+    normal_rt = Renderer::device().CreateTexture(spec);
 
     spec.Label = "GBuffer::albedo"sv;
-    AlbedoRT = Renderer::Device().CreateTexture(spec);
+    albedo_rt = Renderer::device().CreateTexture(spec);
 
     constexpr auto path = "Assets/Shaders/Slang/GBuffer.slang";
-    auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
-    auto shader = MakeRef<ShaderAsset>(compiled, std::vector { GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float });
-    Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path, "GBuffer Shader");
+    auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
+    auto shader = make_ref<ShaderAsset>(compiled, std::vector { GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float });
+    shader_asset = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path, "GBuffer Shader");
 }
 
-void GBuffer::Resize(Vector2 const& new_size)
+void GBuffer::resize(Vector2 const& new_size)
 {
-    PositionRT.Release();
-    NormalRT.Release();
-    AlbedoRT.Release();
+    position_rt.Release();
+    normal_rt.Release();
+    albedo_rt.Release();
 
     GPU::TextureSpec spec {
         .Label = "GBuffer::position"sv,
@@ -81,21 +81,21 @@ void GBuffer::Resize(Vector2 const& new_size)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    PositionRT = Renderer::Device().CreateTexture(spec);
+    position_rt = Renderer::device().CreateTexture(spec);
 
     spec.Label = "GBuffer::normal"sv;
-    NormalRT = Renderer::Device().CreateTexture(spec);
+    normal_rt = Renderer::device().CreateTexture(spec);
 
     spec.Label = "GBuffer::albedo"sv;
-    AlbedoRT = Renderer::Device().CreateTexture(spec);
+    albedo_rt = Renderer::device().CreateTexture(spec);
 }
 
-void GBuffer::Render(GPU::CommandEncoder& encoder)
+void GBuffer::render(GPU::CommandEncoder& encoder)
 {
     (void)encoder;
 }
 
-void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
+void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
 {
     GPU::TextureSpec spec {
         .Label = "SSAO::render_target"sv,
@@ -106,7 +106,7 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    RenderTarget = Renderer::Device().CreateTexture(spec);
+    render_target = Renderer::device().CreateTexture(spec);
 
     GPU::TextureSpec noise_spec {
         .Label = "SSAO::noise_texture"sv,
@@ -117,20 +117,20 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    NoiseTexture = Renderer::Device().CreateTexture(noise_spec);
+    noise_texture = Renderer::device().CreateTexture(noise_spec);
 
     GPU::SamplerSpec sampler_spec {};
     sampler_spec.label = "SSAO::sampler"sv;
     sampler_spec.AddressModeU = GPU::AddressMode::ClampToEdge;
     sampler_spec.AddressModeW = GPU::AddressMode::ClampToEdge;
-    Sampler = Renderer::Device().CreateSampler(sampler_spec);
+    sampler = Renderer::device().CreateSampler(sampler_spec);
 
     sampler_spec = GPU::SamplerSpec {};
     sampler_spec.label = "SSAO::noise_sampler"sv,
     sampler_spec.AddressModeU = GPU::AddressMode::Repeat;
     sampler_spec.AddressModeV = GPU::AddressMode::Repeat;
     sampler_spec.AddressModeW = GPU::AddressMode::Repeat;
-    NoiseSampler = Renderer::Device().CreateSampler(sampler_spec);
+    noise_sampler = Renderer::device().CreateSampler(sampler_spec);
 
     GPU::BufferSpec buffer_spec {
         .Label = "SSAO::samples_buffer"sv,
@@ -138,7 +138,7 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         .Size = sizeof(Vector3) * 64,
         .Mapped = true,
     };
-    SamplesBuffer = Renderer::Device().CreateBuffer(buffer_spec);
+    samples_buffer = Renderer::device().CreateBuffer(buffer_spec);
 
     std::uniform_real_distribution<float> random(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator {};                // NOLINT(*-msc51-cpp)
@@ -152,16 +152,16 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
             random(generator) * 2.0 - 1.0,
             random(generator)
         );
-        sample.Normalize();
+        sample.normalize();
 
         auto scale = CAST(f32, i++) / 64.0f;
-        scale = Math::Lerp(0.1f, 0.5f, scale * scale);
+        scale = Math::lerp(0.1f, 0.5f, scale * scale);
         sample *= scale;
     }
 
-    Mem::Copy(SamplesBuffer.Slice().MappedRange(), samples.data(), buffer_spec.Size);
+    Mem::copy(samples_buffer.Slice().MappedRange(), samples.data(), buffer_spec.Size);
 
-    SamplesBuffer.Unmap();
+    samples_buffer.Unmap();
 
     std::array<Vector4, 16> noise_values;
     for (auto& noise : noise_values) {
@@ -172,8 +172,8 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         );
     }
 
-    Renderer::Device().WriteTexture(
-        NoiseTexture,
+    Renderer::device().WriteTexture(
+        noise_texture,
         noise_values.data(),
         16 * sizeof(Vector4),
         Vector2::Zero,
@@ -181,21 +181,21 @@ void SSAO::Init(Vector2 const& size, GBuffer const& gbuffer)
         sizeof(Vector4)
     );
 
-    Options = UniformBuffer<PostProcessing::SSAO>::Create(Renderer::Device(), "SSAO Options"sv);
+    options = UniformBuffer<PostProcessing::SSAO>::create(Renderer::device(), "SSAO Options"sv);
 
     constexpr auto path = "Assets/Shaders/Slang/Effects/SSAO.slang";
-    auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+    auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).unwrap();
     compiledShader.Metadata.UseDepth = false;
 
-    auto shader = MakeRef<ShaderAsset>(compiledShader, std::vector { GPU::TextureFormat::R32Float });
-    Shader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+    auto shader = make_ref<ShaderAsset>(compiledShader, std::vector { GPU::TextureFormat::R32Float });
+    shader_asset = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
 
-    UpdateBindGroup(gbuffer);
+    update_bind_group(gbuffer);
 }
 
-void SSAO::Resize(Vector2 const& new_size, GBuffer const& gbuffer)
+void SSAO::resize(Vector2 const& new_size, GBuffer const& gbuffer)
 {
-    RenderTarget.Release();
+    render_target.Release();
     GPU::TextureSpec spec {
         .Label = "SSAO::render_target"sv,
         .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
@@ -205,48 +205,48 @@ void SSAO::Resize(Vector2 const& new_size, GBuffer const& gbuffer)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    RenderTarget = Renderer::Device().CreateTexture(spec);
+    render_target = Renderer::device().CreateTexture(spec);
 
-    UpdateBindGroup(gbuffer);
+    update_bind_group(gbuffer);
 }
 
-void SSAO::UpdateBindGroup(GBuffer const& gbuffer)
+void SSAO::update_bind_group(GBuffer const& gbuffer)
 {
-    BindGroup.Release();
+    bind_group.Release();
     std::array bing_group_entries {
         GPU::BindGroupEntry {
             .Binding = 0,
-            .Resource = gbuffer.PositionRT.View,
+            .Resource = gbuffer.position_rt.View,
         },
         GPU::BindGroupEntry {
             .Binding = 1,
-            .Resource = gbuffer.NormalRT.View,
+            .Resource = gbuffer.normal_rt.View,
         },
         GPU::BindGroupEntry {
             .Binding = 2,
-            .Resource = NoiseTexture.View,
+            .Resource = noise_texture.View,
         },
         GPU::BindGroupEntry {
             .Binding = 3,
-            .Resource = Sampler,
+            .Resource = sampler,
         },
         GPU::BindGroupEntry {
             .Binding = 4,
-            .Resource = NoiseSampler,
+            .Resource = noise_sampler,
         },
         GPU::BindGroupEntry {
             .Binding = 5,
             .Resource = GPU::BufferBinding {
-                .TargetBuffer = SamplesBuffer,
+                .TargetBuffer = samples_buffer,
                 .Offset = 0,
-                .Size = SamplesBuffer.Size() },
+                .Size = samples_buffer.Size() },
         },
         GPU::BindGroupEntry {
             .Binding = 6,
             .Resource = GPU::BufferBinding {
-                .TargetBuffer = Options.Buffer(),
+                .TargetBuffer = options.buffer(),
                 .Offset = 0,
-                .Size = Options.Buffer().Size(),
+                .Size = options.buffer().Size(),
             },
         },
     };
@@ -254,11 +254,11 @@ void SSAO::UpdateBindGroup(GBuffer const& gbuffer)
         .Label = "SSAO::bing_group"sv,
         .Entries = bing_group_entries
     };
-    auto shader = Shader.Get();
-    BindGroup = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(1).Unwrap(), bg_spec);
+    auto shader = shader_asset.get();
+    bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
 }
 
-void SceneRenderer::SetupSceneBindGroup()
+void SceneRenderer::setup_scene_bind_group()
 {
     std::array scene_entries {
         GPU::BindGroupLayoutEntry {
@@ -315,16 +315,16 @@ void SceneRenderer::SetupSceneBindGroup()
         .Entries = scene_entries,
     };
 
-    m_SceneBindGroupLayout = Renderer::Device().CreateBindGroupLayout(scene_bgl_spec);
+    m_scene_bind_group_layout = Renderer::device().CreateBindGroupLayout(scene_bgl_spec);
 
-    GPU::TextureView env_view = Renderer::WhiteCubeTexture().View;
-    if (m_RenderContext.EnvironmentMap != nullptr && m_EnvironmentMaps.contains(m_RenderContext.EnvironmentMap->GetHandle())) {
-        env_view = m_EnvironmentMaps.at(m_RenderContext.EnvironmentMap->GetHandle()).View;
+    GPU::TextureView env_view = Renderer::white_cube_texture().View;
+    if (m_render_context.environment_texture != nullptr && m_environment_maps.contains(m_render_context.environment_texture->handle())) {
+        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).View;
     }
     std::array scene_bind_group_entries = {
         GPU::BindGroupEntry {
             .Binding = 0,
-            .Resource = ssao_blur.GetRenderTarget().View,
+            .Resource = ssao_blur.render_target().View,
         },
         GPU::BindGroupEntry {
             .Binding = 1,
@@ -332,19 +332,19 @@ void SceneRenderer::SetupSceneBindGroup()
         },
         GPU::BindGroupEntry {
             .Binding = 2,
-            .Resource = m_LinearSampler,
+            .Resource = m_linear_sampler,
         },
         GPU::BindGroupEntry {
             .Binding = 3,
             .Resource = GPU::BufferBinding {
-                .TargetBuffer = SceneLightData.Buffer(),
+                .TargetBuffer = scene_light_data.buffer(),
                 .Offset = 0,
-                .Size = UniformBuffer<LightData>::Size(),
+                .Size = UniformBuffer<LightData>::size(),
             },
         },
         GPU::BindGroupEntry {
             .Binding = 4,
-            .Resource = m_ShadowPassRenderTarget.View,
+            .Resource = m_shadow_pass_render_target.View,
         },
     };
 
@@ -353,16 +353,16 @@ void SceneRenderer::SetupSceneBindGroup()
         .Entries = scene_bind_group_entries
     };
 
-    m_SceneBindGroup = Renderer::Device().CreateBindGroup(m_SceneBindGroupLayout, scene_bg_spec);
+    m_scene_bind_group = Renderer::device().CreateBindGroup(m_scene_bind_group_layout, scene_bg_spec);
 }
 
-void SceneRenderer::UpdateSceneBindGroup(GPU::Texture const& ssao_texture)
+void SceneRenderer::update_scene_bind_group(GPU::Texture const& ssao_texture)
 {
-    m_SceneBindGroup.Release();
+    m_scene_bind_group.Release();
 
-    GPU::TextureView env_view = Renderer::WhiteCubeTexture().View;
-    if (m_RenderContext.EnvironmentMap != nullptr && m_EnvironmentMaps.contains(m_RenderContext.EnvironmentMap->GetHandle())) {
-        env_view = m_EnvironmentMaps.at(m_RenderContext.EnvironmentMap->GetHandle()).View;
+    GPU::TextureView env_view = Renderer::white_cube_texture().View;
+    if (m_render_context.environment_texture != nullptr && m_environment_maps.contains(m_render_context.environment_texture->handle())) {
+        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).View;
     }
     std::array scene_bind_group_entries = {
         GPU::BindGroupEntry {
@@ -375,19 +375,19 @@ void SceneRenderer::UpdateSceneBindGroup(GPU::Texture const& ssao_texture)
         },
         GPU::BindGroupEntry {
             .Binding = 2,
-            .Resource = m_LinearSampler,
+            .Resource = m_linear_sampler,
         },
         GPU::BindGroupEntry {
             .Binding = 3,
             .Resource = GPU::BufferBinding {
-                .TargetBuffer = SceneLightData.Buffer(),
+                .TargetBuffer = scene_light_data.buffer(),
                 .Offset = 0,
-                .Size = UniformBuffer<LightData>::Size(),
+                .Size = UniformBuffer<LightData>::size(),
             },
         },
         GPU::BindGroupEntry {
             .Binding = 4,
-            .Resource = m_ShadowPassRenderTarget.View,
+            .Resource = m_shadow_pass_render_target.View,
         },
     };
 
@@ -396,23 +396,23 @@ void SceneRenderer::UpdateSceneBindGroup(GPU::Texture const& ssao_texture)
         .Entries = scene_bind_group_entries
     };
 
-    m_SceneBindGroup = Renderer::Device().CreateBindGroup(m_SceneBindGroupLayout, scene_bg_spec);
+    m_scene_bind_group = Renderer::device().CreateBindGroup(m_scene_bind_group_layout, scene_bg_spec);
 }
 
-void SceneRenderer::Init()
+void SceneRenderer::init()
 {
-    auto window_size = Application::Self()->GetWindow().Size();
+    auto window_size = Application::self()->window().size();
 
-    CreateSceneRenderTarget(window_size);
+    create_scene_render_target(window_size);
 
-    SceneViewData = UniformBuffer<ViewData>::Create(Renderer::Device(), std::string_view { "View Data" });
-    SceneLightData = UniformBuffer<LightData>::Create(Renderer::Device(), std::string_view { "Light Data" });
+    scene_view_data = UniformBuffer<ViewData>::create(Renderer::device(), std::string_view { "View Data" });
+    scene_light_data = UniformBuffer<LightData>::create(Renderer::device(), std::string_view { "Light Data" });
 
     ///////////////////////
     /// BIND GROUP CREATION
     ///////////////////////
 
-    SetupShadowPassRenderTarget();
+    setup_shadow_pass_render_target();
 
     {
         std::array entries {
@@ -433,15 +433,15 @@ void SceneRenderer::Init()
             .Entries = entries,
         };
 
-        m_GlobalBindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
+        m_global_bind_group_layout = Renderer::device().CreateBindGroupLayout(spec);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
                 .Binding = 0,
                 .Resource = GPU::BufferBinding {
-                    .TargetBuffer = SceneViewData.Buffer(),
+                    .TargetBuffer = scene_view_data.buffer(),
                     .Offset = 0,
-                    .Size = UniformBuffer<ViewData>::Size(),
+                    .Size = UniformBuffer<ViewData>::size(),
                 },
             },
 
@@ -452,7 +452,7 @@ void SceneRenderer::Init()
             .Entries = bind_group_entries
         };
 
-        m_GlobalBindGroup = Renderer::Device().CreateBindGroup(m_GlobalBindGroupLayout, global_bg_spec);
+        m_global_bind_group = Renderer::device().CreateBindGroup(m_global_bind_group_layout, global_bg_spec);
     }
 
     ////////////////////////
@@ -461,12 +461,12 @@ void SceneRenderer::Init()
 
     {
         constexpr auto path = "Assets/Shaders/Slang/Editor/Grid.slang";
-        GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
         compiled.Metadata.UseBlending = true;
 
         // NOTE: Oof much?
-        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
-        m_GridShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
+        m_grid_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
     }
 
     GPU::BufferSpec ibs {
@@ -475,9 +475,9 @@ void SceneRenderer::Init()
         .Size = sizeof(Mat4) * 2'000,
         .Mapped = false,
     };
-    m_PBRInstanceBuffer = Renderer::Device().CreateBuffer(ibs);
+    m_pbr_instance_buffer = Renderer::device().CreateBuffer(ibs);
 
-    m_PBRInstanceStagingBuffer.reserve(sizeof(Mat4) * 2'000);
+    m_pbr_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 
     GPU::SamplerSpec bilinear_sampler_spec {
         .label = "Bilinear Sampler"sv,
@@ -492,164 +492,164 @@ void SceneRenderer::Init()
         .AnisotropyClamp = 16
     };
 
-    m_LinearSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+    m_linear_sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
     bilinear_sampler_spec.MagFilter = GPU::FilterMode::Linear;
     bilinear_sampler_spec.MinFilter = GPU::FilterMode::Linear;
     bilinear_sampler_spec.AnisotropyClamp = 1_u16;
     bilinear_sampler_spec.CompareFunc = GPU::CompareFunction::LessEqual;
 
-    m_ShadowSampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+    m_shadow_sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
 
-    m_TonemappingPipeline.Init(window_size, m_SceneRenderTarget.Spec.Format);
+    m_tonemapping_pipeline.init(window_size, m_scene_render_target.Spec.Format);
 
-    gbuffer.Init(window_size);
-    ssao.Init(window_size, gbuffer);
-    ssao_blur.Init(window_size);
+    gbuffer.init(window_size);
+    ssao.init(window_size, gbuffer);
+    ssao_blur.init(window_size);
 
-    SetupSceneBindGroup();
+    setup_scene_bind_group();
     {
         constexpr auto path = "Assets/Shaders/Slang/ProceduralSky.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
         compiled.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
         compiled.Metadata.DepthState = GPU::DepthStencilState::Default();
         compiled.Metadata.DepthState->DepthWriteEnabled = false;
         compiled.Metadata.DepthState->DepthCompare = GPU::CompareFunction::Always;
 
-        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
+        auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
 
-        m_SkyShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        m_sky_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
     }
 
     // Creating the pbr pipeline after the scene bind group, which must be done after the ssao blur pipeline. oof incarnate.
     {
         constexpr auto path = "Assets/Shaders/Slang/PBR.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
 
-        auto shader = MakeRef<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
-        m_PbrShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
+        m_pbr_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
     }
 
-    m_CubeSkybox.init({ m_GlobalBindGroupLayout, m_SceneBindGroupLayout });
+    m_cube_skybox.init({ m_global_bind_group_layout, m_scene_bind_group_layout });
 
-    Debug::Initialize(Renderer::Device(), Fussion::TonemappingPipeline::Format);
+    Debug::initialize(Renderer::device(), Fussion::TonemappingPipeline::Format);
 
-    SetupShadowPass();
+    setup_shadow_pass();
 
-    SetupQueries();
+    setup_queries();
 }
 
-void SceneRenderer::Resize(Vector2 const& newSize)
+void SceneRenderer::resize(Vector2 const& newSize)
 {
     ZoneScoped;
-    m_RenderArea = newSize;
+    m_render_area = newSize;
 
-    m_SceneRenderTarget.Release();
-    m_SceneRenderDepthTarget.Release();
-    CreateSceneRenderTarget(newSize);
-    m_TonemappingPipeline.Resize(newSize);
+    m_scene_render_target.Release();
+    m_scene_render_depth_target.Release();
+    create_scene_render_target(newSize);
+    m_tonemapping_pipeline.resize(newSize);
 
-    gbuffer.Resize(newSize);
-    ssao.Resize(newSize, gbuffer);
-    ssao_blur.Resize(newSize, ssao.RenderTarget);
-    UpdateSceneBindGroup(ssao_blur.GetRenderTarget());
+    gbuffer.resize(newSize);
+    ssao.resize(newSize, gbuffer);
+    ssao_blur.resize(newSize, ssao.render_target);
+    update_scene_bind_group(ssao_blur.render_target());
 }
 
 f32 GetSplitDepth(s32 current_split, s32 max_splits, f32 near, f32 far, f32 l = 1.0f)
 {
     auto split_ratio = CAST(f32, current_split) / CAST(f32, max_splits);
-    auto log = near * Math::Pow(far / near, split_ratio);
+    auto log = near * Math::pow(far / near, split_ratio);
     auto uniform = near + (far - near) * split_ratio;
     auto d = l * (log - uniform) + uniform;
     return (d - near) / (far - near);
 }
 
-void SceneRenderer::Render(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
+void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view)
 {
     ZoneScoped;
 
-    if (Renderer::HasPipelineStatistics()) {
-        if (m_TimingsReadBuffer.GetMapState() == GPU::MapState::Unmapped) {
-            m_TimingsReadBuffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
-                auto data = CAST(u64*, m_TimingsReadBuffer.Slice().MappedRange());
-                Timings.Gbuffer = CAST(f64, data[3] - data[2]) * 1e-6;
-                Timings.SSAO = CAST(f64, data[5] - data[4]) * 1e-6;
-                Timings.SSAOBlur = CAST(f64, data[7] - data[6]) * 1e-6;
-                Timings.PBR = CAST(f64, data[9] - data[8]) * 1e-6;
+    if (Renderer::supports_pipeline_statistics()) {
+        if (m_timings_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
+            m_timings_read_buffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
+                auto data = CAST(u64*, m_timings_read_buffer.Slice().MappedRange());
+                timings.gbuffer = CAST(f64, data[3] - data[2]) * 1e-6;
+                timings.ssao = CAST(f64, data[5] - data[4]) * 1e-6;
+                timings.ssao_blur = CAST(f64, data[7] - data[6]) * 1e-6;
+                timings.pbr = CAST(f64, data[9] - data[8]) * 1e-6;
 
-                m_TimingsReadBuffer.Unmap();
+                m_timings_read_buffer.Unmap();
             });
         }
 
-        if (m_StatisticsReadBuffer.GetMapState() == GPU::MapState::Unmapped) {
-            m_StatisticsReadBuffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
-                auto data = CAST(u64*, m_StatisticsReadBuffer.Slice().MappedRange());
+        if (m_statistics_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
+            m_statistics_read_buffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
+                auto data = CAST(u64*, m_statistics_read_buffer.Slice().MappedRange());
                 // 1st VertexShaderInvocations
                 // 2nd ClipperInvocations
                 // 3d FragmentShaderInvocations
 
                 u32 i = 0;
-                PipelineStatistics.GbufferStats.VertexShaderInvocations = data[i++];
-                PipelineStatistics.GbufferStats.ClipperInvocations = data[i++];
-                PipelineStatistics.GbufferStats.FragmentShaderInvocations = data[i++];
+                pipeline_statistics.gbuffer_stats.vertex_shader_invocations = data[i++];
+                pipeline_statistics.gbuffer_stats.clipper_invocations = data[i++];
+                pipeline_statistics.gbuffer_stats.fragment_shader_invocations = data[i++];
 
-                PipelineStatistics.SSAOStats.VertexShaderInvocations = data[i++];
-                PipelineStatistics.SSAOStats.ClipperInvocations = data[i++];
-                PipelineStatistics.SSAOStats.FragmentShaderInvocations = data[i++];
+                pipeline_statistics.ssao_stats.vertex_shader_invocations = data[i++];
+                pipeline_statistics.ssao_stats.clipper_invocations = data[i++];
+                pipeline_statistics.ssao_stats.fragment_shader_invocations = data[i++];
 
-                PipelineStatistics.PBRStats.VertexShaderInvocations = data[i++];
-                PipelineStatistics.PBRStats.ClipperInvocations = data[i++];
-                PipelineStatistics.PBRStats.FragmentShaderInvocations = data[i++];
+                pipeline_statistics.pbr_stats.vertex_shader_invocations = data[i++];
+                pipeline_statistics.pbr_stats.clipper_invocations = data[i++];
+                pipeline_statistics.pbr_stats.fragment_shader_invocations = data[i++];
 
-                m_StatisticsReadBuffer.Unmap();
+                m_statistics_read_buffer.Unmap();
             });
         }
     }
 
-    m_RenderContext.Reset();
+    m_render_context.reset();
 
     {
         ZoneScopedN("Render Object Collection");
-        m_RenderContext.RenderFlags = RenderState::LightCollection;
+        m_render_context.render_flags = RenderState::LightCollection;
         if (packet.scene) {
-            packet.scene->ForEachEntity([&](Entity* entity) {
-                entity->OnDraw(m_RenderContext);
+            packet.scene->for_each_entity([&](Entity* entity) {
+                entity->on_draw(m_render_context);
             });
         }
     }
 
-    SceneViewData.Data.perspective = packet.camera.perspective;
-    SceneViewData.Data.view = packet.camera.view;
-    SceneViewData.Data.view_rotation_only = packet.camera.rotation;
-    SceneViewData.Data.position = packet.camera.position;
-    SceneViewData.Data.screen_size = m_RenderArea;
-    SceneViewData.Flush();
+    scene_view_data.Data.perspective = packet.camera.perspective;
+    scene_view_data.Data.view = packet.camera.view;
+    scene_view_data.Data.view_rotation_only = packet.camera.rotation;
+    scene_view_data.Data.position = packet.camera.position;
+    scene_view_data.Data.screen_size = m_render_area;
+    scene_view_data.flush();
 
-    if (!m_RenderContext.DirectionalLights.empty()) {
-        SceneLightData.Data.directional_light = m_RenderContext.DirectionalLights[0].ShaderData;
-        SceneLightData.Data.shadow_split_distances = Vector4 { 0.0f };
+    if (!m_render_context.directional_lights.empty()) {
+        scene_light_data.Data.directional_light = m_render_context.directional_lights[0].shader_data;
+        scene_light_data.Data.shadow_split_distances = Vector4 { 0.0f };
     }
-    SceneLightData.Flush();
+    scene_light_data.flush();
 
-    DepthPass(encoder, packet);
-    if (m_RenderContext.EnvironmentMap != nullptr) {
-        if (auto handle = m_RenderContext.EnvironmentMap->GetHandle(); !m_EnvironmentMaps.contains(handle)) {
-            m_EnvironmentMaps[handle] = Renderer::GenerateIrradianceMap(m_RenderContext.EnvironmentMap->GetTexture());
-            UpdateSceneBindGroup(ssao.RenderTarget);
+    depth_pass(encoder, packet);
+    if (m_render_context.environment_texture != nullptr) {
+        if (auto handle = m_render_context.environment_texture->handle(); !m_environment_maps.contains(handle)) {
+            m_environment_maps[handle] = Renderer::generate_irradiance_map(m_render_context.environment_texture->texture());
+            update_scene_bind_group(ssao.render_target);
         }
     }
-    PBRPass(encoder, packet, game_view);
+    pbr_pass(encoder, packet, game_view);
 
-    m_TonemappingPipeline.Render(encoder, m_SceneRenderTarget.View, m_RenderContext);
+    m_tonemapping_pipeline.render(encoder, m_scene_render_target.View, m_render_context);
 
-    for (auto& group : m_ObjectGroupsToRelease) {
+    for (auto& group : m_object_groups_to_release) {
         group.Release();
     }
-    m_ObjectGroupsToRelease.clear();
+    m_object_groups_to_release.clear();
 
-    Debug::Reset();
+    Debug::reset();
 }
 
-void SceneRenderer::SetupShadowPassRenderTarget()
+void SceneRenderer::setup_shadow_pass_render_target()
 {
     GPU::TextureSpec spec {
         .Label = "DepthPass::RenderTarget"sv,
@@ -660,11 +660,11 @@ void SceneRenderer::SetupShadowPassRenderTarget()
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_ShadowPassRenderTarget = Renderer::Device().CreateTexture(spec);
-    m_ShadowPassRenderTarget.InitializeView(MAX_SHADOW_CASCADES);
+    m_shadow_pass_render_target = Renderer::device().CreateTexture(spec);
+    m_shadow_pass_render_target.InitializeView(MAX_SHADOW_CASCADES);
 
     for (u32 i = 0; i < MAX_SHADOW_CASCADES; ++i) {
-        m_ShadowPassRenderTargetViews[i] = m_ShadowPassRenderTarget.CreateView({
+        m_shadow_pass_render_target_views[i] = m_shadow_pass_render_target.CreateView({
             .Label = "Shadow Pass Render Target"sv,
             .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
             .Dimension = GPU::TextureViewDimension::D2,
@@ -678,14 +678,14 @@ void SceneRenderer::SetupShadowPassRenderTarget()
     }
 }
 
-void SceneRenderer::SetupShadowPass()
+void SceneRenderer::setup_shadow_pass()
 {
     {
         constexpr auto path = "Assets/Shaders/Slang/DepthPass.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).Unwrap();
-        auto shader = MakeRef<ShaderAsset>(compiled, std::vector<GPU::TextureFormat> {});
+        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
+        auto shader = make_ref<ShaderAsset>(compiled, std::vector<GPU::TextureFormat> {});
 
-        m_DepthShader = AssetManager::CreateVirtualAssetRefWithPath<ShaderAsset>(shader, path);
+        m_depth_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
     }
 
     GPU::BufferSpec ibs {
@@ -694,27 +694,27 @@ void SceneRenderer::SetupShadowPass()
         .Size = sizeof(Mat4) * 2'000,
         .Mapped = false,
     };
-    m_DepthInstanceBuffer = Renderer::Device().CreateBuffer(ibs);
+    m_depth_instance_buffer = Renderer::device().CreateBuffer(ibs);
 
-    m_DepthInstanceStagingBuffer.reserve(sizeof(Mat4) * 2'000);
+    m_depth_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 }
 
-void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& packet)
+void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const& packet)
 {
     {
         ZoneScopedN("Depth Pass");
 
-        for (auto& light : m_RenderContext.DirectionalLights) {
+        for (auto& light : m_render_context.directional_lights) {
 
             std::array<f32, MAX_SHADOW_CASCADES> shadow_splits {};
             for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
-                shadow_splits[i] = GetSplitDepth(i + 1, MAX_SHADOW_CASCADES, packet.camera.near, packet.camera.far, light.Split);
+                shadow_splits[i] = GetSplitDepth(i + 1, MAX_SHADOW_CASCADES, packet.camera.near, packet.camera.far, light.split);
             }
 
             GPU::Buffer instance_buffer;
-            if (!m_InstanceBufferPool.empty()) {
-                instance_buffer = m_InstanceBufferPool.back();
-                m_InstanceBufferPool.pop_back();
+            if (!m_instance_buffer_pool.empty()) {
+                instance_buffer = m_instance_buffer_pool.back();
+                m_instance_buffer_pool.pop_back();
             } else {
                 GPU::BufferSpec spec {
                     .Label = "Depth Instance Buffer"sv,
@@ -722,7 +722,7 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     .Size = sizeof(Mat4) * 2 * 2'000,
                     .Mapped = true,
                 };
-                instance_buffer = Renderer::Device().CreateBuffer(spec);
+                instance_buffer = Renderer::device().CreateBuffer(spec);
             }
 
             f32 last_split { 0 };
@@ -763,8 +763,8 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
 
                 float radius = 0.0f;
                 for (auto frustum_corner : frustum_corners) {
-                    f32 distance = (frustum_corner - center).Length();
-                    radius = Math::Max(radius, distance);
+                    f32 distance = (frustum_corner - center).length();
+                    radius = Math::max(radius, distance);
                 }
                 radius = std::ceil(radius * 16.f) / 16.f;
 
@@ -774,31 +774,31 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 Vector3 max_extents { radius, radius, radius };
                 Vector3 min_extents = -max_extents;
 
-                glm::mat4 view = glm::lookAt(glm::vec3(center - Vector3(light.ShaderData.Direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
+                glm::mat4 view = glm::lookAt(glm::vec3(center - Vector3(light.shader_data.direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
                 view = scalar * view;
                 center = glm::mat3(view) * center;
-                center.x = Math::Floor(center.x);
-                center.y = Math::Floor(center.y);
+                center.x = Math::floor(center.x);
+                center.y = Math::floor(center.y);
                 center = inverse(glm::mat3(view)) * center;
-                view = glm::lookAt(glm::vec3(center - Vector3(light.ShaderData.Direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
+                view = glm::lookAt(glm::vec3(center - Vector3(light.shader_data.direction) * min_extents.z), glm::vec3(center), glm::vec3(Vector3::Up));
 
                 glm::mat4 proj = glm::ortho(min_extents.x, max_extents.x, min_extents.y, max_extents.y, -20.0f, max_extents.z - min_extents.z);
 
-                light.ShaderData.LightSpaceMatrix[i] = proj * view;
+                light.shader_data.light_space_matrix[i] = proj * view;
 
-                SceneLightData.Data.shadow_split_distances[i] = packet.camera.near + split * (packet.camera.far - packet.camera.near) * -1.0f;
-                SceneLightData.Data.directional_light.LightSpaceMatrix[i] = light.ShaderData.LightSpaceMatrix[i];
+                scene_light_data.Data.shadow_split_distances[i] = packet.camera.near + split * (packet.camera.far - packet.camera.near) * -1.0f;
+                scene_light_data.Data.directional_light.light_space_matrix[i] = light.shader_data.light_space_matrix[i];
 
-                for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
+                for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
                     (void)material;
                     for (auto const& [buffer, list] : mesh_map) {
                         (void)buffer;
                         auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.Slice().MappedRange()) + buffer_offset;
                         int j = 0;
                         for (auto index : list) {
-                            auto& obj = m_RenderContext.RenderObjects[index];
-                            data[j].Model = obj.WorldMatrix;
-                            data[j++].LightSpace = light.ShaderData.LightSpaceMatrix[i];
+                            auto& obj = m_render_context.render_objects[index];
+                            data[j].model = obj.world_matrix;
+                            data[j++].light_space = light.shader_data.light_space_matrix[i];
                         }
 
                         buffer_offset += list.size();
@@ -808,14 +808,14 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
             }
 
             instance_buffer.Unmap();
-            auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+            auto copy_encoder = Renderer::device().CreateCommandEncoder();
 
-            copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_DepthInstanceBuffer, 0, buffer_offset * sizeof(DepthInstanceData));
-            Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
+            copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_depth_instance_buffer, 0, buffer_offset * sizeof(DepthInstanceData));
+            Renderer::device().SubmitCommandBuffer(copy_encoder.Finish());
             copy_encoder.Release();
 
             instance_buffer.Slice().MapAsync(GPU::MapMode::Write, [instance_buffer, this] {
-                auto& copy = m_InstanceBufferPool.emplace_back(instance_buffer);
+                auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
                 copy.ForceMapState(GPU::MapState::Mapped);
             });
 
@@ -824,7 +824,7 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 GPU::RenderPassSpec rp_spec {
                     .Label = "DepthPass::RenderPass"sv,
                     .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                        .View = m_ShadowPassRenderTargetViews[i],
+                        .View = m_shadow_pass_render_target_views[i],
                         .LoadOp = GPU::LoadOp::Clear,
                         .StoreOp = GPU::StoreOp::Store,
                         .DepthClear = 1.0f,
@@ -832,16 +832,16 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                 };
                 auto rp = encoder.BeginRendering(rp_spec);
                 rp.SetViewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
-                auto shader = m_DepthShader.Get();
-                rp.SetPipeline(shader->Pipeline());
+                auto shader = m_depth_shader.get();
+                rp.SetPipeline(shader->pipeline());
 
                 std::array bind_group_entries {
                     GPU::BindGroupEntry {
                         .Binding = 0,
                         .Resource = GPU::BufferBinding {
-                            .TargetBuffer = m_DepthInstanceBuffer,
+                            .TargetBuffer = m_depth_instance_buffer,
                             .Offset = 0,
-                            .Size = m_DepthInstanceBuffer.Size(),
+                            .Size = m_depth_instance_buffer.Size(),
                         } },
                 };
 
@@ -850,39 +850,39 @@ void SceneRenderer::DepthPass(GPU::CommandEncoder& encoder, RenderPacket const& 
                     .Entries = bind_group_entries
                 };
 
-                auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
-                m_ObjectGroupsToRelease.push_back(object_group);
+                auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
+                m_object_groups_to_release.push_back(object_group);
                 rp.SetBindGroup(object_group, 0);
-                for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
+                for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
                     for (auto const& [buffer, list] : mesh_map) {
                         if (list.empty())
                             continue;
                         (void)buffer;
 
-                        auto& hack = m_RenderContext.RenderObjects[list[0]];
-                        rp.SetVertexBuffer(0, hack.VertexBuffer);
-                        rp.SetIndexBuffer(hack.IndexBuffer);
+                        auto& hack = m_render_context.render_objects[list[0]];
+                        rp.SetVertexBuffer(0, hack.vertex_buffer);
+                        rp.SetIndexBuffer(hack.index_buffer);
 
-                        rp.DrawIndex({ 0, hack.IndexCount }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
+                        rp.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
                         buffer_offset += list.size();
                     }
                 }
                 rp.End();
                 rp.Release();
             }
-            SceneLightData.Flush();
+            scene_light_data.flush();
         }
     }
 }
 
-void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view)
+void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view)
 {
     (void)packet;
     GPU::Buffer instance_buffer;
-    if (!m_InstanceBufferPool.empty()) {
-        instance_buffer = m_InstanceBufferPool.back();
-        m_InstanceBufferPool.pop_back();
+    if (!m_instance_buffer_pool.empty()) {
+        instance_buffer = m_instance_buffer_pool.back();
+        m_instance_buffer_pool.pop_back();
     } else {
         GPU::BufferSpec spec {
             .Label = "PBR Instance Buffer"sv,
@@ -890,19 +890,19 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .Size = sizeof(Mat4) * 2'000,
             .Mapped = true,
         };
-        instance_buffer = Renderer::Device().CreateBuffer(spec);
+        instance_buffer = Renderer::device().CreateBuffer(spec);
     }
 
     usz buffer_count_offset = 0;
 
-    for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
+    for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
         for (auto const& [buffer, list] : mesh_map) {
             VERIFY(instance_buffer.GetMapState() == GPU::MapState::Mapped, "{}", magic_enum::enum_name(instance_buffer.GetMapState()));
             auto data = TRANSMUTE(InstanceData*, instance_buffer.Slice().MappedRange()) + buffer_count_offset;
             int j = 0;
             for (auto index : list) {
-                auto& obj = m_RenderContext.RenderObjects[index];
-                data[j++].Model = obj.WorldMatrix;
+                auto& obj = m_render_context.render_objects[index];
+                data[j++].model = obj.world_matrix;
             }
 
             buffer_count_offset += list.size();
@@ -910,14 +910,14 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
     }
     instance_buffer.Unmap();
 
-    auto copy_encoder = Renderer::Device().CreateCommandEncoder();
+    auto copy_encoder = Renderer::device().CreateCommandEncoder();
 
-    copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_PBRInstanceBuffer, 0, buffer_count_offset * sizeof(InstanceData));
-    Renderer::Device().SubmitCommandBuffer(copy_encoder.Finish());
+    copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_pbr_instance_buffer, 0, buffer_count_offset * sizeof(InstanceData));
+    Renderer::device().SubmitCommandBuffer(copy_encoder.Finish());
     copy_encoder.Release();
 
     instance_buffer.Slice().MapAsync(GPU::MapMode::Write, [instance_buffer, this] {
-        auto& copy = m_InstanceBufferPool.emplace_back(instance_buffer);
+        auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
         copy.ForceMapState(GPU::MapState::Mapped);
     });
 
@@ -925,19 +925,19 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         ZoneScopedN("G-Buffer");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.PositionRT.View,
+                .View = gbuffer.position_rt.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::Black,
             },
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.NormalRT.View,
+                .View = gbuffer.normal_rt.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::Black,
             },
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.AlbedoRT.View,
+                .View = gbuffer.albedo_rt.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::Black,
@@ -945,7 +945,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         };
 
         GPU::RenderPassTimestampWrites timestamp_writes {
-            .Set = m_TimingsSet,
+            .Set = m_timings_set,
             .BeginningOfPassWriteIndex = 2,
             .EndOfPassWriteIndex = 3
         };
@@ -953,7 +953,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .Label = "GBuffer::render_pass"sv,
             .ColorAttachments = color_attachments,
             .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                .View = m_SceneRenderDepthTarget.View,
+                .View = m_scene_render_depth_target.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .DepthClear = 1.0f,
@@ -962,18 +962,18 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         };
         auto gpass = encoder.BeginRendering(gpass_rp_spec);
 
-        auto shader = gbuffer.Shader.Get();
-        gpass.SetPipeline(shader->Pipeline());
-        gpass.SetBindGroup(m_GlobalBindGroup, 0);
-        BeginPipelineStatisticsQuery(gpass, m_StatisticsQuerySet, 0);
+        auto shader = gbuffer.shader_asset.get();
+        gpass.SetPipeline(shader->pipeline());
+        gpass.SetBindGroup(m_global_bind_group, 0);
+        BeginPipelineStatisticsQuery(gpass, m_statistics_query_set, 0);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
                 .Binding = 0,
                 .Resource = GPU::BufferBinding {
-                    .TargetBuffer = m_PBRInstanceBuffer,
+                    .TargetBuffer = m_pbr_instance_buffer,
                     .Offset = 0,
-                    .Size = m_PBRInstanceBuffer.Size(),
+                    .Size = m_pbr_instance_buffer.Size(),
                 } },
         };
 
@@ -982,21 +982,21 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .Entries = bind_group_entries
         };
 
-        auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(1).Unwrap(), bg_spec);
-        m_ObjectGroupsToRelease.push_back(object_group);
+        auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
+        m_object_groups_to_release.push_back(object_group);
         gpass.SetBindGroup(object_group, 1);
         buffer_count_offset = 0;
-        for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
+        for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
             for (auto& [buffer, list] : mesh_map) {
                 if (list.empty())
                     continue;
                 (void)buffer;
-                auto& hack = m_RenderContext.RenderObjects[list[0]];
-                gpass.SetVertexBuffer(0, hack.VertexBuffer);
-                gpass.SetIndexBuffer(hack.IndexBuffer);
+                auto& hack = m_render_context.render_objects[list[0]];
+                gpass.SetVertexBuffer(0, hack.vertex_buffer);
+                gpass.SetIndexBuffer(hack.index_buffer);
 
-                gpass.DrawIndex({ 0, hack.IndexCount }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                gpass.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
                 buffer_count_offset += list.size();
             }
         }
@@ -1010,7 +1010,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         ZoneScopedN("SSAO");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = ssao.RenderTarget.View,
+                .View = ssao.render_target.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::White,
@@ -1018,7 +1018,7 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         };
 
         GPU::RenderPassTimestampWrites timestamp_writes {
-            .Set = m_TimingsSet,
+            .Set = m_timings_set,
             .BeginningOfPassWriteIndex = 4,
             .EndOfPassWriteIndex = 5
         };
@@ -1029,16 +1029,16 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .TimestampWrites = timestamp_writes
         };
         auto pass = encoder.BeginRendering(rp_spec);
-        BeginPipelineStatisticsQuery(pass, m_StatisticsQuerySet, 1);
+        BeginPipelineStatisticsQuery(pass, m_statistics_query_set, 1);
 
-        if (m_RenderContext.PostProcessingSettings.UseSSAO) {
-            ssao.Options.Data = m_RenderContext.PostProcessingSettings.SSAOData;
-            ssao.Options.Flush();
+        if (m_render_context.post_processing_settings.use_ssao) {
+            ssao.options.Data = m_render_context.post_processing_settings.ssao_data;
+            ssao.options.flush();
 
-            auto shader = ssao.Shader.Get();
-            pass.SetPipeline(shader->Pipeline());
-            pass.SetBindGroup(m_GlobalBindGroup, 0);
-            pass.SetBindGroup(ssao.BindGroup, 1);
+            auto shader = ssao.shader_asset.get();
+            pass.SetPipeline(shader->pipeline());
+            pass.SetBindGroup(m_global_bind_group, 0);
+            pass.SetBindGroup(ssao.bind_group, 1);
             pass.Draw({ 0, 3 }, { 0, 1 });
         }
 
@@ -1047,13 +1047,13 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         pass.Release();
     }
 
-    ssao_blur.Render(encoder, m_TimingsSet, 6, 7);
+    ssao_blur.render(encoder, m_timings_set, 6, 7);
 
     {
         ZoneScopedN("PBR Pass");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = m_TonemappingPipeline.GetView(),
+                .View = m_tonemapping_pipeline.view(),
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .ClearColor = Color::Black,
@@ -1064,30 +1064,30 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
             .Label = "Scene Render Pass"sv,
             .ColorAttachments = color_attachments,
             .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                .View = m_SceneRenderDepthTarget.View,
+                .View = m_scene_render_depth_target.View,
                 .LoadOp = GPU::LoadOp::Clear,
                 .StoreOp = GPU::StoreOp::Store,
                 .DepthClear = 1.0f,
             },
-            .TimestampWrites = GPU::RenderPassTimestampWrites { .Set = m_TimingsSet, .BeginningOfPassWriteIndex = 8, .EndOfPassWriteIndex = 9 }
+            .TimestampWrites = GPU::RenderPassTimestampWrites { .Set = m_timings_set, .BeginningOfPassWriteIndex = 8, .EndOfPassWriteIndex = 9 }
         };
         auto scene_rp = encoder.BeginRendering(scene_rp_spec);
-        BeginPipelineStatisticsQuery(scene_rp, m_StatisticsQuerySet, 2);
+        BeginPipelineStatisticsQuery(scene_rp, m_statistics_query_set, 2);
 
-        scene_rp.SetViewport(Vector2::Zero, { m_RenderArea.x, m_RenderArea.y });
+        scene_rp.SetViewport(Vector2::Zero, { m_render_area.x, m_render_area.y });
 
-        scene_rp.SetBindGroup(m_GlobalBindGroup, 0);
-        scene_rp.SetBindGroup(m_SceneBindGroup, 1);
+        scene_rp.SetBindGroup(m_global_bind_group, 0);
+        scene_rp.SetBindGroup(m_scene_bind_group, 1);
         {
-            auto shader = m_SkyShader.Get();
-            scene_rp.SetPipeline(shader->Pipeline());
+            auto shader = m_sky_shader.get();
+            scene_rp.SetPipeline(shader->pipeline());
             scene_rp.Draw({ 0, 4 }, { 0, 1 });
         }
 
-        m_CubeSkybox.execute(scene_rp);
+        m_cube_skybox.execute(scene_rp);
 
-        auto shader = m_PbrShader.Get();
-        scene_rp.SetPipeline(shader->Pipeline());
+        auto shader = m_pbr_shader.get();
+        scene_rp.SetPipeline(shader->pipeline());
 
         // For each material
         // - Create a bind group
@@ -1096,79 +1096,79 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         // -- Draw it
 
         buffer_count_offset = 0;
-        for (auto const& [material, mesh_map] : m_RenderContext.MeshRenderLists) {
+        for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
-            material->UpdateBuffer();
+            material->update_buffer();
 
-            auto albedo = material->albedo_map.Get();
+            auto albedo = material->albedo_map.get();
             if (!albedo) {
-                albedo = Renderer::WhiteTexture().Get();
+                albedo = Renderer::white_texture().get();
             }
 
-            auto normal = material->normal_map.Get();
+            auto normal = material->normal_map.get();
             if (!normal) {
-                normal = Renderer::DefaultNormalMap().Get();
+                normal = Renderer::default_normal_map().get();
             }
 
-            auto ao = material->ambient_occlusion_map.Get();
+            auto ao = material->ambient_occlusion_map.get();
             if (!ao) {
-                ao = Renderer::WhiteTexture().Get();
+                ao = Renderer::white_texture().get();
             }
 
-            auto metallic_roughness = material->metallic_roughness_map.Get();
+            auto metallic_roughness = material->metallic_roughness_map.get();
             if (!metallic_roughness) {
-                metallic_roughness = Renderer::WhiteTexture().Get();
+                metallic_roughness = Renderer::white_texture().get();
             }
 
-            auto emissive = material->emissive_map.Get();
+            auto emissive = material->emissive_map.get();
             if (!emissive) {
-                emissive = Renderer::BlackTexture().Get();
+                emissive = Renderer::black_texture().get();
             }
 
             std::array bind_group_entries {
                 GPU::BindGroupEntry {
                     .Binding = 0,
                     .Resource = GPU::BufferBinding {
-                        .TargetBuffer = m_PBRInstanceBuffer,
+                        .TargetBuffer = m_pbr_instance_buffer,
                         .Offset = 0,
-                        .Size = m_PBRInstanceBuffer.Size(),
+                        .Size = m_pbr_instance_buffer.Size(),
                     },
                 },
                 GPU::BindGroupEntry {
                     .Binding = 1,
                     .Resource = GPU::BufferBinding {
-                        .TargetBuffer = material->material_uniform_buffer.Buffer(),
+                        .TargetBuffer = material->material_uniform_buffer.buffer(),
                         .Offset = 0,
-                        .Size = material->material_uniform_buffer.Buffer().Size(),
+                        .Size = material->material_uniform_buffer.buffer().Size(),
                     },
                 },
                 GPU::BindGroupEntry {
                     .Binding = 2,
-                    .Resource = albedo->GetTexture().View,
+                    .Resource = albedo->texture().View,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 3,
-                    .Resource = normal->GetTexture().View,
+                    .Resource = normal->texture().View,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 4,
-                    .Resource = metallic_roughness->GetTexture().View,
+                    .Resource = metallic_roughness->texture().View,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 5,
-                    .Resource = ao->GetTexture().View,
+                    .Resource = ao->texture().View,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 6,
-                    .Resource = emissive->GetTexture().View,
+                    .Resource = emissive->texture().View,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 7,
-                    .Resource = m_LinearSampler,
+                    .Resource = m_linear_sampler,
                 },
                 GPU::BindGroupEntry {
                     .Binding = 8,
-                    .Resource = m_ShadowSampler,
+                    .Resource = m_shadow_sampler,
                 },
             };
 
@@ -1177,29 +1177,29 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
                 .Entries = bind_group_entries
             };
 
-            auto object_group = Renderer::Device().CreateBindGroup(shader->GetBindGroupLayout(2).Unwrap(), global_bg_spec);
-            m_ObjectGroupsToRelease.push_back(object_group);
+            auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(2).unwrap(), global_bg_spec);
+            m_object_groups_to_release.push_back(object_group);
             scene_rp.SetBindGroup(object_group, 2);
 
             for (auto const& [buffer, list] : mesh_map) {
                 if (list.empty())
                     continue;
                 (void)buffer;
-                auto& hack = m_RenderContext.RenderObjects[list[0]];
+                auto& hack = m_render_context.render_objects[list[0]];
 
-                scene_rp.SetVertexBuffer(0, hack.VertexBuffer);
-                scene_rp.SetIndexBuffer(hack.IndexBuffer);
+                scene_rp.SetVertexBuffer(0, hack.vertex_buffer);
+                scene_rp.SetIndexBuffer(hack.index_buffer);
 
-                scene_rp.DrawIndex({ 0, hack.IndexCount }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                scene_rp.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
                 buffer_count_offset += list.size();
             }
         }
         // Draw editor specific stuff only if we are not rendering a game view.
         if (!game_view) {
-            Debug::Render(scene_rp);
+            Debug::render(scene_rp);
 
-            auto gridShader = m_GridShader.Get();
-            scene_rp.SetPipeline(gridShader->Pipeline());
+            auto gridShader = m_grid_shader.get();
+            scene_rp.SetPipeline(gridShader->pipeline());
             scene_rp.Draw({ 0, 6 }, { 0, 1 });
         }
 
@@ -1208,20 +1208,20 @@ void SceneRenderer::PBRPass(GPU::CommandEncoder const& encoder, RenderPacket con
         scene_rp.Release();
     }
 
-    if (Renderer::HasPipelineStatistics()) {
-        encoder.ResolveQuerySet(m_TimingsSet, { 0, 10 }, m_TimingsResolveBuffer, 0);
-        encoder.ResolveQuerySet(m_StatisticsQuerySet, { 0, 3 }, m_StatisticsResolveBuffer, 0);
+    if (Renderer::supports_pipeline_statistics()) {
+        encoder.ResolveQuerySet(m_timings_set, { 0, 10 }, m_timings_resolve_buffer, 0);
+        encoder.ResolveQuerySet(m_statistics_query_set, { 0, 3 }, m_statistics_resolve_buffer, 0);
 
-        if (m_TimingsReadBuffer.GetMapState() == GPU::MapState::Unmapped) {
-            encoder.CopyBufferToBuffer(m_TimingsResolveBuffer, 0, m_TimingsReadBuffer, 0, m_TimingsReadBuffer.Size());
+        if (m_timings_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
+            encoder.CopyBufferToBuffer(m_timings_resolve_buffer, 0, m_timings_read_buffer, 0, m_timings_read_buffer.Size());
         }
-        if (m_StatisticsReadBuffer.GetMapState() == GPU::MapState::Unmapped) {
-            encoder.CopyBufferToBuffer(m_StatisticsResolveBuffer, 0, m_StatisticsReadBuffer, 0, m_StatisticsReadBuffer.Size());
+        if (m_statistics_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
+            encoder.CopyBufferToBuffer(m_statistics_resolve_buffer, 0, m_statistics_read_buffer, 0, m_statistics_read_buffer.Size());
         }
     }
 }
 
-void SceneRenderer::SetupQueries()
+void SceneRenderer::setup_queries()
 {
 
     {
@@ -1231,7 +1231,7 @@ void SceneRenderer::SetupQueries()
             .Count = 5 * 2, // 5, one for each pass, times 2 for start and end
         };
 
-        m_TimingsSet = Renderer::Device().CreateQuerySet(query_set_spec);
+        m_timings_set = Renderer::device().CreateQuerySet(query_set_spec);
 
         GPU::BufferSpec resolve_spec {
             .Label = "Timings Resolve Buffer"sv,
@@ -1240,7 +1240,7 @@ void SceneRenderer::SetupQueries()
             .Mapped = false
         };
 
-        m_TimingsResolveBuffer = Renderer::Device().CreateBuffer(resolve_spec);
+        m_timings_resolve_buffer = Renderer::device().CreateBuffer(resolve_spec);
 
         GPU::BufferSpec read_spec {
             .Label = "Timings Read Buffer"sv,
@@ -1249,10 +1249,10 @@ void SceneRenderer::SetupQueries()
             .Mapped = false
         };
 
-        m_TimingsReadBuffer = Renderer::Device().CreateBuffer(read_spec);
+        m_timings_read_buffer = Renderer::device().CreateBuffer(read_spec);
     }
 
-    if (Renderer::HasPipelineStatistics()) {
+    if (Renderer::supports_pipeline_statistics()) {
         using enum GPU::PipelineStatisticName;
         GPU::QuerySetSpec query_set_spec {
             .Label = String("Pipeline Statistics Set"),
@@ -1260,7 +1260,7 @@ void SceneRenderer::SetupQueries()
             .Count = 4 * 3, // 5, one for each pass, times 3, for each of the types above
         };
 
-        m_StatisticsQuerySet = Renderer::Device().CreateQuerySet(query_set_spec);
+        m_statistics_query_set = Renderer::device().CreateQuerySet(query_set_spec);
 
         GPU::BufferSpec resolve_spec {
             .Label = "Pipeline Statistics Resolve Buffer"sv,
@@ -1269,7 +1269,7 @@ void SceneRenderer::SetupQueries()
             .Mapped = false
         };
 
-        m_StatisticsResolveBuffer = Renderer::Device().CreateBuffer(resolve_spec);
+        m_statistics_resolve_buffer = Renderer::device().CreateBuffer(resolve_spec);
 
         GPU::BufferSpec read_spec {
             .Label = "Pipeline Statistics Read Buffer"sv,
@@ -1278,11 +1278,11 @@ void SceneRenderer::SetupQueries()
             .Mapped = false
         };
 
-        m_StatisticsReadBuffer = Renderer::Device().CreateBuffer(read_spec);
+        m_statistics_read_buffer = Renderer::device().CreateBuffer(read_spec);
     }
 }
 
-void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
+void SceneRenderer::create_scene_render_target(Vector2 const& size)
 {
     GPU::TextureSpec spec {
         .Label = "Main Render Target"sv,
@@ -1293,7 +1293,7 @@ void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::All,
     };
-    m_SceneRenderTarget = Renderer::Device().CreateTexture(spec);
+    m_scene_render_target = Renderer::device().CreateTexture(spec);
 
     GPU::TextureSpec depth_spec {
         .Label = "Main Render Depth Target"sv,
@@ -1304,5 +1304,5 @@ void SceneRenderer::CreateSceneRenderTarget(Vector2 const& size)
         .SampleCount = 1,
         .Aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_SceneRenderDepthTarget = Renderer::Device().CreateTexture(depth_spec);
+    m_scene_render_depth_target = Renderer::device().CreateTexture(depth_spec);
 }

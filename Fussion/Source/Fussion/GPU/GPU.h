@@ -784,7 +784,7 @@ namespace Fussion::GPU {
         template<typename T>
         void WriteBuffer(Buffer const& buffer, u64 offset, ReadOnlySpan<T> data) const
         {
-            WriteBuffer(buffer, offset, data.DataPtr(), data.SizeInBytes());
+            WriteBuffer(buffer, offset, data.data(), data.size_in_bytes());
         }
 
         template<typename T>

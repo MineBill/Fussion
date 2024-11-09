@@ -23,172 +23,172 @@
 #include <ranges>
 #include <tracy/Tracy.hpp>
 
-Editor* Editor::s_EditorInstance = nullptr;
-AssetPicker Editor::GenericAssetPicker {};
+Editor* Editor::s_editor_instance = nullptr;
+AssetPicker Editor::s_generic_asset_picker {};
 
 using namespace Fussion;
 
 Editor::Editor()
 {
-    VERIFY(s_EditorInstance == nullptr, "EditorLayer already exists!")
-    s_EditorInstance = this;
+    VERIFY(s_editor_instance == nullptr, "EditorLayer already exists!")
+    s_editor_instance = this;
 }
 
 Editor::~Editor() = default;
 
-void Editor::OnStart()
+void Editor::on_start()
 {
-    Application::Self()->GetWindow().SetTitle(fmt::format("Fussion Editor - {}", Project::Name()));
-    Application::Self()->GetWindow().Maximize();
+    Application::self()->window().set_title(fmt::format("Fussion Editor - {}", Project::name()));
+    Application::self()->window().maximize();
 
     ZoneScoped;
-    m_ViewportWindow = MakePtr<ViewportWindow>(this);
-    m_InspectorWindow = MakePtr<InspectorWindow>(this);
-    m_ConsoleWindow = MakePtr<ConsoleWindow>(this);
-    m_SceneWindow = MakePtr<SceneTreeWindow>(this);
-    m_ScriptsInspector = MakePtr<ScriptsInspector>(this);
-    m_ContentBrowser = MakePtr<ContentBrowserWindow>(this);
-    m_AssetRegistryViewer = MakePtr<AssetRegistryViewer>(this);
-    m_RendererReport = MakePtr<RendererReport>(this);
-    m_EngineInfoWindow = MakePtr<EngineInfoWindow>(this);
+    m_viewport_window = make_ptr<ViewportWindow>(this);
+    m_inspector_window = make_ptr<InspectorWindow>(this);
+    m_console_window = make_ptr<ConsoleWindow>(this);
+    m_scene_window = make_ptr<SceneTreeWindow>(this);
+    m_scripts_inspector = make_ptr<ScriptsInspector>(this);
+    m_content_browser = make_ptr<ContentBrowserWindow>(this);
+    m_asset_registry_viewer = make_ptr<AssetRegistryViewer>(this);
+    m_renderer_report = make_ptr<RendererReport>(this);
+    m_engine_info_window = make_ptr<EngineInfoWindow>(this);
 
-    ScriptingEngine::Self().CompileGameAssembly(Project::ScriptsFolderPath());
-    FileSystem::WriteEntireFile(Project::ScriptsFolderPath() / "as.predefined", ScriptingEngine::Self().DumpCurrentTypes().str());
+    ScriptingEngine::self().compile_game_assembly(Project::scripts_folder_path());
+    FileSystem::write_entire_file(Project::scripts_folder_path() / "as.predefined", ScriptingEngine::self().dump_current_types().str());
 
-    m_Watcher = FileWatcher::Create(Project::ScriptsFolderPath());
-    m_Watcher->AddListener([](std::filesystem::path const& path, FileWatcher::EventType type) {
+    m_watcher = FileWatcher::create(Project::scripts_folder_path());
+    m_watcher->add_listener([](std::filesystem::path const& path, FileWatcher::EventType type) {
         using namespace std::chrono_literals;
         (void)path;
         (void)type;
 
         // Wait a bit for the file lock to be released.
         std::this_thread::sleep_for(100ms);
-        ScriptingEngine::Self().CompileGameAssembly(Project::ScriptsFolderPath());
+        ScriptingEngine::self().compile_game_assembly(Project::scripts_folder_path());
     });
-    m_Watcher->Start();
+    m_watcher->start();
 
     ImGui::LoadIniSettingsFromDisk("Assets/EditorLayout.ini");
 
-    m_Camera.Resize(Application::Self()->GetWindow().Size());
-    m_Camera.Position = Vector3(0, 3, 5);
-    m_SceneRenderer.Init();
+    m_camera.resize(Application::self()->window().size());
+    m_camera.position = Vector3(0, 3, 5);
+    m_scene_renderer.init();
 
-    OnViewportResized(Vector2(300, 300));
+    on_viewport_resized(Vector2(300, 300));
 
-    m_ViewportWindow->OnStart();
-    m_InspectorWindow->OnStart();
-    m_ConsoleWindow->OnStart();
-    m_SceneWindow->OnStart();
-    m_ContentBrowser->OnStart();
+    m_viewport_window->on_start();
+    m_inspector_window->on_start();
+    m_console_window->on_start();
+    m_scene_window->on_start();
+    m_content_browser->on_start();
 
-    m_AssetRegistryViewer->OnStart();
-    m_AssetRegistryViewer->Hide();
+    m_asset_registry_viewer->on_start();
+    m_asset_registry_viewer->hide();
 
-    m_ScriptsInspector->OnStart();
-    m_ScriptsInspector->Hide();
+    m_scripts_inspector->on_start();
+    m_scripts_inspector->hide();
 
-    m_EngineInfoWindow->OnStart();
-    m_EngineInfoWindow->Hide();
+    m_engine_info_window->on_start();
+    m_engine_info_window->hide();
 
-    OnBeginPlay += [this] {
+    on_begin_play += [this] {
         LOG_DEBUG("On Begin Play");
-        auto meta = Project::AssetManager()->GetMetadata(m_ActiveScene->GetHandle());
+        auto meta = Project::asset_manager()->get_metadata(m_active_scene->handle());
 
-        YamlDeserializer ds(*FileSystem::ReadEntireFile(Project::AssetsFolderPath() / meta.Path));
-        m_PlayScene = MakeRef<Scene>();
-        m_PlayScene->Deserialize(ds);
+        YamlDeserializer ds(*FileSystem::read_entire_file(Project::assets_folder_path() / meta.path));
+        m_play_scene = make_ref<Scene>();
+        m_play_scene->deserialize(ds);
 
-        if (m_PlayScene)
-            m_PlayScene->OnStart();
+        if (m_play_scene)
+            m_play_scene->on_start();
     };
 
-    OnStopPlay += [this] {
+    on_stop_play += [this] {
         LOG_DEBUG("On Stop Play");
-        if (m_PlayScene) {
-            m_PlayScene = nullptr;
+        if (m_play_scene) {
+            m_play_scene = nullptr;
         }
     };
 
-    OnPaused += [] {
+    on_paused += [] {
         LOG_DEBUG("On Paused");
     };
 
-    OnResumePlay += [] {
+    on_resume_play += [] {
         LOG_DEBUG("On Resume Play");
     };
 }
 
-void Editor::OnEnable() { }
+void Editor::on_enable() { }
 
-void Editor::OnDisable() { }
+void Editor::on_disable() { }
 
-void Editor::Save() const
+void Editor::save() const
 {
-    for (auto& asd : m_AssetWindows) {
-        asd.second->OnSave();
+    for (auto& asd : m_asset_windows) {
+        asd.second->on_save();
     }
 
-    Project::Save();
+    Project::save();
 
-    if (m_PlayState == PlayState::Editing && m_ActiveScene != nullptr) {
-        LOG_DEBUGF("Saving scene {} to {}", m_ActiveScene->GetName(), m_ActiveScenePath);
+    if (m_play_state == PlayState::Editing && m_active_scene != nullptr) {
+        LOG_DEBUGF("Saving scene {} to {}", m_active_scene->name(), m_active_scene_path);
         YamlSerializer js;
         js.Initialize();
 
-        m_ActiveScene->Serialize(js);
+        m_active_scene->serialize(js);
 
-        auto path = Project::AssetsFolderPath() / m_ActiveScenePath;
-        FileSystem::WriteEntireFile(path, js.ToString());
+        auto path = Project::assets_folder_path() / m_active_scene_path;
+        FileSystem::write_entire_file(path, js.to_string());
 
-        m_ActiveScene->SetDirty(false);
+        m_active_scene->set_dirty(false);
     }
 }
 
-void Editor::OpenAsset(AssetHandle handle)
+void Editor::open_asset(AssetHandle handle)
 {
-    if (m_AssetWindows.contains(handle))
+    if (m_asset_windows.contains(handle))
         return;
 
-    auto assman = Project::AssetManager();
-    auto meta = assman->GetMetadata(handle);
-    if (!meta.IsValid())
+    auto assman = Project::asset_manager();
+    auto meta = assman->get_metadata(handle);
+    if (!meta.is_valid())
         return;
 
-    switch (meta.Type) {
+    switch (meta.type) {
     case AssetType::PbrMaterial:
-        m_AssetWindows[handle] = MakePtr<MaterialWindow>(handle);
+        m_asset_windows[handle] = make_ptr<MaterialWindow>(handle);
         break;
     case AssetType::Texture2D:
-        m_AssetWindows[handle] = MakePtr<Texture2DWindow>(handle);
+        m_asset_windows[handle] = make_ptr<Texture2DWindow>(handle);
         break;
     default:
         break;
     }
 }
 
-void Editor::OnUpdate(f32 delta)
+void Editor::on_update(f32 delta)
 {
     ZoneScoped;
 
-    GenericAssetPicker.Update();
+    s_generic_asset_picker.Update();
 
-    switch (m_PlayState) {
+    switch (m_play_state) {
     case PlayState::Editing: {
-        m_Camera.SetFocus(m_ViewportWindow->IsFocused());
-        m_Camera.OnUpdate(delta);
-        if (m_ActiveScene) {
-            m_ActiveScene->Tick();
-            m_ActiveScene->OnDebugDraw(DebugDrawContext);
+        m_camera.set_focus(m_viewport_window->is_focused());
+        m_camera.on_update(delta);
+        if (m_active_scene) {
+            m_active_scene->tick();
+            m_active_scene->on_debug_draw(debug_draw_context);
         }
     } break;
     case PlayState::Playing: {
-        if (m_Detached) {
-            m_Camera.SetFocus(m_ViewportWindow->IsFocused());
-            m_Camera.OnUpdate(delta);
+        if (m_detached) {
+            m_camera.set_focus(m_viewport_window->is_focused());
+            m_camera.on_update(delta);
         }
-        if (m_PlayScene) {
-            m_PlayScene->OnUpdate(delta);
-            m_PlayScene->OnDebugDraw(DebugDrawContext);
+        if (m_play_scene) {
+            m_play_scene->on_update(delta);
+            m_play_scene->on_debug_draw(debug_draw_context);
         }
     } break;
     case PlayState::Paused:
@@ -205,21 +205,21 @@ void Editor::OnUpdate(f32 delta)
         if (ImGui::BeginMenu("File")) {
             if (ImGui::BeginMenu("New..")) {
                 if (ImGui::MenuItem("Create Scene")) {
-                    ChangeScene(Project::AssetManager()->CreateAsset<Scene>("TestScene.fsn"));
+                    change_scene(Project::asset_manager()->create_asset<Scene>("TestScene.fsn"));
                 }
                 ImGui::EndMenu();
             }
 
             ImGui::Separator();
 
-            if (!m_ActiveScene)
+            if (!m_active_scene)
                 ImGui::BeginDisabled();
 
             if (ImGui::MenuItem("Save..", "Ctrl+S")) {
-                Save();
+                save();
             }
 
-            if (!m_ActiveScene)
+            if (!m_active_scene)
                 ImGui::EndDisabled();
 
             ImGui::Separator();
@@ -231,15 +231,15 @@ void Editor::OnUpdate(f32 delta)
 
         if (ImGui::BeginMenu("Windows")) {
             if (ImGui::MenuItem("Scripts Inspector")) {
-                m_ScriptsInspector->Show();
+                m_scripts_inspector->show();
             }
             if (ImGui::BeginMenu("Debug")) {
                 if (ImGui::MenuItem("Shadow Map")) {
-                    m_ShadowMapDisplayOpened = !m_ShadowMapDisplayOpened;
+                    m_shadow_map_display_opened = !m_shadow_map_display_opened;
                 }
 
                 if (ImGui::MenuItem("Asset Registry")) {
-                    m_AssetRegistryViewer->Toggle();
+                    m_asset_registry_viewer->toggle();
                 }
                 ImGui::EndMenu();
             }
@@ -257,7 +257,7 @@ void Editor::OnUpdate(f32 delta)
         if (ImGui::BeginMenu("Extra")) {
             ImGui::Checkbox("Demo Window", &show_demo_window);
             if (ImGui::MenuItem("Engine Info")) {
-                m_EngineInfoWindow->Show();
+                m_engine_info_window->show();
             }
             ImGui::EndMenu();
         }
@@ -271,11 +271,11 @@ void Editor::OnUpdate(f32 delta)
 
     ImGui::SetNextWindowClass(&klass);
 
-    auto state = m_PlayState;
+    auto state = m_play_state;
     if (state == PlayState::Playing) {
         ImGui::PushStyleColor(ImGuiCol_WindowBg, Color::Yellow);
     }
-    EUI::Window("##toolbar", [this] {
+    EUI::window("##toolbar", [this] {
         constexpr auto y = 4;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2 { 0, y });
         defer(ImGui::PopStyleVar());
@@ -288,13 +288,13 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSplit(2);
         list->ChannelsSetCurrent(1);
 
-        auto& style = EditorStyle::Style();
-        EUI::ImageButton(
-            style.EditorIcons[EditorIcon::Play],
+        auto& style = EditorStyle::style();
+        EUI::image_button(
+            style.editor_icons[EditorIcon::Play],
             [this] {
-                SetPlayState(PlayState::Playing);
+                set_play_state(PlayState::Playing);
             },
-            { .Size = Vector2 { height, height }, .Disabled = m_ActiveScene == nullptr || m_PlayState == PlayState::Playing }
+            { .size = Vector2 { height, height }, .disabled = m_active_scene == nullptr || m_play_state == PlayState::Playing }
         );
 
         auto min = ImGui::GetItemRectMin();
@@ -303,37 +303,37 @@ void Editor::OnUpdate(f32 delta)
 
         ImGui::SameLine();
 
-        EUI::ImageButton(
-            style.EditorIcons[EditorIcon::Stop],
+        EUI::image_button(
+            style.editor_icons[EditorIcon::Stop],
             [this] {
-                SetPlayState(PlayState::Editing);
+                set_play_state(PlayState::Editing);
             },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+            { .size = Vector2 { height, height }, .disabled = m_play_state != PlayState::Playing }
         );
 
         ImGui::SameLine();
 
-        EUI::ImageButton(
-            style.EditorIcons[EditorIcon::Pause],
+        EUI::image_button(
+            style.editor_icons[EditorIcon::Pause],
             [this] {
-                SetPlayState(PlayState::Paused);
+                set_play_state(PlayState::Paused);
             },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+            { .size = Vector2 { height, height }, .disabled = m_play_state != PlayState::Playing }
         );
 
         ImGui::SameLine();
 
-        EUI::ImageButton(
-            style.EditorIcons[EditorIcon::Dots],
+        EUI::image_button(
+            style.editor_icons[EditorIcon::Dots],
             [] {
                 ImGui::OpenPopup("Toolbar::Options");
             },
-            { .Size = Vector2 { height, height }, .Disabled = m_PlayState != PlayState::Playing }
+            { .size = Vector2 { height, height }, .disabled = m_play_state != PlayState::Playing }
         );
 
-        EUI::Popup("Toolbar::Options", [&] {
+        EUI::popup("Toolbar::Options", [&] {
             if (ImGui::MenuItem("Detach")) {
-                m_Detached = !m_Detached;
+                m_detached = !m_detached;
             }
         });
 
@@ -344,13 +344,13 @@ void Editor::OnUpdate(f32 delta)
         list->ChannelsSetCurrent(0);
 
         Color color = ImGui::GetStyleColorVec4(ImGuiCol_FrameBg);
-        color = color.Lighten(0.2f);
+        color = color.lighten(0.2f);
 
-        list->AddRectFilled(min, max, color.ToABGR(), 3);
+        list->AddRectFilled(min, max, color.to_abgr(), 3);
 
         list->ChannelsMerge();
     },
-                { .Flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .UseChild = false });
+                { .flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize, .use_child = false });
     if (state == PlayState::Playing) {
         ImGui::PopStyleColor();
     }
@@ -367,70 +367,70 @@ void Editor::OnUpdate(f32 delta)
     //     }, { .Opened = &m_ShadowMapDisplayOpened });
     // }
 
-    m_ViewportWindow->OnDraw();
-    m_InspectorWindow->OnDraw();
-    m_ConsoleWindow->OnDraw();
-    m_SceneWindow->OnDraw();
-    m_ScriptsInspector->OnDraw();
-    m_ContentBrowser->OnDraw();
-    m_RendererReport->OnDraw();
-    m_EngineInfoWindow->OnDraw();
+    m_viewport_window->on_draw();
+    m_inspector_window->on_draw();
+    m_console_window->on_draw();
+    m_scene_window->on_draw();
+    m_scripts_inspector->on_draw();
+    m_content_browser->on_draw();
+    m_renderer_report->on_draw();
+    m_engine_info_window->on_draw();
 
-    if (m_AssetRegistryViewer->IsVisible())
-        m_AssetRegistryViewer->OnDraw();
+    if (m_asset_registry_viewer->is_visible())
+        m_asset_registry_viewer->on_draw();
 
-    for (auto const& asset_window : m_AssetWindows | std::views::values) {
-        asset_window->Draw(delta);
+    for (auto const& asset_window : m_asset_windows | std::views::values) {
+        asset_window->draw(delta);
     }
 
-    std::erase_if(m_AssetWindows, [](auto const& pair) {
-        return !pair.second->IsOpen();
+    std::erase_if(m_asset_windows, [](auto const& pair) {
+        return !pair.second->opened();
     });
 
-    Undo.Commit();
+    undo.commit();
 
-    Project::AssetManager()->CheckForLoadedAssets();
+    Project::asset_manager()->check_for_loaded_assets();
 }
 
-void Editor::OnEvent(Event& event)
+void Editor::on_event(Event& event)
 {
     EventDispatcher dispatcher(event);
-    dispatcher.Dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
-        if (e.Key == Keys::Z && e.Mods.test(KeyMod::Control)) {
-            Undo.Undo();
+    dispatcher.dispatch<OnKeyPressed>([this](OnKeyPressed const& e) -> bool {
+        if (e.key == Keys::Z && e.mods.test(KeyMod::Control)) {
+            undo.undo();
         }
 
-        if (e.Key == Keys::Y && e.Mods.test(KeyMod::Control)) {
-            Undo.Redo();
+        if (e.key == Keys::Y && e.mods.test(KeyMod::Control)) {
+            undo.redo();
         }
 
-        if (e.Key == Keys::S && e.Mods.test(KeyMod::Control)) {
-            Save();
+        if (e.key == Keys::S && e.mods.test(KeyMod::Control)) {
+            save();
         }
 
         // TODO: This is really fucky. Figure out a way to properly define what has input focus and what not.
-        if (m_SceneWindow->IsFocused() && !m_ViewportWindow->IsFocused() && e.Key == Keys::D && e.Mods.test(KeyMod::Control)) {
-            for (auto const& [entity, nothing] : m_SceneWindow->GetSelection()) {
+        if (m_scene_window->is_focused() && !m_viewport_window->is_focused() && e.key == Keys::D && e.mods.test(KeyMod::Control)) {
+            for (auto const& [entity, nothing] : m_scene_window->selection()) {
                 (void)nothing;
-                if (auto new_handle = m_ActiveScene->CloneEntity(entity); new_handle != EntityHandle::Invalid) {
-                    auto* new_entity = m_ActiveScene->GetEntity(new_handle);
-                    new_entity->Name += " (Clone)";
+                if (auto new_handle = m_active_scene->clone_entity(entity); new_handle != EntityHandle::Invalid) {
+                    auto* new_entity = m_active_scene->get_entity(new_handle);
+                    new_entity->name += " (Clone)";
                 }
             }
         }
         return false;
     });
 
-    dispatcher.Dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
-        if (m_ActiveScene != nullptr && m_ActiveScene->IsDirty()) {
+    dispatcher.dispatch<WindowCloseRequest>([this](WindowCloseRequest const&) {
+        if (m_active_scene != nullptr && m_active_scene->dirty()) {
             Dialogs::MessageBox data {};
-            data.Type = Dialogs::MessageType::Question;
-            data.Message = "The current scene has unsaved modifications. Are you sure you want to quit?";
-            data.Action = Dialogs::MessageAction::YesNoCancel;
-            switch (Dialogs::ShowMessageBox(data)) {
+            data.type = Dialogs::MessageType::Question;
+            data.message = "The current scene has unsaved modifications. Are you sure you want to quit?";
+            data.action = Dialogs::MessageAction::YesNoCancel;
+            switch (Dialogs::show_message_box(data)) {
             case Dialogs::MessageButton::Ok:
             case Dialogs::MessageButton::Yes:
-                Application::Self()->Quit();
+                Application::self()->quit();
                 break;
             case Dialogs::MessageButton::No:
                 [[fallthrough]];
@@ -438,35 +438,35 @@ void Editor::OnEvent(Event& event)
                 break;
             }
         } else {
-            Application::Self()->Quit();
+            Application::self()->quit();
         }
         return true;
     });
 
-    m_Camera.HandleEvent(event);
+    m_camera.on_event(event);
 
-    m_ViewportWindow->OnEvent(event);
-    m_InspectorWindow->OnEvent(event);
-    m_ConsoleWindow->OnEvent(event);
-    m_SceneWindow->OnEvent(event);
-    m_ScriptsInspector->OnEvent(event);
-    m_ContentBrowser->OnEvent(event);
+    m_viewport_window->on_event(event);
+    m_inspector_window->on_event(event);
+    m_console_window->on_event(event);
+    m_scene_window->on_event(event);
+    m_scripts_inspector->on_event(event);
+    m_content_browser->on_event(event);
 }
 
-void Editor::OnDraw(GPU::CommandEncoder& encoder)
+void Editor::on_draw(GPU::CommandEncoder& encoder)
 {
     auto render_editor_view = [&](Ref<Scene> const& scene) {
-        m_SceneRenderer.Render(
+        m_scene_renderer.render(
             encoder,
             {
                 .camera = RenderCamera {
-                    .perspective = m_Camera.Perspective(),
-                    .view = m_Camera.View(),
-                    .rotation = m_Camera.RotationMatrix(),
-                    .position = m_Camera.Position,
-                    .near = m_Camera.Near,
-                    .far = m_Camera.Far,
-                    .direction = m_Camera.Direction(),
+                    .perspective = m_camera.perspective(),
+                    .view = m_camera.view(),
+                    .rotation = m_camera.rotation_matrix(),
+                    .position = m_camera.position,
+                    .near = m_camera.near,
+                    .far = m_camera.far,
+                    .direction = m_camera.direction(),
                 },
                 .scene = scene.get(),
             },
@@ -474,37 +474,37 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
         );
     };
     auto render_game_view = [&](Camera const& camera) {
-        auto entity = camera.GetOwner();
-        m_SceneRenderer.Render(
+        auto entity = camera.owner();
+        m_scene_renderer.render(
             encoder,
             {
                 .camera = RenderCamera {
-                    .perspective = camera.GetPerspective(),
-                    .view = inverse(entity->WorldMatrix()),
-                    .rotation = entity->WorldTransform.RotationMatrix(),
-                    .position = entity->WorldTransform.Position,
+                    .perspective = camera.perspective(),
+                    .view = inverse(entity->world_matrix()),
+                    .rotation = entity->transform.rotation_matrix(),
+                    .position = entity->transform.Position,
                     .near = camera.near,
                     .far = camera.far,
-                    .direction = entity->WorldTransform.Forward(),
+                    .direction = entity->transform.forward(),
                 },
-                .scene = m_PlayScene.get(),
+                .scene = m_play_scene.get(),
             },
             true
         );
     };
-    switch (m_PlayState) {
+    switch (m_play_state) {
     case PlayState::Editing: {
-        render_editor_view(m_ActiveScene);
+        render_editor_view(m_active_scene);
     } break;
     case PlayState::Detached:
         [[fallthrough]];
     case PlayState::Playing:
         [[fallthrough]];
     case PlayState::Paused: {
-        auto camera = m_PlayScene->FindFirstComponent<Camera>();
+        auto camera = m_play_scene->find_first_component<Camera>();
 
-        if (camera == nullptr || m_Detached) {
-            render_editor_view(m_PlayScene);
+        if (camera == nullptr || m_detached) {
+            render_editor_view(m_play_scene);
         } else {
             render_game_view(*camera.get());
         }
@@ -512,14 +512,14 @@ void Editor::OnDraw(GPU::CommandEncoder& encoder)
     }
 }
 
-void Editor::SetPlayState(PlayState new_state)
+void Editor::set_play_state(PlayState new_state)
 {
     ZoneScoped;
-    switch (m_PlayState) {
+    switch (m_play_state) {
     case PlayState::Editing:
         switch (new_state) {
         case PlayState::Playing:
-            OnBeginPlay.Fire();
+            on_begin_play.fire();
             break;
         // noop
         case PlayState::Editing:
@@ -533,13 +533,13 @@ void Editor::SetPlayState(PlayState new_state)
     case PlayState::Playing:
         switch (new_state) {
         case PlayState::Editing:
-            OnStopPlay.Fire();
+            on_stop_play.fire();
             break;
         case PlayState::Playing:
             // noop
             return;
         case PlayState::Paused:
-            OnPaused.Fire();
+            on_paused.fire();
             break;
         case PlayState::Detached:
             break;
@@ -548,10 +548,10 @@ void Editor::SetPlayState(PlayState new_state)
     case PlayState::Paused:
         switch (new_state) {
         case PlayState::Editing:
-            OnStopPlay.Fire();
+            on_stop_play.fire();
             break;
         case PlayState::Playing:
-            OnResumePlay.Fire();
+            on_resume_play.fire();
             break;
         case PlayState::Detached:
             break;
@@ -574,46 +574,46 @@ void Editor::SetPlayState(PlayState new_state)
         }
         break;
     }
-    m_PlayState = new_state;
+    m_play_state = new_state;
 }
 
-void Editor::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
+void Editor::on_log_received(LogLevel level, std::string_view message, std::source_location const& loc)
 {
-    m_LogEntries.push_back(LogEntry {
+    m_log_entries.push_back(LogEntry {
         level,
         std::string(message),
         loc,
     });
 }
 
-void Editor::ChangeScene(AssetRef<Scene> scene)
+void Editor::change_scene(AssetRef<Scene> scene)
 {
     auto LoadScene = [&scene] {
-        s_EditorInstance->m_SceneWindow->ClearSelection();
+        s_editor_instance->m_scene_window->clear_selection();
 
-        auto meta = Project::AssetManager()->GetMetadata(scene.GetHandle());
+        auto meta = Project::asset_manager()->get_metadata(scene.handle());
 
-        if (auto scene_json = FileSystem::ReadEntireFile(Project::AssetsFolderPath() / meta.Path)) {
+        if (auto scene_json = FileSystem::read_entire_file(Project::assets_folder_path() / meta.path)) {
             YamlDeserializer ds(*scene_json);
 
-            auto scene_asset = MakeRef<Scene>();
-            scene_asset->Deserialize(ds);
-            scene_asset->SetHandle(scene.GetHandle());
+            auto scene_asset = make_ref<Scene>();
+            scene_asset->deserialize(ds);
+            scene_asset->set_handle(scene.handle());
 
-            s_EditorInstance->m_ActiveScenePath = meta.Path;
-            s_EditorInstance->m_ActiveScene = scene_asset;
+            s_editor_instance->m_active_scene_path = meta.path;
+            s_editor_instance->m_active_scene = scene_asset;
 
-            Application::Self()->GetWindow().SetTitle(fmt::format("Fussion - {} - {}", Project::Name(), meta.Name));
+            Application::self()->window().set_title(fmt::format("Fussion - {} - {}", Project::name(), meta.name));
         }
     };
-    if (s_EditorInstance->m_ActiveScene != nullptr && s_EditorInstance->m_ActiveScene->IsDirty()) {
+    if (s_editor_instance->m_active_scene != nullptr && s_editor_instance->m_active_scene->dirty()) {
         Dialogs::MessageBox data {};
-        data.Type = Dialogs::MessageType::Question;
-        data.Message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
-        data.Action = Dialogs::MessageAction::YesNoCancel;
-        switch (Dialogs::ShowMessageBox(data)) {
+        data.type = Dialogs::MessageType::Question;
+        data.message = "The current scene has unsaved modifications. Are you sure you want to discard them? Selecting 'No' will save the current scene and load the new one.";
+        data.action = Dialogs::MessageAction::YesNoCancel;
+        switch (Dialogs::show_message_box(data)) {
         case Dialogs::MessageButton::No:
-            s_EditorInstance->Save();
+            s_editor_instance->save();
             break;
         case Dialogs::MessageButton::Yes:
             LoadScene();
@@ -628,10 +628,10 @@ void Editor::ChangeScene(AssetRef<Scene> scene)
     }
 }
 
-void Editor::OnViewportResized(Vector2 const& new_size)
+void Editor::on_viewport_resized(Vector2 const& new_size)
 {
     ZoneScoped;
 
-    s_EditorInstance->m_Camera.Resize(new_size);
-    s_EditorInstance->m_SceneRenderer.Resize(new_size);
+    s_editor_instance->m_camera.resize(new_size);
+    s_editor_instance->m_scene_renderer.resize(new_size);
 }

@@ -6,11 +6,11 @@
 
 Fussion::PbrMaterial::PbrMaterial()
 {
-    material_uniform_buffer = UniformBuffer<MaterialBlock>::Create(Renderer::Device(), "Material"sv);
-    UpdateSampler();
+    material_uniform_buffer = UniformBuffer<MaterialBlock>::create(Renderer::device(), "Material"sv);
+    update_sampler();
 }
 
-void Fussion::PbrMaterial::Serialize(Serializer& ctx) const
+void Fussion::PbrMaterial::serialize(Serializer& ctx) const
 {
     FSN_SERIALIZE_MEMBER(metallic);
     FSN_SERIALIZE_MEMBER(roughness);
@@ -24,7 +24,7 @@ void Fussion::PbrMaterial::Serialize(Serializer& ctx) const
     FSN_SERIALIZE_MEMBER(ambient_occlusion_map);
 }
 
-void Fussion::PbrMaterial::Deserialize(Deserializer& ctx)
+void Fussion::PbrMaterial::deserialize(Deserializer& ctx)
 {
     FSN_DESERIALIZE_MEMBER(metallic);
     FSN_DESERIALIZE_MEMBER(roughness);
@@ -38,16 +38,16 @@ void Fussion::PbrMaterial::Deserialize(Deserializer& ctx)
     FSN_DESERIALIZE_MEMBER(ambient_occlusion_map);
 }
 
-void Fussion::PbrMaterial::UpdateBuffer()
+void Fussion::PbrMaterial::update_buffer()
 {
     material_uniform_buffer.Data.metallic = metallic;
     material_uniform_buffer.Data.roughness = roughness;
     material_uniform_buffer.Data.object_color = object_color;
     material_uniform_buffer.Data.tilling = tiling;
-    material_uniform_buffer.Flush();
+    material_uniform_buffer.flush();
 }
 
-void Fussion::PbrMaterial::UpdateSampler()
+void Fussion::PbrMaterial::update_sampler()
 {
     sampler.Release();
     GPU::SamplerSpec bilinear_sampler_spec {
@@ -63,5 +63,5 @@ void Fussion::PbrMaterial::UpdateSampler()
         .AnisotropyClamp = 16
     };
 
-    sampler = Renderer::Device().CreateSampler(bilinear_sampler_spec);
+    sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
 }

@@ -9,7 +9,7 @@
 namespace Fussion::GPU {
     auto ShaderProcessor::ProcessFile(std::filesystem::path const& path) -> Maybe<std::string>
     {
-        auto file = FileSystem::ReadEntireFile(path);
+        auto file = FileSystem::read_entire_file(path);
         if (!file) {
             return None();
         }
@@ -429,7 +429,7 @@ namespace Fussion::GPU {
 
             ZoneScopedN("Common Module");
             ComPtr<IBlob> diagnosticBlob;
-            auto commonSrc = FileSystem::ReadEntireFile("Assets/Shaders/Slang/Common.slang").Unwrap();
+            auto commonSrc = FileSystem::read_entire_file("Assets/Shaders/Slang/Common.slang").unwrap();
             g_State.CommonModule = session->loadModuleFromSourceString("common", "Assets/Shaders/Slang/Common.slang", commonSrc.data(), diagnosticBlob.writeRef());
             DiagnoseIfNeeded(diagnosticBlob);
         }
@@ -481,7 +481,7 @@ namespace Fussion::GPU {
             }
         };
 
-        auto source = FileSystem::ReadEntireFile(path).Unwrap();
+        auto source = FileSystem::read_entire_file(path).unwrap();
 
         ComPtr<IModule> slangModule = nullptr;
         {

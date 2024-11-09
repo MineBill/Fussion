@@ -7,15 +7,15 @@
 namespace Fussion {
     class TextureLoader {
     public:
-        static auto LoadImageFromMemory(ReadOnlySpan<u8> data) -> Maybe<Image>;
-        static auto LoadImageFromFile(std::filesystem::path const& path) -> Maybe<Image>;
-        static auto LoadTextureFromFile(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>;
-        static auto LoadTextureFromMemory(ReadOnlySpan<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
+        static auto load_image_from_memory(ReadOnlySpan<u8> data) -> Maybe<Image>;
+        static auto load_image_from_file(std::filesystem::path const& path) -> Maybe<Image>;
+        static auto load_texture_from_file(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>;
+        static auto load_texture_from_memory(ReadOnlySpan<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
 
-        static void SaveImageToFile(GPU::Texture const& texture, std::filesystem::path const& path);
+        static void save_image_to_file(GPU::Texture const& texture, std::filesystem::path const& path);
 
-        static auto LoadHDRImageFromMemory(ReadOnlySpan<u8> data) -> Maybe<FloatImage>;
-        static auto LoadHDRImageFromFile(std::filesystem::path const& path) -> Maybe<FloatImage>;
-        static auto LoadHDRTextureFromMemory(ReadOnlySpan<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
+        static auto load_hdr_image_from_memory(ReadOnlySpan<u8> data) -> Maybe<FloatImage>;
+        static auto load_hdr_image_from_file(std::filesystem::path const& path) -> Maybe<FloatImage>;
+        static auto load_hdr_texture_from_memory(ReadOnlySpan<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
     };
 }

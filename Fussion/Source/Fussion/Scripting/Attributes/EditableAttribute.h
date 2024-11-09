@@ -6,7 +6,7 @@
 namespace Fussion::Scripting {
     class EditableAttribute final : public Attribute {
     public:
-        virtual std::string ToString() override
+        virtual std::string to_string() override
         {
             return "EditableAttribute";
         }

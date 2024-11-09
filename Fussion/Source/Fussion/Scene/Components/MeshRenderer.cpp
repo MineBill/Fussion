@@ -10,16 +10,16 @@
 #include <tracy/Tracy.hpp>
 
 namespace Fussion {
-    void MeshRenderer::OnStart()
+    void MeshRenderer::on_start()
     {
     }
 
-    void MeshRenderer::OnUpdate([[maybe_unused]] f32 delta)
+    void MeshRenderer::on_update([[maybe_unused]] f32 delta)
     {
-        Model* model = ModelAsset.Get();
+        Model* model = ModelAsset.get();
         if (!model)
             return;
-        auto matrix = m_Owner->WorldMatrix();
+        auto matrix = m_owner->world_matrix();
         glm::vec3 scale;
         glm::quat rotation;
         glm::vec3 translation;
@@ -27,24 +27,24 @@ namespace Fussion {
         glm::vec4 perspective;
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
-        m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : model->Meshes) {
-            for (auto const& corner : mesh.Box.GetCorners()) {
-                m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
+        m_owner->bounding_box() = BoundingBox(translation);
+        for (auto const& mesh : model->meshes) {
+            for (auto const& corner : mesh.box.corners()) {
+                m_owner->bounding_box().add_point(Vector3(matrix * Vector4(corner, 1.0f)));
             }
         }
     }
 
-    void MeshRenderer::OnDraw(RenderContext& ctx)
+    void MeshRenderer::on_draw(RenderContext& ctx)
     {
         ZoneScoped;
-        if (!m_Owner->IsEnabled())
+        if (!m_owner->enabled())
             return;
-        auto m = ModelAsset.Get();
+        auto m = ModelAsset.get();
         if (m == nullptr)
             return;
 
-        auto matrix = m_Owner->WorldMatrix();
+        auto matrix = m_owner->world_matrix();
         glm::vec3 scale;
         glm::quat rotation;
         glm::vec3 translation;
@@ -52,78 +52,78 @@ namespace Fussion {
         glm::vec4 perspective;
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
-        m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : m->Meshes) {
-            for (auto const& corner : mesh.Box.GetCorners()) {
-                m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
+        m_owner->bounding_box() = BoundingBox(translation);
+        for (auto const& mesh : m->meshes) {
+            for (auto const& corner : mesh.box.corners()) {
+                m_owner->bounding_box().add_point(Vector3(matrix * Vector4(corner, 1.0f)));
             }
         }
 
-        Materials.resize(m->Meshes.size());
-        for (auto& mesh : m->Meshes) {
+        Materials.resize(m->meshes.size());
+        for (auto& mesh : m->meshes) {
             PbrMaterial* material = nullptr;
-            if (mesh.MaterialIndex != -1) {
-                material = Materials.at(mesh.MaterialIndex).Get();
+            if (mesh.material_index != -1) {
+                material = Materials.at(mesh.material_index).get();
             } else {
                 if (!Materials.empty()) {
-                    material = Materials.at(0).Get();
+                    material = Materials.at(0).get();
                 }
             }
             if (material == nullptr) {
-                material = Renderer::DefaultMaterial().Get();
+                material = Renderer::default_material().get();
             }
 
             RenderObject obj;
-            obj.Material = material;
-            obj.Position = m_Owner->WorldTransform.Position;
-            obj.WorldMatrix = translate(matrix, CAST(glm::vec3, mesh.Offset));
-            obj.VertexBuffer = mesh.VertexBuffer;
-            obj.IndexBuffer = mesh.IndexBuffer;
-            obj.IndexCount = mesh.IndexCount;
+            obj.material = material;
+            obj.position = m_owner->transform.Position;
+            obj.world_matrix = translate(matrix, CAST(glm::vec3, mesh.offset));
+            obj.vertex_buffer = mesh.vertex_buffer;
+            obj.index_buffer = mesh.index_buffer;
+            obj.index_count = mesh.index_count;
             // obj.InstanceBuffer = mesh.InstanceBuffer;
-            obj.Pass = DrawPass::All;
+            obj.pass_flags = DrawPass::All;
 
-            ctx.AddRenderObject(obj);
+            ctx.add_render_object(obj);
         }
     }
 
-    void MeshRenderer::OnDebugDraw(DebugDrawContext& ctx)
+    void MeshRenderer::on_debug_draw(DebugDrawContext& ctx)
     {
         (void)ctx;
     }
 
-    Ref<Component> MeshRenderer::Clone()
+    Ref<Component> MeshRenderer::clone()
     {
-        auto mr = MakeRef<MeshRenderer>();
+        auto mr = make_ref<MeshRenderer>();
         mr->ModelAsset = ModelAsset;
         mr->Materials = Materials;
         return mr;
     }
 
-    void MeshRenderer::Serialize(Serializer& ctx) const
+    void MeshRenderer::serialize(Serializer& ctx) const
     {
-        Component::Serialize(ctx);
+        Component::serialize(ctx);
         FSN_SERIALIZE_MEMBER(ModelAsset);
-        ctx.WriteCollection("materials", Materials);
+        ctx.write_collection("materials", Materials);
     }
 
-    void MeshRenderer::Deserialize(Deserializer& ctx)
+    void MeshRenderer::deserialize(Deserializer& ctx)
     {
-        Component::Deserialize(ctx);
+        Component::deserialize(ctx);
         FSN_DESERIALIZE_MEMBER(ModelAsset);
-        ctx.ReadCollection("materials", Materials);
+        ctx.read_collection("materials", Materials);
 
         // Trigger to calculate the bounding box.
-        OnModelChanged();
+        on_model_changed();
     }
 
-    void MeshRenderer::OnModelChanged()
+    void MeshRenderer::on_model_changed()
     {
-        Model* model = ModelAsset.Get();
+        Model* model = ModelAsset.get();
         if (!model)
             return;
 
-        auto matrix = m_Owner->WorldMatrix();
+        auto matrix = m_owner->world_matrix();
         glm::vec3 scale;
         glm::quat rotation;
         glm::vec3 translation;
@@ -131,10 +131,10 @@ namespace Fussion {
         glm::vec4 perspective;
         decompose(matrix, scale, rotation, translation, skew, perspective);
 
-        m_Owner->GetBoundingBox() = BoundingBox(translation);
-        for (auto const& mesh : model->Meshes) {
-            for (auto const& corner : mesh.Box.GetCorners()) {
-                m_Owner->GetBoundingBox().IncludePoint(Vector3(matrix * Vector4(corner, 1.0f)));
+        m_owner->bounding_box() = BoundingBox(translation);
+        for (auto const& mesh : model->meshes) {
+            for (auto const& corner : mesh.box.corners()) {
+                m_owner->bounding_box().add_point(Vector3(matrix * Vector4(corner, 1.0f)));
             }
         }
     }

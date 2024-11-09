@@ -11,18 +11,18 @@
 
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
-void ImGuiHelpers::BeginProperty(char const* label)
+void ImGuiHelpers::begin_property(char const* label)
 {
     constexpr auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_SizingStretchSame;
     ImGui::BeginTable(label, 2, table_flags);
 }
 
-void ImGuiHelpers::EndProperty()
+void ImGuiHelpers::end_property()
 {
     ImGui::EndTable();
 }
 
-void ImGuiHelpers::BeginGroupPanel(char const* name, ImVec2 const& size, ImFont* font)
+void ImGuiHelpers::begin_group_panel(char const* name, ImVec2 const& size, ImFont* font)
 {
     ImGui::PushFont(font);
     defer(ImGui::PopFont());
@@ -74,7 +74,7 @@ void ImGuiHelpers::BeginGroupPanel(char const* name, ImVec2 const& size, ImFont*
     s_GroupPanelLabelStack.push_back(ImRect(labelMin, labelMax));
 }
 
-void ImGuiHelpers::EndGroupPanel()
+void ImGuiHelpers::end_group_panel()
 {
     ImGui::PopItemWidth();
 
@@ -147,7 +147,7 @@ void ImGuiHelpers::EndGroupPanel()
     ImGui::EndGroup();
 }
 
-bool ImGuiHelpers::DragVec3(char const* id, Vector3* value, f32 speed, f32 min, f32 max, char const* format, ImFont* font, ImFont* font2)
+bool ImGuiHelpers::drag_vec3(char const* id, Vector3* value, f32 speed, f32 min, f32 max, char const* format, ImFont* font, ImFont* font2)
 {
     bool modified { false };
     ImGui::PushID(id);
@@ -216,7 +216,7 @@ bool ImGuiHelpers::DragVec3(char const* id, Vector3* value, f32 speed, f32 min, 
     return modified;
 }
 
-bool ImGuiHelpers::ButtonCenteredOnLine(char const* label, float alignment)
+bool ImGuiHelpers::button_centered_on_line(char const* label, float alignment)
 {
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -230,7 +230,7 @@ bool ImGuiHelpers::ButtonCenteredOnLine(char const* label, float alignment)
     return ImGui::Button(label);
 }
 
-void ImGuiHelpers::RenderSimpleRect(ImDrawList* draw_list, Vector2 const& position, Vector2 const& size, u32 color,
+void ImGuiHelpers::render_simple_rect(ImDrawList* draw_list, Vector2 const& position, Vector2 const& size, u32 color,
     f32 width)
 {
     ImGui::RenderRectFilledWithHole(
@@ -239,10 +239,10 @@ void ImGuiHelpers::RenderSimpleRect(ImDrawList* draw_list, Vector2 const& positi
         0.0f);
 }
 
-void ImGuiHelpers::InputText(char const* label, std::string& value, ImGuiInputTextFlags flags)
+void ImGuiHelpers::input_text(char const* label, std::string& value, ImGuiInputTextFlags flags)
 {
-    BeginProperty(label);
-    defer(EndProperty());
+    begin_property(label);
+    defer(end_property());
 
     if (flags & ImGuiInputTextFlags_ReadOnly)
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -256,7 +256,7 @@ void ImGuiHelpers::InputText(char const* label, std::string& value, ImGuiInputTe
     ImGui::PopID();
 }
 
-bool ImGuiHelpers::ImageToggleButton(char const* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size)
+bool ImGuiHelpers::image_toggle_button(char const* id, Fussion::GPU::TextureView const& texture, bool& toggled, Vector2 const& size)
 {
     auto button = CAST(Vector4, ImGui::GetStyleColorVec4(ImGuiCol_Button)) * 0.8f;
 
@@ -274,7 +274,7 @@ bool ImGuiHelpers::ImageToggleButton(char const* id, Fussion::GPU::TextureView c
     return pressed;
 }
 
-bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView const& view, ImGuiTreeNodeFlags flags)
+bool ImGuiHelpers::tree_node(std::string_view label, Fussion::GPU::TextureView const& view, ImGuiTreeNodeFlags flags)
 {
     ImGuiContext& g = *ImGui::GetCurrentContext();
     ImGuiWindow* window = g.CurrentWindow;
@@ -287,7 +287,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // bool selected = flags & ImGuiTreeNodeFlags_Selected;
 
     float button_sz = g.FontSize + g.Style.FramePadding.y * 2;
-    auto arrow_rect = Fussion::Rect::FromStartEnd(pos, Vector2(pos.x + button_sz, bb.Max.y));
+    auto arrow_rect = Fussion::Rect::from_start_end(pos, Vector2(pos.x + button_sz, bb.Max.y));
     //
     // if (flags & ImGuiTreeNodeFlags_OpenOnArrow) {
     //     if (ImGui::ButtonBehavior(ImRect(pos, ImVec2(pos.x + button_sz, bb.Max.y)), id, &hovered, &held, ImGuiButtonFlags_PressedOnClick))
@@ -324,7 +324,7 @@ bool ImGuiHelpers::TreeNode(std::string_view label, Fussion::GPU::TextureView co
     // - Double-click on arrow = Toggle on MouseDoubleClick (when _OpenOnDoubleClick=1 and _OpenOnArrow=0)
     // It is rather standard that arrow click react on Down rather than Up.
     // We set ImGuiButtonFlags_PressedOnClickRelease on OpenOnDoubleClick because we want the item to be active on the initial MouseDown in order for drag and drop to work.
-    auto is_mouse_x_over_arrow = arrow_rect.Contains(g.IO.MousePos);
+    auto is_mouse_x_over_arrow = arrow_rect.contains_point(g.IO.MousePos);
     if (is_mouse_x_over_arrow)
         button_flags |= ImGuiButtonFlags_PressedOnClick;
     else if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)

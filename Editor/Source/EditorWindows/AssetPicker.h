@@ -11,16 +11,16 @@ public:
 
 private:
     struct Entry {
-        Fussion::AssetHandle Handle {};
-        std::string_view Name {};
-        bool IsVirtual {};
+        Fussion::AssetHandle handle {};
+        std::string_view name {};
+        bool is_virtual {};
     };
 
-    bool m_Show { false };
-    meta_hpp::member m_Member;
-    meta_hpp::uvalue m_Instance;
-    Fussion::AssetType m_Type {};
-    bool m_Opened {};
+    bool m_show { false };
+    meta_hpp::member m_member;
+    meta_hpp::uvalue m_instance;
+    Fussion::AssetType m_type {};
+    bool m_opened {};
 
-    std::vector<Entry> m_Entries {};
+    std::vector<Entry> m_entries {};
 };

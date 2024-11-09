@@ -66,74 +66,74 @@ constexpr s32 MAX_SHADOW_CASCADES = 4;
 constexpr s32 SHADOWMAP_RESOLUTION = 4096;
 
 struct GBuffer {
-    Fussion::GPU::Texture PositionRT;
-    Fussion::GPU::Texture NormalRT;
-    Fussion::GPU::Texture AlbedoRT;
+    Fussion::GPU::Texture position_rt;
+    Fussion::GPU::Texture normal_rt;
+    Fussion::GPU::Texture albedo_rt;
 
-    Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
+    Fussion::AssetRef<Fussion::ShaderAsset> shader_asset {};
 
-    void Init(Vector2 const& size);
-    void Resize(Vector2 const& new_size);
-    void Render(Fussion::GPU::CommandEncoder& encoder);
+    void init(Vector2 const& size);
+    void resize(Vector2 const& new_size);
+    void render(Fussion::GPU::CommandEncoder& encoder);
 };
 
 struct SSAO {
-    Fussion::GPU::Texture RenderTarget {};
-    Fussion::GPU::Texture NoiseTexture {};
-    Fussion::AssetRef<Fussion::ShaderAsset> Shader {};
-    Fussion::GPU::BindGroup BindGroup {};
-    Fussion::GPU::Sampler Sampler {}, NoiseSampler {};
+    Fussion::GPU::Texture render_target {};
+    Fussion::GPU::Texture noise_texture {};
+    Fussion::AssetRef<Fussion::ShaderAsset> shader_asset {};
+    Fussion::GPU::BindGroup bind_group {};
+    Fussion::GPU::Sampler sampler {}, noise_sampler {};
 
-    Fussion::GPU::Buffer SamplesBuffer {};
+    Fussion::GPU::Buffer samples_buffer {};
 
-    Fussion::UniformBuffer<Fussion::PostProcessing::SSAO> Options {};
+    Fussion::UniformBuffer<Fussion::PostProcessing::SSAO> options {};
 
-    void Init(Vector2 const& size, GBuffer const& gbuffer);
-    void Resize(Vector2 const& new_size, GBuffer const& gbuffer);
+    void init(Vector2 const& size, GBuffer const& gbuffer);
+    void resize(Vector2 const& new_size, GBuffer const& gbuffer);
 
-    void UpdateBindGroup(GBuffer const& gbuffer);
+    void update_bind_group(GBuffer const& gbuffer);
 };
 
 class SceneRenderer {
 public:
     struct RenderDebugOptions {
-        s32 CascadeIndex { 0 };
-    } RenderDebugOptions;
+        s32 cascade_index { 0 };
+    } render_debug_options;
 
     struct Timings {
-        f64 Depth {};    // [0, 1]
-        f64 Gbuffer {};  // [2, 3]
-        f64 SSAO {};     // [4, 5]
-        f64 SSAOBlur {}; // [6, 7]
-        f64 PBR {};      // [8, 9]
-    } Timings {};
+        f64 depth {};    // [0, 1]
+        f64 gbuffer {};  // [2, 3]
+        f64 ssao {};     // [4, 5]
+        f64 ssao_blur {}; // [6, 7]
+        f64 pbr {};      // [8, 9]
+    } timings {};
 
     struct PipelineStatistics {
         struct Statistic {
-            u64 VertexShaderInvocations {};
-            u64 ClipperInvocations {};
-            u64 FragmentShaderInvocations {};
+            u64 vertex_shader_invocations {};
+            u64 clipper_invocations {};
+            u64 fragment_shader_invocations {};
         };
 
-        Statistic GbufferStats {};
-        Statistic SSAOStats {};
-        Statistic PBRStats {};
-    } PipelineStatistics {};
+        Statistic gbuffer_stats {};
+        Statistic ssao_stats {};
+        Statistic pbr_stats {};
+    } pipeline_statistics {};
 
-    Fussion::UniformBuffer<ViewData> SceneViewData;
-    Fussion::UniformBuffer<LightData> SceneLightData;
+    Fussion::UniformBuffer<ViewData> scene_view_data;
+    Fussion::UniformBuffer<LightData> scene_light_data;
 
-    Fussion::UniformBuffer<DebugOptions> SceneDebugOptions;
-    Fussion::UniformBuffer<GlobalData> SceneGlobalData;
+    Fussion::UniformBuffer<DebugOptions> scene_debug_options;
+    Fussion::UniformBuffer<GlobalData> scene_global_data;
 
-    Fussion::UniformBuffer<SceneData> SceneSceneData;
+    Fussion::UniformBuffer<SceneData> scene_data;
 
-    void Init();
-    void Resize(Vector2 const& newSize);
+    void init();
+    void resize(Vector2 const& newSize);
 
-    void Render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
+    void render(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet, bool game_view = false);
 
-    auto GetRenderTarget() const -> Fussion::GPU::Texture const& { return m_SceneRenderTarget; }
+    auto render_target() const -> Fussion::GPU::Texture const& { return m_scene_render_target; }
 
     GBuffer gbuffer;
     SSAO ssao;
@@ -141,65 +141,65 @@ public:
 
 private:
     struct InstanceData {
-        Mat4 Model;
+        Mat4 model;
     };
 
     struct DepthInstanceData {
-        Mat4 Model;
-        Mat4 LightSpace;
+        Mat4 model;
+        Mat4 light_space;
     };
 
-    void SetupSceneBindGroup();
-    void UpdateSceneBindGroup(Fussion::GPU::Texture const& ssao_texture);
+    void setup_scene_bind_group();
+    void update_scene_bind_group(Fussion::GPU::Texture const& ssao_texture);
 
-    void SetupShadowPassRenderTarget();
-    void SetupShadowPass();
-    void DepthPass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
-    void PBRPass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
-    void SetupQueries();
+    void setup_shadow_pass_render_target();
+    void setup_shadow_pass();
+    void depth_pass(Fussion::GPU::CommandEncoder& encoder, RenderPacket const& packet);
+    void pbr_pass(Fussion::GPU::CommandEncoder const& encoder, RenderPacket const& packet, bool game_view);
+    void setup_queries();
 
-    void CreateSceneRenderTarget(Vector2 const& size);
+    void create_scene_render_target(Vector2 const& size);
 
-    Fussion::TonemappingPipeline m_TonemappingPipeline {};
-    Fussion::CubeSkybox m_CubeSkybox {};
-    std::map<Fussion::AssetHandle, Fussion::GPU::Texture> m_EnvironmentMaps {};
+    Fussion::TonemappingPipeline m_tonemapping_pipeline {};
+    Fussion::CubeSkybox m_cube_skybox {};
+    std::map<Fussion::AssetHandle, Fussion::GPU::Texture> m_environment_maps {};
 
-    Fussion::GPU::Texture m_SceneRenderTarget {};
-    Fussion::GPU::Texture m_SceneRenderDepthTarget {};
+    Fussion::GPU::Texture m_scene_render_target {};
+    Fussion::GPU::Texture m_scene_render_depth_target {};
 
-    Fussion::GPU::Texture m_ShadowPassRenderTarget {};
-    std::array<Fussion::GPU::TextureView, MAX_SHADOW_CASCADES> m_ShadowPassRenderTargetViews {};
+    Fussion::GPU::Texture m_shadow_pass_render_target {};
+    std::array<Fussion::GPU::TextureView, MAX_SHADOW_CASCADES> m_shadow_pass_render_target_views {};
 
-    Fussion::AssetRef<Fussion::ShaderAsset> m_GridShader {}, m_SkyShader {}, m_DepthShader {}, m_PbrShader {};
+    Fussion::AssetRef<Fussion::ShaderAsset> m_grid_shader {}, m_sky_shader {}, m_depth_shader {}, m_pbr_shader {};
     // Fussion::GPU::RenderPipeline m_PBRPipeline {};
 
-    Fussion::GPU::BindGroup m_GlobalBindGroup {}, m_SceneBindGroup {};
-    Fussion::GPU::BindGroupLayout m_GlobalBindGroupLayout {}, m_SceneBindGroupLayout {};
+    Fussion::GPU::BindGroup m_global_bind_group {}, m_scene_bind_group {};
+    Fussion::GPU::BindGroupLayout m_global_bind_group_layout {}, m_scene_bind_group_layout {};
 
-    std::vector<Fussion::GPU::Buffer> m_InstanceBufferPool {};
+    std::vector<Fussion::GPU::Buffer> m_instance_buffer_pool {};
 
-    Fussion::GPU::Buffer m_PBRInstanceBuffer {}, m_DepthInstanceBuffer {};
-    std::vector<u8> m_PBRInstanceStagingBuffer {};
-    std::vector<u8> m_DepthInstanceStagingBuffer {};
+    Fussion::GPU::Buffer m_pbr_instance_buffer {}, m_depth_instance_buffer {};
+    std::vector<u8> m_pbr_instance_staging_buffer {};
+    std::vector<u8> m_depth_instance_staging_buffer {};
 
-    Fussion::GPU::Sampler m_LinearSampler {};
-    Fussion::GPU::Sampler m_ShadowSampler {};
+    Fussion::GPU::Sampler m_linear_sampler {};
+    Fussion::GPU::Sampler m_shadow_sampler {};
 
-    Fussion::GPU::QuerySet m_TimingsSet {};
+    Fussion::GPU::QuerySet m_timings_set {};
     /// Used to resolve the query set into it.
-    Fussion::GPU::Buffer m_TimingsResolveBuffer {};
+    Fussion::GPU::Buffer m_timings_resolve_buffer {};
     /// Used to read from it on the CPU once we copy the resolve buffer into it.
-    Fussion::GPU::Buffer m_TimingsReadBuffer {};
+    Fussion::GPU::Buffer m_timings_read_buffer {};
 
-    Fussion::GPU::QuerySet m_StatisticsQuerySet {};
+    Fussion::GPU::QuerySet m_statistics_query_set {};
     /// Used to resolve the query set into it.
-    Fussion::GPU::Buffer m_StatisticsResolveBuffer {};
+    Fussion::GPU::Buffer m_statistics_resolve_buffer {};
     /// Used to read from it on the CPU once we copy the resolve buffer into it.
-    Fussion::GPU::Buffer m_StatisticsReadBuffer {};
+    Fussion::GPU::Buffer m_statistics_read_buffer {};
 
-    Vector2 m_RenderArea {};
+    Vector2 m_render_area {};
 
-    Fsn::RenderContext m_RenderContext {};
+    Fsn::RenderContext m_render_context {};
 
-    std::vector<Fussion::GPU::BindGroup> m_ObjectGroupsToRelease {};
+    std::vector<Fussion::GPU::BindGroup> m_object_groups_to_release {};
 };

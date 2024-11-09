@@ -12,12 +12,12 @@ namespace Fussion {
     public:
         COMPONENT_DEFAULT(MeshRenderer)
 
-        virtual void OnStart() override;
-        virtual void OnUpdate(f32 delta) override;
-        virtual void OnDraw(RenderContext& ctx) override;
+        virtual void on_start() override;
+        virtual void on_update(f32 delta) override;
+        virtual void on_draw(RenderContext& ctx) override;
 
 #if FSN_DEBUG_DRAW
-        virtual void OnDebugDraw(DebugDrawContext& ctx) override;
+        virtual void on_debug_draw(DebugDrawContext& ctx) override;
 #endif
 
         [[API, EditorName("Model")]]
@@ -25,13 +25,13 @@ namespace Fussion {
 
         std::vector<AssetRef<PbrMaterial>> Materials {};
 
-        virtual auto Clone() -> Ref<Component> override;
+        virtual auto clone() -> Ref<Component> override;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
     private:
         [[API, NotifyFor("Model")]]
-        void OnModelChanged();
+        void on_model_changed();
     };
 }

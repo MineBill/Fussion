@@ -8,31 +8,31 @@ namespace Fussion {
     public:
         virtual ~Application();
 
-        virtual void OnStart() { }
+        virtual void on_start() { }
 
-        virtual void OnUpdate([[maybe_unused]] f32 delta) { }
+        virtual void on_update([[maybe_unused]] f32 delta) { }
 
-        virtual void OnEvent([[maybe_unused]] Event& event) { }
+        virtual void on_event([[maybe_unused]] Event& event) { }
 
-        virtual void OnLogReceived(
+        virtual void on_log_received(
             [[maybe_unused]] LogLevel level,
             [[maybe_unused]] std::string_view message,
             [[maybe_unused]] std::source_location const& loc) { }
 
-        Window& GetWindow() const { return *m_Window.get(); }
-        static Application* Self() { return s_Instance; }
+        Window& window() const { return *m_window.get(); }
+        static Application* self() { return s_instance; }
 
-        void Run();
+        void run();
 
-        void Quit();
+        void quit();
 
     protected:
-        Ptr<Window> m_Window {};
-        bool m_QuitRequested { false };
+        Ptr<Window> m_window {};
+        bool m_quit_requested { false };
         Ref<LogSink> m_Sink {};
 
     private:
-        static Application* s_Instance;
+        static Application* s_instance;
     };
 }
 

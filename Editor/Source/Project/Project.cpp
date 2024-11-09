@@ -8,7 +8,7 @@
 #include "Fussion/Serialization/YamlSerializer.h"
 #include "Serialization/AssetImporter.h"
 
-Ptr<Project> Project::s_ActiveProject;
+Ptr<Project> Project::s_active_project;
 using namespace Fussion;
 
 constexpr auto ASSETS_FOLDER = "AssetsFolder";
@@ -17,56 +17,56 @@ constexpr auto SCRIPTS_FOLDER = "ScriptsFolder";
 constexpr auto ASSET_REGISTRY = "AssetRegistry";
 constexpr auto LOGS_FOLDER = "Logs";
 
-void Project::Initialize()
+void Project::initialize()
 {
-    s_ActiveProject = MakePtr<Project>();
-    s_ActiveProject->m_AssetManager = MakePtr<EditorAssetManager>();
+    s_active_project = make_ptr<Project>();
+    s_active_project->m_asset_manager = make_ptr<EditorAssetManager>();
 
-    AssetManager::SetActive(s_ActiveProject->m_AssetManager.get());
+    AssetManager::set_active(s_active_project->m_asset_manager.get());
 }
 
-void Project::Save()
+void Project::save()
 {
-    s_ActiveProject->m_AssetManager->SaveToFile();
+    s_active_project->m_asset_manager->save_to_file();
 }
 
-bool Project::Load(fs::path const& path)
+bool Project::load(fs::path const& path)
 {
-    s_ActiveProject->m_ProjectPath = path;
+    s_active_project->m_project_path = path;
     auto const base = path.parent_path();
 
-    auto const data = FileSystem::ReadEntireFile(path);
+    auto const data = FileSystem::read_entire_file(path);
 
     YamlDeserializer ds(*data);
 
-    ds.Read("Name", s_ActiveProject->m_Name);
+    ds.read("Name", s_active_project->m_name);
 
-    ds.Read(ASSETS_FOLDER, s_ActiveProject->m_AssetsFolderPath, base);
-    ds.Read(CACHE_FOLDER, s_ActiveProject->m_CacheFolderPath, base);
-    ds.Read(SCRIPTS_FOLDER, s_ActiveProject->m_ScriptsFolderPath, base);
-    ds.Read(ASSET_REGISTRY, s_ActiveProject->m_AssetRegistryPath, base);
-    ds.Read(LOGS_FOLDER, s_ActiveProject->m_LogsFolderPath, base);
+    ds.read(ASSETS_FOLDER, s_active_project->m_assets_folder_path, base);
+    ds.read(CACHE_FOLDER, s_active_project->m_cache_folder_path, base);
+    ds.read(SCRIPTS_FOLDER, s_active_project->m_scripts_folder_path, base);
+    ds.read(ASSET_REGISTRY, s_active_project->m_asset_registry_path, base);
+    ds.read(LOGS_FOLDER, s_active_project->m_logs_folder_path, base);
 
-    if (!exists(s_ActiveProject->m_AssetsFolderPath)) {
-        LOG_ERRORF("AssetsFolder '{}' does not exist", s_ActiveProject->m_AssetsFolderPath.string());
+    if (!exists(s_active_project->m_assets_folder_path)) {
+        LOG_ERRORF("AssetsFolder '{}' does not exist", s_active_project->m_assets_folder_path.string());
     }
-    if (!exists(s_ActiveProject->m_CacheFolderPath)) {
-        LOG_ERRORF("CacheFolder '{}' does not exist", s_ActiveProject->m_CacheFolderPath.string());
+    if (!exists(s_active_project->m_cache_folder_path)) {
+        LOG_ERRORF("CacheFolder '{}' does not exist", s_active_project->m_cache_folder_path.string());
     }
-    if (!exists(s_ActiveProject->m_ScriptsFolderPath)) {
-        LOG_ERRORF("ScriptsFolder '{}' does not exist", s_ActiveProject->m_ScriptsFolderPath.string());
+    if (!exists(s_active_project->m_scripts_folder_path)) {
+        LOG_ERRORF("ScriptsFolder '{}' does not exist", s_active_project->m_scripts_folder_path.string());
     }
-    if (!exists(s_ActiveProject->m_AssetRegistryPath)) {
-        LOG_ERRORF("AssetRegistry '{}' does not exist", s_ActiveProject->m_AssetRegistryPath.string());
+    if (!exists(s_active_project->m_asset_registry_path)) {
+        LOG_ERRORF("AssetRegistry '{}' does not exist", s_active_project->m_asset_registry_path.string());
     }
-    if (!exists(s_ActiveProject->m_LogsFolderPath)) {
-        LOG_ERRORF("Logs folder '{}' does not exist", s_ActiveProject->m_LogsFolderPath.string());
+    if (!exists(s_active_project->m_logs_folder_path)) {
+        LOG_ERRORF("Logs folder '{}' does not exist", s_active_project->m_logs_folder_path.string());
     }
-    s_ActiveProject->m_AssetManager->LoadFromFile();
+    s_active_project->m_asset_manager->load_from_file();
     return true;
 }
 
-auto Project::GenerateProject(fs::path const& path, std::string_view name) -> fs::path
+auto Project::generate_project(fs::path const& path, std::string_view name) -> fs::path
 {
 
     auto fullPath = path / name;
@@ -83,26 +83,26 @@ auto Project::GenerateProject(fs::path const& path, std::string_view name) -> fs
         // project[ASSET_REGISTRY] = "AssetRegistry.json";
         // project[LOGS_FOLDER] = "Logs";
 
-        s.Write("Name", name);
-        s.Write(ASSETS_FOLDER, "Assets");
-        s.Write(CACHE_FOLDER, "Cache");
-        s.Write(SCRIPTS_FOLDER, "Scripts");
-        s.Write(ASSET_REGISTRY, "AssetRegistry.fsn");
-        s.Write(LOGS_FOLDER, "Logs");
+        s.write("Name", name);
+        s.write(ASSETS_FOLDER, "Assets");
+        s.write(CACHE_FOLDER, "Cache");
+        s.write(SCRIPTS_FOLDER, "Scripts");
+        s.write(ASSET_REGISTRY, "AssetRegistry.fsn");
+        s.write(LOGS_FOLDER, "Logs");
 
         create_directory(fullPath / "Assets");
         create_directory(fullPath / "Cache");
         create_directory(fullPath / "Scripts");
         create_directory(fullPath / "Logs");
 
-        FileSystem::WriteEntireFile(fullPath / "AssetRegistry.fsn", "");
+        FileSystem::write_entire_file(fullPath / "AssetRegistry.fsn", "");
 
         std::string nameWithExt(name);
         nameWithExt += ".fsnproj";
 
         auto projectPath = fullPath / nameWithExt;
         LOG_DEBUGF("Writing project file to {}", projectPath);
-        FileSystem::WriteEntireFile(projectPath, s.ToString());
+        FileSystem::write_entire_file(projectPath, s.to_string());
         return projectPath;
     } catch (fs::filesystem_error const& error) {
         LOG_ERRORF("Failed to create directory for project creation: {}", error.what());

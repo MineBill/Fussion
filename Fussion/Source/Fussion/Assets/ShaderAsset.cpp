@@ -22,8 +22,8 @@ namespace Fussion {
 
     ShaderAsset::ShaderAsset(GPU::ShaderProcessor::CompiledShader const& compiledShader, std::vector<GPU::TextureFormat> colorTargetFormats)
     {
-        m_Metadata = compiledShader.Metadata;
-        m_ColorTargetFormats = colorTargetFormats;
+        m_metadata = compiledShader.Metadata;
+        m_color_target_formats = colorTargetFormats;
         usz shaderOutputCount = compiledShader.Metadata.ColorOutputs.size();
         usz targetFormatCount = colorTargetFormats.size();
         if (shaderOutputCount != targetFormatCount) {
@@ -46,15 +46,15 @@ namespace Fussion {
                     .Count = CAST(u32, resource.Count),
                 });
             }
-            auto layout = Renderer::Device().CreateBindGroupLayout({
+            auto layout = Renderer::device().CreateBindGroupLayout({
                 .Label = "asd"sv,
                 .Entries = entries,
             });
-            m_BindGroupLayouts[setIndex] = layout;
+            m_bind_group_layouts[setIndex] = layout;
             layouts.emplace_back(layout);
         }
 
-        auto layout = Renderer::Device().CreatePipelineLayout({ .BindGroupLayouts = layouts });
+        auto layout = Renderer::device().CreatePipelineLayout({ .BindGroupLayouts = layouts });
 
         GPU::RenderPipelineSpec spec {
             .Label = "Pipeline"sv,
@@ -69,7 +69,7 @@ namespace Fussion {
         };
 
         if (compiledShader.Metadata.DepthState) {
-            spec.DepthStencil = compiledShader.Metadata.DepthState.Unwrap();
+            spec.DepthStencil = compiledShader.Metadata.DepthState.unwrap();
         } else if (compiledShader.Metadata.UseDepth) {
             spec.DepthStencil = GPU::DepthStencilState::Default();
         }
@@ -114,15 +114,15 @@ namespace Fussion {
             .Label = "Shader"sv,
             .Data = const_cast<std::vector<u32>&>(compiledShader.VertexStage),
         };
-        auto vertexShader = Renderer::Device().CreateShaderModuleSpirV(vsShaderSpec);
+        auto vertexShader = Renderer::device().CreateShaderModuleSpirV(vsShaderSpec);
 
         GPU::SpirVShaderSpec fsShaderSpec {
             .Label = "Shader"sv,
             .Data = const_cast<std::vector<u32>&>(compiledShader.FragmentStage),
         };
-        auto fragmentShader = Renderer::Device().CreateShaderModuleSpirV(fsShaderSpec);
+        auto fragmentShader = Renderer::device().CreateShaderModuleSpirV(fsShaderSpec);
 
-        m_Pipeline = Renderer::Device().CreateRenderPipeline(vertexShader, fragmentShader, spec);
+        m_pipeline = Renderer::device().CreateRenderPipeline(vertexShader, fragmentShader, spec);
     }
 
     ShaderAsset::~ShaderAsset()
@@ -134,10 +134,10 @@ namespace Fussion {
         // m_Pipeline.Release();
     }
 
-    Maybe<GPU::BindGroupLayout> ShaderAsset::GetBindGroupLayout(u32 index)
+    Maybe<GPU::BindGroupLayout> ShaderAsset::get_bind_group_layout_for(u32 index)
     {
-        if (m_BindGroupLayouts.contains(index)) {
-            return m_BindGroupLayouts[index];
+        if (m_bind_group_layouts.contains(index)) {
+            return m_bind_group_layouts[index];
         }
         return None();
     }

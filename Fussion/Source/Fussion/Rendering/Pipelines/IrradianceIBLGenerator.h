@@ -8,30 +8,30 @@ namespace Fussion {
     class IrradianceIBLGenerator {
     public:
         ~IrradianceIBLGenerator();
-        void Initialize();
+        void init();
 
-        auto Generate(GPU::Texture const& inputTexture) -> GPU::Texture;
+        auto generate(GPU::Texture const& inputTexture) -> GPU::Texture;
 
     private:
-        auto GenerateCubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture;
-        auto GenerateConvolutedCubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture;
+        auto generate_cubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture;
+        auto generate_convoluted_cubemap(GPU::CommandEncoder& encoder, GPU::Texture const& inputTexture) -> GPU::Texture;
 
         struct ViewData {
-            Mat4 View {};
+            Mat4 view {};
         };
-        std::array<UniformBuffer<ViewData>, 6> m_PerFaceViewData {};
+        std::array<UniformBuffer<ViewData>, 6> m_per_face_view_data {};
 
-        Ref<ShaderAsset> m_CubeMapGeneratorShader {};
-        GPU::BindGroup m_BindGroup {};
+        Ref<ShaderAsset> m_cube_map_generator_shader {};
+        GPU::BindGroup m_bind_group {};
 
-        Ref<ShaderAsset> m_CubeMapConvolutionShader {};
-        GPU::BindGroup m_ConvBindGroup {};
+        Ref<ShaderAsset> m_cube_map_convolution_shader {};
+        GPU::BindGroup m_conv_bind_group {};
 
-        std::array<GPU::Texture, 6> m_RenderTextures {};
-        GPU::Sampler m_Sampler {};
+        std::array<GPU::Texture, 6> m_render_textures {};
+        GPU::Sampler m_sampler {};
 
-        GPU::Buffer m_CubeVertexBuffer {};
+        GPU::Buffer m_cube_vertex_buffer {};
 
-        std::array<Mat4, 6> m_CaptureViews {};
+        std::array<Mat4, 6> m_capture_views {};
     };
 }

@@ -1,17 +1,17 @@
 ﻿#include "Math.h"
 
 namespace Fussion::Math {
-    auto FloorLog2(s32 value) -> s32
+    auto floor_log2(s32 value) -> s32
     {
-        return 31 - CountLeadingZeros(CAST(u32, value));
+        return 31 - count_leading_zeros(CAST(u32, value));
     }
 
-    auto FloorLog2(s64 value) -> s64
+    auto floor_log2(s64 value) -> s64
     {
-        return 61 - CountLeadingZeros(CAST(u64, value));
+        return 61 - count_leading_zeros(CAST(u64, value));
     }
 
-    auto CountLeadingZeros(u32 value) -> u32
+    auto count_leading_zeros(u32 value) -> u32
     {
 #if _MSC_VER
         return __lzcnt(value);
@@ -20,7 +20,7 @@ namespace Fussion::Math {
 #endif
     }
 
-    auto CountLeadingZeros(u64 value) -> u64
+    auto count_leading_zeros(u64 value) -> u64
     {
 #if _MSC_VER
         return __lzcnt64(value);
@@ -29,7 +29,7 @@ namespace Fussion::Math {
 #endif
     }
 
-    auto GetFrustumCornersWorldSpace(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>
+    auto get_frustum_corners_world_space(Mat4 const& proj, Mat4 const& view) -> std::array<Vector4, 8>
     {
         auto inv = glm::inverse(proj * view);
         std::array<Vector4, 8> corners;

@@ -5,58 +5,58 @@
 
 namespace Fussion {
     AssetRefBase::AssetRefBase(AssetHandle handle)
-        : m_Handle(handle)
+        : m_handle(handle)
     {
-        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
-            m_IsValid = false;
+        if (!AssetManager::is_asset_handle_valid(m_handle)) {
+            m_is_valid = false;
         }
     }
 
-    bool AssetRefBase::IsLoaded() const
+    bool AssetRefBase::is_loaded() const
     {
-        if (!IsValid())
+        if (!is_valid())
             return false;
-        return AssetManager::IsAssetLoaded(m_Handle);
+        return AssetManager::is_asset_loaded(m_handle);
     }
 
-    bool AssetRefBase::IsVirtual() const
+    bool AssetRefBase::is_virtual() const
     {
-        return AssetManager::IsAssetVirtual(m_Handle);
+        return AssetManager::is_asset_virtual(m_handle);
     }
 
-    void AssetRefBase::SetHandle(AssetHandle handle)
+    void AssetRefBase::set_handle(AssetHandle handle)
     {
-        m_Handle = handle;
-        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
-            m_IsValid = false;
+        m_handle = handle;
+        if (!AssetManager::is_asset_handle_valid(m_handle)) {
+            m_is_valid = false;
         }
     }
 
-    void AssetRefBase::WaitUntilLoaded() const
+    void AssetRefBase::wait_until_loaded() const
     {
         // Call once to trigger a load.
-        (void)GetRaw(GetType());
+        (void)raw(type());
         // TODO: Fishy
-        while (!IsLoaded()) { }
+        while (!is_loaded()) { }
     }
 
-    void AssetRefBase::Serialize(Serializer& ctx) const
+    void AssetRefBase::serialize(Serializer& ctx) const
     {
-        ctx.Write("Handle", IsVirtual() ? 0_u64 : CAST(u64, this->m_Handle));
+        ctx.write("Handle", is_virtual() ? 0_u64 : CAST(u64, this->m_handle));
     }
 
-    void AssetRefBase::Deserialize(Deserializer& ctx)
+    void AssetRefBase::deserialize(Deserializer& ctx)
     {
-        if (IsVirtual())
+        if (is_virtual())
             return;
-        ctx.Read("Handle", this->m_Handle);
+        ctx.read("Handle", this->m_handle);
     }
 
-    Asset* AssetRefBase::GetRaw(AssetType type) const
+    Asset* AssetRefBase::raw(AssetType type) const
     {
-        if (!AssetManager::IsAssetHandleValid(m_Handle)) {
+        if (!AssetManager::is_asset_handle_valid(m_handle)) {
             return nullptr;
         }
-        return AssetManager::GetAsset(m_Handle, type);
+        return AssetManager::get_asset(m_handle, type);
     }
 }

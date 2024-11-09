@@ -10,12 +10,12 @@ namespace Fussion {
             f32 h {}, s {}, l {}, a {};
 
             [[nodiscard]]
-            static constexpr HSL FromRGB(Color color)
+            static constexpr HSL from_rgb(Color color)
             {
                 HSL hsl;
                 hsl.a = color.a;
-                auto max = Math::Max(color.r, color.g, color.b);
-                auto min = Math::Min(color.r, color.g, color.b);
+                auto max = Math::max(color.r, color.g, color.b);
+                auto min = Math::min(color.r, color.g, color.b);
 
                 hsl.l = (min + max) / 2.0f;
 
@@ -75,7 +75,7 @@ namespace Fussion {
         { }
 
         [[nodiscard]]
-        static constexpr Color FromHex(u32 hex)
+        static constexpr Color from_hex(u32 hex)
         {
             return {
                 CAST(f32, hex >> 24) / 256.f,
@@ -86,7 +86,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color FromRGBA(u8 r, u8 g, u8 b, u8 a = 255)
+        static constexpr Color from_rgba(u8 r, u8 g, u8 b, u8 a = 255)
         {
             return {
                 CAST(f32, r) / 255.f,
@@ -97,7 +97,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr Color FromHSL(HSL hsl)
+        static constexpr Color from_hsl(HSL hsl)
         {
             Color color;
 
@@ -134,28 +134,28 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        constexpr Color Lighten(f32 percent) const
+        constexpr Color lighten(f32 percent) const
         {
-            auto hsl = ToHSL();
+            auto hsl = to_hsl();
             hsl.l += percent;
-            return FromHSL(hsl);
+            return from_hsl(hsl);
         }
 
         [[nodiscard]]
-        constexpr Color Darken(f32 percent) const
+        constexpr Color darken(f32 percent) const
         {
-            auto hsl = ToHSL();
+            auto hsl = to_hsl();
             hsl.l -= percent;
-            return FromHSL(hsl);
+            return from_hsl(hsl);
         }
 
         [[nodiscard]]
-        constexpr HSL ToHSL() const
+        constexpr HSL to_hsl() const
         {
-            return HSL::FromRGB(*this);
+            return HSL::from_rgb(*this);
         }
 
-        u32 ToABGR() const;
+        u32 to_abgr() const;
 
         static Color const White;
         static Color const Red;
@@ -218,6 +218,6 @@ using Fussion::Color;
 using HSL = Fussion::Color::HSL;
 #endif
 
-FSN_MAKE_FORMATTABLE(Fussion::Color, "Color(R: {}, G: {}, B: {}, A: {})", v.r, v.g, v.b, v.a)
+FSN_MAKE_FORMATTABLE(Fussion::Color, "Color(r: {}, g: {}, b: {}, a: {})", v.r, v.g, v.b, v.a)
 
-FSN_MAKE_FORMATTABLE(Fussion::Color::HSL, "HSL(H: {}, S: {}, L: {}, A: {})", v.h, v.s, v.l, v.a)
+FSN_MAKE_FORMATTABLE(Fussion::Color::HSL, "HSL(h: {}, s: {}, l: {}, a: {})", v.h, v.s, v.l, v.a)

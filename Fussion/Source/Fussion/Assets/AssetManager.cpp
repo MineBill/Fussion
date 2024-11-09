@@ -4,10 +4,10 @@
 #include <utility>
 
 namespace Fussion {
-    AssetManagerBase* AssetManager::s_Active;
+    AssetManagerBase* AssetManager::s_active;
 
-    void AssetManager::SetActive(AssetManagerBase* manager)
+    void AssetManager::set_active(AssetManagerBase* manager)
     {
-        s_Active = manager;
+        s_active = manager;
     }
 }

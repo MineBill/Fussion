@@ -5,54 +5,54 @@
 
 namespace Fussion {
     struct Data {
-        System::Info Info {};
+        System::Info info {};
     };
 
-    static Data g_Data;
+    static Data g_data;
 
-    void System::Initialize()
+    void System::initialize()
     {
-        if (auto cstr = std::getenv("XDG_CURRENT_DESKTOP")) {
-            auto desktop = std::string(cstr);
+        if (auto xdg_current_desktop = std::getenv("XDG_CURRENT_DESKTOP")) {
+            auto desktop = std::string(xdg_current_desktop);
             if (desktop == "KDE") {
-                g_Data.Info.Desktop = Desktop::KDE;
+                g_data.info.desktop = Desktop::KDE;
             } else if (desktop == "GNOME") {
-                g_Data.Info.Desktop = Desktop::Gnome;
+                g_data.info.desktop = Desktop::Gnome;
             }
         } else {
             LOG_WARNF("XDG_CURRENT_DESKTOP not set, cannot determine current desktop environment");
         }
 
-        if (auto cstr = std::getenv("FSN_LINUX_X11")) {
-            g_Data.Info.WindowingSystem = WindowingSystem::X11;
+        if (std::getenv("FSN_LINUX_X11")) {
+            g_data.info.windowing_system = WindowingSystem::X11;
         } else {
-            if (cstr = std::getenv("XDG_SESSION_TYPE"); cstr) {
-                auto session = std::string(cstr);
+            if (auto xdg_session_type = std::getenv("XDG_SESSION_TYPE"); xdg_session_type) {
+                auto session = std::string(xdg_session_type);
                 if (session == "wayland") {
-                    g_Data.Info.WindowingSystem = WindowingSystem::Wayland;
+                    g_data.info.windowing_system = WindowingSystem::Wayland;
                 } else if (session == "x11") {
-                    g_Data.Info.WindowingSystem = WindowingSystem::X11;
+                    g_data.info.windowing_system = WindowingSystem::X11;
                 }
             }
         }
     }
 
-    System::Info const& System::GetSystemInfo()
+    System::Info const& System::system_info()
     {
-        return g_Data.Info;
+        return g_data.info;
     }
 
-    bool System::PrefersDark()
+    bool System::prefers_dark()
     {
-        return !PrefersLight();
+        return !prefers_light();
     }
 
-    bool System::PrefersLight()
+    bool System::prefers_light()
     {
         return false;
     }
 
-    auto System::GetKnownFolder(KnownFolders folder) -> std::filesystem::path
+    auto System::get_known_folder(KnownFolders folder) -> std::filesystem::path
     {
         std::filesystem::path home = std::getenv("HOME");
         if (home.empty()) {
@@ -93,9 +93,8 @@ namespace Fussion {
         return path;
     }
 
-    bool System::ConsoleSupportsColor()
+    bool System::does_console_support_color()
     {
         return false;
     }
-
 }

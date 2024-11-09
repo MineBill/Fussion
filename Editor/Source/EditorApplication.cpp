@@ -31,7 +31,7 @@ namespace {
 #    include "battery/embed.hpp"
 #endif
 
-EditorApplication* EditorApplication::s_EditorInstance;
+EditorApplication* EditorApplication::s_editor_instance;
 
 Ptr<ProjectCreatorLayer> g_ProjectCreator;
 Ptr<Editor> g_Editor;
@@ -39,66 +39,66 @@ Ptr<ImGuiLayer> g_Imgui;
 
 EditorApplication::EditorApplication()
 {
-    m_Args = argparse::parse<EditorCLI>(Args::Argc(), Args::Argv());
+    m_args = argparse::parse<EditorCLI>(Args::argc(), Args::argv());
 }
 
-void EditorApplication::OnStart()
+void EditorApplication::on_start()
 {
     ZoneScoped;
 
-    s_EditorInstance = this;
+    s_editor_instance = this;
 
-    Project::Initialize();
+    Project::initialize();
 
 #ifndef IS_XMAKE
     auto LOGO32_DATA = b::embed<"Assets/Icons/logo_32.png">().vec();
 #endif
-    auto image = TextureLoader::LoadImageFromMemory(LOGO32_DATA).Unwrap();
-    m_Window->SetIcon(image);
+    auto image = TextureLoader::load_image_from_memory(LOGO32_DATA).unwrap();
+    m_window->set_icon(image);
 
-    g_Imgui = MakePtr<ImGuiLayer>();
-    g_Imgui->Initialize();
+    g_Imgui = make_ptr<ImGuiLayer>();
+    g_Imgui->initialize();
 
-    EditorStyle::Style().Initialize();
+    EditorStyle::style().initialize();
 
-    if (m_Args.CreateProject) {
-        if (auto project = m_Args.ProjectPath) {
-            auto path = CreateProject(std::filesystem::path(*project), "EmptyProject");
-            CreateEditor(path);
+    if (m_args.create_project) {
+        if (auto project = m_args.project_path) {
+            auto path = create_project(std::filesystem::path(*project), "EmptyProject");
+            create_editor(path);
         } else {
             PANIC("Must provide path with the create option");
         }
     } else {
-        if (auto project = m_Args.ProjectPath) {
-            CreateEditor(std::filesystem::path(*project));
+        if (auto project = m_args.project_path) {
+            create_editor(std::filesystem::path(*project));
         } else {
-            g_ProjectCreator = MakePtr<ProjectCreatorLayer>();
-            g_ProjectCreator->OnStart();
+            g_ProjectCreator = make_ptr<ProjectCreatorLayer>();
+            g_ProjectCreator->on_start();
         }
     }
 
-    Application::OnStart();
+    Application::on_start();
 }
 
-void EditorApplication::OnUpdate(f32 delta)
+void EditorApplication::on_update(f32 delta)
 {
     ZoneScoped;
     using namespace Fussion;
 
-    g_Imgui->Begin();
+    g_Imgui->begin();
 
     if (g_ProjectCreator)
-        g_ProjectCreator->OnUpdate(delta);
+        g_ProjectCreator->on_update(delta);
     if (g_Editor)
-        g_Editor->OnUpdate(delta);
+        g_Editor->on_update(delta);
 
-    auto view = Renderer::BeginRendering();
+    auto view = Renderer::begin_rendering();
     if (!view) {
-        g_Imgui->End(None());
+        g_Imgui->end(None());
         return;
     }
 
-    auto encoder = Renderer::Device().CreateCommandEncoder();
+    auto encoder = Renderer::device().CreateCommandEncoder();
 
     std::array colorAttachments {
         GPU::RenderPassColorAttachment {
@@ -114,87 +114,87 @@ void EditorApplication::OnUpdate(f32 delta)
     };
 
     if (g_ProjectCreator)
-        g_ProjectCreator->OnDraw(encoder);
+        g_ProjectCreator->on_draw(encoder);
     if (g_Editor)
-        g_Editor->OnDraw(encoder);
+        g_Editor->on_draw(encoder);
 
     auto main_rp = encoder.BeginRendering(rp_spec);
 
-    g_Imgui->End(main_rp);
+    g_Imgui->end(main_rp);
 
     main_rp.End();
     main_rp.Release();
 
     auto cmd = encoder.Finish();
-    Renderer::EndRendering(cmd);
+    Renderer::end_rendering(cmd);
     encoder.Release();
     view->Release();
 }
 
-void EditorApplication::OnEvent(Event& event)
+void EditorApplication::on_event(Event& event)
 {
     if (g_ProjectCreator)
-        g_ProjectCreator->OnEvent(event);
+        g_ProjectCreator->on_event(event);
     if (g_Editor)
-        g_Editor->OnEvent(event);
+        g_Editor->on_event(event);
 
     EventDispatcher dispatcher(event);
-    dispatcher.Dispatch<WindowResized>([](WindowResized const& e) {
-        Renderer::Resize({ e.Width, e.Height });
+    dispatcher.dispatch<WindowResized>([](WindowResized const& e) {
+        Renderer::resize({ e.width, e.height });
         return false;
     });
 }
 
-void EditorApplication::OnLogReceived(LogLevel level, std::string_view message, std::source_location const& loc)
+void EditorApplication::on_log_received(LogLevel level, std::string_view message, std::source_location const& loc)
 {
     if (g_ProjectCreator)
-        g_ProjectCreator->OnLogReceived(level, message, loc);
+        g_ProjectCreator->on_log_received(level, message, loc);
     if (g_Editor)
-        g_Editor->OnLogReceived(level, message, loc);
+        g_Editor->on_log_received(level, message, loc);
 }
 
-auto EditorApplication::CreateProject(Maybe<fs::path> path, std::string_view name) -> fs::path
+auto EditorApplication::create_project(Maybe<fs::path> path, std::string_view name) -> fs::path
 {
-    if (path.IsEmpty() || !is_directory(*path)) {
-        path = Dialogs::ShowDirectoryPicker();
+    if (path.is_empty() || !is_directory(*path)) {
+        path = Dialogs::show_directory_picker();
     }
 
-    return Project::GenerateProject(*path, name);
+    return Project::generate_project(*path, name);
 }
 
-void EditorApplication::CreateEditor(Maybe<fs::path> path)
+void EditorApplication::create_editor(Maybe<fs::path> path)
 {
-    if (path.IsEmpty() || !exists(*path)) {
-        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
+    if (path.is_empty() || !exists(*path)) {
+        path = Dialogs::show_file_picker("Fussion Project", { "*.fsnproj" })[0];
     }
 
-    bool loaded = Project::Load(*path);
+    bool loaded = Project::load(*path);
     VERIFY(loaded, "Project loading must not fail, for now.");
 
-    g_Editor = MakePtr<Editor>();
+    g_Editor = make_ptr<Editor>();
 
     auto now = std::chrono::system_clock::now();
     auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::LogsFolderPath() / log_file));
+    Log::default_logger()->register_sink(FileSink::Create(Project::logs_folder_path() / log_file));
 }
 
-void EditorApplication::CreateEditorFromProjectCreator(fs::path path)
+void EditorApplication::create_editor_from_project_creator(fs::path path)
 {
     (void)g_ProjectCreator.release();
 
     if (!exists(path)) {
-        path = Dialogs::ShowFilePicker("Fussion Project", { "*.fsnproj" })[0];
+        path = Dialogs::show_file_picker("Fussion Project", { "*.fsnproj" })[0];
     }
 
-    bool loaded = Project::Load(path);
+    bool loaded = Project::load(path);
     VERIFY(loaded, "Project loading must not fail, for now.");
 
-    g_Editor = MakePtr<Editor>();
-    g_Editor->OnStart();
+    g_Editor = make_ptr<Editor>();
+    g_Editor->on_start();
 
     auto now = std::chrono::system_clock::now();
     auto log_file = fmt::format("{:%y-%m-%d_%H-%M}.log", now);
 
-    Log::DefaultLogger()->RegisterSink(FileSink::Create(Project::LogsFolderPath() / log_file));
+    Log::default_logger()->register_sink(FileSink::Create(Project::logs_folder_path() / log_file));
 }

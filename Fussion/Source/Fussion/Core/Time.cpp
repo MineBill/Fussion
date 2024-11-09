@@ -2,31 +2,31 @@
 #include "Time.h"
 
 namespace Fussion {
-    f32 Time::m_DeltaTime { 0.0f };
-    f32 AverageDelta { 0.0f };
-    f32 SmoothDelta { 0.0f };
+    f32 Time::m_delta_time { 0.0f };
+    f32 g_average_delta { 0.0f };
+    f32 g_smooth_delta { 0.0f };
 
-    f32 Time::DeltaTime()
+    f32 Time::delta_time()
     {
-        return m_DeltaTime;
+        return m_delta_time;
     }
 
-    f32 Time::SmoothDeltaTime()
+    f32 Time::smooth_delta_time()
     {
-        return SmoothDelta;
+        return g_smooth_delta;
     }
 
-    void Time::SetDeltaTime(f32 delta_time)
+    void Time::set_delta_time(f32 delta_time)
     {
-        m_DeltaTime = delta_time;
+        m_delta_time = delta_time;
 
         constexpr auto frames = 16;
         static u64 counter = 0;
 
-        AverageDelta += delta_time;
+        g_average_delta += delta_time;
         if (counter++ % frames == 0) {
-            SmoothDelta = AverageDelta / CAST(f32, frames);
-            AverageDelta = 0.0f;
+            g_smooth_delta = g_average_delta / CAST(f32, frames);
+            g_average_delta = 0.0f;
         }
     }
 }

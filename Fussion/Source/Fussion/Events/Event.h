@@ -1,15 +1,15 @@
 #pragma once
 #include <functional>
 
-#define EVENT(name)                    \
-    static EventType StaticType()      \
-    {                                  \
-        return EventType::name;        \
-    }                                  \
-                                       \
-    EventType GetType() const override \
-    {                                  \
-        return StaticType();           \
+#define EVENT(name)                 \
+    static EventType static_type()  \
+    {                               \
+        return EventType::name;     \
+    }                               \
+                                    \
+    EventType type() const override \
+    {                               \
+        return static_type();       \
     }
 
 namespace Fussion {
@@ -36,35 +36,35 @@ namespace Fussion {
         friend class EventDispatcher;
 
     public:
-        bool Handled { false };
+        bool handled { false };
 
         virtual ~Event() = default;
 
         [[nodiscard]]
-        virtual EventType GetType() const
+        virtual EventType type() const
             = 0;
     };
 
     using EventFnType = std::function<bool(Event&)>;
 
     class EventDispatcher {
-        Event* m_Event;
+        Event* m_event;
 
     public:
         template<std::derived_from<Event> T>
         using EventFn = std::function<bool(T&)>;
 
         explicit EventDispatcher(Event& e)
-            : m_Event(&e)
+            : m_event(&e)
         { }
 
         template<std::derived_from<Event> T>
-        void Dispatch(EventFn<T> fn)
+        void dispatch(EventFn<T> fn)
         {
-            if (m_Event->Handled || m_Event->GetType() != T::StaticType())
+            if (m_event->handled || m_event->type() != T::static_type())
                 return;
 
-            m_Event->Handled = fn(dynamic_cast<T&>(*m_Event));
+            m_event->handled = fn(dynamic_cast<T&>(*m_event));
         }
     };
 } // namespace Fussion

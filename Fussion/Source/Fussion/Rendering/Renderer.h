@@ -6,42 +6,42 @@
 namespace Fussion {
     class Renderer {
     public:
-        static void Initialize(Window const& window);
-        static void Shutdown();
+        static void initialize(Window const& window);
+        static void shutdown();
 
-        static auto BeginRendering() -> Maybe<GPU::TextureView>;
-        static void EndRendering(GPU::CommandBuffer cmd);
-        static void Resize(Vector2 const& new_size);
-
-        [[nodiscard]]
-        static auto Device() -> GPU::Device&;
+        static auto begin_rendering() -> Maybe<GPU::TextureView>;
+        static void end_rendering(GPU::CommandBuffer cmd);
+        static void resize(Vector2 const& new_size);
 
         [[nodiscard]]
-        static auto Surface() -> GPU::Surface&;
+        static auto device() -> GPU::Device&;
 
         [[nodiscard]]
-        static auto GPUInstance() -> GPU::Instance&;
+        static auto surface() -> GPU::Surface&;
 
         [[nodiscard]]
-        static auto DefaultMaterial() -> AssetRef<PbrMaterial>;
+        static auto gpu_instance() -> GPU::Instance&;
 
         [[nodiscard]]
-        static auto DefaultNormalMap() -> AssetRef<Texture2D>;
+        static auto default_material() -> AssetRef<PbrMaterial>;
 
         [[nodiscard]]
-        static auto WhiteTexture() -> AssetRef<Texture2D>;
+        static auto default_normal_map() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto BlackTexture() -> AssetRef<Texture2D>;
+        static auto white_texture() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static auto WhiteCubeTexture() -> GPU::Texture;
-
-        static bool HasPipelineStatistics();
+        static auto black_texture() -> AssetRef<Texture2D>;
 
         [[nodiscard]]
-        static GPU::Texture GenerateIrradianceMap(GPU::Texture const& texture);
+        static auto white_cube_texture() -> GPU::Texture;
 
-        static void CreateDefaultResources();
+        static bool supports_pipeline_statistics();
+
+        [[nodiscard]]
+        static GPU::Texture generate_irradiance_map(GPU::Texture const& texture);
+
+        static void create_default_resources();
     };
 }

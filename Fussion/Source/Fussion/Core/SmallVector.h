@@ -11,7 +11,7 @@ namespace Fussion {
     template<typename T, size_t N, bool EnableLogging = false>
     class SmallVector {
     public:
-        constexpr Result<void, SmallVectorError> Append(T&& value)
+        constexpr Result<void, SmallVectorError> append(T&& value)
         {
             if (m_index >= N) {
                 if constexpr (EnableLogging) {
@@ -24,15 +24,15 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        constexpr T& Pop()
+        constexpr T& pop()
         {
             return m_array[--m_index];
         }
 
         [[nodiscard]]
-        constexpr T* Data()
+        constexpr T* data()
         {
-            return m_array.Data();
+            return m_array.data();
         }
 
         [[nodiscard]]
@@ -42,7 +42,7 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        static constexpr size_t Capacity()
+        static constexpr size_t capacity()
         {
             return N;
         }

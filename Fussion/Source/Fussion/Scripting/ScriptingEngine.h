@@ -11,14 +11,14 @@ namespace Fussion {
         ScriptingEngine();
 
     public:
-        static ScriptingEngine& Self() { return *s_Instance; }
+        static ScriptingEngine& self() { return *s_instance; }
 
-        static void Initialize();
-        static void Shutdown();
+        static void initialize();
+        static void shutdown();
 
-        auto DumpCurrentTypes() const -> std::stringstream;
+        auto dump_current_types() const -> std::stringstream;
 
-        void RegisterTypes();
+        void register_types();
 
         /**
          * Reads all scripts in path and compiles them into a module. If the module
@@ -27,22 +27,22 @@ namespace Fussion {
          * @param module_name The name of the assembly.
          * @return
          */
-        auto CompileAssembly(std::filesystem::path const& path, std::string const& module_name) -> Ref<ScriptAssembly>;
+        auto compile_assembly(std::filesystem::path const& path, std::string const& module_name) -> Ref<ScriptAssembly>;
 
-        void ParseAttributes(CScriptBuilder& builder, ScriptAssembly& assembly);
+        void parse_attributes(CScriptBuilder& builder, ScriptAssembly& assembly);
 
-        auto CompileGameAssembly(std::filesystem::path const& path) -> Ref<ScriptAssembly>;
-        auto GetGameAssembly() -> Ref<ScriptAssembly>;
+        auto compile_game_assembly(std::filesystem::path const& path) -> Ref<ScriptAssembly>;
+        auto game_assembly() -> Ref<ScriptAssembly>;
 
-        auto GetAssembly(std::string const& name) -> Ref<ScriptAssembly> { return m_LoadedAssemblies[name]; }
-        auto GetLoadedAssemblies() -> std::unordered_map<std::string, Ref<ScriptAssembly>>& { return m_LoadedAssemblies; }
+        auto get_assembly(std::string const& name) -> Ref<ScriptAssembly> { return m_loaded_assemblies[name]; }
+        auto loaded_assemblies() -> std::unordered_map<std::string, Ref<ScriptAssembly>>& { return m_loaded_assemblies; }
 
-        auto GetTypeInfo(s32 typeId) -> asITypeInfo*;
+        auto type_info_for(s32 typeId) -> asITypeInfo*;
 
         template<typename T>
-        static auto GetAttribute(Uuid uuid) -> T*
+        static auto get_attribute(Uuid uuid) -> T*
         {
-            for (auto& attribute : s_Instance->m_Attributes[uuid]) {
+            for (auto& attribute : s_instance->m_attributes[uuid]) {
                 if (auto attr = dynamic_cast<T*>(attribute.get())) {
                     return attr;
                 }
@@ -51,10 +51,10 @@ namespace Fussion {
         }
 
     private:
-        static ScriptingEngine* s_Instance;
+        static ScriptingEngine* s_instance;
 
-        std::unordered_map<Uuid, std::vector<Ptr<Scripting::Attribute>>> m_Attributes;
-        std::unordered_map<std::string, Ref<ScriptAssembly>> m_LoadedAssemblies;
-        asIScriptEngine* m_ScriptEngine;
+        std::unordered_map<Uuid, std::vector<Ptr<Scripting::Attribute>>> m_attributes;
+        std::unordered_map<std::string, Ref<ScriptAssembly>> m_loaded_assemblies;
+        asIScriptEngine* m_script_engine;
     };
 }

@@ -11,14 +11,14 @@ namespace Fussion {
             : SimpleParser(tokens)
         { }
 
-        auto Parse() -> std::vector<Ptr<Scripting::Attribute>>;
+        auto parse() -> std::vector<Ptr<Scripting::Attribute>>;
 
-        virtual void OnError(Token token, std::string const& reason) override;
+        virtual void on_error(Token token, std::string const& reason) override;
 
     private:
-        auto ParseAttributes() -> std::vector<Ptr<Scripting::Attribute>>;
-        auto ParseAttribute() -> Ptr<Scripting::Attribute>;
-        auto ParseBoolean(std::string_view str) -> std::optional<bool>;
-        auto ParseValue() -> std::optional<ValueType>;
+        auto parse_attributes() -> std::vector<Ptr<Scripting::Attribute>>;
+        auto parse_attribute() -> Ptr<Scripting::Attribute>;
+        auto parse_boolean(std::string_view str) -> std::optional<bool>;
+        auto parse_value() -> std::optional<ValueType>;
     };
 }

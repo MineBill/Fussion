@@ -6,12 +6,12 @@ class Texture2DWindow : public AssetWindow {
 public:
     ASSET_WINDOW_DEFAULT(Texture2DWindow)
 
-    virtual void OnDraw(f32 delta) override;
-    virtual void OnSave() override;
+    virtual void on_draw(f32 delta) override;
+    virtual void on_save() override;
 
 private:
-    Vector2 m_PanPosition { 0.5f, 0.5f };
-    Vector2 m_Scale { 1.0f, 1.0f };
-    f32 m_ZoomRate { 1.2f };
-    bool m_IsDragging {};
+    Vector2 m_pan_position { 0.5f, 0.5f };
+    Vector2 m_scale { 1.0f, 1.0f };
+    f32 m_zoom_rate { 1.2f };
+    bool m_is_dragging {};
 };

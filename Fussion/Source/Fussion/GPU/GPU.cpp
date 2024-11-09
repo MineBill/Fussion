@@ -29,7 +29,7 @@ namespace Fussion::GPU {
         void Initialize(Device const& device)
         {
             constexpr auto ShaderPath = "Assets/Shaders/Slang/MipMapGenerator.slang";
-            m_CompiledShader = ShaderProcessor::CompileSlang(ShaderPath).Unwrap();
+            m_CompiledShader = ShaderProcessor::CompileSlang(ShaderPath).unwrap();
             m_CompiledShader.Metadata.UseDepth = false;
             m_CompiledShader.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
 
@@ -67,7 +67,7 @@ namespace Fussion::GPU {
                 };
                 auto rp = encoder.BeginRendering(spec);
 
-                rp.SetPipeline(m_Shader->Pipeline());
+                rp.SetPipeline(m_Shader->pipeline());
                 rp.SetBindGroup(m_BindGroup, 0);
                 rp.Draw({ 0, 6 }, { 0, 1 });
                 rp.End();
@@ -92,7 +92,7 @@ namespace Fussion::GPU {
     private:
         void SetTexture(Device const& device, Texture& texture)
         {
-            m_Shader = MakeRef<ShaderAsset>(m_CompiledShader, std::vector { texture.Spec.Format });
+            m_Shader = make_ref<ShaderAsset>(m_CompiledShader, std::vector { texture.Spec.Format });
 
             m_TargetTexture = texture;
             {
@@ -132,7 +132,7 @@ namespace Fussion::GPU {
                 .Entries = entries,
             };
 
-            m_BindGroup = device.CreateBindGroup(m_Shader->GetBindGroupLayout(0).Unwrap(), bg_spec);
+            m_BindGroup = device.CreateBindGroup(m_Shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
 
             // NOTE: When this is called from another thread logging
             //       stuff here causes problems like segfaults and
@@ -345,7 +345,7 @@ namespace Fussion::GPU {
     {
         WGPUTextureViewDescriptor texture_view_descriptor {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("View"sv).data(),
+            .label = spec.Label.value_or("View"sv).data(),
             .format = ToWGPU(spec.Format),
             .dimension = ToWGPU(spec.Dimension),
             .baseMipLevel = spec.BaseMipLevel,
@@ -557,7 +557,7 @@ namespace Fussion::GPU {
 
         WGPURenderPassDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pass"sv).data(),
+            .label = spec.Label.value_or("Render Pass"sv).data(),
             .colorAttachmentCount = spec.ColorAttachments.size(),
             .colorAttachments = stack_attachments.data(),
             .depthStencilAttachment = nullptr,
@@ -569,10 +569,10 @@ namespace Fussion::GPU {
         if (spec.TimestampWrites) {
             timestamp_writes.querySet = spec.TimestampWrites->Set.As<WGPUQuerySet>();
             if (spec.TimestampWrites->BeginningOfPassWriteIndex) {
-                timestamp_writes.beginningOfPassWriteIndex = spec.TimestampWrites->BeginningOfPassWriteIndex.Unwrap();
+                timestamp_writes.beginningOfPassWriteIndex = spec.TimestampWrites->BeginningOfPassWriteIndex.unwrap();
             }
             if (spec.TimestampWrites->EndOfPassWriteIndex) {
-                timestamp_writes.endOfPassWriteIndex = spec.TimestampWrites->EndOfPassWriteIndex.Unwrap();
+                timestamp_writes.endOfPassWriteIndex = spec.TimestampWrites->EndOfPassWriteIndex.unwrap();
             }
             desc.timestampWrites = &timestamp_writes;
         }
@@ -696,7 +696,7 @@ namespace Fussion::GPU {
     {
         WGPUBufferDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Buffer"sv).data(),
+            .label = spec.Label.value_or("Buffer"sv).data(),
             .usage = ToWGPU(spec.Usage),
             .size = spec.Size,
             .mappedAtCreation = spec.Mapped
@@ -710,7 +710,7 @@ namespace Fussion::GPU {
     {
         WGPUTextureDescriptor texture_descriptor {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Texture"sv).data(),
+            .label = spec.Label.value_or("Texture"sv).data(),
             .usage = ToWGPU(spec.Usage),
             .dimension = ToWGPU(spec.Dimension),
             .size = {
@@ -726,7 +726,7 @@ namespace Fussion::GPU {
         };
 
         if (spec.GenerateMipMaps) {
-            texture_descriptor.mipLevelCount = CAST(u32, Math::FloorLog2(Math::Max(CAST(s32, spec.Size.x), CAST(s32, spec.Size.y)))) + 1;
+            texture_descriptor.mipLevelCount = CAST(u32, Math::floor_log2(Math::max(CAST(s32, spec.Size.x), CAST(s32, spec.Size.y)))) + 1;
         }
 
         auto texture_handle = wgpuDeviceCreateTexture(CAST(WGPUDevice, Handle), &texture_descriptor);
@@ -743,7 +743,7 @@ namespace Fussion::GPU {
     {
         WGPUSamplerDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.label.ValueOr("Sampler"sv).data(),
+            .label = spec.label.value_or("Sampler"sv).data(),
             .addressModeU = ToWGPU(spec.AddressModeU),
             .addressModeV = ToWGPU(spec.AddressModeV),
             .addressModeW = ToWGPU(spec.AddressModeW),
@@ -752,7 +752,7 @@ namespace Fussion::GPU {
             .mipmapFilter = CAST(WGPUMipmapFilterMode, ToWGPU(spec.MipMapFilter)),
             .lodMinClamp = spec.LodMinClamp,
             .lodMaxClamp = spec.LodMaxClamp,
-            .compare = ToWGPU(spec.CompareFunc.ValueOr(CompareFunction::Undefined)),
+            .compare = ToWGPU(spec.CompareFunc.value_or(CompareFunction::Undefined)),
             .maxAnisotropy = spec.AnisotropyClamp,
         };
 
@@ -805,7 +805,7 @@ namespace Fussion::GPU {
 
         WGPUBindGroupDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"sv).data(),
+            .label = spec.Label.value_or("Bind Group"sv).data(),
             .layout = CAST(WGPUBindGroupLayout, layout.Handle),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
@@ -894,7 +894,7 @@ namespace Fussion::GPU {
 
         WGPUBindGroupLayoutDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Bind Group"sv).data(),
+            .label = spec.Label.value_or("Bind Group"sv).data(),
             .entryCount = CAST(u32, entries.size()),
             .entries = entries.data(),
         };
@@ -917,7 +917,7 @@ namespace Fussion::GPU {
 
         WGPUQuerySetDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("QuerySet").data.ptr,
+            .label = spec.Label.value_or("QuerySet").data.ptr,
             .count = spec.Count,
         };
 
@@ -1007,7 +1007,7 @@ namespace Fussion::GPU {
     auto Device::CreateShaderModuleSpirV(SpirVShaderSpec const& spec) const -> ShaderModule
     {
         WGPUShaderModuleDescriptorSpirV desc;
-        desc.label = spec.Label.ValueOr("SpirVShaderModule"sv).data();
+        desc.label = spec.Label.value_or("SpirVShaderModule"sv).data();
         desc.sourceSize = CAST(u32, spec.Data.size());
         desc.source = spec.Data.data();
         auto module = wgpuDeviceCreateShaderModuleSpirV(CAST(WGPUDevice, Handle), &desc);
@@ -1024,7 +1024,7 @@ namespace Fussion::GPU {
 
         WGPUPipelineLayoutDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Pipeline Layout"sv).data(),
+            .label = spec.Label.value_or("Pipeline Layout"sv).data(),
             .bindGroupLayoutCount = CAST(u32, layouts.size()),
             .bindGroupLayouts = layouts.data(),
         };
@@ -1063,7 +1063,7 @@ namespace Fussion::GPU {
         WGPUVertexState vertex {
             .nextInChain = nullptr,
             .module = vert_module.As<WGPUShaderModule>(),
-            .entryPoint = spec.VertexEntryPointOverride.ValueOr(vert_module.Spec.VertexEntryPoint).data(),
+            .entryPoint = spec.VertexEntryPointOverride.value_or(vert_module.Spec.VertexEntryPoint).data(),
             .constantCount = 0,
             .constants = nullptr,
             .bufferCount = CAST(u32, vertex_buffer_layouts.size()),
@@ -1073,7 +1073,7 @@ namespace Fussion::GPU {
         WGPUPrimitiveState primitive {
             .nextInChain = nullptr,
             .topology = ToWGPU(spec.Primitive.Topology),
-            .stripIndexFormat = ToWGPU(spec.Primitive.StripIndexFormat.ValueOr(IndexFormat::Undefined)),
+            .stripIndexFormat = ToWGPU(spec.Primitive.StripIndexFormat.value_or(IndexFormat::Undefined)),
             .frontFace = ToWGPU(spec.Primitive.FrontFace),
             .cullMode = ToWGPU(spec.Primitive.Cull),
         };
@@ -1095,9 +1095,9 @@ namespace Fussion::GPU {
         std::vector<WGPUBlendState> blends {};
         WGPUFragmentState fragment {};
 
-        if (spec.Fragment.HasValue()) {
+        if (spec.Fragment.has_value()) {
             fragment.module = frag_module.As<WGPUShaderModule>();
-            fragment.entryPoint = spec.FragmentEntryPointOverride.ValueOr(frag_module.Spec.FragmentEntryPoint).data();
+            fragment.entryPoint = spec.FragmentEntryPointOverride.value_or(frag_module.Spec.FragmentEntryPoint).data();
             fragment.constantCount = 0;
             fragment.constants = nullptr;
             // Resize to a max of spec.Fragment.Targets.size() to prevent reallocations
@@ -1134,14 +1134,14 @@ namespace Fussion::GPU {
 
         WGPURenderPipelineDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Render Pipeline"sv).data(),
+            .label = spec.Label.value_or("Render Pipeline"sv).data(),
             .vertex = vertex,
             .primitive = primitive,
             .depthStencil = nullptr,
             .multisample = multisample,
             .fragment = spec.Fragment ? &fragment : nullptr,
         };
-        if (spec.Layout.HasValue()) {
+        if (spec.Layout.has_value()) {
             desc.layout = spec.Layout->As<WGPUPipelineLayout>();
         }
 
@@ -1248,7 +1248,7 @@ namespace Fussion::GPU {
 
         WGPUDeviceDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.ValueOr("Device").data.ptr,
+            .label = spec.Label.value_or("Device").data.ptr,
             .requiredFeatureCount = features.size(),
             .requiredFeatures = features.data(),
             .defaultQueue = {
@@ -1407,7 +1407,7 @@ namespace Fussion::GPU {
 
     auto Instance::GetSurface(Window const* window) const -> Surface
     {
-        auto glfw_window = CAST(GLFWwindow*, window->NativeHandle());
+        auto glfw_window = CAST(GLFWwindow*, window->native_handle());
         auto surface = glfwGetWGPUSurface(CAST(WGPUInstance, Handle), glfw_window);
         return Surface { surface };
     }

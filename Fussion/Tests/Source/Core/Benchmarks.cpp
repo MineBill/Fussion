@@ -38,18 +38,18 @@ TEST_CASE("RefCounted Benchmarks", "[!benchmark]")
     };
 
     BENCHMARK("make") {
-        return MakeRefPtr<SimpleClass>();
+        return make_ref_ptr<SimpleClass>();
     };
 
     BENCHMARK("copy") {
-        auto ptr = MakeRefPtr<SimpleClass>();
+        auto ptr = make_ref_ptr<SimpleClass>();
         RefPtr<SimpleClass> ptr2 = ptr;
         return ptr2;
     };
 
     BENCHMARK("Assignment") {
-        auto ptr = MakeRefPtr<SimpleClass>();
-        auto ptr2 = MakeRefPtr<SimpleClass>();
+        auto ptr = make_ref_ptr<SimpleClass>();
+        auto ptr2 = make_ref_ptr<SimpleClass>();
         ptr2 = ptr;
         return ptr2;
     };

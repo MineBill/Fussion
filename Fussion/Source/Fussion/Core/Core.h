@@ -73,7 +73,7 @@ namespace Fussion {
      */
 
     [[noreturn]]
-    inline void Panic()
+    inline void panic()
     {
         auto trace = cpptrace::generate_trace(1, 1);
         auto frame = trace.frames[0];
@@ -86,7 +86,7 @@ namespace Fussion {
 
     template<typename... Args>
     [[noreturn]]
-    void Panic(fmt::format_string<Args...> message, Args&&... args)
+    void panic(fmt::format_string<Args...> message, Args&&... args)
     {
         auto trace = cpptrace::generate_trace(1, 1);
         if (!trace.frames.empty()) {
@@ -102,7 +102,7 @@ namespace Fussion {
     }
 }
 
-#define PANIC(...) Fussion::Panic(__VA_ARGS__)
+#define PANIC(...) Fussion::panic(__VA_ARGS__)
 #define TODO() PANIC("TODO")
 #define UNREACHABLE() PANIC("Reached unreachable code!")
 

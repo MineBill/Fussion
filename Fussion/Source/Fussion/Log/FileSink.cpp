@@ -43,11 +43,11 @@ namespace Fussion {
         VERIFY(m_OutStream.is_open());
     }
 
-    void FileSink::Write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
+    void FileSink::write(LogLevel level, std::string_view message, [[maybe_unused]] std::source_location const& loc)
     {
         static char const* prefixes[] = { "[ DEBUG ]", "[ INFO  ]", "[WARNING]", "[ ERROR ]", "[ FATAL ]" };
 
-        if (level >= m_logger->GetPriority()) {
+        if (level >= m_logger->log_level()) {
             m_OutStream << std::format("{} [FileSink]: {}", prefixes[static_cast<int>(level)], message) << std::endl;
         }
     }

@@ -22,33 +22,33 @@ namespace Fussion {
             : data(std::move(buffer))
         { }
 
-        String Clone(Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
-        void Free(Mem::Allocator const& allocator);
+        String clone(Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        void free(Mem::Allocator const& allocator);
 
         /// Splits the string using separator, returning an allocated slice of all the parts.
         /// The parts are views into the original string.
-        Slice<String> Split(String const& separator, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        Slice<String> split(String const& separator, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
 
         /// Returns a new allocated string with 'old_str' replaced by 'new_str'.
         /// If the string is empty, an empty Maybe is returned.
         /// If 'old_str' could not be located, an empty Maybe is returned.
-        Maybe<String> Replace(String const& old_str, String const& new_str, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        Maybe<String> replace(String const& old_str, String const& new_str, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
 
         /// Returns the index of the needle if found, None otherwise.
-        Maybe<usz> IndexOf(String const& needle) const;
+        Maybe<usz> index_of(String const& needle) const;
 
-        usz Len() const;
+        usz size() const;
 
         /// Returns a sub-view into this string.
         /// @param start is the starting index.
         /// @param end is the exclusive end index.
-        String View(usz start, usz end) const;
+        String view(usz start, usz end) const;
 
         /// Trims whitespace both from left and right;
-        void Trim(String whitespace = " ");
+        void trim(String whitespace = " ");
 
-        void TrimLeft(String whitespace = " ");
-        void TrimRight(String whitespace = " ");
+        void trim_left(String whitespace = " ");
+        void trim_right(String whitespace = " ");
 
         bool operator==(String const&) const;
         char& operator[](usz) const;
@@ -57,10 +57,10 @@ namespace Fussion {
 #endif
 
         /// Create an allocated string form a cstring.
-        static String Alloc(char const* str, Mem::Allocator const& allocator = Mem::GetHeapAllocator());
+        static String alloc(char const* str, Mem::Allocator const& allocator = Mem::GetHeapAllocator());
 
         template<typename... Args>
-        static String Format(String fmt, Args&&...)
+        static String format(String fmt, Args&&...)
         {
             (void)fmt;
             PANIC("TODO");

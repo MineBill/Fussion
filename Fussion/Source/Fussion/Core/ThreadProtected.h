@@ -16,7 +16,7 @@ namespace Fussion {
         { }
 
         template<typename Func>
-        auto Access(Func&& func) const
+        auto access(Func&& func) const
         {
             using ResultType = std::invoke_result_t<Func, T const&>;
             std::lock_guard lock(m_Mutex);
@@ -29,7 +29,7 @@ namespace Fussion {
         }
 
         template<typename Func>
-        auto Access(Func&& func)
+        auto access(Func&& func)
         {
             using ResultType = std::invoke_result_t<Func, T&>;
             std::lock_guard lock(m_Mutex);
@@ -41,7 +41,7 @@ namespace Fussion {
             }
         }
 
-        T* UnsafePtr() { return &m_Object; }
+        T* unsafe_ptr() { return &m_Object; }
 
     private:
         T m_Object;

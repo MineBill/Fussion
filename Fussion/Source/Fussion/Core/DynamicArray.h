@@ -17,7 +17,7 @@ namespace Fussion {
             if (m_leaked) {
                 return;
             }
-            Mem::Free(m_buffer, m_allocator);
+            Mem::free(m_buffer, m_allocator);
         }
 
         void init(Mem::Allocator const& allocator)
@@ -44,13 +44,13 @@ namespace Fussion {
             if (m_capacity == 0) {
                 m_capacity = 10;
             } else {
-                m_capacity = Math::Max(m_capacity + m_capacity / 2, size);
+                m_capacity = Math::max(m_capacity + m_capacity / 2, size);
             }
 
-            auto new_buffer = Mem::Alloc<T>(m_capacity, m_allocator);
-            Mem::Copy(new_buffer, m_buffer);
+            auto new_buffer = Mem::alloc<T>(m_capacity, m_allocator);
+            Mem::copy(new_buffer, m_buffer);
 
-            Mem::Free(m_buffer, m_allocator);
+            Mem::free(m_buffer, m_allocator);
             m_buffer = new_buffer;
         }
 
@@ -64,7 +64,7 @@ namespace Fussion {
                 return;
             }
             m_buffer[index].~T();
-            Mem::Copy(m_buffer.ptr + index, m_buffer.ptr + index + 1, m_length * sizeof(T));
+            Mem::copy(m_buffer.ptr + index, m_buffer.ptr + index + 1, m_length * sizeof(T));
             m_length--;
         }
 

@@ -7,8 +7,8 @@ namespace Fussion {
     public:
         COMPONENT_DEFAULT(BoxCollider)
         COMPONENT_DEFAULT_COPY(BoxCollider)
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
         Vector3 half_extent{};
     };
@@ -18,8 +18,8 @@ namespace Fussion {
         COMPONENT_DEFAULT(SphereCollider)
         COMPONENT_DEFAULT_COPY(SphereCollider)
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
         f32 radius{};
     };
@@ -29,11 +29,11 @@ namespace Fussion {
         COMPONENT_DEFAULT(RigidBody)
         COMPONENT_DEFAULT_COPY(RigidBody)
 
-        virtual void OnStart() override;
-        virtual void OnUpdate(f32 delta) override;
+        virtual void on_start() override;
+        virtual void on_update(f32 delta) override;
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
         // BodyType type{};
         f32 linear_damping{};

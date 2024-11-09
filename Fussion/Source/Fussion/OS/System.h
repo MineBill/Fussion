@@ -28,21 +28,21 @@ namespace Fussion {
             Gnome,
         };
 
-        static SystemType GetCurrentSystemType();
+        static SystemType current_system_type();
 
         struct Info {
-            SystemType Type {};
-            WindowingSystem WindowingSystem {};
-            Desktop Desktop {};
+            SystemType type {};
+            WindowingSystem windowing_system {};
+            Desktop desktop {};
         };
 
-        static Info const& GetSystemInfo();
+        static Info const& system_info();
 
         /// Returns if the OS is currently in dark mode.
-        static bool PrefersDark();
+        static bool prefers_dark();
 
         /// Returns if the OS is currently in light mode.
-        static bool PrefersLight();
+        static bool prefers_light();
 
         enum class KnownFolders {
             Downloads,
@@ -62,11 +62,11 @@ namespace Fussion {
         };
 
         /// Returns the location of the specified known folder for the current OS.
-        static auto GetKnownFolder(KnownFolders folder) -> std::filesystem::path;
+        static auto get_known_folder(KnownFolders folder) -> std::filesystem::path;
 
-        static bool ConsoleSupportsColor();
+        static bool does_console_support_color();
 
     private:
-        static void Initialize();
+        static void initialize();
     };
 }

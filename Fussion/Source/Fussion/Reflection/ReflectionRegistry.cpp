@@ -10,7 +10,7 @@
 #include "Fussion/Scene/Scene.h"
 
 namespace Fussion {
-    void ReflectionRegistry::Register()
+    void ReflectionRegistry::register_data()
     {
         using namespace std::literals;
         using namespace Fussion;
@@ -27,8 +27,8 @@ namespace Fussion {
                 .member_("G", &Color::g, as_pointer)
                 .member_("B", &Color::b, as_pointer)
                 .member_("A", &Color::a, as_pointer)
-                .method_("Darken", &Color::Darken)
-                .method_("Lighten", &Color::Lighten);
+                .method_("Darken", &Color::darken)
+                .method_("Lighten", &Color::lighten);
 
             meta::class_<Vector2>(
                 metadata_()("Name"s, "Vector2"s))
@@ -36,10 +36,10 @@ namespace Fussion {
                 .constructor_<f64, f64>()
                 .member_("X", &Vector2::x, as_pointer)
                 .member_("Y", &Vector2::y, as_pointer)
-                .method_("Length", &Vector2::Length)
-                .method_("DistanceTo", &Vector2::DistanceTo)
-                .method_("LengthSquared", &Vector2::LengthSquared)
-                .method_("DistanceToSquared", &Vector2::DistanceToSquared);
+                .method_("Length", &Vector2::length)
+                .method_("DistanceTo", &Vector2::distance_to)
+                .method_("LengthSquared", &Vector2::length_squared)
+                .method_("DistanceToSquared", &Vector2::distance_to_squared);
 
             meta::class_<Vector3>(
                 metadata_()("Name"s, "Vector3"s))
@@ -48,36 +48,36 @@ namespace Fussion {
                 .member_("X"s, &Vector3::x, as_pointer)
                 .member_("Y"s, &Vector3::y, as_pointer)
                 .member_("Z"s, &Vector3::z, as_pointer)
-                .method_("Length"s, &Vector3::Length)
-                .method_("Normalize"s, &Vector3::Normalize)
-                .method_("Normalized"s, &Vector3::Normalized)
-                .method_("LengthSquared"s, &Vector3::LengthSquared);
+                .method_("Length"s, &Vector3::length)
+                .method_("Normalize"s, &Vector3::normalize)
+                .method_("Normalized"s, &Vector3::normalized)
+                .method_("LengthSquared"s, &Vector3::length_squared);
         }
 
         meta::class_<Asset>(metadata_()("Name"s, "Asset"s))
-            .method_("GetType"s, &Asset::Type)
-            .method_("GetHandle"s, &Asset::GetHandle)
-            .member_("m_Handle"s, &Asset::m_Handle);
+            .method_("GetType"s, &Asset::type)
+            .method_("GetHandle"s, &Asset::handle)
+            .member_("m_Handle"s, &Asset::m_handle);
 
         meta::class_<Entity>(metadata_()("Name"s, "Entity"s))
-            .member_("m_Parent", &Entity::m_Parent)
-            .member_("m_Handle", &Entity::m_Handle)
-            .member_("m_Enabled", &Entity::m_Enabled);
+            .member_("m_Parent", &Entity::m_parent)
+            .member_("m_Handle", &Entity::m_handle)
+            .member_("m_Enabled", &Entity::m_enabled);
 
         meta::class_<Component>();
 
         meta::class_<Scene>(metadata_()("Name"s, "Scene"s))
-            .method_("CreateEntity"s, &Scene::CreateEntity);
+            .method_("CreateEntity"s, &Scene::create_entity);
 
         meta::class_<AssetRefBase>(metadata_()("Name"s, "AssetRefBase"s))
-            .method_("Handle"s, &AssetRefBase::GetHandle)
-            .method_("SetHandle"s, &AssetRefBase::SetHandle)
-            .member_("m_Handle"s, &AssetRefBase::m_Handle)
-            .method_("GetType", &AssetRefBase::GetType);
+            .method_("Handle"s, &AssetRefBase::handle)
+            .method_("SetHandle"s, &AssetRefBase::set_handle)
+            .member_("m_Handle"s, &AssetRefBase::m_handle)
+            .method_("GetType", &AssetRefBase::type);
 
         meta::class_<PbrMaterial>(metadata_()("Name"s, "PbrMaterial"s))
             .constructor_<>()
-            .function_("GetStaticType", &PbrMaterial::StaticType)
+            .function_("GetStaticType", &PbrMaterial::static_type)
             .member_("ObjectColor", &PbrMaterial::object_color, as_pointer)
             .member_("Metallic", &PbrMaterial::metallic, as_pointer)
             .member_("Roughness", &PbrMaterial::roughness, as_pointer);
@@ -88,9 +88,9 @@ namespace Fussion {
 
         meta::class_<Texture2DMetadata>(metadata_()("Name"s, "Texture2DMetadata"s))
             .constructor_<>(as_raw_pointer)
-            .member_("IsNormalMap", &Texture2DMetadata::IsNormalMap, as_pointer)
-            .member_("Format", &Texture2DMetadata::Format, as_pointer);
+            .member_("IsNormalMap", &Texture2DMetadata::is_normal_map, as_pointer)
+            .member_("Format", &Texture2DMetadata::format, as_pointer);
 
-        RegisterGenerated();
+        register_generated();
     }
 }

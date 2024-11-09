@@ -82,12 +82,12 @@ void DrawGlobalReport(GPU::GlobalReport const& report)
     }
 }
 
-void RendererReport::OnDraw()
+void RendererReport::on_draw()
 {
-    EUI::Window("Report", [&] {
-        m_IsFocused = ImGui::IsWindowFocused();
+    EUI::window("Report", [&] {
+        m_is_focused = ImGui::IsWindowFocused();
 
-        auto& instance = Renderer::GPUInstance();
+        auto& instance = Renderer::gpu_instance();
         auto report = instance.GenerateGlobalReport();
 
         DrawGlobalReport(report);

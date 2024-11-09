@@ -71,15 +71,15 @@ namespace Fussion {
         }
 
         [[nodiscard]]
-        Real Length() const;
+        Real length() const;
 
         [[nodiscard]]
-        Real LengthSquared() const;
+        Real length_squared() const;
 
         [[nodiscard]]
-        Vector3 Normalized() const;
+        Vector3 normalized() const;
 
-        void Normalize();
+        void normalize();
 
         Real& operator[](std::size_t i)
         {

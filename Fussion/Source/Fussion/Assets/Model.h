@@ -8,41 +8,41 @@
 
 namespace Fussion {
     struct Vertex {
-        Vector3 Position {};
-        Vector3 Normal {};
-        Vector4 Tangent { 1, 1, 1 };
-        Vector2 TextureCoords {};
-        Vector3 Color { 1, 1, 1 };
+        Vector3 position {};
+        Vector3 normal {};
+        Vector4 tangent { 1, 1, 1 };
+        Vector2 texture_coords {};
+        Vector3 color { 1, 1, 1 };
     };
 
     struct Mesh {
-        std::vector<Vertex> Vertices {};
-        std::vector<u32> Indices {};
-        Vector3 Offset {};
-        BoundingBox Box {};
+        std::vector<Vertex> vertices {};
+        std::vector<u32> indices {};
+        Vector3 offset {};
+        BoundingBox box {};
 
-        GPU::Buffer VertexBuffer {};
-        GPU::Buffer IndexBuffer {};
+        GPU::Buffer vertex_buffer {};
+        GPU::Buffer index_buffer {};
         // GPU::Buffer ShadowIndexBuffer{};
         // GPU::Buffer InstanceBuffer {};
-        u32 IndexCount {};
+        u32 index_count {};
 
-        s32 MaterialIndex {};
+        s32 material_index {};
 
         Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset);
     };
 
     class Model final : public Asset {
     public:
-        std::vector<Mesh> Meshes {};
-        u32 UniqueMaterialCount {};
+        std::vector<Mesh> meshes {};
+        u32 unique_material_count {};
 
-        static Ref<Model> Create(std::vector<Mesh>& meshes);
+        static Ref<Model> create(std::vector<Mesh>& meshes);
 
-        virtual void Serialize(Serializer& ctx) const override;
-        virtual void Deserialize(Deserializer& ctx) override;
+        virtual void serialize(Serializer& ctx) const override;
+        virtual void deserialize(Deserializer& ctx) override;
 
-        virtual AssetType Type() const override { return StaticType(); }
-        static AssetType StaticType() { return AssetType::Model; }
+        virtual AssetType type() const override { return static_type(); }
+        static AssetType static_type() { return AssetType::Model; }
     };
 }

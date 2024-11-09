@@ -6,13 +6,13 @@
 
 namespace Fussion {
 
-    void Component::Serialize(Serializer& ctx) const
+    void Component::serialize(Serializer& ctx) const
     {
-        ISerializable::Serialize(ctx);
+        ISerializable::serialize(ctx);
     }
 
-    void Component::Deserialize(Deserializer& ctx)
+    void Component::deserialize(Deserializer& ctx)
     {
-        ISerializable::Deserialize(ctx);
+        ISerializable::deserialize(ctx);
     }
 }

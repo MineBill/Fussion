@@ -12,7 +12,7 @@
 #include <tracy/TracyC.h>
 
 namespace Fussion {
-    Application* Application::s_Instance = nullptr;
+    Application* Application::s_instance = nullptr;
 
     class SimpleSink final : public LogSink {
         Application* m_application;
@@ -22,10 +22,10 @@ namespace Fussion {
             : m_application(app)
         { }
 
-        virtual void Write(LogLevel level, std::string_view message, std::source_location const& loc) override
+        virtual void write(LogLevel level, std::string_view message, std::source_location const& loc) override
         {
             if (m_application) {
-                m_application->OnLogReceived(level, message, loc);
+                m_application->on_log_received(level, message, loc);
             }
         }
     };
@@ -35,63 +35,63 @@ namespace Fussion {
         LOG_DEBUGF("Application terminating");
     }
 
-    void Application::Run()
+    void Application::run()
     {
-        ReflectionRegistry::Register();
-        System::Initialize();
+        ReflectionRegistry::register_data();
+        System::initialize();
 
         LOG_DEBUG("Initializing application");
-        s_Instance = this;
-        Log::DefaultLogger()->SetLogLevel(LogLevel::Debug);
-        m_Sink = MakeRef<SimpleSink>(this);
-        Log::DefaultLogger()->RegisterSink(m_Sink);
+        s_instance = this;
+        Log::default_logger()->set_log_level(LogLevel::Debug);
+        m_Sink = make_ref<SimpleSink>(this);
+        Log::default_logger()->register_sink(m_Sink);
 
         WindowOptions options {
-            .InitialTitle = "Window",
-            .InitialWidth = 1366,
-            .InitialHeight = 768,
+            .initial_title = "Window",
+            .initial_width = 1366,
+            .initial_height = 768,
             .Flags = WindowFlag::Centered | WindowFlag::Decorated,
         };
-        m_Window.reset(Window::Create(options));
-        m_Window->SetEventCallback([this](Event& event) -> bool {
+        m_window.reset(Window::create(options));
+        m_window->set_event_callback([this](Event& event) -> bool {
             ZoneScoped;
-            Input::OnEvent(event);
+            Input::on_event(event);
 
-            OnEvent(event);
+            on_event(event);
             return false;
         });
 
-        ScriptingEngine::Initialize();
-        defer(ScriptingEngine::Shutdown());
+        ScriptingEngine::initialize();
+        defer(ScriptingEngine::shutdown());
 
-        Renderer::Initialize(*m_Window.get());
+        Renderer::initialize(*m_window.get());
 
-        OnStart();
+        on_start();
 
-        Renderer::CreateDefaultResources();
+        Renderer::create_default_resources();
 
         Clock clock;
-        while (!m_QuitRequested) {
+        while (!m_quit_requested) {
             ZoneScopedN("Main Loop");
 
-            auto const delta = CAST(f32, clock.Reset());
-            Time::SetDeltaTime(delta);
+            auto const delta = CAST(f32, clock.reset());
+            Time::set_delta_time(delta);
 
-            m_Window->Update();
-            OnUpdate(delta);
+            m_window->update();
+            on_update(delta);
 
-            Input::Flush();
+            Input::flush();
             FrameMark;
         }
 
-        Renderer::Shutdown();
-        Log::DefaultLogger()->RemoveSink(m_Sink);
+        Renderer::shutdown();
+        Log::default_logger()->remove_sink(m_Sink);
     }
 
-    void Application::Quit()
+    void Application::quit()
     {
         LOG_DEBUG("Quit was requested");
-        m_QuitRequested = true;
+        m_quit_requested = true;
     }
 }
 

@@ -32,26 +32,26 @@ static unsigned char g_normal_map_png[] = {
 
 namespace Fussion {
     struct Data {
-        AssetRef<PbrMaterial> DefaultMaterial;
-        AssetRef<Texture2D> WhiteTexture, BlackTexture, NormalMap;
-        GPU::Texture WhiteCubeTexture;
+        AssetRef<PbrMaterial> default_material;
+        AssetRef<Texture2D> white_texture, black_texture, normal_map;
+        GPU::Texture white_cube_texture;
 
-        Vector2 WindowSize {};
-        bool SkipRender {};
+        Vector2 window_size {};
+        bool skip_render {};
 
-        GPU::Instance Instance {};
-        GPU::Device Device {};
-        GPU::Adapter Adapter {};
-        GPU::Surface Surface {};
-        bool HasPipelineStatistics {};
+        GPU::Instance instance {};
+        GPU::Device device {};
+        GPU::Adapter adapter {};
+        GPU::Surface surface {};
+        bool supports_pipeline_statistics {};
 
-        GPU::PresentMode PresentMode {};
-        GPU::TextureFormat SurfaceFormat {};
+        GPU::PresentMode present_mode {};
+        GPU::TextureFormat surface_format {};
 
-        IrradianceIBLGenerator IrradianceGenerator;
-    } g_Data;
+        IrradianceIBLGenerator irradiance_generator;
+    } g_data;
 
-    void Renderer::Initialize(Window const& window)
+    void Renderer::initialize(Window const& window)
     {
         LOG_INFO("Initializing Renderer");
         GPU::ShaderProcessor::Initialize();
@@ -78,16 +78,16 @@ namespace Fussion {
         };
 
         if (adapter.HasFeature(GPU::Feature::PipelineStatistics)) {
-            g_Data.HasPipelineStatistics = true;
+            g_data.supports_pipeline_statistics = true;
             spec.RequiredFeatures.push_back(GPU::Feature::PipelineStatistics);
         }
         auto device = adapter.RequestDevice(spec);
 
-        g_Data.WindowSize = window.Size();
+        g_data.window_size = window.size();
 
         auto caps = surface.GetCapabilities(adapter);
         VERIFY(!caps.AvailableSurfaceFormats.empty());
-        g_Data.SurfaceFormat = caps.AvailableSurfaceFormats[0];
+        g_data.surface_format = caps.AvailableSurfaceFormats[0];
 
         std::array present_modes {
             GPU::PresentMode::Immediate,
@@ -103,112 +103,112 @@ namespace Fussion {
                 break;
             }
         }
-        g_Data.PresentMode = present_mode.ValueOr(caps.AvailablePresentModes[0]);
-        LOG_INFOF("Choosing '{}' present mode", magic_enum::enum_name(g_Data.PresentMode));
+        g_data.present_mode = present_mode.value_or(caps.AvailablePresentModes[0]);
+        LOG_INFOF("Choosing '{}' present mode", magic_enum::enum_name(g_data.present_mode));
 
         if (!std::ranges::contains(caps.AvailablePresentModes, GPU::PresentMode::Immediate)) {
-            g_Data.PresentMode = caps.AvailablePresentModes[0];
+            g_data.present_mode = caps.AvailablePresentModes[0];
         }
 
-        surface.Configure(device, g_Data.SurfaceFormat, { .Mode = g_Data.PresentMode, .Size = g_Data.WindowSize });
+        surface.Configure(device, g_data.surface_format, { .Mode = g_data.present_mode, .Size = g_data.window_size });
 
-        g_Data.Device = device;
-        g_Data.Adapter = adapter;
-        g_Data.Instance = instance;
-        g_Data.Surface = surface;
+        g_data.device = device;
+        g_data.adapter = adapter;
+        g_data.instance = instance;
+        g_data.surface = surface;
 
-        g_Data.IrradianceGenerator.Initialize();
+        g_data.irradiance_generator.init();
 
         GPU::Utils::RenderDoc::Initialize();
     }
 
-    void Renderer::Shutdown()
+    void Renderer::shutdown()
     {
         LOG_DEBUGF("Shutting down Renderer!");
         GPU::ShaderProcessor::Shutdown();
 
-        g_Data.Device.Release();
-        g_Data.Adapter.Release();
-        g_Data.Surface.Release();
-        g_Data.Instance.Release();
+        g_data.device.Release();
+        g_data.adapter.Release();
+        g_data.surface.Release();
+        g_data.instance.Release();
     }
 
-    auto Renderer::BeginRendering() -> Maybe<GPU::TextureView>
+    auto Renderer::begin_rendering() -> Maybe<GPU::TextureView>
     {
         ZoneScoped;
-        auto new_size = Application::Self()->GetWindow().Size();
-        if (g_Data.WindowSize != new_size) {
-            Resize(new_size);
+        auto new_size = Application::self()->window().size();
+        if (g_data.window_size != new_size) {
+            resize(new_size);
         }
 
-        if (g_Data.SkipRender)
+        if (g_data.skip_render)
             return None();
 
-        auto view = g_Data.Surface.GetNextView();
-        if (view.HasError()) {
+        auto view = g_data.surface.GetNextView();
+        if (view.has_error()) {
             // Handle resize or the reason the view is empty
             // ...
             return None();
         }
-        return view.Unwrap();
+        return view.unwrap();
     }
 
-    void Renderer::EndRendering(GPU::CommandBuffer cmd)
+    void Renderer::end_rendering(GPU::CommandBuffer cmd)
     {
         ZoneScoped;
-        g_Data.Device.SubmitCommandBuffer(cmd);
-        g_Data.Surface.Present();
+        g_data.device.SubmitCommandBuffer(cmd);
+        g_data.surface.Present();
     }
 
-    void Renderer::Resize(Vector2 const& new_size)
+    void Renderer::resize(Vector2 const& new_size)
     {
         ZoneScoped;
-        if (new_size.IsZero()) {
-            g_Data.SkipRender = true;
+        if (new_size.is_zero()) {
+            g_data.skip_render = true;
             return;
         }
-        g_Data.SkipRender = false;
+        g_data.skip_render = false;
 
-        g_Data.WindowSize = new_size;
-        g_Data.Surface.Configure(g_Data.Device, g_Data.SurfaceFormat, { .Mode = g_Data.PresentMode, .Size = new_size });
+        g_data.window_size = new_size;
+        g_data.surface.Configure(g_data.device, g_data.surface_format, { .Mode = g_data.present_mode, .Size = new_size });
     }
 
-    auto Renderer::Device() -> GPU::Device&
+    auto Renderer::device() -> GPU::Device&
     {
-        return g_Data.Device;
+        return g_data.device;
     }
 
-    auto Renderer::Surface() -> GPU::Surface&
+    auto Renderer::surface() -> GPU::Surface&
     {
-        return g_Data.Surface;
+        return g_data.surface;
     }
 
-    auto Renderer::GPUInstance() -> GPU::Instance&
+    auto Renderer::gpu_instance() -> GPU::Instance&
     {
-        return g_Data.Instance;
+        return g_data.instance;
     }
 
-    auto Renderer::DefaultMaterial() -> AssetRef<PbrMaterial>
+    auto Renderer::default_material() -> AssetRef<PbrMaterial>
     {
-        return g_Data.DefaultMaterial;
+        return g_data.default_material;
     }
 
-    auto Renderer::DefaultNormalMap() -> AssetRef<Texture2D> { return g_Data.NormalMap; }
+    auto Renderer::default_normal_map() -> AssetRef<Texture2D> { return g_data.normal_map; }
 
-    auto Renderer::WhiteTexture() -> AssetRef<Texture2D> { return g_Data.WhiteTexture; }
+    auto Renderer::white_texture() -> AssetRef<Texture2D> { return g_data.white_texture; }
 
-    auto Renderer::BlackTexture() -> AssetRef<Texture2D> { return g_Data.BlackTexture; }
+    auto Renderer::black_texture() -> AssetRef<Texture2D> { return g_data.black_texture; }
 
-    auto Renderer::WhiteCubeTexture() -> GPU::Texture
+    auto Renderer::white_cube_texture() -> GPU::Texture
     {
-        return g_Data.WhiteCubeTexture;
+        return g_data.white_cube_texture;
     }
 
-    void Renderer::CreateDefaultResources()
+    void Renderer::create_default_resources()
     {
-        auto material = MakeRef<PbrMaterial>();
+        auto material = make_ref<PbrMaterial>();
         material->object_color = Color(1, 1, 1, 1);
-        g_Data.DefaultMaterial = AssetManager::CreateVirtualAssetRef<PbrMaterial>(material);
+        g_data.default_material = AssetManager::create_virtual_asset_ref<PbrMaterial>(material);
 
 #ifndef IS_XMAKE
         auto g_white_texture_png = b::embed<"Assets/Textures/white_texture.png">().vec();
@@ -216,9 +216,9 @@ namespace Fussion {
         auto g_normal_map_png = b::embed<"Assets/Textures/default_normal_map.png">().vec();
         auto g_white_texture_hdr = b::embed<"Assets/Textures/white_texture.hdr">().vec();
 #endif
-        g_Data.WhiteTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_white_texture_png).Unwrap(), "Default White Texture");
-        g_Data.BlackTexture = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_black_texture_png).Unwrap(), "Default Black Texture");
-        g_Data.NormalMap = AssetManager::CreateVirtualAssetRef<Texture2D>(TextureLoader::LoadTextureFromMemory(g_normal_map_png, true).Unwrap(), "Default Normal Map");
+        g_data.white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_white_texture_png).unwrap(), "Default White Texture");
+        g_data.black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_black_texture_png).unwrap(), "Default Black Texture");
+        g_data.normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_normal_map_png, true).unwrap(), "Default Normal Map");
 
         GPU::TextureSpec texture_spec {
             .Label = "CubeTexGen::cube_texture"sv,
@@ -232,8 +232,8 @@ namespace Fussion {
             .InitializeView = false,
         };
 
-        g_Data.WhiteCubeTexture = Device().CreateTexture(texture_spec);
-        g_Data.WhiteCubeTexture.View = g_Data.WhiteCubeTexture.CreateView({
+        g_data.white_cube_texture = device().CreateTexture(texture_spec);
+        g_data.white_cube_texture.View = g_data.white_cube_texture.CreateView({
             .Label = "View"sv,
             .Usage = texture_spec.Usage,
             .Dimension = GPU::TextureViewDimension::Cube, // TODO: Make configurable
@@ -245,24 +245,24 @@ namespace Fussion {
             .Aspect = texture_spec.Aspect // TODO: Make configurable
         });
 
-        auto data = TextureLoader::LoadHDRTextureFromMemory(g_white_texture_hdr).Unwrap();
+        auto data = TextureLoader::load_hdr_texture_from_memory(g_white_texture_hdr).unwrap();
 
-        auto encoder = g_Data.Device.CreateCommandEncoder();
+        auto encoder = g_data.device.CreateCommandEncoder();
 
         for (u32 i = 0; i < 6; ++i) {
-            encoder.CopyTextureToTexture(data.get()->GetTexture(), g_Data.WhiteCubeTexture, { 1, 1 }, 0, 0, 0, i);
+            encoder.CopyTextureToTexture(data.get()->texture(), g_data.white_cube_texture, { 1, 1 }, 0, 0, 0, i);
         }
-        g_Data.Device.SubmitCommandBuffer(encoder.Finish());
+        g_data.device.SubmitCommandBuffer(encoder.Finish());
         encoder.Release();
     }
 
-    bool Renderer::HasPipelineStatistics()
+    bool Renderer::supports_pipeline_statistics()
     {
-        return g_Data.HasPipelineStatistics;
+        return g_data.supports_pipeline_statistics;
     }
 
-    GPU::Texture Renderer::GenerateIrradianceMap(GPU::Texture const& texture)
+    GPU::Texture Renderer::generate_irradiance_map(GPU::Texture const& texture)
     {
-        return g_Data.IrradianceGenerator.Generate(texture);
+        return g_data.irradiance_generator.generate(texture);
     }
 }
