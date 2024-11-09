@@ -78,7 +78,7 @@ namespace Fussion {
             return None();
         }
 
-        auto parts = split(old_str, Mem::GetTempAllocator());
+        auto parts = split(old_str, Mem::temp_allocator());
         if (parts.len() == 0) {
             return None();
         }

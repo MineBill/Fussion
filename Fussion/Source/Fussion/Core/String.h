@@ -22,7 +22,7 @@ namespace Fussion {
             : data(std::move(buffer))
         { }
 
-        String clone(Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        String clone(Mem::Allocator const& allocator = Mem::heap_allocator()) const;
         void free(Mem::Allocator const& allocator);
 
         /// Splits the string using separator, returning an allocated slice of all the parts.

@@ -137,20 +137,20 @@ TEST_CASE("String constructor and basic functionality", "[String]")
 TEST_CASE("String clone and free", "[String]")
 {
     String hello_str("Hello");
-    auto cloned_str = hello_str.clone(Mem::GetHeapAllocator());
+    auto cloned_str = hello_str.clone(Mem::heap_allocator());
 
     REQUIRE(cloned_str == hello_str);
     REQUIRE(cloned_str.size() == hello_str.size());
 
     // Freeing resources for cloned string
-    cloned_str.free(Mem::GetHeapAllocator());
+    cloned_str.free(Mem::heap_allocator());
     REQUIRE(cloned_str.size() == 0);
 }
 
 TEST_CASE("String split", "[String]")
 {
     String csv_str("A,B,C");
-    auto parts = csv_str.split(String(","), Mem::GetHeapAllocator());
+    auto parts = csv_str.split(String(","), Mem::heap_allocator());
 
     REQUIRE(parts.len() == 3);
     REQUIRE(parts[0] == String("A"));
@@ -236,10 +236,10 @@ TEST_CASE("String view", "[String]")
 
 TEST_CASE("String alloc", "[String]")
 {
-    String allocated_str = String::alloc("heap allocated string", Mem::GetHeapAllocator());
+    String allocated_str = String::alloc("heap allocated string", Mem::heap_allocator());
 
     REQUIRE(allocated_str == String("heap allocated string"));
-    allocated_str.free(Mem::GetHeapAllocator());
+    allocated_str.free(Mem::heap_allocator());
 }
 
 TEST_CASE("String equality operator", "[String]")

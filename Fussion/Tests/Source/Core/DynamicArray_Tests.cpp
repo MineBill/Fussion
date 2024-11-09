@@ -18,7 +18,7 @@ struct TestingAllocator {
 
     TestingAllocator()
     {
-        backing_allocator = Mem::GetHeapAllocator();
+        backing_allocator = Mem::heap_allocator();
     }
 
     auto allocator() -> Mem::Allocator

@@ -5,26 +5,18 @@ namespace Fussion::Mem {
     struct TempAllocator {
         TempAllocator()
         {
-            m_base_ptr = Mem::alloc(1'000'000, Mem::GetHeapAllocator());
+            m_base_ptr = Mem::alloc(1'000'000, Mem::heap_allocator());
         }
 
         auto allocator() -> Allocator
         {
             return {
                 .alloc_proc = [](usz size, void* data, std::source_location const&) -> void* {
-                    // auto self = TRANSMUTE(TempAllocator*, data);
-                    // if (self->m_offset + size >= self->m_buffer.length) {
-                    //     self->m_offset = 0;
-                    // }
-                    // auto ptr = self->m_buffer.ptr + self->m_offset;
-                    // self->m_offset += size;
-                    // return ptr;
-
-                    auto self = CAST(TempAllocator*, data);
+                    auto self = cast<TempAllocator*>(data);
                     if ((self->m_offset + size) >= 1'000'000) {
                         self->m_offset = 0;
                     }
-                    auto ptr = Fussion::Mem::AlignForward(TRANSMUTE(uintptr_t, self->m_base_ptr) + self->m_offset, Fussion::Mem::DEFAULT_ALIGNMENT);
+                    auto ptr = Fussion::Mem::align_forward(TRANSMUTE(uintptr_t, self->m_base_ptr) + self->m_offset, Fussion::Mem::DEFAULT_ALIGNMENT);
                     self->m_offset = (ptr - TRANSMUTE(uintptr_t, self->m_base_ptr)) + size;
                     return TRANSMUTE(void*, ptr);
                 },
@@ -52,20 +44,20 @@ namespace Fussion::Mem {
     thread_local TempAllocator TEMP_ALLOCATOR_DATA {};
     thread_local Allocator TEMP_ALLOCATOR = TEMP_ALLOCATOR_DATA.allocator();
 
-    auto GetHeapAllocator() -> Allocator
+    auto heap_allocator() -> Allocator
     {
         return HEAP_ALLOCATOR;
     }
 
-    auto GetTempAllocator() -> Allocator
+    auto temp_allocator() -> Allocator
     {
         return TEMP_ALLOCATOR;
     }
 
-    uintptr_t AlignForward(uintptr_t ptr, usz alignment)
+    uintptr_t align_forward(uintptr_t ptr, usz alignment)
     {
         VERIFY(is_power_of_two(alignment));
-        auto a = CAST(uintptr_t, alignment);
+        auto a = cast<uintptr_t>(alignment);
         if (auto mod = ptr & (a - 1)) {
             return ptr + a - mod;
         }

@@ -26,10 +26,10 @@ namespace Fussion::Mem {
         void* data;
     };
 
-    auto GetHeapAllocator() -> Allocator;
-    auto GetTempAllocator() -> Allocator;
+    auto heap_allocator() -> Allocator;
+    auto temp_allocator() -> Allocator;
 
-    uintptr_t AlignForward(uintptr_t ptr, size_t alignment);
+    uintptr_t align_forward(uintptr_t ptr, size_t alignment);
 
     inline void* alloc(
         usz size,
