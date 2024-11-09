@@ -80,7 +80,7 @@ public:
             registry[handle] = EditorAssetMetadata {
                 .type = T::static_type(),
                 .path = normal_path,
-                .name = path.filename().string(),
+                .name = path.filename().replace_extension().string(),
                 .is_virtual = false,
                 .dont_serialize = false,
                 .handle = handle,
