@@ -5,66 +5,66 @@ namespace Fussion::GPU {
     class ShaderProcessor {
     public:
         /// Process shader file and resolve custom directives, such as '#import'.
-        static auto ProcessFile(std::filesystem::path const& path) -> Maybe<std::string>;
+        static auto process_file(std::filesystem::path const& path) -> Maybe<std::string>;
 
         struct ShaderUniform {
-            std::string Name {};
+            std::string name {};
         };
 
         struct PushConstant {
-            ShaderStage Stage {};
-            std::string Name {};
-            size_t Size {};
+            ShaderStage stage {};
+            std::string name {};
+            size_t size {};
         };
 
         struct ParsedPragma {
-            std::string Key {};
-            std::string Value {};
+            std::string key {};
+            std::string value {};
         };
 
         struct ResourceUsage {
-            std::string Label = "Resource Usage";
-            BindingType::Type Type;
-            s32 Count = 1;
-            ShaderStageFlags Stages;
-            u32 Binding = 42069;
+            std::string label = "Resource Usage";
+            BindingType::Type type;
+            s32 count = 1;
+            ShaderStageFlags stages;
+            u32 binding = 42069;
         };
 
         using BindingSet = u32;
         using BindingIndex = u32;
 
         struct ShaderMetadata {
-            std::vector<VertexAttribute> VertexAttributes {};
-            std::map<BindingSet, std::map<BindingIndex, ResourceUsage>> Uniforms {};
-            std::vector<u32> ColorOutputs {};
-            std::vector<PushConstant> PushConstants {};
-            std::vector<ParsedPragma> ParsedPragmas {};
-            bool UseBlending {};
-            bool UseDepth { true };
-            u32 Samples { 1 };
-            Maybe<DepthStencilState> DepthState {};
+            std::vector<VertexAttribute> vertex_attributes {};
+            std::map<BindingSet, std::map<BindingIndex, ResourceUsage>> uniforms {};
+            std::vector<u32> color_outputs {};
+            std::vector<PushConstant> push_constants {};
+            std::vector<ParsedPragma> parsed_pragmas {};
+            bool use_blending {};
+            bool use_depth { true };
+            u32 samples { 1 };
+            Maybe<DepthStencilState> depth_state {};
         };
 
         struct CompiledShaderStage {
-            ShaderStage Type {};
-            std::vector<u32> Bytecode {};
+            ShaderStage type {};
+            std::vector<u32> bytecode {};
         };
 
         struct CompiledShader {
             /// Individual vertex, fragment, compute binaries.
-            std::vector<CompiledShaderStage> ShaderStages {};
+            std::vector<CompiledShaderStage> shader_stages {};
             /// A single binary with all the stages linked together.
-            std::vector<u32> LinkedStage {};
-            std::vector<u32> VertexStage {};
-            std::vector<u32> FragmentStage {};
-            ShaderMetadata Metadata {};
+            std::vector<u32> linked_stage {};
+            std::vector<u32> vertex_stage {};
+            std::vector<u32> fragment_stage {};
+            ShaderMetadata metadata {};
         };
 
-        static void Initialize();
-        static void Shutdown();
+        static void initialize();
+        static void shutdown();
 
         /// Loads and compiles a Slang shader.
         /// @param path The path of the shader file.
-        static auto CompileSlang(std::filesystem::path const& path) -> Maybe<CompiledShader>;
+        static auto compile_slang(std::filesystem::path const& path) -> Maybe<CompiledShader>;
     };
 }

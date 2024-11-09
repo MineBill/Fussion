@@ -53,8 +53,8 @@ void ImGuiLayer::initialize()
     ImGui_ImplGlfw_InitForOther(window, true);
 
     ImGui_ImplWGPU_InitInfo info {};
-    info.Device = Renderer::device().As<WGPUDevice>();
-    info.RenderTargetFormat = ToWGPU(Renderer::surface().Format);
+    info.Device = Renderer::device().as<WGPUDevice>();
+    info.RenderTargetFormat = to_wgpu(Renderer::surface().format);
     ImGui_ImplWGPU_Init(&info);
 
     setup_imgui_style();
@@ -90,7 +90,7 @@ void ImGuiLayer::end(Maybe<Fussion::GPU::RenderPassEncoder> encoder)
     }
 
     if (encoder.has_value()) {
-        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->As<WGPURenderPassEncoder>());
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), encoder->as<WGPURenderPassEncoder>());
     }
 }
 

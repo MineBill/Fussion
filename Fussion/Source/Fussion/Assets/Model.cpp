@@ -17,20 +17,20 @@ namespace Fussion {
         auto& device = Renderer::device();
 
         auto vertex_spec = GPU::BufferSpec {
-            .Label = "Mesh Vertex Buffer"sv,
-            .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
-            .Size = CAST(u32, vertices.size() * sizeof(Vertex)),
+            .label = "Mesh Vertex Buffer"sv,
+            .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
+            .size = CAST(u32, vertices.size() * sizeof(Vertex)),
         };
-        vertex_buffer = device.CreateBuffer(vertex_spec);
-        device.WriteBuffer(vertex_buffer, 0, vertices);
+        vertex_buffer = device.create_buffer(vertex_spec);
+        device.write_buffer(vertex_buffer, 0, vertices);
 
         auto index_spec = GPU::BufferSpec {
-            .Label = "Index Vertex Buffer"sv,
-            .Usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
-            .Size = CAST(u32, indices.size() * sizeof(u32)),
+            .label = "Index Vertex Buffer"sv,
+            .usage = GPU::BufferUsage::Index | GPU::BufferUsage::CopyDst,
+            .size = CAST(u32, indices.size() * sizeof(u32)),
         };
-        index_buffer = device.CreateBuffer(index_spec);
-        device.WriteBuffer(index_buffer, 0, indices);
+        index_buffer = device.create_buffer(index_spec);
+        device.write_buffer(index_buffer, 0, indices);
 
         index_count = CAST(u32, indices.size());
 

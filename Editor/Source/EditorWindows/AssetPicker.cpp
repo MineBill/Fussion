@@ -44,7 +44,7 @@ void AssetPicker::Update()
             }
             size.x = texture->metadata().aspect() * size.y;
 
-            EUI::image_button(texture->texture().View, [&] {
+            EUI::image_button(texture->texture().view, [&] {
                 m_member.set(m_instance, handle);
                 // TODO: Call notify methods, if available.
                 m_opened = false;

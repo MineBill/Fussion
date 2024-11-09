@@ -47,21 +47,21 @@ namespace Fussion {
         g_DebugData.Device = device;
 
         constexpr auto path = "Assets/Shaders/Slang/Debug.slang";
-        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).unwrap();
-        compiledShader.Metadata.UseBlending = true;
-        compiledShader.Metadata.ParsedPragmas.push_back({ .Key = "topology", .Value = "lines" });
+        auto compiledShader = GPU::ShaderProcessor::compile_slang(path).unwrap();
+        compiledShader.metadata.use_blending = true;
+        compiledShader.metadata.parsed_pragmas.push_back({ .key = "topology", .value = "lines" });
 
         auto shader = make_ref<ShaderAsset>(compiledShader, std::vector { target_format });
         g_DebugData.Shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
 
         GPU::BufferSpec spec {
-            .Label = "Debug::VertexBuffer"sv,
-            .Usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
-            .Size = 20'000 * sizeof(Point),
-            .Mapped = false,
+            .label = "Debug::VertexBuffer"sv,
+            .usage = GPU::BufferUsage::Vertex | GPU::BufferUsage::CopyDst,
+            .size = 20'000 * sizeof(Point),
+            .mapped_at_creation = false,
         };
 
-        g_DebugData.VertexBuffer = device.CreateBuffer(spec);
+        g_DebugData.VertexBuffer = device.create_buffer(spec);
     }
 
     void Debug::draw_box(BoundingBox const& box, Vector3 euler_angles, Vector3 size, f32 time, Color color)
@@ -201,13 +201,13 @@ namespace Fussion {
         VERIFY(line_count % 2 == 0);
 
         auto shader = g_DebugData.Shader.get();
-        encoder.SetPipeline(shader->pipeline());
+        encoder.set_pipeline(shader->pipeline());
 
-        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
-        g_DebugData.Device.WriteBuffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));
+        g_DebugData.Device.write_buffer(g_DebugData.VertexBuffer, 0, g_DebugData.Points.data(), g_DebugData.Points.size() * sizeof(Point));
+        g_DebugData.Device.write_buffer(g_DebugData.VertexBuffer, g_DebugData.Points.size() * sizeof(Point), g_DebugData.TimedPoints.data(), g_DebugData.TimedPoints.size() * sizeof(Point));
 
-        encoder.SetVertexBuffer(0, g_DebugData.VertexBuffer);
-        encoder.Draw({ 0, CAST(u32, line_count) }, { 0, 1 });
+        encoder.set_vertex_buffer(0, g_DebugData.VertexBuffer);
+        encoder.draw({ 0, CAST(u32, line_count) }, { 0, 1 });
     }
 
     void Debug::reset()

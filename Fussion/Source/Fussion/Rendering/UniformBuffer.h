@@ -10,13 +10,13 @@ namespace Fussion {
             : m_device(device)
         {
             auto buffer_spec = GPU::BufferSpec {
-                .Label = label.value_or("Uniform Buffer<T>"),
-                .Usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
-                .Size = sizeof(T),
-                .Mapped = false,
+                .label = label.value_or("Uniform Buffer<T>"),
+                .usage = GPU::BufferUsage::Uniform | GPU::BufferUsage::CopyDst,
+                .size = sizeof(T),
+                .mapped_at_creation = false,
             };
 
-            m_buffer = m_device.CreateBuffer(buffer_spec);
+            m_buffer = m_device.create_buffer(buffer_spec);
         }
 
     public:
@@ -32,16 +32,16 @@ namespace Fussion {
         void flush()
         {
             ZoneScopedN("Uniform Buffer Flush");
-            VERIFY(m_buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            VERIFY(m_buffer.handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
 
-            m_device.WriteBuffer(m_buffer, 0, &Data, sizeof(T));
+            m_device.write_buffer(m_buffer, 0, &Data, sizeof(T));
         }
 
         static size_t size() { return TypeSize; }
 
         GPU::Buffer const& buffer() const
         {
-            VERIFY(m_buffer.Handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
+            VERIFY(m_buffer.handle != nullptr, "Ensure you created the buffer with UnifromBuffer<T>::Create");
             return m_buffer;
         }
 

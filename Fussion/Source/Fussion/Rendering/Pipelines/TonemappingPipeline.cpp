@@ -9,98 +9,98 @@ namespace Fussion {
     {
         std::array entries {
             GPU::BindGroupLayoutEntry {
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Texture {
-                    .SampleType = GPU::TextureSampleType::Float { true },
-                    .ViewDimension = GPU::TextureViewDimension::D2,
-                    .MultiSampled = false,
+                .binding = 0,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Texture {
+                    .sample_type = GPU::TextureSampleType::Float { true },
+                    .view_dimension = GPU::TextureViewDimension::D2,
+                    .multi_sampled = false,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry {
-                .Binding = 1,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Sampler {
-                    .Type = GPU::SamplerBindingType::Filtering,
+                .binding = 1,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Sampler {
+                    .type = GPU::SamplerBindingType::Filtering,
                 },
-                .Count = 1,
+                .count = 1,
             },
             GPU::BindGroupLayoutEntry {
-                .Binding = 2,
-                .Visibility = GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer {},
-                .Count = 1,
+                .binding = 2,
+                .visibility = GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer {},
+                .count = 1,
             }
         };
 
         GPU::BindGroupLayoutSpec spec {
             .Label = "HDR::BGL"sv,
-            .Entries = entries,
+            .entries = entries,
         };
 
-        m_bind_group_layout = Renderer::device().CreateBindGroupLayout(spec);
+        m_bind_group_layout = Renderer::device().create_bind_group_layout(spec);
 
         GPU::SamplerSpec sampler_spec {
             .label = "HDR::Sampler"sv,
-            .AddressModeU = GPU::AddressMode::Repeat,
-            .AddressModeV = GPU::AddressMode::Repeat,
-            .AddressModeW = GPU::AddressMode::Repeat,
-            .MagFilter = GPU::FilterMode::Linear,
-            .MinFilter = GPU::FilterMode::Linear,
-            .MipMapFilter = GPU::FilterMode::Linear,
+            .address_mode_u = GPU::AddressMode::Repeat,
+            .address_mode_v = GPU::AddressMode::Repeat,
+            .address_mode_w = GPU::AddressMode::Repeat,
+            .mag_filter = GPU::FilterMode::Linear,
+            .min_filter = GPU::FilterMode::Linear,
+            .mip_map_filter = GPU::FilterMode::Linear,
         };
 
-        m_sampler = Renderer::device().CreateSampler(sampler_spec);
+        m_sampler = Renderer::device().create_sampler(sampler_spec);
 
         m_tonemapping_buffer = UniformBuffer<PostProcessing::Tonemapping>::create(Renderer::device(), "Tonemapping Settings Buffer"sv);
         resize(size);
 
-        auto shader_src = GPU::ShaderProcessor::ProcessFile("Assets/Shaders/WGSL/HDR.wgsl").unwrap();
+        auto shader_src = GPU::ShaderProcessor::process_file("Assets/Shaders/WGSL/HDR.wgsl").unwrap();
 
         GPU::ShaderModuleSpec shader_spec {
-            .Label = "HDR::Shader"sv,
-            .Type = GPU::WGSLShader {
-                .Source = shader_src,
+            .label = "HDR::Shader"sv,
+            .type = GPU::WGSLShader {
+                .source = shader_src,
             },
-            .VertexEntryPoint = "vs_main",
-            .FragmentEntryPoint = "fs_main",
+            .vertex_entry_point_name = "vs_main",
+            .fragment_entry_point_name = "fs_main",
         };
 
-        auto shader = Renderer::device().CreateShaderModule(shader_spec);
+        auto shader = Renderer::device().create_shader_module(shader_spec);
 
         std::array bind_group_layouts {
             m_bind_group_layout,
         };
         GPU::PipelineLayoutSpec pl_spec {
-            .BindGroupLayouts = bind_group_layouts
+            .bind_group_layouts = bind_group_layouts
         };
-        auto layout = Renderer::device().CreatePipelineLayout(pl_spec);
+        auto layout = Renderer::device().create_pipeline_layout(pl_spec);
 
         GPU::RenderPipelineSpec rp_spec {
-            .Label = "HDR::RenderPipeline"sv,
-            .Layout = layout,
-            .Vertex = {},
-            .Primitive = {
-                .Topology = GPU::PrimitiveTopology::TriangleList,
-                .StripIndexFormat = None(),
-                .FrontFace = GPU::FrontFace::Ccw,
-                .Cull = GPU::Face::None,
+            .label = "HDR::RenderPipeline"sv,
+            .layout = layout,
+            .vertex = {},
+            .primitive = {
+                .topology = GPU::PrimitiveTopology::TriangleList,
+                .strip_index_format = None(),
+                .front_face = GPU::FrontFace::Ccw,
+                .cull_mode = GPU::Face::None,
             },
-            .DepthStencil = None(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = GPU::FragmentStage {
-                .Targets = {
+            .depth_stencil = None(),
+            .multi_sample = GPU::MultiSampleState::default_(),
+            .fragment = GPU::FragmentStage {
+                .targets = {
                     GPU::ColorTargetState {
-                        .Format = output_format,
-                        .Blend = None(),
-                        .WriteMask = GPU::ColorWrite::All,
+                        .format = output_format,
+                        .blend_state = None(),
+                        .write_mask = GPU::ColorWrite::All,
                     },
                 },
             },
         };
 
-        m_pipeline = Renderer::device().CreateRenderPipeline(shader, shader, rp_spec);
+        m_pipeline = Renderer::device().create_render_pipeline(shader, shader, rp_spec);
     }
 
     void TonemappingPipeline::render(GPU::CommandEncoder& encoder, GPU::TextureView& output, RenderContext const& render_context)
@@ -108,75 +108,75 @@ namespace Fussion {
         using namespace GPU;
         std::array color_attachments {
             RenderPassColorAttachment {
-                .View = output,
-                .LoadOp = LoadOp::Clear,
-                .StoreOp = StoreOp::Store,
-                .ClearColor = Color::Indigo,
+                .view = output,
+                .load_op = LoadOp::Clear,
+                .store_op = StoreOp::Store,
+                .clear_color = Color::Indigo,
             },
         };
 
         RenderPassSpec spec {
-            .Label = "HDR::RenderPass"sv,
-            .ColorAttachments = color_attachments,
-            .DepthStencilAttachment = None(),
+            .label = "HDR::RenderPass"sv,
+            .color_attachments = color_attachments,
+            .depth_stencil_attachment = None(),
         };
-        auto rp = encoder.BeginRendering(spec);
+        auto rp = encoder.begin_rendering(spec);
 
         m_tonemapping_buffer.Data = render_context.post_processing_settings.tonemapping_settings;
         m_tonemapping_buffer.flush();
 
-        rp.SetPipeline(m_pipeline);
-        rp.SetBindGroup(m_bind_group, 0);
-        rp.Draw({ 0, 4 }, { 0, 1 });
+        rp.set_pipeline(m_pipeline);
+        rp.set_bind_group(m_bind_group, 0);
+        rp.draw({ 0, 4 }, { 0, 1 });
 
-        rp.End();
-        rp.Release();
+        rp.end();
+        rp.release();
     }
 
     void TonemappingPipeline::resize(Vector2 size)
     {
-        m_render_texture.Release();
+        m_render_texture.release();
         GPU::TextureSpec rt_spec {
-            .Label = "HDR::RenderTarget"sv,
-            .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .Dimension = GPU::TextureDimension::D2,
-            .Size = { size.x, size.y, 1 },
-            .Format = Format,
-            .SampleCount = 1,
-            .Aspect = GPU::TextureAspect::All,
+            .label = "HDR::RenderTarget"sv,
+            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { size.x, size.y, 1 },
+            .format = Format,
+            .sample_count = 1,
+            .aspect = GPU::TextureAspect::All,
         };
-        m_render_texture = Renderer::device().CreateTexture(rt_spec);
+        m_render_texture = Renderer::device().create_texture(rt_spec);
 
-        m_bind_group.Release();
+        m_bind_group.release();
         std::array bind_group_entries {
             GPU::BindGroupEntry {
-                .Binding = 0,
-                .Resource = m_render_texture.View,
+                .binding = 0,
+                .resource = m_render_texture.view,
             },
             GPU::BindGroupEntry {
-                .Binding = 1,
-                .Resource = m_sampler,
+                .binding = 1,
+                .resource = m_sampler,
             },
             GPU::BindGroupEntry {
-                .Binding = 2,
+                .binding = 2,
                 // TODO: Make the UniformBuffer create the binding directly?
-                .Resource = GPU::BufferBinding {
-                    .TargetBuffer = m_tonemapping_buffer.buffer(),
-                    .Offset = 0,
-                    .Size = m_tonemapping_buffer.buffer().Size() },
+                .resource = GPU::BufferBinding {
+                    .target_buffer = m_tonemapping_buffer.buffer(),
+                    .offset = 0,
+                    .size = m_tonemapping_buffer.buffer().size() },
             },
         };
 
         GPU::BindGroupSpec global_bg_spec {
-            .Label = "HDR::BindGroup"sv,
-            .Entries = bind_group_entries
+            .label = "HDR::BindGroup"sv,
+            .entries = bind_group_entries
         };
 
-        m_bind_group = Renderer::device().CreateBindGroup(m_bind_group_layout, global_bg_spec);
+        m_bind_group = Renderer::device().create_bind_group(m_bind_group_layout, global_bg_spec);
     }
 
     auto TonemappingPipeline::view() -> GPU::TextureView&
     {
-        return m_render_texture.View;
+        return m_render_texture.view;
     }
 }

@@ -40,88 +40,88 @@ namespace Fussion {
         // m_BindGroupLayout = Renderer::Device().CreateBindGroupLayout(spec);
 
         constexpr auto path = "Assets/Shaders/Slang/Effects/Blur.slang";
-        auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).unwrap();
-        compiledShader.Metadata.UseDepth = false;
+        auto compiledShader = GPU::ShaderProcessor::compile_slang(path).unwrap();
+        compiledShader.metadata.use_depth = false;
         auto shader = make_ref<ShaderAsset>(compiledShader, std::vector { Format });
         m_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
 
         GPU::TextureSpec rt_spec {
-            .Label = "SSAOBlur::RenderTarget"sv,
-            .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .Dimension = GPU::TextureDimension::D2,
-            .Size = { size.x, size.y, 1 },
-            .Format = Format,
-            .SampleCount = 1,
-            .Aspect = GPU::TextureAspect::All,
+            .label = "SSAOBlur::RenderTarget"sv,
+            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { size.x, size.y, 1 },
+            .format = Format,
+            .sample_count = 1,
+            .aspect = GPU::TextureAspect::All,
         };
-        m_render_target = Renderer::device().CreateTexture(rt_spec);
-        m_render_target.InitializeView();
+        m_render_target = Renderer::device().create_texture(rt_spec);
+        m_render_target.initialize_view();
 
         GPU::SamplerSpec sampler_spec {
             .label = "SSAOBlur::Sampler"sv,
-            .AddressModeU = GPU::AddressMode::Repeat,
-            .AddressModeV = GPU::AddressMode::Repeat,
-            .AddressModeW = GPU::AddressMode::Repeat,
-            .MagFilter = GPU::FilterMode::Nearest,
-            .MinFilter = GPU::FilterMode::Nearest,
-            .MipMapFilter = GPU::FilterMode::Linear,
+            .address_mode_u = GPU::AddressMode::Repeat,
+            .address_mode_v = GPU::AddressMode::Repeat,
+            .address_mode_w = GPU::AddressMode::Repeat,
+            .mag_filter = GPU::FilterMode::Nearest,
+            .min_filter = GPU::FilterMode::Nearest,
+            .mip_map_filter = GPU::FilterMode::Linear,
         };
 
-        m_sampler = Renderer::device().CreateSampler(sampler_spec);
+        m_sampler = Renderer::device().create_sampler(sampler_spec);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
-                .Binding = 0,
-                .Resource = m_render_target.View,
+                .binding = 0,
+                .resource = m_render_target.view,
             },
             GPU::BindGroupEntry {
-                .Binding = 1,
-                .Resource = m_sampler,
+                .binding = 1,
+                .resource = m_sampler,
             },
         };
 
         GPU::BindGroupSpec bgSpec {
-            .Label = "SSAOBlur::BindGroup"sv,
-            .Entries = bind_group_entries
+            .label = "SSAOBlur::BindGroup"sv,
+            .entries = bind_group_entries
         };
 
-        m_bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bgSpec);
+        m_bind_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(0).unwrap(), bgSpec);
     }
 
     void SSAOBlur::resize(Vector2 const& new_size, GPU::Texture const& ssao_texture)
     {
-        m_bind_group.Release();
-        m_render_target.Release();
+        m_bind_group.release();
+        m_render_target.release();
 
         std::array bgEntries {
             GPU::BindGroupEntry {
-                .Binding = 0,
-                .Resource = ssao_texture.View,
+                .binding = 0,
+                .resource = ssao_texture.view,
             },
             GPU::BindGroupEntry {
-                .Binding = 1,
-                .Resource = m_sampler,
+                .binding = 1,
+                .resource = m_sampler,
             },
         };
 
         GPU::BindGroupSpec bg_spec {
-            .Label = "SSAOBlur::BindGroup"sv,
-            .Entries = bgEntries
+            .label = "SSAOBlur::BindGroup"sv,
+            .entries = bgEntries
         };
 
         auto shader = m_shader.get();
-        m_bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
+        m_bind_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
 
         GPU::TextureSpec rt_spec {
-            .Label = "SSAOBlur::RenderTarget"sv,
-            .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .Dimension = GPU::TextureDimension::D2,
-            .Size = { new_size.x, new_size.y, 1 },
-            .Format = Format,
-            .SampleCount = 1,
-            .Aspect = GPU::TextureAspect::All,
+            .label = "SSAOBlur::RenderTarget"sv,
+            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { new_size.x, new_size.y, 1 },
+            .format = Format,
+            .sample_count = 1,
+            .aspect = GPU::TextureAspect::All,
         };
-        m_render_target = Renderer::device().CreateTexture(rt_spec);
+        m_render_target = Renderer::device().create_texture(rt_spec);
     }
 
     void SSAOBlur::render(GPU::CommandEncoder const& encoder, GPU::QuerySet const& set, u32 begin, u32 end)
@@ -131,31 +131,31 @@ namespace Fussion {
         using namespace GPU;
         std::array color_attachments {
             RenderPassColorAttachment {
-                .View = m_render_target.View,
-                .LoadOp = LoadOp::Clear,
-                .StoreOp = StoreOp::Store,
-                .ClearColor = Color::Indigo,
+                .view = m_render_target.view,
+                .load_op = LoadOp::Clear,
+                .store_op = StoreOp::Store,
+                .clear_color = Color::Indigo,
             },
         };
 
         RenderPassSpec spec {
-            .Label = "SSAOBlur::RenderPass"sv,
-            .ColorAttachments = color_attachments,
-            .DepthStencilAttachment = None(),
-            .TimestampWrites = RenderPassTimestampWrites {
-                .Set = set,
-                .BeginningOfPassWriteIndex = begin,
-                .EndOfPassWriteIndex = end,
+            .label = "SSAOBlur::RenderPass"sv,
+            .color_attachments = color_attachments,
+            .depth_stencil_attachment = None(),
+            .timestamp_writes = RenderPassTimestampWrites {
+                .set = set,
+                .beginning_of_pass_write_index = begin,
+                .end_of_pass_write_index = end,
             }
         };
-        auto rp = encoder.BeginRendering(spec);
+        auto rp = encoder.begin_rendering(spec);
 
         auto shader = m_shader.get();
-        rp.SetPipeline(shader->pipeline());
-        rp.SetBindGroup(m_bind_group, 0);
-        rp.Draw({ 0, 6 }, { 0, 1 });
+        rp.set_pipeline(shader->pipeline());
+        rp.set_bind_group(m_bind_group, 0);
+        rp.draw({ 0, 6 }, { 0, 1 });
 
-        rp.End();
-        rp.Release();
+        rp.end();
+        rp.release();
     }
 }

@@ -49,19 +49,19 @@ void Fussion::PbrMaterial::update_buffer()
 
 void Fussion::PbrMaterial::update_sampler()
 {
-    sampler.Release();
+    sampler.release();
     GPU::SamplerSpec bilinear_sampler_spec {
         .label = "Material Sampler"sv,
-        .AddressModeU = GPU::AddressMode::Repeat,
-        .AddressModeV = GPU::AddressMode::Repeat,
-        .AddressModeW = GPU::AddressMode::Repeat,
-        .MagFilter = GPU::FilterMode::Linear,
-        .MinFilter = GPU::FilterMode::Linear,
-        .MipMapFilter = GPU::FilterMode::Linear,
-        .LodMinClamp = 0.f,
-        .LodMaxClamp = 32.f,
-        .AnisotropyClamp = 16
+        .address_mode_u = GPU::AddressMode::Repeat,
+        .address_mode_v = GPU::AddressMode::Repeat,
+        .address_mode_w = GPU::AddressMode::Repeat,
+        .mag_filter = GPU::FilterMode::Linear,
+        .min_filter = GPU::FilterMode::Linear,
+        .mip_map_filter = GPU::FilterMode::Linear,
+        .lod_min_clamp = 0.f,
+        .lod_max_clamp = 32.f,
+        .anisotropy_clamp = 16
     };
 
-    sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
+    sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
 }

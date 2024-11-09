@@ -11,7 +11,7 @@ namespace Fussion {
         size_t index = render_objects.size();
         render_objects.push_back(obj);
 
-        mesh_render_lists[obj.material][obj.vertex_buffer.Handle].push_back(index);
+        mesh_render_lists[obj.material][obj.vertex_buffer.handle].push_back(index);
     }
 
     void RenderContext::reset()

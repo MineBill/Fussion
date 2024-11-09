@@ -98,19 +98,19 @@ void EditorApplication::on_update(f32 delta)
         return;
     }
 
-    auto encoder = Renderer::device().CreateCommandEncoder();
+    auto encoder = Renderer::device().create_command_encoder();
 
     std::array colorAttachments {
         GPU::RenderPassColorAttachment {
-            .View = *view,
-            .LoadOp = GPU::LoadOp::Clear,
-            .StoreOp = GPU::StoreOp::Store,
-            .ClearColor = Color::Coral,
+            .view = *view,
+            .load_op = GPU::LoadOp::Clear,
+            .store_op = GPU::StoreOp::Store,
+            .clear_color = Color::Coral,
         }
     };
     GPU::RenderPassSpec rp_spec {
-        .Label = "Main RenderPass"sv,
-        .ColorAttachments = colorAttachments
+        .label = "Main RenderPass"sv,
+        .color_attachments = colorAttachments
     };
 
     if (g_ProjectCreator)
@@ -118,17 +118,17 @@ void EditorApplication::on_update(f32 delta)
     if (g_Editor)
         g_Editor->on_draw(encoder);
 
-    auto main_rp = encoder.BeginRendering(rp_spec);
+    auto main_rp = encoder.begin_rendering(rp_spec);
 
     g_Imgui->end(main_rp);
 
-    main_rp.End();
-    main_rp.Release();
+    main_rp.end();
+    main_rp.release();
 
-    auto cmd = encoder.Finish();
+    auto cmd = encoder.finish();
     Renderer::end_rendering(cmd);
-    encoder.Release();
-    view->Release();
+    encoder.release();
+    view->release();
 }
 
 void EditorApplication::on_event(Event& event)

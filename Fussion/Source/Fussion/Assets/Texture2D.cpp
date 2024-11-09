@@ -36,26 +36,26 @@ namespace Fussion {
 
         texture->m_metadata = metadata;
         GPU::TextureSpec spec {
-            .Label = "Texture2D Texture"sv,
-            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
-            .Dimension = GPU::TextureDimension::D2,
-            .Size = { metadata.width, metadata.height, 1 },
-            .Format = metadata.format,
-            .SampleCount = 1,
-            .GenerateMipMaps = metadata.generate_mipmaps,
+            .label = "Texture2D Texture"sv,
+            .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { metadata.width, metadata.height, 1 },
+            .format = metadata.format,
+            .sample_count = 1,
+            .generate_mip_maps = metadata.generate_mipmaps,
         };
 
         if (metadata.is_normal_map) {
-            spec.Format = GPU::TextureFormat::RGBA8Unorm;
+            spec.format = GPU::TextureFormat::RGBA8Unorm;
         }
 
         auto& device = Renderer::device();
 
-        texture->m_texture = device.CreateTexture(spec);
+        texture->m_texture = device.create_texture(spec);
 
-        device.WriteTexture(texture->m_texture, data.data(), data.size_in_bytes(), Vector2::Zero, { metadata.width, metadata.height });
+        device.write_texture(texture->m_texture, data.data(), data.size_in_bytes(), Vector2::Zero, { metadata.width, metadata.height });
 
-        texture->m_texture.GenerateMipmaps(device);
+        texture->m_texture.generate_mipmaps(device);
 
         return texture;
     }
@@ -66,22 +66,22 @@ namespace Fussion {
 
         texture->m_metadata = metadata;
         GPU::TextureSpec spec {
-            .Label = "Texture2D Texture"sv,
-            .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
-            .Dimension = GPU::TextureDimension::D2,
-            .Size = { metadata.width, metadata.height, 1 },
-            .Format = metadata.format,
-            .SampleCount = 1,
-            .GenerateMipMaps = metadata.generate_mipmaps,
+            .label = "Texture2D Texture"sv,
+            .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding | GPU::TextureUsage::CopySrc,
+            .dimension = GPU::TextureDimension::D2,
+            .size = { metadata.width, metadata.height, 1 },
+            .format = metadata.format,
+            .sample_count = 1,
+            .generate_mip_maps = metadata.generate_mipmaps,
         };
 
         auto& device = Renderer::device();
 
-        texture->m_texture = device.CreateTexture(spec);
+        texture->m_texture = device.create_texture(spec);
 
-        device.WriteTexture(texture->m_texture, data.data(), data.size_in_bytes(), Vector2::Zero, { metadata.width, metadata.height }, 4 * sizeof(f32));
+        device.write_texture(texture->m_texture, data.data(), data.size_in_bytes(), Vector2::Zero, { metadata.width, metadata.height }, 4 * sizeof(f32));
 
-        texture->m_texture.GenerateMipmaps(device);
+        texture->m_texture.generate_mipmaps(device);
 
         return texture;
     }

@@ -51,7 +51,7 @@ void ContentBrowserWindow::NamePopup::update()
         }
 
         if (m_show_error) {
-            ImGui::Image(EditorStyle::style().editor_icons[EditorIcon::Error]->texture().View, Vector2(16, 16));
+            ImGui::Image(EditorStyle::style().editor_icons[EditorIcon::Error]->texture().view, Vector2(16, 16));
             ImGui::SameLine();
             ImGui::TextUnformatted("Item already exists");
         }
@@ -205,7 +205,7 @@ void ContentBrowserWindow::on_draw()
                     .with(ImGuiStyleVar_FrameRounding, 2.0f)
                     .with(ImGuiCol_Button, Color::Transparent)
                     .build([&] {
-                        ImGui::ImageButton(style.editor_icons[EditorIcon::FolderBack]->texture().View, size);
+                        ImGui::ImageButton(style.editor_icons[EditorIcon::FolderBack]->texture().view, size);
                     });
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                     change_directory(m_current_path.parent_path());
@@ -230,7 +230,7 @@ void ContentBrowserWindow::on_draw()
                         .with(ImGuiStyleVar_FrameRounding, 2.0f)
                         .with(ImGuiCol_Button, Color::Transparent)
                         .build([&] {
-                            ImGui::ImageButton(style.editor_icons[EditorIcon::Folder]->texture().View, size);
+                            ImGui::ImageButton(style.editor_icons[EditorIcon::Folder]->texture().view, size);
                         });
                     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemFocused()) {
                         requested_directory_change = entry.path;
@@ -286,7 +286,7 @@ void ContentBrowserWindow::on_draw()
                         .with(ImGuiCol_ButtonHovered, Color::from_hex(ACCENT_COLOR).lighten(0.05f), m_Selection.contains(entry.id))
                         .with(ImGuiCol_ButtonActive, Color::from_hex(ACCENT_COLOR).darken(0.05f), m_Selection.contains(entry.id))
                         .build([&] {
-                            ImGui::ImageButton(texture->texture().View, size);
+                            ImGui::ImageButton(texture->texture().view, size);
                         });
 
                     if (m_Selection.contains(entry.id)) {

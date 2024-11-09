@@ -26,11 +26,11 @@ void ConsoleWindow::on_draw()
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, Vector2(5, 5));
 
         auto& style = EditorStyle::style();
-        ImGuiH::image_toggle_button("##info_toggle", style.editor_icons[EditorIcon::Info]->texture().View, m_info_enable, Vector2(15, 15));
+        ImGuiH::image_toggle_button("##info_toggle", style.editor_icons[EditorIcon::Info]->texture().view, m_info_enable, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::image_toggle_button("##warn_toggle", style.editor_icons[EditorIcon::Warning]->texture().View, m_warning_enabled, Vector2(15, 15));
+        ImGuiH::image_toggle_button("##warn_toggle", style.editor_icons[EditorIcon::Warning]->texture().view, m_warning_enabled, Vector2(15, 15));
         ImGui::SameLine();
-        ImGuiH::image_toggle_button("##error_toggle", style.editor_icons[EditorIcon::Error]->texture().View, m_error_enabled, Vector2(15, 15));
+        ImGuiH::image_toggle_button("##error_toggle", style.editor_icons[EditorIcon::Error]->texture().view, m_error_enabled, Vector2(15, 15));
 
         ImGui::PopStyleVar();
 

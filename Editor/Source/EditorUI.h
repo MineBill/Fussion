@@ -116,7 +116,7 @@ namespace EUI {
 
     void image_button(Ref<Fussion::Texture2D> const& texture, auto&& func, ImageButtonParams params = {})
     {
-        image_button(texture->texture().View, func, params);
+        image_button(texture->texture().view, func, params);
     }
 
     bool asset_property(meta_hpp::class_type class_type, meta_hpp::uvalue data);

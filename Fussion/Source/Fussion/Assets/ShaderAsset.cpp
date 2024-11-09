@@ -22,9 +22,9 @@ namespace Fussion {
 
     ShaderAsset::ShaderAsset(GPU::ShaderProcessor::CompiledShader const& compiledShader, std::vector<GPU::TextureFormat> colorTargetFormats)
     {
-        m_metadata = compiledShader.Metadata;
+        m_metadata = compiledShader.metadata;
         m_color_target_formats = colorTargetFormats;
-        usz shaderOutputCount = compiledShader.Metadata.ColorOutputs.size();
+        usz shaderOutputCount = compiledShader.metadata.color_outputs.size();
         usz targetFormatCount = colorTargetFormats.size();
         if (shaderOutputCount != targetFormatCount) {
             LOG_ERRORF("Mismatch between fragment shader color targets and provided texture formats: {} vs {}", shaderOutputCount, targetFormatCount);
@@ -36,93 +36,93 @@ namespace Fussion {
         }
 
         std::vector<GPU::BindGroupLayout> layouts {};
-        for (auto const& [setIndex, set] : compiledShader.Metadata.Uniforms) {
+        for (auto const& [setIndex, set] : compiledShader.metadata.uniforms) {
             std::vector<GPU::BindGroupLayoutEntry> entries {};
             for (auto const& [bindingIndex, resource] : set) {
                 entries.push_back({
-                    .Binding = bindingIndex,
-                    .Visibility = resource.Stages,
-                    .Type = resource.Type,
-                    .Count = CAST(u32, resource.Count),
+                    .binding = bindingIndex,
+                    .visibility = resource.stages,
+                    .type = resource.type,
+                    .count = CAST(u32, resource.count),
                 });
             }
-            auto layout = Renderer::device().CreateBindGroupLayout({
+            auto layout = Renderer::device().create_bind_group_layout({
                 .Label = "asd"sv,
-                .Entries = entries,
+                .entries = entries,
             });
             m_bind_group_layouts[setIndex] = layout;
             layouts.emplace_back(layout);
         }
 
-        auto layout = Renderer::device().CreatePipelineLayout({ .BindGroupLayouts = layouts });
+        auto layout = Renderer::device().create_pipeline_layout({ .bind_group_layouts = layouts });
 
         GPU::RenderPipelineSpec spec {
-            .Label = "Pipeline"sv,
-            .Layout = layout,
-            .Vertex = { .AttributeLayouts = {} },
-            .Primitive = GPU::PrimitiveState::Default(),
-            .DepthStencil = None(),
-            .MultiSample = GPU::MultiSampleState::Default(),
-            .Fragment = None(),
-            .VertexEntryPointOverride = "main"sv,
-            .FragmentEntryPointOverride = "main"sv,
+            .label = "Pipeline"sv,
+            .layout = layout,
+            .vertex = { .attribute_layouts = {} },
+            .primitive = GPU::PrimitiveState::default_(),
+            .depth_stencil = None(),
+            .multi_sample = GPU::MultiSampleState::default_(),
+            .fragment = None(),
+            .vertex_entry_point_override = "main"sv,
+            .fragment_entry_point_override = "main"sv,
         };
 
-        if (compiledShader.Metadata.DepthState) {
-            spec.DepthStencil = compiledShader.Metadata.DepthState.unwrap();
-        } else if (compiledShader.Metadata.UseDepth) {
-            spec.DepthStencil = GPU::DepthStencilState::Default();
+        if (compiledShader.metadata.depth_state) {
+            spec.depth_stencil = compiledShader.metadata.depth_state.unwrap();
+        } else if (compiledShader.metadata.use_depth) {
+            spec.depth_stencil = GPU::DepthStencilState::default_();
         }
 
-        if (!compiledShader.Metadata.VertexAttributes.empty()) {
-            spec.Vertex.AttributeLayouts.push_back(
-                GPU::VertexBufferLayout::Create(compiledShader.Metadata.VertexAttributes)
+        if (!compiledShader.metadata.vertex_attributes.empty()) {
+            spec.vertex.attribute_layouts.push_back(
+                GPU::VertexBufferLayout::create(compiledShader.metadata.vertex_attributes)
             );
         }
 
-        if (auto pragma = std::ranges::find_if(compiledShader.Metadata.ParsedPragmas, [](GPU::ShaderProcessor::ParsedPragma const& parsedPragma) {
-                return parsedPragma.Key == "topology";
+        if (auto pragma = std::ranges::find_if(compiledShader.metadata.parsed_pragmas, [](GPU::ShaderProcessor::ParsedPragma const& parsedPragma) {
+                return parsedPragma.key == "topology";
             });
-            pragma != compiledShader.Metadata.ParsedPragmas.end()) {
-            if (pragma->Value == "triangles"sv) {
-                spec.Primitive.Topology = GPU::PrimitiveTopology::TriangleList;
-            } else if (pragma->Value == "triangle_strip"sv) {
-                spec.Primitive.Topology = GPU::PrimitiveTopology::TriangleStrip;
-            } else if (pragma->Value == "lines"sv) {
-                spec.Primitive.Topology = GPU::PrimitiveTopology::LineList;
+            pragma != compiledShader.metadata.parsed_pragmas.end()) {
+            if (pragma->value == "triangles"sv) {
+                spec.primitive.topology = GPU::PrimitiveTopology::TriangleList;
+            } else if (pragma->value == "triangle_strip"sv) {
+                spec.primitive.topology = GPU::PrimitiveTopology::TriangleStrip;
+            } else if (pragma->value == "lines"sv) {
+                spec.primitive.topology = GPU::PrimitiveTopology::LineList;
             } else {
                 // Default is triangle list.
-                spec.Primitive.Topology = GPU::PrimitiveTopology::TriangleList;
+                spec.primitive.topology = GPU::PrimitiveTopology::TriangleList;
             }
         }
 
-        if (!compiledShader.Metadata.ColorOutputs.empty()) {
-            spec.Fragment = GPU::FragmentStage {};
+        if (!compiledShader.metadata.color_outputs.empty()) {
+            spec.fragment = GPU::FragmentStage {};
         }
 
         u32 i = 0;
-        for (auto const& colorOutput : compiledShader.Metadata.ColorOutputs) {
+        for (auto const& colorOutput : compiledShader.metadata.color_outputs) {
             (void)colorOutput;
-            spec.Fragment->Targets.push_back({
-                .Format = colorTargetFormats[i++],
-                .Blend = compiledShader.Metadata.UseBlending ? GPU::BlendState::Default() : Maybe<GPU::BlendState>(None()),
-                .WriteMask = GPU::ColorWrite::All,
+            spec.fragment->targets.push_back({
+                .format = colorTargetFormats[i++],
+                .blend_state = compiledShader.metadata.use_blending ? GPU::BlendState::default_() : Maybe<GPU::BlendState>(None()),
+                .write_mask = GPU::ColorWrite::All,
             });
         }
 
         GPU::SpirVShaderSpec vsShaderSpec {
-            .Label = "Shader"sv,
-            .Data = const_cast<std::vector<u32>&>(compiledShader.VertexStage),
+            .label = "Shader"sv,
+            .data = const_cast<std::vector<u32>&>(compiledShader.vertex_stage),
         };
-        auto vertexShader = Renderer::device().CreateShaderModuleSpirV(vsShaderSpec);
+        auto vertexShader = Renderer::device().create_shader_module_spir_v(vsShaderSpec);
 
         GPU::SpirVShaderSpec fsShaderSpec {
-            .Label = "Shader"sv,
-            .Data = const_cast<std::vector<u32>&>(compiledShader.FragmentStage),
+            .label = "Shader"sv,
+            .data = const_cast<std::vector<u32>&>(compiledShader.fragment_stage),
         };
-        auto fragmentShader = Renderer::device().CreateShaderModuleSpirV(fsShaderSpec);
+        auto fragmentShader = Renderer::device().create_shader_module_spir_v(fsShaderSpec);
 
-        m_pipeline = Renderer::device().CreateRenderPipeline(vertexShader, fragmentShader, spec);
+        m_pipeline = Renderer::device().create_render_pipeline(vertexShader, fragmentShader, spec);
     }
 
     ShaderAsset::~ShaderAsset()

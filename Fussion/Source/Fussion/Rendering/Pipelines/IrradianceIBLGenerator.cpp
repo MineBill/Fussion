@@ -53,7 +53,7 @@ namespace Fussion {
 
     IrradianceIBLGenerator::~IrradianceIBLGenerator()
     {
-        m_bind_group.Release();
+        m_bind_group.release();
     }
 
     constexpr auto EQUIRECT_TO_CUBE_MAP_PATH = "Assets/Shaders/Slang/EquirectToCubeMap.slang";
@@ -64,34 +64,34 @@ namespace Fussion {
         ZoneScoped;
         using namespace GPU;
         {
-            auto compiled = ShaderProcessor::CompileSlang(EQUIRECT_TO_CUBE_MAP_PATH).unwrap();
-            compiled.Metadata.UseDepth = false;
+            auto compiled = ShaderProcessor::compile_slang(EQUIRECT_TO_CUBE_MAP_PATH).unwrap();
+            compiled.metadata.use_depth = false;
 
             m_cube_map_generator_shader = make_ref<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
         }
 
         {
-            auto compiled = ShaderProcessor::CompileSlang(CUBEMAP_CONVOLUTION_PATH).unwrap();
-            compiled.Metadata.UseDepth = false;
+            auto compiled = ShaderProcessor::compile_slang(CUBEMAP_CONVOLUTION_PATH).unwrap();
+            compiled.metadata.use_depth = false;
 
             m_cube_map_convolution_shader = make_ref<ShaderAsset>(compiled, std::vector { TextureFormat::RGBA16Float });
         }
 
-        m_sampler = Renderer::device().CreateSampler({
+        m_sampler = Renderer::device().create_sampler({
             .label = "sampler"sv,
-            .AddressModeU = AddressMode::ClampToEdge,
-            .AddressModeV = AddressMode::ClampToEdge,
-            .AddressModeW = AddressMode::ClampToEdge,
+            .address_mode_u = AddressMode::ClampToEdge,
+            .address_mode_v = AddressMode::ClampToEdge,
+            .address_mode_w = AddressMode::ClampToEdge,
         });
 
-        m_cube_vertex_buffer = Renderer::device().CreateBuffer({
-            .Label = "Cube Verts"sv,
-            .Usage = BufferUsage::Vertex | BufferUsage::CopyDst,
-            .Size = 36 * sizeof(Vector3),
-            .Mapped = false,
+        m_cube_vertex_buffer = Renderer::device().create_buffer({
+            .label = "Cube Verts"sv,
+            .usage = BufferUsage::Vertex | BufferUsage::CopyDst,
+            .size = 36 * sizeof(Vector3),
+            .mapped_at_creation = false,
         });
 
-        Renderer::device().WriteBuffer<Vector3>(m_cube_vertex_buffer, 0, CUBE_VERTICES);
+        Renderer::device().write_buffer<Vector3>(m_cube_vertex_buffer, 0, CUBE_VERTICES);
 
         auto perspective = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
         m_capture_views = {
@@ -107,17 +107,17 @@ namespace Fussion {
             constexpr f32 resolution = 512.f;
 
             TextureSpec rt_spec {
-                .Label = "CubeTexGen::CrapGPU"sv,
-                .Usage = TextureUsage::RenderAttachment | TextureUsage::CopySrc,
-                .Dimension = TextureDimension::D2,
-                .Size = { resolution, resolution, 1 },
-                .Format = TextureFormat::RGBA16Float,
-                .SampleCount = 1,
-                .Aspect = TextureAspect::All,
-                .GenerateMipMaps = false,
+                .label = "CubeTexGen::CrapGPU"sv,
+                .usage = TextureUsage::RenderAttachment | TextureUsage::CopySrc,
+                .dimension = TextureDimension::D2,
+                .size = { resolution, resolution, 1 },
+                .format = TextureFormat::RGBA16Float,
+                .sample_count = 1,
+                .aspect = TextureAspect::All,
+                .generate_mip_maps = false,
             };
 
-            m_render_textures[i] = Renderer::device().CreateTexture(rt_spec);
+            m_render_textures[i] = Renderer::device().create_texture(rt_spec);
 
             m_per_face_view_data[i] = UniformBuffer<ViewData>::create(Renderer::device());
             m_per_face_view_data[i].Data.view = m_capture_views[i];
@@ -129,22 +129,22 @@ namespace Fussion {
     {
         ZoneScoped;
         // GPU::Utils::RenderDoc::StartCapture();
-        auto encoder = Renderer::device().CreateCommandEncoder();
+        auto encoder = Renderer::device().create_command_encoder();
 
-        encoder.PushDebugGroup("Cubemap");
+        encoder.push_debug_group("Cubemap");
         auto texture = generate_cubemap(encoder, inputTexture);
-        encoder.PopDebugGroup();
+        encoder.pop_debug_group();
 
-        encoder.PushDebugGroup("Convolution");
+        encoder.push_debug_group("Convolution");
         auto convoluted_texture = generate_convoluted_cubemap(encoder, texture);
-        encoder.PopDebugGroup();
+        encoder.pop_debug_group();
 
-        Renderer::device().SubmitCommandBuffer(encoder.Finish());
-        encoder.Release();
+        Renderer::device().submit_command_buffer(encoder.finish());
+        encoder.release();
         // GPU::Utils::RenderDoc::EndCapture();
 
-        m_bind_group.Release();
-        m_conv_bind_group.Release();
+        m_bind_group.release();
+        m_conv_bind_group.release();
         return convoluted_texture;
     }
 
@@ -154,82 +154,82 @@ namespace Fussion {
         using namespace GPU;
 
         TextureSpec texture_spec {
-            .Label = "CubeTexGen::cube_texture"sv,
-            .Usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
-            .Dimension = TextureDimension::D2,
-            .Size = { 512, 512, 6 },
-            .Format = TextureFormat::RGBA16Float,
-            .SampleCount = 1,
-            .Aspect = TextureAspect::All,
-            .GenerateMipMaps = false,
-            .InitializeView = false,
+            .label = "CubeTexGen::cube_texture"sv,
+            .usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
+            .dimension = TextureDimension::D2,
+            .size = { 512, 512, 6 },
+            .format = TextureFormat::RGBA16Float,
+            .sample_count = 1,
+            .aspect = TextureAspect::All,
+            .generate_mip_maps = false,
+            .initialize_view = false,
         };
 
-        auto texture = Renderer::device().CreateTexture(texture_spec);
-        texture.View = texture.CreateView({
-            .Label = "View"sv,
-            .Usage = texture_spec.Usage,
-            .Dimension = TextureViewDimension::Cube, // TODO: Make configurable
-            .Format = texture_spec.Format,
-            .BaseMipLevel = 0, // TODO: Make configurable
-            .MipLevelCount = 1,
-            .BaseArrayLayer = 0,          // TODO: Make configurable
-            .ArrayLayerCount = 6,         // TODO: Make configurable
-            .Aspect = texture_spec.Aspect // TODO: Make configurable
+        auto texture = Renderer::device().create_texture(texture_spec);
+        texture.view = texture.create_view({
+            .label = "View"sv,
+            .usage = texture_spec.usage,
+            .dimension = TextureViewDimension::Cube, // TODO: Make configurable
+            .format = texture_spec.format,
+            .base_mip_level = 0, // TODO: Make configurable
+            .mip_level_count = 1,
+            .base_array_layer = 0,          // TODO: Make configurable
+            .array_layer_count = 6,         // TODO: Make configurable
+            .aspect = texture_spec.aspect // TODO: Make configurable
         });
 
         for (u32 i = 0; i < 6; ++i) {
             std::vector entries {
                 BindGroupEntry {
-                    .Binding = 0,
-                    .Resource = BufferBinding {
-                        .TargetBuffer = m_per_face_view_data[i].buffer(),
-                        .Offset = 0,
-                        .Size = m_per_face_view_data[i].size(),
+                    .binding = 0,
+                    .resource = BufferBinding {
+                        .target_buffer = m_per_face_view_data[i].buffer(),
+                        .offset = 0,
+                        .size = m_per_face_view_data[i].size(),
                     },
                 },
                 BindGroupEntry {
-                    .Binding = 1,
-                    .Resource = inputTexture.View,
+                    .binding = 1,
+                    .resource = inputTexture.view,
                 },
                 BindGroupEntry {
-                    .Binding = 2,
-                    .Resource = m_sampler,
+                    .binding = 2,
+                    .resource = m_sampler,
                 }
             };
 
-            m_bind_group = Renderer::device().CreateBindGroup(m_cube_map_generator_shader->get_bind_group_layout_for(0).unwrap(),
+            m_bind_group = Renderer::device().create_bind_group(m_cube_map_generator_shader->get_bind_group_layout_for(0).unwrap(),
                 {
-                    .Label = "CubeTexGen::bind_group"sv,
-                    .Entries = entries,
+                    .label = "CubeTexGen::bind_group"sv,
+                    .entries = entries,
                 });
 
             std::array attachments {
                 RenderPassColorAttachment {
-                    .View = m_render_textures[i].View,
-                    .LoadOp = LoadOp::Clear,
-                    .StoreOp = StoreOp::Store,
-                    .ClearColor = Color::Black,
+                    .view = m_render_textures[i].view,
+                    .load_op = LoadOp::Clear,
+                    .store_op = StoreOp::Store,
+                    .clear_color = Color::Black,
                 },
             };
             RenderPassSpec spec {
-                .Label = "CubeTexGen::render_pass"sv,
-                .ColorAttachments = attachments,
+                .label = "CubeTexGen::render_pass"sv,
+                .color_attachments = attachments,
             };
-            auto pass = encoder.BeginRendering(spec);
+            auto pass = encoder.begin_rendering(spec);
 
-            pass.SetPipeline(m_cube_map_generator_shader->pipeline());
-            pass.SetBindGroup(m_bind_group, 0);
-            pass.SetVertexBuffer(0, m_cube_vertex_buffer);
+            pass.set_pipeline(m_cube_map_generator_shader->pipeline());
+            pass.set_bind_group(m_bind_group, 0);
+            pass.set_vertex_buffer(0, m_cube_vertex_buffer);
 
-            pass.Draw({ 0, 36 }, { 0, 1 });
+            pass.draw({ 0, 36 }, { 0, 1 });
 
-            pass.End();
-            pass.Release();
+            pass.end();
+            pass.release();
         }
 
         for (u32 i = 0; i < 6; ++i) {
-            encoder.CopyTextureToTexture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
+            encoder.copy_texture_to_texture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
         }
 
         return texture;
@@ -241,82 +241,82 @@ namespace Fussion {
         using namespace GPU;
 
         TextureSpec texture_spec {
-            .Label = "CubeTexGen::conv_texture"sv,
-            .Usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
-            .Dimension = TextureDimension::D2,
-            .Size = { 512, 512, 6 },
-            .Format = TextureFormat::RGBA16Float,
-            .SampleCount = 1,
-            .Aspect = TextureAspect::All,
-            .GenerateMipMaps = false,
-            .InitializeView = false,
+            .label = "CubeTexGen::conv_texture"sv,
+            .usage = TextureUsage::TextureBinding | TextureUsage::CopyDst,
+            .dimension = TextureDimension::D2,
+            .size = { 512, 512, 6 },
+            .format = TextureFormat::RGBA16Float,
+            .sample_count = 1,
+            .aspect = TextureAspect::All,
+            .generate_mip_maps = false,
+            .initialize_view = false,
         };
 
-        auto texture = Renderer::device().CreateTexture(texture_spec);
-        texture.View = texture.CreateView({
-            .Label = "View"sv,
-            .Usage = texture_spec.Usage,
-            .Dimension = TextureViewDimension::Cube, // TODO: Make configurable
-            .Format = texture_spec.Format,
-            .BaseMipLevel = 0, // TODO: Make configurable
-            .MipLevelCount = 1,
-            .BaseArrayLayer = 0,          // TODO: Make configurable
-            .ArrayLayerCount = 6,         // TODO: Make configurable
-            .Aspect = texture_spec.Aspect // TODO: Make configurable
+        auto texture = Renderer::device().create_texture(texture_spec);
+        texture.view = texture.create_view({
+            .label = "View"sv,
+            .usage = texture_spec.usage,
+            .dimension = TextureViewDimension::Cube, // TODO: Make configurable
+            .format = texture_spec.format,
+            .base_mip_level = 0, // TODO: Make configurable
+            .mip_level_count = 1,
+            .base_array_layer = 0,          // TODO: Make configurable
+            .array_layer_count = 6,         // TODO: Make configurable
+            .aspect = texture_spec.aspect // TODO: Make configurable
         });
 
         for (u32 i = 0; i < 6; ++i) {
             std::vector entries {
                 BindGroupEntry {
-                    .Binding = 0,
-                    .Resource = BufferBinding {
-                        .TargetBuffer = m_per_face_view_data[i].buffer(),
-                        .Offset = 0,
-                        .Size = m_per_face_view_data[i].size(),
+                    .binding = 0,
+                    .resource = BufferBinding {
+                        .target_buffer = m_per_face_view_data[i].buffer(),
+                        .offset = 0,
+                        .size = m_per_face_view_data[i].size(),
                     },
                 },
                 BindGroupEntry {
-                    .Binding = 1,
-                    .Resource = inputTexture.View,
+                    .binding = 1,
+                    .resource = inputTexture.view,
                 },
                 BindGroupEntry {
-                    .Binding = 2,
-                    .Resource = m_sampler,
+                    .binding = 2,
+                    .resource = m_sampler,
                 }
             };
 
-            m_conv_bind_group = Renderer::device().CreateBindGroup(m_cube_map_convolution_shader->get_bind_group_layout_for(0).unwrap(),
+            m_conv_bind_group = Renderer::device().create_bind_group(m_cube_map_convolution_shader->get_bind_group_layout_for(0).unwrap(),
                 {
-                    .Label = "CubeTexGen::bind_group"sv,
-                    .Entries = entries,
+                    .label = "CubeTexGen::bind_group"sv,
+                    .entries = entries,
                 });
 
             std::array attachments {
                 RenderPassColorAttachment {
-                    .View = m_render_textures[i].View,
-                    .LoadOp = LoadOp::Clear,
-                    .StoreOp = StoreOp::Store,
-                    .ClearColor = Color::Black,
+                    .view = m_render_textures[i].view,
+                    .load_op = LoadOp::Clear,
+                    .store_op = StoreOp::Store,
+                    .clear_color = Color::Black,
                 },
             };
             RenderPassSpec spec {
-                .Label = "CubeTexGen::render_pass"sv,
-                .ColorAttachments = attachments,
+                .label = "CubeTexGen::render_pass"sv,
+                .color_attachments = attachments,
             };
-            auto pass = encoder.BeginRendering(spec);
+            auto pass = encoder.begin_rendering(spec);
 
-            pass.SetPipeline(m_cube_map_convolution_shader->pipeline());
-            pass.SetBindGroup(m_conv_bind_group, 0);
-            pass.SetVertexBuffer(0, m_cube_vertex_buffer);
+            pass.set_pipeline(m_cube_map_convolution_shader->pipeline());
+            pass.set_bind_group(m_conv_bind_group, 0);
+            pass.set_vertex_buffer(0, m_cube_vertex_buffer);
 
-            pass.Draw({ 0, 36 }, { 0, 1 });
+            pass.draw({ 0, 36 }, { 0, 1 });
 
-            pass.End();
-            pass.Release();
+            pass.end();
+            pass.release();
         }
 
         for (u32 i = 0; i < 6; ++i) {
-            encoder.CopyTextureToTexture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
+            encoder.copy_texture_to_texture(m_render_textures[i], texture, { 512, 512 }, 0, 0, 0, i);
         }
 
         return texture;

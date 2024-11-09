@@ -149,9 +149,9 @@ EditorAssetManager::EditorAssetManager()
             switch (meta->type) {
             case AssetType::Shader: {
                 auto shader = get_asset(meta->handle, AssetType::Shader)->as<ShaderAsset>();
-                auto result = GPU::ShaderProcessor::CompileSlang(meta->path);
+                auto result = GPU::ShaderProcessor::compile_slang(meta->path);
                 if (result) {
-                    result->Metadata = shader->metadata();
+                    result->metadata = shader->metadata();
                     *shader = ShaderAsset(*result, shader->color_target_formats());
                 }
             } break;

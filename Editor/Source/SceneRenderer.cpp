@@ -30,64 +30,64 @@ constexpr GPU::TextureFormat SSAO_NOISE_TEXTURE_FORMAT = GPU::TextureFormat::RGB
 void BeginPipelineStatisticsQuery(GPU::RenderPassEncoder const& encoder, GPU::QuerySet const& set, u32 index)
 {
     if (Renderer::supports_pipeline_statistics()) {
-        encoder.BeginPipelineStatisticsQuery(set, index);
+        encoder.begin_pipeline_statistics_query(set, index);
     }
 }
 
 void EndPipelineStatisticsQuery(GPU::RenderPassEncoder const& encoder)
 {
     if (Renderer::supports_pipeline_statistics()) {
-        encoder.EndPipelineStatisticsQuery();
+        encoder.end_pipeline_statistics_query();
     }
 }
 
 void GBuffer::init(Vector2 const& size)
 {
     GPU::TextureSpec spec {
-        .Label = "GBuffer::position"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { size, 1 },
-        .Format = GPU::TextureFormat::RGBA16Float,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "GBuffer::position"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { size, 1 },
+        .format = GPU::TextureFormat::RGBA16Float,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    position_rt = Renderer::device().CreateTexture(spec);
+    position_rt = Renderer::device().create_texture(spec);
 
-    spec.Label = "GBuffer::normal"sv;
-    normal_rt = Renderer::device().CreateTexture(spec);
+    spec.label = "GBuffer::normal"sv;
+    normal_rt = Renderer::device().create_texture(spec);
 
-    spec.Label = "GBuffer::albedo"sv;
-    albedo_rt = Renderer::device().CreateTexture(spec);
+    spec.label = "GBuffer::albedo"sv;
+    albedo_rt = Renderer::device().create_texture(spec);
 
     constexpr auto path = "Assets/Shaders/Slang/GBuffer.slang";
-    auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
+    auto compiled = GPU::ShaderProcessor::compile_slang(path).unwrap();
     auto shader = make_ref<ShaderAsset>(compiled, std::vector { GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float, GPU::TextureFormat::RGBA16Float });
     shader_asset = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path, "GBuffer Shader");
 }
 
 void GBuffer::resize(Vector2 const& new_size)
 {
-    position_rt.Release();
-    normal_rt.Release();
-    albedo_rt.Release();
+    position_rt.release();
+    normal_rt.release();
+    albedo_rt.release();
 
     GPU::TextureSpec spec {
-        .Label = "GBuffer::position"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { new_size, 1 },
-        .Format = GPU::TextureFormat::RGBA16Float,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "GBuffer::position"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { new_size, 1 },
+        .format = GPU::TextureFormat::RGBA16Float,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    position_rt = Renderer::device().CreateTexture(spec);
+    position_rt = Renderer::device().create_texture(spec);
 
-    spec.Label = "GBuffer::normal"sv;
-    normal_rt = Renderer::device().CreateTexture(spec);
+    spec.label = "GBuffer::normal"sv;
+    normal_rt = Renderer::device().create_texture(spec);
 
-    spec.Label = "GBuffer::albedo"sv;
-    albedo_rt = Renderer::device().CreateTexture(spec);
+    spec.label = "GBuffer::albedo"sv;
+    albedo_rt = Renderer::device().create_texture(spec);
 }
 
 void GBuffer::render(GPU::CommandEncoder& encoder)
@@ -98,47 +98,47 @@ void GBuffer::render(GPU::CommandEncoder& encoder)
 void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
 {
     GPU::TextureSpec spec {
-        .Label = "SSAO::render_target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { size, 1 },
-        .Format = GPU::TextureFormat::R32Float,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "SSAO::render_target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { size, 1 },
+        .format = GPU::TextureFormat::R32Float,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    render_target = Renderer::device().CreateTexture(spec);
+    render_target = Renderer::device().create_texture(spec);
 
     GPU::TextureSpec noise_spec {
-        .Label = "SSAO::noise_texture"sv,
-        .Usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { 4, 4, 1 },
-        .Format = SSAO_NOISE_TEXTURE_FORMAT,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "SSAO::noise_texture"sv,
+        .usage = GPU::TextureUsage::CopyDst | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { 4, 4, 1 },
+        .format = SSAO_NOISE_TEXTURE_FORMAT,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    noise_texture = Renderer::device().CreateTexture(noise_spec);
+    noise_texture = Renderer::device().create_texture(noise_spec);
 
     GPU::SamplerSpec sampler_spec {};
     sampler_spec.label = "SSAO::sampler"sv;
-    sampler_spec.AddressModeU = GPU::AddressMode::ClampToEdge;
-    sampler_spec.AddressModeW = GPU::AddressMode::ClampToEdge;
-    sampler = Renderer::device().CreateSampler(sampler_spec);
+    sampler_spec.address_mode_u = GPU::AddressMode::ClampToEdge;
+    sampler_spec.address_mode_w = GPU::AddressMode::ClampToEdge;
+    sampler = Renderer::device().create_sampler(sampler_spec);
 
     sampler_spec = GPU::SamplerSpec {};
     sampler_spec.label = "SSAO::noise_sampler"sv,
-    sampler_spec.AddressModeU = GPU::AddressMode::Repeat;
-    sampler_spec.AddressModeV = GPU::AddressMode::Repeat;
-    sampler_spec.AddressModeW = GPU::AddressMode::Repeat;
-    noise_sampler = Renderer::device().CreateSampler(sampler_spec);
+    sampler_spec.address_mode_u = GPU::AddressMode::Repeat;
+    sampler_spec.address_mode_v = GPU::AddressMode::Repeat;
+    sampler_spec.address_mode_w = GPU::AddressMode::Repeat;
+    noise_sampler = Renderer::device().create_sampler(sampler_spec);
 
     GPU::BufferSpec buffer_spec {
-        .Label = "SSAO::samples_buffer"sv,
-        .Usage = GPU::BufferUsage::Storage,
-        .Size = sizeof(Vector3) * 64,
-        .Mapped = true,
+        .label = "SSAO::samples_buffer"sv,
+        .usage = GPU::BufferUsage::Storage,
+        .size = sizeof(Vector3) * 64,
+        .mapped_at_creation = true,
     };
-    samples_buffer = Renderer::device().CreateBuffer(buffer_spec);
+    samples_buffer = Renderer::device().create_buffer(buffer_spec);
 
     std::uniform_real_distribution<float> random(0.0, 1.0); // random floats between [0.0, 1.0]
     std::default_random_engine generator {};                // NOLINT(*-msc51-cpp)
@@ -159,9 +159,9 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
         sample *= scale;
     }
 
-    Mem::copy(samples_buffer.Slice().MappedRange(), samples.data(), buffer_spec.Size);
+    Mem::copy(samples_buffer.slice().mapped_range_ptr(), samples.data(), buffer_spec.size);
 
-    samples_buffer.Unmap();
+    samples_buffer.unmap();
 
     std::array<Vector4, 16> noise_values;
     for (auto& noise : noise_values) {
@@ -172,7 +172,7 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
         );
     }
 
-    Renderer::device().WriteTexture(
+    Renderer::device().write_texture(
         noise_texture,
         noise_values.data(),
         16 * sizeof(Vector4),
@@ -184,8 +184,8 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
     options = UniformBuffer<PostProcessing::SSAO>::create(Renderer::device(), "SSAO Options"sv);
 
     constexpr auto path = "Assets/Shaders/Slang/Effects/SSAO.slang";
-    auto compiledShader = GPU::ShaderProcessor::CompileSlang(path).unwrap();
-    compiledShader.Metadata.UseDepth = false;
+    auto compiledShader = GPU::ShaderProcessor::compile_slang(path).unwrap();
+    compiledShader.metadata.use_depth = false;
 
     auto shader = make_ref<ShaderAsset>(compiledShader, std::vector { GPU::TextureFormat::R32Float });
     shader_asset = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
@@ -195,208 +195,208 @@ void SSAO::init(Vector2 const& size, GBuffer const& gbuffer)
 
 void SSAO::resize(Vector2 const& new_size, GBuffer const& gbuffer)
 {
-    render_target.Release();
+    render_target.release();
     GPU::TextureSpec spec {
-        .Label = "SSAO::render_target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { new_size, 1 },
-        .Format = GPU::TextureFormat::R32Float,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "SSAO::render_target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { new_size, 1 },
+        .format = GPU::TextureFormat::R32Float,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    render_target = Renderer::device().CreateTexture(spec);
+    render_target = Renderer::device().create_texture(spec);
 
     update_bind_group(gbuffer);
 }
 
 void SSAO::update_bind_group(GBuffer const& gbuffer)
 {
-    bind_group.Release();
+    bind_group.release();
     std::array bing_group_entries {
         GPU::BindGroupEntry {
-            .Binding = 0,
-            .Resource = gbuffer.position_rt.View,
+            .binding = 0,
+            .resource = gbuffer.position_rt.view,
         },
         GPU::BindGroupEntry {
-            .Binding = 1,
-            .Resource = gbuffer.normal_rt.View,
+            .binding = 1,
+            .resource = gbuffer.normal_rt.view,
         },
         GPU::BindGroupEntry {
-            .Binding = 2,
-            .Resource = noise_texture.View,
+            .binding = 2,
+            .resource = noise_texture.view,
         },
         GPU::BindGroupEntry {
-            .Binding = 3,
-            .Resource = sampler,
+            .binding = 3,
+            .resource = sampler,
         },
         GPU::BindGroupEntry {
-            .Binding = 4,
-            .Resource = noise_sampler,
+            .binding = 4,
+            .resource = noise_sampler,
         },
         GPU::BindGroupEntry {
-            .Binding = 5,
-            .Resource = GPU::BufferBinding {
-                .TargetBuffer = samples_buffer,
-                .Offset = 0,
-                .Size = samples_buffer.Size() },
+            .binding = 5,
+            .resource = GPU::BufferBinding {
+                .target_buffer = samples_buffer,
+                .offset = 0,
+                .size = samples_buffer.size() },
         },
         GPU::BindGroupEntry {
-            .Binding = 6,
-            .Resource = GPU::BufferBinding {
-                .TargetBuffer = options.buffer(),
-                .Offset = 0,
-                .Size = options.buffer().Size(),
+            .binding = 6,
+            .resource = GPU::BufferBinding {
+                .target_buffer = options.buffer(),
+                .offset = 0,
+                .size = options.buffer().size(),
             },
         },
     };
     GPU::BindGroupSpec bg_spec {
-        .Label = "SSAO::bing_group"sv,
-        .Entries = bing_group_entries
+        .label = "SSAO::bing_group"sv,
+        .entries = bing_group_entries
     };
     auto shader = shader_asset.get();
-    bind_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
+    bind_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
 }
 
 void SceneRenderer::setup_scene_bind_group()
 {
     std::array scene_entries {
         GPU::BindGroupLayoutEntry {
-            .Binding = 0,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Float {},
-                .ViewDimension = GPU::TextureViewDimension::D2,
-                .MultiSampled = false,
+            .binding = 0,
+            .visibility = GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Texture {
+                .sample_type = GPU::TextureSampleType::Float {},
+                .view_dimension = GPU::TextureViewDimension::D2,
+                .multi_sampled = false,
             },
-            .Count = 1,
+            .count = 1,
         },
         // Environment Map
         GPU::BindGroupLayoutEntry {
-            .Binding = 1,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Float {},
-                .ViewDimension = GPU::TextureViewDimension::Cube,
-                .MultiSampled = false,
+            .binding = 1,
+            .visibility = GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Texture {
+                .sample_type = GPU::TextureSampleType::Float {},
+                .view_dimension = GPU::TextureViewDimension::Cube,
+                .multi_sampled = false,
             },
-            .Count = 1,
+            .count = 1,
         },
         GPU::BindGroupLayoutEntry {
-            .Binding = 2,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Sampler { .Type = GPU::SamplerBindingType::Filtering },
-            .Count = 1,
+            .binding = 2,
+            .visibility = GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Sampler { .type = GPU::SamplerBindingType::Filtering },
+            .count = 1,
         },
         GPU::BindGroupLayoutEntry {
-            .Binding = 3,
-            .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Buffer {
-                .Type = GPU::BufferBindingType::Uniform {},
-                .HasDynamicOffset = false,
-                .MinBindingSize = None(),
+            .binding = 3,
+            .visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Buffer {
+                .type = GPU::BufferBindingType::Uniform {},
+                .has_dynamic_offset = false,
+                .min_binding_size = None(),
             },
-            .Count = 1,
+            .count = 1,
         },
         GPU::BindGroupLayoutEntry {
-            .Binding = 4,
-            .Visibility = GPU::ShaderStage::Fragment,
-            .Type = GPU::BindingType::Texture {
-                .SampleType = GPU::TextureSampleType::Depth {},
-                .ViewDimension = GPU::TextureViewDimension::D2_Array,
-                .MultiSampled = false,
+            .binding = 4,
+            .visibility = GPU::ShaderStage::Fragment,
+            .type = GPU::BindingType::Texture {
+                .sample_type = GPU::TextureSampleType::Depth {},
+                .view_dimension = GPU::TextureViewDimension::D2_Array,
+                .multi_sampled = false,
             },
-            .Count = 1,
+            .count = 1,
         },
     };
 
     GPU::BindGroupLayoutSpec scene_bgl_spec = {
         .Label = "Scene BGL"sv,
-        .Entries = scene_entries,
+        .entries = scene_entries,
     };
 
-    m_scene_bind_group_layout = Renderer::device().CreateBindGroupLayout(scene_bgl_spec);
+    m_scene_bind_group_layout = Renderer::device().create_bind_group_layout(scene_bgl_spec);
 
-    GPU::TextureView env_view = Renderer::white_cube_texture().View;
+    GPU::TextureView env_view = Renderer::white_cube_texture().view;
     if (m_render_context.environment_texture != nullptr && m_environment_maps.contains(m_render_context.environment_texture->handle())) {
-        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).View;
+        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).view;
     }
     std::array scene_bind_group_entries = {
         GPU::BindGroupEntry {
-            .Binding = 0,
-            .Resource = ssao_blur.render_target().View,
+            .binding = 0,
+            .resource = ssao_blur.render_target().view,
         },
         GPU::BindGroupEntry {
-            .Binding = 1,
-            .Resource = env_view,
+            .binding = 1,
+            .resource = env_view,
         },
         GPU::BindGroupEntry {
-            .Binding = 2,
-            .Resource = m_linear_sampler,
+            .binding = 2,
+            .resource = m_linear_sampler,
         },
         GPU::BindGroupEntry {
-            .Binding = 3,
-            .Resource = GPU::BufferBinding {
-                .TargetBuffer = scene_light_data.buffer(),
-                .Offset = 0,
-                .Size = UniformBuffer<LightData>::size(),
+            .binding = 3,
+            .resource = GPU::BufferBinding {
+                .target_buffer = scene_light_data.buffer(),
+                .offset = 0,
+                .size = UniformBuffer<LightData>::size(),
             },
         },
         GPU::BindGroupEntry {
-            .Binding = 4,
-            .Resource = m_shadow_pass_render_target.View,
+            .binding = 4,
+            .resource = m_shadow_pass_render_target.view,
         },
     };
 
     GPU::BindGroupSpec scene_bg_spec {
-        .Label = "Scene Bind Group"sv,
-        .Entries = scene_bind_group_entries
+        .label = "Scene Bind Group"sv,
+        .entries = scene_bind_group_entries
     };
 
-    m_scene_bind_group = Renderer::device().CreateBindGroup(m_scene_bind_group_layout, scene_bg_spec);
+    m_scene_bind_group = Renderer::device().create_bind_group(m_scene_bind_group_layout, scene_bg_spec);
 }
 
 void SceneRenderer::update_scene_bind_group(GPU::Texture const& ssao_texture)
 {
-    m_scene_bind_group.Release();
+    m_scene_bind_group.release();
 
-    GPU::TextureView env_view = Renderer::white_cube_texture().View;
+    GPU::TextureView env_view = Renderer::white_cube_texture().view;
     if (m_render_context.environment_texture != nullptr && m_environment_maps.contains(m_render_context.environment_texture->handle())) {
-        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).View;
+        env_view = m_environment_maps.at(m_render_context.environment_texture->handle()).view;
     }
     std::array scene_bind_group_entries = {
         GPU::BindGroupEntry {
-            .Binding = 0,
-            .Resource = ssao_texture.View,
+            .binding = 0,
+            .resource = ssao_texture.view,
         },
         GPU::BindGroupEntry {
-            .Binding = 1,
-            .Resource = env_view,
+            .binding = 1,
+            .resource = env_view,
         },
         GPU::BindGroupEntry {
-            .Binding = 2,
-            .Resource = m_linear_sampler,
+            .binding = 2,
+            .resource = m_linear_sampler,
         },
         GPU::BindGroupEntry {
-            .Binding = 3,
-            .Resource = GPU::BufferBinding {
-                .TargetBuffer = scene_light_data.buffer(),
-                .Offset = 0,
-                .Size = UniformBuffer<LightData>::size(),
+            .binding = 3,
+            .resource = GPU::BufferBinding {
+                .target_buffer = scene_light_data.buffer(),
+                .offset = 0,
+                .size = UniformBuffer<LightData>::size(),
             },
         },
         GPU::BindGroupEntry {
-            .Binding = 4,
-            .Resource = m_shadow_pass_render_target.View,
+            .binding = 4,
+            .resource = m_shadow_pass_render_target.view,
         },
     };
 
     GPU::BindGroupSpec scene_bg_spec {
-        .Label = "Scene Bind Group"sv,
-        .Entries = scene_bind_group_entries
+        .label = "Scene Bind Group"sv,
+        .entries = scene_bind_group_entries
     };
 
-    m_scene_bind_group = Renderer::device().CreateBindGroup(m_scene_bind_group_layout, scene_bg_spec);
+    m_scene_bind_group = Renderer::device().create_bind_group(m_scene_bind_group_layout, scene_bg_spec);
 }
 
 void SceneRenderer::init()
@@ -417,42 +417,42 @@ void SceneRenderer::init()
     {
         std::array entries {
             GPU::BindGroupLayoutEntry {
-                .Binding = 0,
-                .Visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
-                .Type = GPU::BindingType::Buffer {
-                    .Type = GPU::BufferBindingType::Uniform {},
-                    .HasDynamicOffset = false,
-                    .MinBindingSize = None(),
+                .binding = 0,
+                .visibility = GPU::ShaderStage::Vertex | GPU::ShaderStage::Fragment,
+                .type = GPU::BindingType::Buffer {
+                    .type = GPU::BufferBindingType::Uniform {},
+                    .has_dynamic_offset = false,
+                    .min_binding_size = None(),
                 },
-                .Count = 1,
+                .count = 1,
             },
         };
 
         GPU::BindGroupLayoutSpec spec {
             .Label = "Global BGL"sv,
-            .Entries = entries,
+            .entries = entries,
         };
 
-        m_global_bind_group_layout = Renderer::device().CreateBindGroupLayout(spec);
+        m_global_bind_group_layout = Renderer::device().create_bind_group_layout(spec);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
-                .Binding = 0,
-                .Resource = GPU::BufferBinding {
-                    .TargetBuffer = scene_view_data.buffer(),
-                    .Offset = 0,
-                    .Size = UniformBuffer<ViewData>::size(),
+                .binding = 0,
+                .resource = GPU::BufferBinding {
+                    .target_buffer = scene_view_data.buffer(),
+                    .offset = 0,
+                    .size = UniformBuffer<ViewData>::size(),
                 },
             },
 
         };
 
         GPU::BindGroupSpec global_bg_spec {
-            .Label = "Global Bind Group"sv,
-            .Entries = bind_group_entries
+            .label = "Global Bind Group"sv,
+            .entries = bind_group_entries
         };
 
-        m_global_bind_group = Renderer::device().CreateBindGroup(m_global_bind_group_layout, global_bg_spec);
+        m_global_bind_group = Renderer::device().create_bind_group(m_global_bind_group_layout, global_bg_spec);
     }
 
     ////////////////////////
@@ -461,8 +461,8 @@ void SceneRenderer::init()
 
     {
         constexpr auto path = "Assets/Shaders/Slang/Editor/Grid.slang";
-        GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
-        compiled.Metadata.UseBlending = true;
+        GPU::ShaderProcessor::CompiledShader compiled = GPU::ShaderProcessor::compile_slang(path).unwrap();
+        compiled.metadata.use_blending = true;
 
         // NOTE: Oof much?
         auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
@@ -470,37 +470,37 @@ void SceneRenderer::init()
     }
 
     GPU::BufferSpec ibs {
-        .Label = "PBR Instance Buffer"sv,
-        .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-        .Size = sizeof(Mat4) * 2'000,
-        .Mapped = false,
+        .label = "PBR Instance Buffer"sv,
+        .usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+        .size = sizeof(Mat4) * 2'000,
+        .mapped_at_creation = false,
     };
-    m_pbr_instance_buffer = Renderer::device().CreateBuffer(ibs);
+    m_pbr_instance_buffer = Renderer::device().create_buffer(ibs);
 
     m_pbr_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 
     GPU::SamplerSpec bilinear_sampler_spec {
         .label = "Bilinear Sampler"sv,
-        .AddressModeU = GPU::AddressMode::Repeat,
-        .AddressModeV = GPU::AddressMode::Repeat,
-        .AddressModeW = GPU::AddressMode::Repeat,
-        .MagFilter = GPU::FilterMode::Linear,
-        .MinFilter = GPU::FilterMode::Linear,
-        .MipMapFilter = GPU::FilterMode::Linear,
-        .LodMinClamp = 0.f,
-        .LodMaxClamp = 32.f,
-        .AnisotropyClamp = 16
+        .address_mode_u = GPU::AddressMode::Repeat,
+        .address_mode_v = GPU::AddressMode::Repeat,
+        .address_mode_w = GPU::AddressMode::Repeat,
+        .mag_filter = GPU::FilterMode::Linear,
+        .min_filter = GPU::FilterMode::Linear,
+        .mip_map_filter = GPU::FilterMode::Linear,
+        .lod_min_clamp = 0.f,
+        .lod_max_clamp = 32.f,
+        .anisotropy_clamp = 16
     };
 
-    m_linear_sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
-    bilinear_sampler_spec.MagFilter = GPU::FilterMode::Linear;
-    bilinear_sampler_spec.MinFilter = GPU::FilterMode::Linear;
-    bilinear_sampler_spec.AnisotropyClamp = 1_u16;
-    bilinear_sampler_spec.CompareFunc = GPU::CompareFunction::LessEqual;
+    m_linear_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
+    bilinear_sampler_spec.mag_filter = GPU::FilterMode::Linear;
+    bilinear_sampler_spec.min_filter = GPU::FilterMode::Linear;
+    bilinear_sampler_spec.anisotropy_clamp = 1_u16;
+    bilinear_sampler_spec.compare_fn = GPU::CompareFunction::LessEqual;
 
-    m_shadow_sampler = Renderer::device().CreateSampler(bilinear_sampler_spec);
+    m_shadow_sampler = Renderer::device().create_sampler(bilinear_sampler_spec);
 
-    m_tonemapping_pipeline.init(window_size, m_scene_render_target.Spec.Format);
+    m_tonemapping_pipeline.init(window_size, m_scene_render_target.spec.format);
 
     gbuffer.init(window_size);
     ssao.init(window_size, gbuffer);
@@ -509,11 +509,11 @@ void SceneRenderer::init()
     setup_scene_bind_group();
     {
         constexpr auto path = "Assets/Shaders/Slang/ProceduralSky.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
-        compiled.Metadata.ParsedPragmas.push_back({ "topology", "triangle_strip" });
-        compiled.Metadata.DepthState = GPU::DepthStencilState::Default();
-        compiled.Metadata.DepthState->DepthWriteEnabled = false;
-        compiled.Metadata.DepthState->DepthCompare = GPU::CompareFunction::Always;
+        auto compiled = GPU::ShaderProcessor::compile_slang(path).unwrap();
+        compiled.metadata.parsed_pragmas.push_back({ "topology", "triangle_strip" });
+        compiled.metadata.depth_state = GPU::DepthStencilState::default_();
+        compiled.metadata.depth_state->depth_write_enabled = false;
+        compiled.metadata.depth_state->depth_compare = GPU::CompareFunction::Always;
 
         auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
 
@@ -523,7 +523,7 @@ void SceneRenderer::init()
     // Creating the pbr pipeline after the scene bind group, which must be done after the ssao blur pipeline. oof incarnate.
     {
         constexpr auto path = "Assets/Shaders/Slang/PBR.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
+        auto compiled = GPU::ShaderProcessor::compile_slang(path).unwrap();
 
         auto shader = make_ref<ShaderAsset>(compiled, std::vector { TonemappingPipeline::Format });
         m_pbr_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
@@ -543,8 +543,8 @@ void SceneRenderer::resize(Vector2 const& newSize)
     ZoneScoped;
     m_render_area = newSize;
 
-    m_scene_render_target.Release();
-    m_scene_render_depth_target.Release();
+    m_scene_render_target.release();
+    m_scene_render_depth_target.release();
     create_scene_render_target(newSize);
     m_tonemapping_pipeline.resize(newSize);
 
@@ -568,21 +568,21 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     ZoneScoped;
 
     if (Renderer::supports_pipeline_statistics()) {
-        if (m_timings_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
-            m_timings_read_buffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
-                auto data = CAST(u64*, m_timings_read_buffer.Slice().MappedRange());
+        if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
+            m_timings_read_buffer.slice().map_async(GPU::MapMode::Read, [this] {
+                auto data = CAST(u64*, m_timings_read_buffer.slice().mapped_range_ptr());
                 timings.gbuffer = CAST(f64, data[3] - data[2]) * 1e-6;
                 timings.ssao = CAST(f64, data[5] - data[4]) * 1e-6;
                 timings.ssao_blur = CAST(f64, data[7] - data[6]) * 1e-6;
                 timings.pbr = CAST(f64, data[9] - data[8]) * 1e-6;
 
-                m_timings_read_buffer.Unmap();
+                m_timings_read_buffer.unmap();
             });
         }
 
-        if (m_statistics_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
-            m_statistics_read_buffer.Slice().MapAsync(GPU::MapMode::Read, [this] {
-                auto data = CAST(u64*, m_statistics_read_buffer.Slice().MappedRange());
+        if (m_statistics_read_buffer.map_state() == GPU::MapState::Unmapped) {
+            m_statistics_read_buffer.slice().map_async(GPU::MapMode::Read, [this] {
+                auto data = CAST(u64*, m_statistics_read_buffer.slice().mapped_range_ptr());
                 // 1st VertexShaderInvocations
                 // 2nd ClipperInvocations
                 // 3d FragmentShaderInvocations
@@ -600,7 +600,7 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
                 pipeline_statistics.pbr_stats.clipper_invocations = data[i++];
                 pipeline_statistics.pbr_stats.fragment_shader_invocations = data[i++];
 
-                m_statistics_read_buffer.Unmap();
+                m_statistics_read_buffer.unmap();
             });
         }
     }
@@ -639,10 +639,10 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
     }
     pbr_pass(encoder, packet, game_view);
 
-    m_tonemapping_pipeline.render(encoder, m_scene_render_target.View, m_render_context);
+    m_tonemapping_pipeline.render(encoder, m_scene_render_target.view, m_render_context);
 
     for (auto& group : m_object_groups_to_release) {
-        group.Release();
+        group.release();
     }
     m_object_groups_to_release.clear();
 
@@ -652,28 +652,28 @@ void SceneRenderer::render(GPU::CommandEncoder& encoder, RenderPacket const& pac
 void SceneRenderer::setup_shadow_pass_render_target()
 {
     GPU::TextureSpec spec {
-        .Label = "DepthPass::RenderTarget"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION, MAX_SHADOW_CASCADES },
-        .Format = GPU::TextureFormat::Depth24Plus,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::DepthOnly,
+        .label = "DepthPass::RenderTarget"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION, MAX_SHADOW_CASCADES },
+        .format = GPU::TextureFormat::Depth24Plus,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_shadow_pass_render_target = Renderer::device().CreateTexture(spec);
-    m_shadow_pass_render_target.InitializeView(MAX_SHADOW_CASCADES);
+    m_shadow_pass_render_target = Renderer::device().create_texture(spec);
+    m_shadow_pass_render_target.initialize_view(MAX_SHADOW_CASCADES);
 
     for (u32 i = 0; i < MAX_SHADOW_CASCADES; ++i) {
-        m_shadow_pass_render_target_views[i] = m_shadow_pass_render_target.CreateView({
-            .Label = "Shadow Pass Render Target"sv,
-            .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-            .Dimension = GPU::TextureViewDimension::D2,
-            .Format = GPU::TextureFormat::Depth24Plus,
-            .BaseMipLevel = 0,
-            .MipLevelCount = 1,
-            .BaseArrayLayer = i,
-            .ArrayLayerCount = 1,
-            .Aspect = GPU::TextureAspect::DepthOnly,
+        m_shadow_pass_render_target_views[i] = m_shadow_pass_render_target.create_view({
+            .label = "Shadow Pass Render Target"sv,
+            .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+            .dimension = GPU::TextureViewDimension::D2,
+            .format = GPU::TextureFormat::Depth24Plus,
+            .base_mip_level = 0,
+            .mip_level_count = 1,
+            .base_array_layer = i,
+            .array_layer_count = 1,
+            .aspect = GPU::TextureAspect::DepthOnly,
         });
     }
 }
@@ -682,19 +682,19 @@ void SceneRenderer::setup_shadow_pass()
 {
     {
         constexpr auto path = "Assets/Shaders/Slang/DepthPass.slang";
-        auto compiled = GPU::ShaderProcessor::CompileSlang(path).unwrap();
+        auto compiled = GPU::ShaderProcessor::compile_slang(path).unwrap();
         auto shader = make_ref<ShaderAsset>(compiled, std::vector<GPU::TextureFormat> {});
 
         m_depth_shader = AssetManager::create_virtual_asset_ref_with_path<ShaderAsset>(shader, path);
     }
 
     GPU::BufferSpec ibs {
-        .Label = "Depth Instance Buffer"sv,
-        .Usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
-        .Size = sizeof(Mat4) * 2'000,
-        .Mapped = false,
+        .label = "Depth Instance Buffer"sv,
+        .usage = GPU::BufferUsage::Storage | GPU::BufferUsage::CopyDst,
+        .size = sizeof(Mat4) * 2'000,
+        .mapped_at_creation = false,
     };
-    m_depth_instance_buffer = Renderer::device().CreateBuffer(ibs);
+    m_depth_instance_buffer = Renderer::device().create_buffer(ibs);
 
     m_depth_instance_staging_buffer.reserve(sizeof(Mat4) * 2'000);
 }
@@ -717,12 +717,12 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                 m_instance_buffer_pool.pop_back();
             } else {
                 GPU::BufferSpec spec {
-                    .Label = "Depth Instance Buffer"sv,
-                    .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
-                    .Size = sizeof(Mat4) * 2 * 2'000,
-                    .Mapped = true,
+                    .label = "Depth Instance Buffer"sv,
+                    .usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+                    .size = sizeof(Mat4) * 2 * 2'000,
+                    .mapped_at_creation = true,
                 };
-                instance_buffer = Renderer::device().CreateBuffer(spec);
+                instance_buffer = Renderer::device().create_buffer(spec);
             }
 
             f32 last_split { 0 };
@@ -793,7 +793,7 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                     (void)material;
                     for (auto const& [buffer, list] : mesh_map) {
                         (void)buffer;
-                        auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.Slice().MappedRange()) + buffer_offset;
+                        auto data = TRANSMUTE(DepthInstanceData*, instance_buffer.slice().mapped_range_ptr()) + buffer_offset;
                         int j = 0;
                         for (auto index : list) {
                             auto& obj = m_render_context.render_objects[index];
@@ -807,52 +807,52 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                 last_split = split;
             }
 
-            instance_buffer.Unmap();
-            auto copy_encoder = Renderer::device().CreateCommandEncoder();
+            instance_buffer.unmap();
+            auto copy_encoder = Renderer::device().create_command_encoder();
 
-            copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_depth_instance_buffer, 0, buffer_offset * sizeof(DepthInstanceData));
-            Renderer::device().SubmitCommandBuffer(copy_encoder.Finish());
-            copy_encoder.Release();
+            copy_encoder.copy_buffer_to_buffer(instance_buffer, 0, m_depth_instance_buffer, 0, buffer_offset * sizeof(DepthInstanceData));
+            Renderer::device().submit_command_buffer(copy_encoder.finish());
+            copy_encoder.release();
 
-            instance_buffer.Slice().MapAsync(GPU::MapMode::Write, [instance_buffer, this] {
+            instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
                 auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
-                copy.ForceMapState(GPU::MapState::Mapped);
+                copy.force_set_map_state(GPU::MapState::Mapped);
             });
 
             buffer_offset = 0;
             for (auto i = 0; i < MAX_SHADOW_CASCADES; i++) {
                 GPU::RenderPassSpec rp_spec {
-                    .Label = "DepthPass::RenderPass"sv,
-                    .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                        .View = m_shadow_pass_render_target_views[i],
-                        .LoadOp = GPU::LoadOp::Clear,
-                        .StoreOp = GPU::StoreOp::Store,
-                        .DepthClear = 1.0f,
+                    .label = "DepthPass::RenderPass"sv,
+                    .depth_stencil_attachment = GPU::RenderPassColorAttachment {
+                        .view = m_shadow_pass_render_target_views[i],
+                        .load_op = GPU::LoadOp::Clear,
+                        .store_op = GPU::StoreOp::Store,
+                        .depth_clear = 1.0f,
                     },
                 };
-                auto rp = encoder.BeginRendering(rp_spec);
-                rp.SetViewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
+                auto rp = encoder.begin_rendering(rp_spec);
+                rp.set_viewport({}, { SHADOWMAP_RESOLUTION, SHADOWMAP_RESOLUTION });
                 auto shader = m_depth_shader.get();
-                rp.SetPipeline(shader->pipeline());
+                rp.set_pipeline(shader->pipeline());
 
                 std::array bind_group_entries {
                     GPU::BindGroupEntry {
-                        .Binding = 0,
-                        .Resource = GPU::BufferBinding {
-                            .TargetBuffer = m_depth_instance_buffer,
-                            .Offset = 0,
-                            .Size = m_depth_instance_buffer.Size(),
+                        .binding = 0,
+                        .resource = GPU::BufferBinding {
+                            .target_buffer = m_depth_instance_buffer,
+                            .offset = 0,
+                            .size = m_depth_instance_buffer.size(),
                         } },
                 };
 
                 GPU::BindGroupSpec bg_spec {
-                    .Label = "Object Depth Bind Group"sv,
-                    .Entries = bind_group_entries
+                    .label = "Object Depth Bind Group"sv,
+                    .entries = bind_group_entries
                 };
 
-                auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
+                auto object_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(0).unwrap(), bg_spec);
                 m_object_groups_to_release.push_back(object_group);
-                rp.SetBindGroup(object_group, 0);
+                rp.set_bind_group(object_group, 0);
                 for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
                     for (auto const& [buffer, list] : mesh_map) {
@@ -861,15 +861,15 @@ void SceneRenderer::depth_pass(GPU::CommandEncoder& encoder, RenderPacket const&
                         (void)buffer;
 
                         auto& hack = m_render_context.render_objects[list[0]];
-                        rp.SetVertexBuffer(0, hack.vertex_buffer);
-                        rp.SetIndexBuffer(hack.index_buffer);
+                        rp.set_vertex_buffer(0, hack.vertex_buffer);
+                        rp.set_index_buffer(hack.index_buffer);
 
-                        rp.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
+                        rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_offset), CAST(u32, list.size()) });
                         buffer_offset += list.size();
                     }
                 }
-                rp.End();
-                rp.Release();
+                rp.end();
+                rp.release();
             }
             scene_light_data.flush();
         }
@@ -885,20 +885,20 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         m_instance_buffer_pool.pop_back();
     } else {
         GPU::BufferSpec spec {
-            .Label = "PBR Instance Buffer"sv,
-            .Usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
-            .Size = sizeof(Mat4) * 2'000,
-            .Mapped = true,
+            .label = "PBR Instance Buffer"sv,
+            .usage = GPU::BufferUsage::CopySrc | GPU::BufferUsage::MapWrite,
+            .size = sizeof(Mat4) * 2'000,
+            .mapped_at_creation = true,
         };
-        instance_buffer = Renderer::device().CreateBuffer(spec);
+        instance_buffer = Renderer::device().create_buffer(spec);
     }
 
     usz buffer_count_offset = 0;
 
     for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
         for (auto const& [buffer, list] : mesh_map) {
-            VERIFY(instance_buffer.GetMapState() == GPU::MapState::Mapped, "{}", magic_enum::enum_name(instance_buffer.GetMapState()));
-            auto data = TRANSMUTE(InstanceData*, instance_buffer.Slice().MappedRange()) + buffer_count_offset;
+            VERIFY(instance_buffer.map_state() == GPU::MapState::Mapped, "{}", magic_enum::enum_name(instance_buffer.map_state()));
+            auto data = TRANSMUTE(InstanceData*, instance_buffer.slice().mapped_range_ptr()) + buffer_count_offset;
             int j = 0;
             for (auto index : list) {
                 auto& obj = m_render_context.render_objects[index];
@@ -908,83 +908,83 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             buffer_count_offset += list.size();
         }
     }
-    instance_buffer.Unmap();
+    instance_buffer.unmap();
 
-    auto copy_encoder = Renderer::device().CreateCommandEncoder();
+    auto copy_encoder = Renderer::device().create_command_encoder();
 
-    copy_encoder.CopyBufferToBuffer(instance_buffer, 0, m_pbr_instance_buffer, 0, buffer_count_offset * sizeof(InstanceData));
-    Renderer::device().SubmitCommandBuffer(copy_encoder.Finish());
-    copy_encoder.Release();
+    copy_encoder.copy_buffer_to_buffer(instance_buffer, 0, m_pbr_instance_buffer, 0, buffer_count_offset * sizeof(InstanceData));
+    Renderer::device().submit_command_buffer(copy_encoder.finish());
+    copy_encoder.release();
 
-    instance_buffer.Slice().MapAsync(GPU::MapMode::Write, [instance_buffer, this] {
+    instance_buffer.slice().map_async(GPU::MapMode::Write, [instance_buffer, this] {
         auto& copy = m_instance_buffer_pool.emplace_back(instance_buffer);
-        copy.ForceMapState(GPU::MapState::Mapped);
+        copy.force_set_map_state(GPU::MapState::Mapped);
     });
 
     {
         ZoneScopedN("G-Buffer");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.position_rt.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .ClearColor = Color::Black,
+                .view = gbuffer.position_rt.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .clear_color = Color::Black,
             },
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.normal_rt.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .ClearColor = Color::Black,
+                .view = gbuffer.normal_rt.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .clear_color = Color::Black,
             },
             GPU::RenderPassColorAttachment {
-                .View = gbuffer.albedo_rt.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .ClearColor = Color::Black,
+                .view = gbuffer.albedo_rt.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .clear_color = Color::Black,
             },
         };
 
         GPU::RenderPassTimestampWrites timestamp_writes {
-            .Set = m_timings_set,
-            .BeginningOfPassWriteIndex = 2,
-            .EndOfPassWriteIndex = 3
+            .set = m_timings_set,
+            .beginning_of_pass_write_index = 2,
+            .end_of_pass_write_index = 3
         };
         GPU::RenderPassSpec gpass_rp_spec {
-            .Label = "GBuffer::render_pass"sv,
-            .ColorAttachments = color_attachments,
-            .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                .View = m_scene_render_depth_target.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .DepthClear = 1.0f,
+            .label = "GBuffer::render_pass"sv,
+            .color_attachments = color_attachments,
+            .depth_stencil_attachment = GPU::RenderPassColorAttachment {
+                .view = m_scene_render_depth_target.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .depth_clear = 1.0f,
             },
-            .TimestampWrites = timestamp_writes,
+            .timestamp_writes = timestamp_writes,
         };
-        auto gpass = encoder.BeginRendering(gpass_rp_spec);
+        auto gpass = encoder.begin_rendering(gpass_rp_spec);
 
         auto shader = gbuffer.shader_asset.get();
-        gpass.SetPipeline(shader->pipeline());
-        gpass.SetBindGroup(m_global_bind_group, 0);
+        gpass.set_pipeline(shader->pipeline());
+        gpass.set_bind_group(m_global_bind_group, 0);
         BeginPipelineStatisticsQuery(gpass, m_statistics_query_set, 0);
 
         std::array bind_group_entries {
             GPU::BindGroupEntry {
-                .Binding = 0,
-                .Resource = GPU::BufferBinding {
-                    .TargetBuffer = m_pbr_instance_buffer,
-                    .Offset = 0,
-                    .Size = m_pbr_instance_buffer.Size(),
+                .binding = 0,
+                .resource = GPU::BufferBinding {
+                    .target_buffer = m_pbr_instance_buffer,
+                    .offset = 0,
+                    .size = m_pbr_instance_buffer.size(),
                 } },
         };
 
         GPU::BindGroupSpec bg_spec {
-            .Label = "Object Bind Group"sv,
-            .Entries = bind_group_entries
+            .label = "Object Bind Group"sv,
+            .entries = bind_group_entries
         };
 
-        auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
+        auto object_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(1).unwrap(), bg_spec);
         m_object_groups_to_release.push_back(object_group);
-        gpass.SetBindGroup(object_group, 1);
+        gpass.set_bind_group(object_group, 1);
         buffer_count_offset = 0;
         for (auto const& [material, mesh_map] : m_render_context.mesh_render_lists) {
 
@@ -993,42 +993,42 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                     continue;
                 (void)buffer;
                 auto& hack = m_render_context.render_objects[list[0]];
-                gpass.SetVertexBuffer(0, hack.vertex_buffer);
-                gpass.SetIndexBuffer(hack.index_buffer);
+                gpass.set_vertex_buffer(0, hack.vertex_buffer);
+                gpass.set_index_buffer(hack.index_buffer);
 
-                gpass.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                gpass.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
                 buffer_count_offset += list.size();
             }
         }
 
         EndPipelineStatisticsQuery(gpass);
-        gpass.End();
-        gpass.Release();
+        gpass.end();
+        gpass.release();
     }
 
     {
         ZoneScopedN("SSAO");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = ssao.render_target.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .ClearColor = Color::White,
+                .view = ssao.render_target.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .clear_color = Color::White,
             },
         };
 
         GPU::RenderPassTimestampWrites timestamp_writes {
-            .Set = m_timings_set,
-            .BeginningOfPassWriteIndex = 4,
-            .EndOfPassWriteIndex = 5
+            .set = m_timings_set,
+            .beginning_of_pass_write_index = 4,
+            .end_of_pass_write_index = 5
         };
 
         GPU::RenderPassSpec rp_spec {
-            .Label = "SSAO::render_pass"sv,
-            .ColorAttachments = color_attachments,
-            .TimestampWrites = timestamp_writes
+            .label = "SSAO::render_pass"sv,
+            .color_attachments = color_attachments,
+            .timestamp_writes = timestamp_writes
         };
-        auto pass = encoder.BeginRendering(rp_spec);
+        auto pass = encoder.begin_rendering(rp_spec);
         BeginPipelineStatisticsQuery(pass, m_statistics_query_set, 1);
 
         if (m_render_context.post_processing_settings.use_ssao) {
@@ -1036,15 +1036,15 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             ssao.options.flush();
 
             auto shader = ssao.shader_asset.get();
-            pass.SetPipeline(shader->pipeline());
-            pass.SetBindGroup(m_global_bind_group, 0);
-            pass.SetBindGroup(ssao.bind_group, 1);
-            pass.Draw({ 0, 3 }, { 0, 1 });
+            pass.set_pipeline(shader->pipeline());
+            pass.set_bind_group(m_global_bind_group, 0);
+            pass.set_bind_group(ssao.bind_group, 1);
+            pass.draw({ 0, 3 }, { 0, 1 });
         }
 
         EndPipelineStatisticsQuery(pass);
-        pass.End();
-        pass.Release();
+        pass.end();
+        pass.release();
     }
 
     ssao_blur.render(encoder, m_timings_set, 6, 7);
@@ -1053,41 +1053,41 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
         ZoneScopedN("PBR Pass");
         std::array color_attachments {
             GPU::RenderPassColorAttachment {
-                .View = m_tonemapping_pipeline.view(),
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .ClearColor = Color::Black,
+                .view = m_tonemapping_pipeline.view(),
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .clear_color = Color::Black,
             },
         };
 
         GPU::RenderPassSpec scene_rp_spec {
-            .Label = "Scene Render Pass"sv,
-            .ColorAttachments = color_attachments,
-            .DepthStencilAttachment = GPU::RenderPassColorAttachment {
-                .View = m_scene_render_depth_target.View,
-                .LoadOp = GPU::LoadOp::Clear,
-                .StoreOp = GPU::StoreOp::Store,
-                .DepthClear = 1.0f,
+            .label = "Scene Render Pass"sv,
+            .color_attachments = color_attachments,
+            .depth_stencil_attachment = GPU::RenderPassColorAttachment {
+                .view = m_scene_render_depth_target.view,
+                .load_op = GPU::LoadOp::Clear,
+                .store_op = GPU::StoreOp::Store,
+                .depth_clear = 1.0f,
             },
-            .TimestampWrites = GPU::RenderPassTimestampWrites { .Set = m_timings_set, .BeginningOfPassWriteIndex = 8, .EndOfPassWriteIndex = 9 }
+            .timestamp_writes = GPU::RenderPassTimestampWrites { .set = m_timings_set, .beginning_of_pass_write_index = 8, .end_of_pass_write_index = 9 }
         };
-        auto scene_rp = encoder.BeginRendering(scene_rp_spec);
+        auto scene_rp = encoder.begin_rendering(scene_rp_spec);
         BeginPipelineStatisticsQuery(scene_rp, m_statistics_query_set, 2);
 
-        scene_rp.SetViewport(Vector2::Zero, { m_render_area.x, m_render_area.y });
+        scene_rp.set_viewport(Vector2::Zero, { m_render_area.x, m_render_area.y });
 
-        scene_rp.SetBindGroup(m_global_bind_group, 0);
-        scene_rp.SetBindGroup(m_scene_bind_group, 1);
+        scene_rp.set_bind_group(m_global_bind_group, 0);
+        scene_rp.set_bind_group(m_scene_bind_group, 1);
         {
             auto shader = m_sky_shader.get();
-            scene_rp.SetPipeline(shader->pipeline());
-            scene_rp.Draw({ 0, 4 }, { 0, 1 });
+            scene_rp.set_pipeline(shader->pipeline());
+            scene_rp.draw({ 0, 4 }, { 0, 1 });
         }
 
         m_cube_skybox.execute(scene_rp);
 
         auto shader = m_pbr_shader.get();
-        scene_rp.SetPipeline(shader->pipeline());
+        scene_rp.set_pipeline(shader->pipeline());
 
         // For each material
         // - Create a bind group
@@ -1127,59 +1127,59 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
 
             std::array bind_group_entries {
                 GPU::BindGroupEntry {
-                    .Binding = 0,
-                    .Resource = GPU::BufferBinding {
-                        .TargetBuffer = m_pbr_instance_buffer,
-                        .Offset = 0,
-                        .Size = m_pbr_instance_buffer.Size(),
+                    .binding = 0,
+                    .resource = GPU::BufferBinding {
+                        .target_buffer = m_pbr_instance_buffer,
+                        .offset = 0,
+                        .size = m_pbr_instance_buffer.size(),
                     },
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 1,
-                    .Resource = GPU::BufferBinding {
-                        .TargetBuffer = material->material_uniform_buffer.buffer(),
-                        .Offset = 0,
-                        .Size = material->material_uniform_buffer.buffer().Size(),
+                    .binding = 1,
+                    .resource = GPU::BufferBinding {
+                        .target_buffer = material->material_uniform_buffer.buffer(),
+                        .offset = 0,
+                        .size = material->material_uniform_buffer.buffer().size(),
                     },
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 2,
-                    .Resource = albedo->texture().View,
+                    .binding = 2,
+                    .resource = albedo->texture().view,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 3,
-                    .Resource = normal->texture().View,
+                    .binding = 3,
+                    .resource = normal->texture().view,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 4,
-                    .Resource = metallic_roughness->texture().View,
+                    .binding = 4,
+                    .resource = metallic_roughness->texture().view,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 5,
-                    .Resource = ao->texture().View,
+                    .binding = 5,
+                    .resource = ao->texture().view,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 6,
-                    .Resource = emissive->texture().View,
+                    .binding = 6,
+                    .resource = emissive->texture().view,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 7,
-                    .Resource = m_linear_sampler,
+                    .binding = 7,
+                    .resource = m_linear_sampler,
                 },
                 GPU::BindGroupEntry {
-                    .Binding = 8,
-                    .Resource = m_shadow_sampler,
+                    .binding = 8,
+                    .resource = m_shadow_sampler,
                 },
             };
 
             GPU::BindGroupSpec global_bg_spec {
-                .Label = "Object Bind Group"sv,
-                .Entries = bind_group_entries
+                .label = "Object Bind Group"sv,
+                .entries = bind_group_entries
             };
 
-            auto object_group = Renderer::device().CreateBindGroup(shader->get_bind_group_layout_for(2).unwrap(), global_bg_spec);
+            auto object_group = Renderer::device().create_bind_group(shader->get_bind_group_layout_for(2).unwrap(), global_bg_spec);
             m_object_groups_to_release.push_back(object_group);
-            scene_rp.SetBindGroup(object_group, 2);
+            scene_rp.set_bind_group(object_group, 2);
 
             for (auto const& [buffer, list] : mesh_map) {
                 if (list.empty())
@@ -1187,10 +1187,10 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
                 (void)buffer;
                 auto& hack = m_render_context.render_objects[list[0]];
 
-                scene_rp.SetVertexBuffer(0, hack.vertex_buffer);
-                scene_rp.SetIndexBuffer(hack.index_buffer);
+                scene_rp.set_vertex_buffer(0, hack.vertex_buffer);
+                scene_rp.set_index_buffer(hack.index_buffer);
 
-                scene_rp.DrawIndex({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
+                scene_rp.draw_index({ 0, hack.index_count }, { CAST(u32, buffer_count_offset), CAST(u32, list.size()) });
                 buffer_count_offset += list.size();
             }
         }
@@ -1199,24 +1199,24 @@ void SceneRenderer::pbr_pass(GPU::CommandEncoder const& encoder, RenderPacket co
             Debug::render(scene_rp);
 
             auto gridShader = m_grid_shader.get();
-            scene_rp.SetPipeline(gridShader->pipeline());
-            scene_rp.Draw({ 0, 6 }, { 0, 1 });
+            scene_rp.set_pipeline(gridShader->pipeline());
+            scene_rp.draw({ 0, 6 }, { 0, 1 });
         }
 
         EndPipelineStatisticsQuery(scene_rp);
-        scene_rp.End();
-        scene_rp.Release();
+        scene_rp.end();
+        scene_rp.release();
     }
 
     if (Renderer::supports_pipeline_statistics()) {
-        encoder.ResolveQuerySet(m_timings_set, { 0, 10 }, m_timings_resolve_buffer, 0);
-        encoder.ResolveQuerySet(m_statistics_query_set, { 0, 3 }, m_statistics_resolve_buffer, 0);
+        encoder.resolve_query_set(m_timings_set, { 0, 10 }, m_timings_resolve_buffer, 0);
+        encoder.resolve_query_set(m_statistics_query_set, { 0, 3 }, m_statistics_resolve_buffer, 0);
 
-        if (m_timings_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
-            encoder.CopyBufferToBuffer(m_timings_resolve_buffer, 0, m_timings_read_buffer, 0, m_timings_read_buffer.Size());
+        if (m_timings_read_buffer.map_state() == GPU::MapState::Unmapped) {
+            encoder.copy_buffer_to_buffer(m_timings_resolve_buffer, 0, m_timings_read_buffer, 0, m_timings_read_buffer.size());
         }
-        if (m_statistics_read_buffer.GetMapState() == GPU::MapState::Unmapped) {
-            encoder.CopyBufferToBuffer(m_statistics_resolve_buffer, 0, m_statistics_read_buffer, 0, m_statistics_read_buffer.Size());
+        if (m_statistics_read_buffer.map_state() == GPU::MapState::Unmapped) {
+            encoder.copy_buffer_to_buffer(m_statistics_resolve_buffer, 0, m_statistics_read_buffer, 0, m_statistics_read_buffer.size());
         }
     }
 }
@@ -1226,83 +1226,83 @@ void SceneRenderer::setup_queries()
 
     {
         GPU::QuerySetSpec query_set_spec {
-            .Label = String("Timings Set"),
-            .Type = GPU::QueryType::Timestamp {},
-            .Count = 5 * 2, // 5, one for each pass, times 2 for start and end
+            .label = String("Timings Set"),
+            .type = GPU::QueryType::Timestamp {},
+            .count = 5 * 2, // 5, one for each pass, times 2 for start and end
         };
 
-        m_timings_set = Renderer::device().CreateQuerySet(query_set_spec);
+        m_timings_set = Renderer::device().create_query_set(query_set_spec);
 
         GPU::BufferSpec resolve_spec {
-            .Label = "Timings Resolve Buffer"sv,
-            .Usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
-            .Size = query_set_spec.Count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
-            .Mapped = false
+            .label = "Timings Resolve Buffer"sv,
+            .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
+            .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
+            .mapped_at_creation = false
         };
 
-        m_timings_resolve_buffer = Renderer::device().CreateBuffer(resolve_spec);
+        m_timings_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
 
         GPU::BufferSpec read_spec {
-            .Label = "Timings Read Buffer"sv,
-            .Usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
-            .Size = resolve_spec.Size,
-            .Mapped = false
+            .label = "Timings Read Buffer"sv,
+            .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
+            .size = resolve_spec.size,
+            .mapped_at_creation = false
         };
 
-        m_timings_read_buffer = Renderer::device().CreateBuffer(read_spec);
+        m_timings_read_buffer = Renderer::device().create_buffer(read_spec);
     }
 
     if (Renderer::supports_pipeline_statistics()) {
         using enum GPU::PipelineStatisticName;
         GPU::QuerySetSpec query_set_spec {
-            .Label = String("Pipeline Statistics Set"),
-            .Type = FragmentShaderInvocations | VertexShaderInvocations | ClipperInvocations,
-            .Count = 4 * 3, // 5, one for each pass, times 3, for each of the types above
+            .label = String("Pipeline Statistics Set"),
+            .type = FragmentShaderInvocations | VertexShaderInvocations | ClipperInvocations,
+            .count = 4 * 3, // 5, one for each pass, times 3, for each of the types above
         };
 
-        m_statistics_query_set = Renderer::device().CreateQuerySet(query_set_spec);
+        m_statistics_query_set = Renderer::device().create_query_set(query_set_spec);
 
         GPU::BufferSpec resolve_spec {
-            .Label = "Pipeline Statistics Resolve Buffer"sv,
-            .Usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
-            .Size = query_set_spec.Count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
-            .Mapped = false
+            .label = "Pipeline Statistics Resolve Buffer"sv,
+            .usage = GPU::BufferUsage::QueryResolve | GPU::BufferUsage::CopySrc,
+            .size = query_set_spec.count * 8, // Each element in a querySet takes 8 bytes: https://webgpufundamentals.org/webgpu/lessons/webgpu-timing.html
+            .mapped_at_creation = false
         };
 
-        m_statistics_resolve_buffer = Renderer::device().CreateBuffer(resolve_spec);
+        m_statistics_resolve_buffer = Renderer::device().create_buffer(resolve_spec);
 
         GPU::BufferSpec read_spec {
-            .Label = "Pipeline Statistics Read Buffer"sv,
-            .Usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
-            .Size = resolve_spec.Size,
-            .Mapped = false
+            .label = "Pipeline Statistics Read Buffer"sv,
+            .usage = GPU::BufferUsage::MapRead | GPU::BufferUsage::CopyDst,
+            .size = resolve_spec.size,
+            .mapped_at_creation = false
         };
 
-        m_statistics_read_buffer = Renderer::device().CreateBuffer(read_spec);
+        m_statistics_read_buffer = Renderer::device().create_buffer(read_spec);
     }
 }
 
 void SceneRenderer::create_scene_render_target(Vector2 const& size)
 {
     GPU::TextureSpec spec {
-        .Label = "Main Render Target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { size, 1 },
-        .Format = GPU::TextureFormat::RGBA8UnormSrgb,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::All,
+        .label = "Main Render Target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment | GPU::TextureUsage::TextureBinding,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { size, 1 },
+        .format = GPU::TextureFormat::RGBA8UnormSrgb,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::All,
     };
-    m_scene_render_target = Renderer::device().CreateTexture(spec);
+    m_scene_render_target = Renderer::device().create_texture(spec);
 
     GPU::TextureSpec depth_spec {
-        .Label = "Main Render Depth Target"sv,
-        .Usage = GPU::TextureUsage::RenderAttachment,
-        .Dimension = GPU::TextureDimension::D2,
-        .Size = Vector3 { size, 1 },
-        .Format = GPU::TextureFormat::Depth24Plus,
-        .SampleCount = 1,
-        .Aspect = GPU::TextureAspect::DepthOnly,
+        .label = "Main Render Depth Target"sv,
+        .usage = GPU::TextureUsage::RenderAttachment,
+        .dimension = GPU::TextureDimension::D2,
+        .size = Vector3 { size, 1 },
+        .format = GPU::TextureFormat::Depth24Plus,
+        .sample_count = 1,
+        .aspect = GPU::TextureAspect::DepthOnly,
     };
-    m_scene_render_depth_target = Renderer::device().CreateTexture(depth_spec);
+    m_scene_render_depth_target = Renderer::device().create_texture(depth_spec);
 }

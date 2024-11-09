@@ -17,7 +17,7 @@ void Texture2DWindow::on_draw(f32 delta)
     VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
 
     bool flip = true;
-    if (!GPU::IsHDR(settings->format)) {
+    if (!GPU::is_hdr(settings->format)) {
         flip = false;
         ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
         {
@@ -72,7 +72,7 @@ void Texture2DWindow::on_draw(f32 delta)
     ImGui::BeginChild("texture_preview", availableSize, 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     {
         ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
-        ImGui::Image(texture->texture().View, viewSize, uv0, uv1);
+        ImGui::Image(texture->texture().view, viewSize, uv0, uv1);
         auto& io = ImGui::GetIO();
 
         bool hovered = ImGui::IsWindowHovered();

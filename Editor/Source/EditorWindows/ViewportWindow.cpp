@@ -194,7 +194,7 @@ void ViewportWindow::on_draw()
                 break;
             }
 
-            ImGui::Image(image.View, m_size);
+            ImGui::Image(image.view, m_size);
         }
 
         if (Editor::active_scene() == nullptr) {

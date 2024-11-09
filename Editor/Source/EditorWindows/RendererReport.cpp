@@ -23,35 +23,35 @@ void DrawRegistryReport(GPU::RegistryReport const& report, char const* name)
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Num Allocated");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", report.NumAllocated);
+            ImGui::Text("%zu", report.num_allocated);
 
             // Row: num_kept_from_user
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Num Kept from User");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", report.NumKeptFromUser);
+            ImGui::Text("%zu", report.num_kept_from_user);
 
             // Row: num_released_from_user
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Num Released from User");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", report.NumReleasedFromUser);
+            ImGui::Text("%zu", report.num_released_from_user);
 
             // Row: num_error
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Num Error");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", report.NumError);
+            ImGui::Text("%zu", report.num_error);
 
             // Row: element_size
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Element Size");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%zu", report.ElementSize);
+            ImGui::Text("%zu", report.element_size);
 
             // End table
             ImGui::EndTable();
@@ -63,22 +63,22 @@ void DrawRegistryReport(GPU::RegistryReport const& report, char const* name)
 void DrawGlobalReport(GPU::GlobalReport const& report)
 {
     if (ImGui::CollapsingHeader("Global Report")) {
-        DrawRegistryReport(report.Adapters, "Adapters");
-        DrawRegistryReport(report.Devices, "Devices");
-        DrawRegistryReport(report.Queues, "Queues");
-        DrawRegistryReport(report.PipelineLayouts, "Pipeline Layouts");
-        DrawRegistryReport(report.ShaderModules, "Shader Modules");
-        DrawRegistryReport(report.BindGroupLayouts, "Bind Group Layouts");
-        DrawRegistryReport(report.BindGroups, "Bind Groups");
-        DrawRegistryReport(report.CommandBuffers, "Command Buffers");
-        DrawRegistryReport(report.RenderBundles, "Render Bundles");
-        DrawRegistryReport(report.RenderPipelines, "Render Pipelines");
-        DrawRegistryReport(report.ComputePipelines, "Compute Pipelines");
-        DrawRegistryReport(report.QuerySets, "Query Sets");
-        DrawRegistryReport(report.Buffers, "Buffers");
-        DrawRegistryReport(report.Textures, "Textures");
-        DrawRegistryReport(report.TextureViews, "Texture Views");
-        DrawRegistryReport(report.Samplers, "Samplers");
+        DrawRegistryReport(report.adapters, "Adapters");
+        DrawRegistryReport(report.devices, "Devices");
+        DrawRegistryReport(report.queues, "Queues");
+        DrawRegistryReport(report.pipeline_layouts, "Pipeline Layouts");
+        DrawRegistryReport(report.shader_modules, "Shader Modules");
+        DrawRegistryReport(report.bind_group_layouts, "Bind Group Layouts");
+        DrawRegistryReport(report.bind_groups, "Bind Groups");
+        DrawRegistryReport(report.command_buffers, "Command Buffers");
+        DrawRegistryReport(report.render_bundles, "Render Bundles");
+        DrawRegistryReport(report.render_pipelines, "Render Pipelines");
+        DrawRegistryReport(report.compute_pipelines, "Compute Pipelines");
+        DrawRegistryReport(report.query_sets, "Query Sets");
+        DrawRegistryReport(report.buffers, "Buffers");
+        DrawRegistryReport(report.textures, "Textures");
+        DrawRegistryReport(report.texture_views, "Texture Views");
+        DrawRegistryReport(report.samplers, "Samplers");
     }
 }
 
@@ -88,7 +88,7 @@ void RendererReport::on_draw()
         m_is_focused = ImGui::IsWindowFocused();
 
         auto& instance = Renderer::gpu_instance();
-        auto report = instance.GenerateGlobalReport();
+        auto report = instance.generate_global_report();
 
         DrawGlobalReport(report);
     });
