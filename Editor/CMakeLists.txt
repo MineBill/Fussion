@@ -105,3 +105,12 @@ set_target_properties(
 )
 
 GroupSourcesByFolder(Editor)
+
+add_custom_target(editor
+    COMMAND Editor
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Editor
+    DEPENDS Editor
+    COMMENT "Running Editor"
+    VERBATIM
+    USES_TERMINAL
+)

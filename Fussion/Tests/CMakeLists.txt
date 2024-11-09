@@ -19,3 +19,9 @@ target_link_libraries(FussionTests
 )
 
 GroupSourcesByFolder(FussionTests "Fussion/Tests")
+
+add_custom_target(tests
+    COMMAND "${CMAKE_COMMAND}" -E env "$<TARGET_FILE:FussionTests>"
+    USES_TERMINAL
+    VERBATIM
+)

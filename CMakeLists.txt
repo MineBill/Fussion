@@ -40,12 +40,3 @@ add_subdirectory(Editor)
 if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sandbox")
     add_subdirectory(Sandbox)
 endif()
-
-add_custom_target(run
-    COMMAND Editor
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Editor
-    DEPENDS Editor
-    COMMENT "Running Editor"
-    VERBATIM
-    USES_TERMINAL
-)
