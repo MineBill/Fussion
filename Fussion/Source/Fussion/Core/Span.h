@@ -80,7 +80,7 @@ namespace Fussion {
                 if (m_ptr[i] != other[i])
                     return false;
             }
-            return false;
+            return true;
         }
 
         Span slice(size_t start, size_t end)
