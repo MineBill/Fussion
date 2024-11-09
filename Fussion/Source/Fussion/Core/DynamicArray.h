@@ -1,6 +1,7 @@
 #pragma once
 #include <Fussion/Core/Core.h>
 #include <Fussion/Core/Mem.h>
+#include <Fussion/Core/Span.h>
 #include <Fussion/Math/Math.h>
 
 #include <type_traits>
@@ -10,7 +11,9 @@ namespace Fussion {
     class DynamicArray {
     public:
         DynamicArray() = default;
-        explicit DynamicArray(Mem::Allocator const& allocator): m_allocator(allocator) {}
+        explicit DynamicArray(Mem::Allocator const& allocator)
+            : m_allocator(allocator)
+        { }
 
         ~DynamicArray()
         {
@@ -64,7 +67,7 @@ namespace Fussion {
                 return;
             }
             m_buffer[index].~T();
-            Mem::copy(m_buffer.ptr + index, m_buffer.ptr + index + 1, m_length * sizeof(T));
+            Mem::copy(m_buffer.data() + index, m_buffer.data() + index + 1, m_length * sizeof(T));
             m_length--;
         }
 
@@ -77,23 +80,31 @@ namespace Fussion {
         /// Returns the inner slice of items and prevent automatic deallocation
         /// in the destructor.
         [[nodiscard]]
-        Slice<T> leak()
+        Span<T> leak()
         {
             m_leaked = true;
-            m_buffer.length = m_length;
+            m_buffer = Span(m_buffer.data(), m_length);
             return m_buffer;
         }
 
         /// Returns the current length of the array.
         [[nodiscard]]
-        usz len() const { return m_length; }
+        usz len() const
+        {
+            return m_length;
+        }
 
         /// Returns the current capacity of the array.
         [[nodiscard]]
-        usz capacity() const { return m_capacity; }
+        usz capacity() const
+        {
+            return m_capacity;
+        }
 
         struct Iterator {
-            explicit Iterator(T* ptr): m_ptr(ptr) {}
+            explicit Iterator(T* ptr)
+                : m_ptr(ptr)
+            { }
 
             Iterator& operator++()
             {
@@ -142,19 +153,19 @@ namespace Fussion {
 
         Iterator begin()
         {
-            return Iterator(m_buffer.ptr);
+            return Iterator(m_buffer.data());
         }
 
         Iterator end()
         {
-            return Iterator(m_buffer.ptr + m_leaked);
+            return Iterator(m_buffer.data() + m_length);
         }
 
     private:
-        Mem::Allocator m_allocator{};
-        Slice<T> m_buffer{};
-        usz m_length{ 0 };
-        usz m_capacity{ 0 };
-        bool m_leaked{ false };
+        Mem::Allocator m_allocator {};
+        Span<T> m_buffer {};
+        usz m_length { 0 };
+        usz m_capacity { 0 };
+        bool m_leaked { false };
     };
 }

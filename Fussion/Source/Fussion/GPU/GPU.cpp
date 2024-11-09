@@ -511,12 +511,12 @@ namespace Fussion::GPU {
 
     void RenderPassEncoder::InsertDebugMarker(String const& label) const
     {
-        wgpuRenderPassEncoderInsertDebugMarker(As<WGPURenderPassEncoder>(), label.data.ptr);
+        wgpuRenderPassEncoderInsertDebugMarker(As<WGPURenderPassEncoder>(), label.data.data());
     }
 
     void RenderPassEncoder::PushDebugGroup(String const& name) const
     {
-        wgpuRenderPassEncoderPushDebugGroup(As<WGPURenderPassEncoder>(), name.data.ptr);
+        wgpuRenderPassEncoderPushDebugGroup(As<WGPURenderPassEncoder>(), name.data.data());
     }
 
     void RenderPassEncoder::PopDebugGroup() const
@@ -663,7 +663,7 @@ namespace Fussion::GPU {
 
     void CommandEncoder::PushDebugGroup(String const& name) const
     {
-        wgpuCommandEncoderPushDebugGroup(CAST(WGPUCommandEncoder, handle), name.data.ptr);
+        wgpuCommandEncoderPushDebugGroup(CAST(WGPUCommandEncoder, handle), name.data.data());
     }
 
     void CommandEncoder::PopDebugGroup() const
@@ -917,7 +917,7 @@ namespace Fussion::GPU {
 
         WGPUQuerySetDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.value_or("QuerySet").data.ptr,
+            .label = spec.Label.value_or("QuerySet").data.data(),
             .count = spec.Count,
         };
 
@@ -1248,7 +1248,7 @@ namespace Fussion::GPU {
 
         WGPUDeviceDescriptor desc {
             .nextInChain = nullptr,
-            .label = spec.Label.value_or("Device").data.ptr,
+            .label = spec.Label.value_or("Device").data.data(),
             .requiredFeatureCount = features.size(),
             .requiredFeatures = features.data(),
             .defaultQueue = {

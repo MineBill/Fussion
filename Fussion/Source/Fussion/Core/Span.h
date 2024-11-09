@@ -5,6 +5,7 @@ namespace Fussion {
     template<typename T>
     class Span {
     public:
+        constexpr Span() = default;
         constexpr Span(T* ptr, size_t length) noexcept
             : m_ptr(ptr)
             , m_length(length)
@@ -86,8 +87,14 @@ namespace Fussion {
         Span slice(size_t start, size_t end)
         {
             VERIFY(start <= end, "start: {}, end: {}", start, end);
-            VERIFY(end < m_length);
+            VERIFY(end <= m_length);
             return Span(m_ptr + start, end - start);
+        }
+
+        void reset()
+        {
+            m_ptr = nullptr;
+            m_length = 0;
         }
 
         struct Iterator {

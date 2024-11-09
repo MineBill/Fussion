@@ -46,7 +46,6 @@ add_library(Fussion STATIC
     Source/Fussion/Core/String.h
     Source/Fussion/Core/String.cpp
     Source/Fussion/Core/SmallVector.h
-    Source/Fussion/Core/Slice.h
     Source/Fussion/Core/Result.h
     Source/Fussion/Core/Time.h
     Source/Fussion/Core/Time.cpp

@@ -1,6 +1,6 @@
 #pragma once
 #include <Fussion/Core/Core.h>
-#include <Fussion/Core/Slice.h>
+#include <Fussion/Core/Span.h>
 
 #include <source_location>
 
@@ -53,13 +53,13 @@ namespace Fussion::Mem {
     s32 compare(void const* first, void const* second, size_t length);
 
     template<typename T>
-    Slice<T> alloc(
+    Span<T> alloc(
         usz size,
         Allocator const& allocator,
         std::source_location const& loc = std::source_location::current()
     )
     {
-        return Slice<T>(CAST(T*, alloc(size * sizeof(T), allocator, loc)), size);
+        return Span<T>(CAST(T*, alloc(size * sizeof(T), allocator, loc)), size);
     }
 
     template<typename T>
@@ -70,31 +70,31 @@ namespace Fussion::Mem {
 
     template<typename T>
     void free(
-        Slice<T>& slice,
+        Span<T>& span,
         Allocator const& allocator,
         std::source_location const& loc = std::source_location::current()
     )
     {
-        slice.length = 0;
-        allocator.dealloc_proc(slice.ptr, allocator.data, loc);
+        allocator.dealloc_proc(span.data(), allocator.data, loc);
+        span.reset();
     }
 
     template<typename T>
-    void copy(Slice<T> const& dst, Slice<T> const& src)
+    void copy(Span<T> const& dst, Span<T> const& src)
     {
-        VERIFY(dst.length >= src.length, "dst: {}, src: {}", dst.length, src.length);
-        Mem::copy(dst.ptr, src.ptr, src.length * sizeof(T));
+        VERIFY(dst.size() >= src.size(), "dst: {}, src: {}", dst.size(), src.size());
+        Mem::copy(dst.data(), src.data(), src.size() * sizeof(T));
     }
 
     template<typename T>
-    s32 compare(Slice<T> const& first, Slice<T> const& second)
+    s32 compare(Span<T> const& first, Span<T> const& second)
     {
-        if (first.length < second.length) {
+        if (first.size() < second.size()) {
             return -1;
         }
-        if (first.length > second.length) {
+        if (first.size() > second.size()) {
             return 1;
         }
-        return compare(first.ptr, second.ptr, first.length);
+        return compare(first.data(), second.data(), first.size());
     }
 }

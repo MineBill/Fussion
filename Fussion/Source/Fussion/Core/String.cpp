@@ -17,7 +17,7 @@ namespace Fussion {
     String String::clone(Mem::Allocator const& allocator) const
     {
         String s;
-        s.data = Mem::alloc<char>(data.length, allocator);
+        s.data = Mem::alloc<char>(data.size(), allocator);
 
         Mem::copy(s.data, data);
         return s;
@@ -25,15 +25,16 @@ namespace Fussion {
 
     void String::free(Mem::Allocator const& allocator)
     {
-        if (data.length == 0) {
+        if (data.size() == 0) {
             return;
         }
-        Mem::free(data.ptr, allocator);
-        data.ptr = nullptr;
-        data.length = 0;
+        Mem::free(data.data(), allocator);
+        // data.ptr = nullptr;
+        // data.size() = 0;
+        data.reset();
     }
 
-    Slice<String> String::split(String const& separator, Mem::Allocator const& allocator) const
+    Span<String> String::split(String const& separator, Mem::Allocator const& allocator) const
     {
         if (separator == *this) {
             // TODO: big oof
@@ -79,22 +80,25 @@ namespace Fussion {
         }
 
         auto parts = split(old_str, Mem::temp_allocator());
-        if (parts.len() == 0) {
+        if (parts.size() == 0) {
             return None();
         }
 
         // only one part means old_str == *this
-        if (parts.len() == 1) {
+        if (parts.size() == 1) {
             return new_str.clone(allocator);
         }
-        auto new_size = size() - old_str.size() * (parts.len() - 1) + new_str.size() * (parts.len() - 1);
+        auto new_size = size() - old_str.size() * (parts.size() - 1) + new_str.size() * (parts.size() - 1);
         auto str_buffer = Mem::alloc<char>(new_size, allocator);
         usz pos = 0;
         for (auto const& part : parts) {
             // str_buffer.append()
-            Mem::copy(str_buffer.SubSlice(pos, 1000), part.data);
+            Mem::copy(str_buffer.slice(pos, pos + part.size()), part.data);
             pos += part.size();
-            Mem::copy(str_buffer.SubSlice(pos, 1000), new_str.data);
+            if (pos >= new_size) {
+                break;
+            }
+            Mem::copy(str_buffer.slice(pos, pos + new_str.size()), new_str.data);
             pos += new_str.size();
         }
 
@@ -103,8 +107,8 @@ namespace Fussion {
 
     Maybe<usz> String::index_of(String const& needle) const
     {
-        for (usz i = 0; i < data.length; ++i) {
-            if (view(i, i + needle.data.length) == needle) {
+        for (usz i = 0; i < data.size(); ++i) {
+            if (view(i, i + needle.data.size()) == needle) {
                 return i;
             }
         }
@@ -113,15 +117,17 @@ namespace Fussion {
 
     usz String::size() const
     {
-        return data.length;
+        return data.size();
     }
 
     String String::view(usz start, usz end) const
     {
         VERIFY(end >= start);
         String s;
-        s.data.ptr = data.ptr + start;
-        s.data.length = end - start;
+        // s.data.ptr = data.ptr + start;
+        // s.data.size() = end - start;
+
+        s.data = Span(data.data() + start, end - start);
         return s;
     }
 
@@ -143,14 +149,15 @@ namespace Fussion {
             return false;
         };
         usz j = 0;
-        while (j < data.length) {
+        while (j < data.size()) {
             if (!match_any(data[j], whitespace))
                 break;
             j++;
         }
 
-        if (j == data.length) {
-            data.length = 0;
+        if (j == data.size()) {
+            // data.size() = 0;
+            data = Span(data.data(), 0);
             return;
         }
 
@@ -178,7 +185,8 @@ namespace Fussion {
         }
 
         if (j <= 0) {
-            data.length = 0;
+            // data.size() = 0;
+            data = Span(data.data(), 0);
             return;
         }
         *this = view(0, j);
@@ -186,16 +194,16 @@ namespace Fussion {
 
     bool String::operator==(String const& other) const
     {
-        if (other.data.length != data.length)
+        if (other.data.size() != data.size())
             return false;
-        if ((other.data.length == data.length) && (data.length == 0))
+        if ((other.data.size() == data.size()) && (data.size() == 0))
             return true;
-        return std::memcmp(other.data.ptr, data.ptr, data.length) == 0;
+        return std::memcmp(other.data.data(), data.data(), data.size()) == 0;
     }
 
     char& String::operator[](usz index) const
     {
-        VERIFY(index < data.length, "Index out-of-bounds");
+        VERIFY(index < data.size(), "Index out-of-bounds");
         return data[index];
     }
 
@@ -204,7 +212,7 @@ namespace Fussion {
     {
         String s;
         s.data.ptr = data.ptr + start;
-        s.data.length = end - start;
+        s.data.size() = end - start;
         return s;
     }
 #endif

@@ -9,7 +9,7 @@ template<>
 struct Catch::StringMaker<String> {
     static std::string convert(String const& value)
     {
-        return std::string(value.data.ptr, value.size());
+        return std::string(value.data.data(), value.size());
     }
 };
 
@@ -152,7 +152,7 @@ TEST_CASE("String split", "[String]")
     String csv_str("A,B,C");
     auto parts = csv_str.split(String(","), Mem::heap_allocator());
 
-    REQUIRE(parts.len() == 3);
+    REQUIRE(parts.size() == 3);
     REQUIRE(parts[0] == String("A"));
     REQUIRE(parts[1] == String("B"));
     REQUIRE(parts[2] == String("C"));

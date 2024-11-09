@@ -1,6 +1,7 @@
 #pragma once
 #include <Fussion/Core/Maybe.h>
 #include <Fussion/Core/Mem.h>
+#include <Fussion/Core/Span.h>
 #include <Fussion/Core/Types.h>
 #include <Fussion/Log/Formatters.h>
 
@@ -12,13 +13,13 @@ namespace Fussion {
     }
 
     struct String {
-        Slice<char> data {};
+        Span<char> data {};
 
         String() = default;
         String(char const* cstr)
             : data(const_cast<char*>(cstr), CAST(u32, strutils::strlen(cstr)))
         { }
-        explicit String(Slice<char> buffer)
+        explicit String(Span<char> buffer)
             : data(std::move(buffer))
         { }
 
@@ -27,12 +28,12 @@ namespace Fussion {
 
         /// Splits the string using separator, returning an allocated slice of all the parts.
         /// The parts are views into the original string.
-        Slice<String> split(String const& separator, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        Span<String> split(String const& separator, Mem::Allocator const& allocator = Mem::heap_allocator()) const;
 
         /// Returns a new allocated string with 'old_str' replaced by 'new_str'.
         /// If the string is empty, an empty Maybe is returned.
         /// If 'old_str' could not be located, an empty Maybe is returned.
-        Maybe<String> replace(String const& old_str, String const& new_str, Mem::Allocator const& allocator = Mem::GetHeapAllocator()) const;
+        Maybe<String> replace(String const& old_str, String const& new_str, Mem::Allocator const& allocator = Mem::heap_allocator()) const;
 
         /// Returns the index of the needle if found, None otherwise.
         Maybe<usz> index_of(String const& needle) const;
@@ -57,7 +58,7 @@ namespace Fussion {
 #endif
 
         /// Create an allocated string form a cstring.
-        static String alloc(char const* str, Mem::Allocator const& allocator = Mem::GetHeapAllocator());
+        static String alloc(char const* str, Mem::Allocator const& allocator = Mem::heap_allocator());
 
         template<typename... Args>
         static String format(String fmt, Args&&...)
@@ -69,7 +70,7 @@ namespace Fussion {
 }
 
 // TODO: Figure out a way to make this formattable without using std::string_view.
-FSN_MAKE_FORMATTABLE(Fussion::String, "{}", std::string_view(v.data.ptr, v.data.length))
+FSN_MAKE_FORMATTABLE(Fussion::String, "{}", std::string_view(v.data.data(), v.data.size()))
 
 #ifdef FSN_CORE_USE_GLOBALLY
 using Fussion::String;
