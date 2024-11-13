@@ -326,7 +326,7 @@ void ProjectCreatorLayer::save_projects() const
     auto projects_location = System::get_known_folder(System::KnownFolders::AppData) / "Fussion" / "ProjectCreator" / "Projects.yaml";
 
     YamlSerializer s;
-    s.Initialize();
+    s.initialize();
     serialize(s);
 
     FileSystem::write_entire_file(projects_location, s.to_string());

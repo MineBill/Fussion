@@ -2,7 +2,7 @@
 #include "JsonSerializer.h"
 
 namespace Fussion {
-    void JsonSerializer::Initialize()
+    void JsonSerializer::initialize()
     {
         m_object_stack.emplace();
     }

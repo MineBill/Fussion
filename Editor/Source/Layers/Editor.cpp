@@ -133,7 +133,7 @@ void Editor::save() const
     if (m_play_state == PlayState::Editing && m_active_scene != nullptr) {
         LOG_DEBUGF("Saving scene {} to {}", m_active_scene->name(), m_active_scene_path);
         YamlSerializer js;
-        js.Initialize();
+        js.initialize();
 
         m_active_scene->serialize(js);
 

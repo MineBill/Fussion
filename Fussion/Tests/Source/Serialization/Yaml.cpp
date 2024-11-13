@@ -8,14 +8,14 @@ using namespace Fussion;
 TEST_CASE("YamlSerializer Initialization", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
     REQUIRE(serializer.to_string() == "{}"); // Assuming ToString() should return an empty string after initialization
 }
 
 TEST_CASE("YamlSerializer Write integer values", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     SECTION("Write s8 value")
     {
@@ -75,7 +75,7 @@ TEST_CASE("YamlSerializer Write integer values", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Write floating point values", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     SKIP("yaml-cpp pr needs to be merged for proper fp formatting");
     SECTION("Write f32 value")
@@ -94,7 +94,7 @@ TEST_CASE("YamlSerializer Write floating point values", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Write boolean and string values", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     SECTION("Write boolean value")
     {
@@ -126,7 +126,7 @@ public:
 TEST_CASE("YamlSerializer Write ISerializable object", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     MockSerializable mock;
     serializer.write("object", mock);
@@ -136,7 +136,7 @@ TEST_CASE("YamlSerializer Write ISerializable object", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Begin and End Object", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     serializer.begin_object("object", 1);
     serializer.write("key", "value");
@@ -147,7 +147,7 @@ TEST_CASE("YamlSerializer Begin and End Object", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Begin and End Array", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     serializer.begin_array("array", 3);
     serializer.write("0", 1);
@@ -160,7 +160,7 @@ TEST_CASE("YamlSerializer Begin and End Array", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Nested Objects and Arrays", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     SECTION("Nested Object")
     {
@@ -207,7 +207,7 @@ TEST_CASE("YamlSerializer Nested Objects and Arrays", "[YamlSerializer]")
 TEST_CASE("YamlSerializer Complex Serialization", "[YamlSerializer]")
 {
     YamlSerializer serializer;
-    serializer.Initialize();
+    serializer.initialize();
 
     SECTION("Complex Nested Structure")
     {

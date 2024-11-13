@@ -8,7 +8,7 @@ namespace Fussion {
     public:
         virtual ~JsonSerializer() override = default;
 
-        virtual void Initialize() override;
+        virtual void initialize() override;
 
         virtual void write(std::string_view name, s8 value) override;
         virtual void write(std::string_view name, s16 value) override;

@@ -460,7 +460,7 @@ void EditorAssetManager::save_to_file()
 {
     ZoneScoped;
     YamlSerializer s;
-    s.Initialize();
+    s.initialize();
 
     serialize(s);
     // s.Write("$Type", "AssetRegistry");

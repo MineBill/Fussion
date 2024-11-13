@@ -8,7 +8,7 @@ using namespace Fussion;
 TEST_CASE("JsonSerializer")
 {
     JsonSerializer js;
-    js.Initialize();
+    js.initialize();
 
     SECTION("Simple")
     {

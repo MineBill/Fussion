@@ -29,7 +29,7 @@ namespace Fussion {
     public:
         virtual ~Serializer() = default;
 
-        virtual void Initialize() = 0;
+        virtual void initialize() = 0;
 
         virtual void write(std::string_view name, s8 value) = 0;
         virtual void write(std::string_view name, s16 value) = 0;

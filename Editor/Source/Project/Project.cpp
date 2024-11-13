@@ -72,7 +72,7 @@ auto Project::generate_project(fs::path const& path, std::string_view name) -> f
     auto fullPath = path / name;
     try {
         YamlSerializer s;
-        s.Initialize();
+        s.initialize();
 
         fs::create_directories(fullPath);
 

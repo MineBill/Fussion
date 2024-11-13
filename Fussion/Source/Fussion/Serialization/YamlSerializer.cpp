@@ -17,7 +17,7 @@ namespace Fussion {
         }
     }
 
-    void YamlSerializer::Initialize()
+    void YamlSerializer::initialize()
     {
         m_emitter << YAML::BeginMap;
         m_type_stack.push(Type::Object);
