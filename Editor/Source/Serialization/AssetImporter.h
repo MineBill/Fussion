@@ -11,5 +11,5 @@ public:
 
     /// Load a file from disk.
     /// @return The asset if load was successful, nullptr otherwise.
-    virtual auto Import(std::filesystem::path const& path) -> Ref<Fussion::Asset> = 0;
+    virtual auto import(std::filesystem::path const& path) -> Ref<Fussion::BinaryAsset> = 0;
 };

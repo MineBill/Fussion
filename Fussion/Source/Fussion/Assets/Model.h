@@ -30,17 +30,21 @@ namespace Fussion {
         s32 material_index {};
 
         Mesh(std::vector<Vertex> const& vertices, std::vector<u32> const& indices, std::vector<u32> const& shadow_indices, s32 material_index, Vector3 offset);
+
+        static Mesh from_stream(std::istream& stream);
+
+        void serialize(std::ostream& stream) const;
     };
 
-    class Model final : public Asset {
+    class Model final : public BinaryAsset {
     public:
         std::vector<Mesh> meshes {};
         u32 unique_material_count {};
 
         static Ref<Model> create(std::vector<Mesh>& meshes);
 
-        virtual void serialize(Serializer& ctx) const override;
-        virtual void deserialize(Deserializer& ctx) override;
+        virtual void serialize(std::ostream& stream) const override;
+        virtual void deserialize(std::istream& stream) override;
 
         virtual AssetType type() const override { return static_type(); }
         static AssetType static_type() { return AssetType::Model; }

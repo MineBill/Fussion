@@ -7,7 +7,7 @@
 
 using namespace Fussion;
 
-Ref<Asset> TextureImporter::Import(std::filesystem::path const& path)
+Ref<BinaryAsset> TextureImporter::import(std::filesystem::path const& path)
 {
     // auto path = Project::AssetsFolderPath() / metadata.Path;
     // auto texture_metadata = std::dynamic_pointer_cast<Texture2DMetadata>(metadata.CustomMetadata);

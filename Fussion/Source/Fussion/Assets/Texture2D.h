@@ -25,20 +25,24 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
     };
 
-    class Texture2D final : public Asset {
+    class Texture2D final : public BinaryAsset {
     public:
         static Ref<Texture2D> create(ReadOnlySpan<u8> data, Texture2DMetadata const& metadata);
         static Ref<Texture2D> create(ReadOnlySpan<f32> data, Texture2DMetadata const& metadata);
 
         GPU::Texture& texture() { return m_texture; }
 
-        Texture2DMetadata const& metadata() const { return m_metadata; }
+        Texture2DMetadata& metadata() { return m_metadata; }
 
         static AssetType static_type() { return AssetType::Texture2D; }
         virtual AssetType type() const override { return static_type(); }
 
+        virtual void serialize(std::ostream& stream) const override;
+        virtual void deserialize(std::istream& stream) override;
+
     private:
         GPU::Texture m_texture {};
         Texture2DMetadata m_metadata {};
+        std::vector<u8> m_image_pixels {};
     };
 }

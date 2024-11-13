@@ -165,15 +165,15 @@ void ContentBrowserWindow::on_draw()
                 ImGui::Separator();
                 if (ImGui::MenuItem("Scene")) {
                     m_name_popup.show([this](std::string const& name) {
-                        auto path = fs::relative(m_current_path, m_root) / (name + ".fsn");
-                        Project::asset_manager()->create_asset<Scene>(path);
+                        auto path = fs::relative(m_current_path, m_root);
+                        Project::asset_manager()->create_asset<Scene>(name, path);
                         refresh_contents();
                     });
                 }
                 if (ImGui::MenuItem("PbrMaterial")) {
                     m_name_popup.show([this](std::string const& name) {
-                        auto path = fs::relative(m_current_path, m_root) / (name + ".fsn");
-                        Project::asset_manager()->create_asset<PbrMaterial>(path);
+                        auto path = fs::relative(m_current_path, m_root);
+                        (void)Project::asset_manager()->create_asset<PbrMaterial>(name, path);
                         refresh_contents();
                     });
                 }

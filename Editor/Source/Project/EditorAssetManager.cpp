@@ -56,7 +56,7 @@ void WorkerPool::work(s32 index)
 
     std::set binaryAssets { AssetType::Model, AssetType::Texture2D };
 
-    auto makeAsset = [](AssetType type) -> Ref<Asset> {
+    auto make_asset = [](AssetType type) -> Ref<AssetBase> {
         switch (type) {
         case AssetType::Model:
             return make_ref<Model>();
@@ -89,20 +89,20 @@ void WorkerPool::work(s32 index)
         if (task.has_value()) {
             LOG_INFOF("Worker({}) was notified about a new task: {}", index, task->path.string());
 
-            auto asset = makeAsset(task->type);
+            auto asset_base = make_asset(task->type);
             auto fullPath = Project::assets_folder_path() / task->path;
-            if (binaryAssets.contains(task->type)) {
+            if (auto binary = std::dynamic_pointer_cast<BinaryAsset>(asset_base)) {
                 std::ifstream file;
                 file.open(fullPath, std::ios::binary | std::ios::in);
-                BinaryDeserializer ds(&file);
-                asset->deserialize(ds);
-                asset->set_handle(task->handle);
+                binary->deserialize(file);
+                binary->set_handle(task->handle);
                 loaded_assets.access([&](auto& queue) {
-                    queue.push(asset);
+                    queue.push(binary);
                 });
             } else {
                 if (auto json_string = FileSystem::read_entire_file(fullPath)) {
                     YamlDeserializer ds(*json_string);
+                    auto asset = asset_base->as<Asset>();
                     asset->deserialize(ds);
                     asset->set_handle(task->handle);
                     loaded_assets.access([&](auto& queue) {
@@ -165,7 +165,7 @@ EditorAssetManager::EditorAssetManager()
 
 EditorAssetManager::~EditorAssetManager() = default;
 
-Asset* EditorAssetManager::get_asset(AssetHandle handle, AssetType type)
+auto EditorAssetManager::get_asset(AssetHandle handle, AssetType type) -> AssetBase*
 {
     // VERIFY(m_Registry.contains(handle), "The registry does not contain this asset handle: {}. Could it be that you are referencing a virtual asset?", handle);
     ZoneScoped;
@@ -179,11 +179,11 @@ Asset* EditorAssetManager::get_asset(AssetHandle handle, AssetType type)
     return m_loaded_assets[handle].get();
 }
 
-auto EditorAssetManager::get_asset(std::string const& path, AssetType type) -> Asset*
+auto EditorAssetManager::get_asset(std::string const& path, AssetType type) -> AssetBase*
 {
     // TODO: This is wrong, GetAsset will call functions that will try to lock the registry
     // while we already have it locked.
-    return m_registry.access([&](Registry const& registry) -> Asset* {
+    return m_registry.access([&](Registry const& registry) -> AssetBase* {
         for (auto const& [handle, asset] : registry) {
             if (asset.path == path && asset.type == type) {
                 return get_asset(handle, type);
@@ -218,7 +218,7 @@ bool EditorAssetManager::is_asset_virtual(AssetHandle handle)
     });
 }
 
-AssetHandle EditorAssetManager::create_virtual_asset(Ref<Asset> const& asset, std::string_view name, fs::path const& path)
+AssetHandle EditorAssetManager::create_virtual_asset(Ref<AssetBase> const& asset, std::string_view name, fs::path const& path)
 {
     auto const handle = AssetHandle();
     m_registry.access([&](Registry& registry) {
@@ -308,38 +308,38 @@ auto metadata_for_asset(AssetType type) -> Ref<AssetMetadata>
     return nullptr;
 }
 
-void EditorAssetManager::register_asset(fs::path const& path, AssetType type)
-{
-    ZoneScoped;
-    if (type == AssetType::Invalid) {
-        LOG_WARNF("Ignoring Invalid asset type.");
-        return;
-    }
-    m_registry.access([&](Registry& registry) {
-        auto pos = std::ranges::find_if(registry, [&path](auto entry) -> bool { return entry.second.path == path; });
-        if (pos != registry.end()) {
-            LOG_ERRORF("Cannot register asset at path '{}', another asset lives there", path.string());
-            return;
-        }
+// void EditorAssetManager::register_asset(fs::path const& path, AssetType type)
+// {
+//     ZoneScoped;
+//     if (type == AssetType::Invalid) {
+//         LOG_WARNF("Ignoring Invalid asset type.");
+//         return;
+//     }
+//     m_registry.access([&](Registry& registry) {
+//         auto pos = std::ranges::find_if(registry, [&path](auto entry) -> bool { return entry.second.path == path; });
+//         if (pos != registry.end()) {
+//             LOG_ERRORF("Cannot register asset at path '{}', another asset lives there", path.string());
+//             return;
+//         }
+//
+//         LOG_INFOF("Registering '{}' of type '{}'", path.string(), magic_enum::enum_name(type));
+//
+//         Uuid id;
+//         registry[id] = EditorAssetMetadata {
+//             .type = type,
+//             .path = path,
+//             .name = path.filename().string(),
+//             .is_virtual = false,
+//             .dont_serialize = false,
+//             .handle = id,
+//             .custom_metadata = metadata_for_asset(type),
+//         };
+//     });
+//
+//     save_to_file();
+// }
 
-        LOG_INFOF("Registering '{}' of type '{}'", path.string(), magic_enum::enum_name(type));
-
-        Uuid id;
-        registry[id] = EditorAssetMetadata {
-            .type = type,
-            .path = path,
-            .name = path.filename().string(),
-            .is_virtual = false,
-            .dont_serialize = false,
-            .handle = id,
-            .custom_metadata = metadata_for_asset(type),
-        };
-    });
-
-    save_to_file();
-}
-
-void EditorAssetManager::import_asset(std::filesystem::path const& path, std::filesystem::path const& parentDir)
+void EditorAssetManager::import_asset(std::filesystem::path const& path, std::filesystem::path const& parent_dir)
 {
     // 1. Load asset into memory using the appropriate importer (stb_image, tinyglfy, etc..)
     if (!path.has_extension() || !path.has_filename()) {
@@ -357,14 +357,14 @@ void EditorAssetManager::import_asset(std::filesystem::path const& path, std::fi
         { ".gltf", AssetType::Model },
     };
 
-    auto const ext = path.extension().string();
+    auto ext = path.extension().string();
     if (!FileTypes.contains(ext)) {
         LOG_ERRORF("Do not have importer for this filetype: {}", ext);
         return;
     }
-    auto assetType = FileTypes.at(ext);
+    auto asset_type = FileTypes.at(ext);
 
-    auto asset = m_asset_importers[assetType]->Import(path);
+    auto asset = m_asset_importers[asset_type]->import(path);
 
     // 1.1 Run any extra post-processing steps.
     (void)0;
@@ -372,38 +372,76 @@ void EditorAssetManager::import_asset(std::filesystem::path const& path, std::fi
     // 2. Save the asset into a binary form in the project.
     auto name = path.filename();
     name.replace_extension(".fsn");
-    auto assetPath = parentDir / name;
-    std::ofstream file;
-    file.open(assetPath, std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
-        LOG_ERRORF("Could not open file '{}' for writing", assetPath);
-        return;
-    }
-
-    BinarySerializer s(&file);
-    asset->serialize(s);
 
     // 3. Register this form in the registry.
-    register_asset(relative(assetPath, Project::assets_folder_path()), assetType);
+    register_asset(name.string(), relative(parent_dir, Project::assets_folder_path()), asset);
 
     // NOTE: When the asset is loaded, we load that binary format and do not go through the importer.
 }
 
-void EditorAssetManager::save_asset(AssetHandle handle)
+void EditorAssetManager::register_asset(std::string_view name, std::filesystem::path const& path, Ref<Fsn::AssetBase> const& asset)
+{
+    if (name.empty()) {
+        LOG_ERRORF("Invalid name: '{}'", name);
+        return;
+    }
+
+    auto normal_path = (path / (std::string(name) + ".fsn")).lexically_normal();
+    Fussion::AssetHandle handle;
+
+    m_registry.access([&](auto& registry) {
+        registry[handle] = EditorAssetMetadata {
+            .type = asset->type(),
+            .path = normal_path,
+            .name = std::string(name),
+            .is_virtual = false,
+            .dont_serialize = false,
+            .handle = handle,
+        };
+    });
+
+    m_loaded_assets[handle] = asset;
+
+    // Create the necessary directories, recursively.
+    auto base_path = normal_path;
+    base_path.remove_filename();
+    if (!base_path.empty()) {
+        try {
+            std::filesystem::create_directories(base_path);
+        } catch (std::exception& e) {
+            LOG_DEBUGF("Exception caught in create_directories: '{}'\npath {}", e.what(), normal_path.string());
+        }
+    }
+
+    save_asset(handle);
+
+    save_to_file();
+}
+
+void EditorAssetManager:: save_asset(AssetHandle handle)
 {
     ZoneScoped;
     auto meta = m_registry.access([&](Registry& registry) {
         return registry[handle];
     });
 
-    // FIXME: What about binary assets? Should they be able to be saved?
-    YamlSerializer ys;
-    ys.Initialize();
+    if (auto binary = std::dynamic_pointer_cast<BinaryAsset>(m_loaded_assets[handle])) {
+        std::ofstream file;
+        file.open(Project::assets_folder_path() / meta.path, std::ios::out | std::ios::binary);
+        if (!file.is_open()) {
+            LOG_ERRORF("Could not open file '{}' for writing", meta.path);
+            return;
+        }
+        binary->serialize(file);
+    } else {
+        YamlSerializer ys;
+        ys.initialize();
 
-    m_loaded_assets[handle]->serialize(ys);
+        m_loaded_assets[handle]->as<Asset>()->serialize(ys);
 
-    auto path = Project::assets_folder_path() / meta.path;
-    FileSystem::write_entire_file(path, ys.to_string());
+        auto path = Project::assets_folder_path() / meta.path;
+        FileSystem::write_entire_file(path, ys.to_string());
+    }
 }
 
 void EditorAssetManager::rename_asset(AssetHandle handle, std::string_view new_name)
@@ -580,7 +618,7 @@ void EditorAssetManager::move_asset(AssetHandle handle, fs::path const& path)
 
 void EditorAssetManager::check_for_loaded_assets()
 {
-    m_worker_pool.loaded_assets.access([this](std::queue<Ref<Asset>>& queue) {
+    m_worker_pool.loaded_assets.access([this](std::queue<Ref<AssetBase>>& queue) {
         while (!queue.empty()) {
             auto asset = queue.front();
             queue.pop();
@@ -636,16 +674,6 @@ void EditorAssetManager::deserialize(Deserializer& ctx)
             ctx.read("Handle", metadata.handle);
             ctx.read("Type", metadata.type);
             ctx.read("Path", metadata.path);
-
-            switch (metadata.type) {
-            case AssetType::Texture2D: {
-                auto meta = make_ref<Texture2DMetadata>();
-                ctx.read("CustomMetadata", *meta);
-                metadata.custom_metadata = meta;
-            } break;
-            default:
-                break;
-            }
 
             registry[metadata.handle] = metadata;
 

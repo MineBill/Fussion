@@ -51,7 +51,7 @@ namespace Fussion {
         virtual void deserialize(Deserializer& ctx) override;
 
     protected:
-        [[nodiscard]] Asset* raw(AssetType type) const;
+        [[nodiscard]] AssetBase* raw(AssetType type) const;
 
         AssetHandle m_handle { 0 };
         bool m_is_valid { true };

@@ -52,7 +52,7 @@ namespace Fussion {
         ctx.read("Handle", this->m_handle);
     }
 
-    Asset* AssetRefBase::raw(AssetType type) const
+    AssetBase* AssetRefBase::raw(AssetType type) const
     {
         if (!AssetManager::is_asset_handle_valid(m_handle)) {
             return nullptr;

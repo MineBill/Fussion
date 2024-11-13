@@ -27,17 +27,21 @@ namespace Fussion {
         virtual ~AssetMetadata() override = default;
     };
 
-    class [[nodiscard]] Asset : public std::enable_shared_from_this<Asset>, public ISerializable {
+    class AssetBase : public std::enable_shared_from_this<AssetBase> {
         friend ReflectionRegistry;
 
     public:
-        virtual ~Asset() override = default;
+        virtual ~AssetBase() = default;
 
         [[nodiscard]]
-        virtual AssetType type() const = 0;
+        virtual AssetType type() const
+            = 0;
 
         [[nodiscard]]
-        AssetHandle handle() const { return m_handle; }
+        AssetHandle handle() const
+        {
+            return m_handle;
+        }
 
         void set_handle(AssetHandle handle)
         {
@@ -57,8 +61,20 @@ namespace Fussion {
         }
 
     protected:
-        AssetHandle m_handle{ 0 };
-
+        AssetHandle m_handle { 0 };
         friend class AssetManagerBase;
     };
+
+    class BinaryAsset : public AssetBase {
+        friend ReflectionRegistry;
+    public:
+        virtual void serialize([[maybe_unused]] std::ostream& stream) const {}
+        virtual void deserialize([[maybe_unused]] std::istream& stream) {}
+    };
+
+    class Asset : public AssetBase
+        , public ISerializable {
+        friend ReflectionRegistry;
+    };
+
 }

@@ -68,7 +68,7 @@ namespace Mikktspace {
     }
 }
 
-Ref<Asset> MeshImporter::Import(std::filesystem::path const& path)
+Ref<BinaryAsset> MeshImporter::import(std::filesystem::path const& path)
 {
     // auto path = Project::AssetsFolderPath() / metadata.Path;
 

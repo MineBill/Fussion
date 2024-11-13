@@ -16,13 +16,13 @@ namespace Fussion {
         virtual auto is_asset_loaded(AssetHandle handle) -> bool = 0;
 
         [[nodiscard]]
-        virtual auto get_asset(AssetHandle handle, AssetType type) -> Asset* = 0;
+        virtual auto get_asset(AssetHandle handle, AssetType type) -> AssetBase* = 0;
 
         [[nodiscard]]
-        virtual auto get_asset(std::string const& path, AssetType type) -> Asset* = 0;
+        virtual auto get_asset(std::string const& path, AssetType type) -> AssetBase* = 0;
 
         [[nodiscard]]
-        virtual auto create_virtual_asset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset", std::filesystem::path const& path = "") -> AssetHandle = 0;
+        virtual auto create_virtual_asset(Ref<AssetBase> const& asset, std::string_view name = "(Unnamed) Virtual Asset", std::filesystem::path const& path = "") -> AssetHandle = 0;
 
         [[nodiscard]]
         virtual auto is_asset_virtual(AssetHandle handle) -> bool = 0;

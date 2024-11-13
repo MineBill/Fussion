@@ -7,24 +7,24 @@ namespace Fussion {
     public:
         static void set_active(AssetManagerBase*);
 
-        static AssetHandle create_virtual_asset(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
+        static AssetHandle create_virtual_asset(Ref<AssetBase> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
         {
             return s_active->create_virtual_asset(asset, name);
         }
 
-        template<std::derived_from<Asset> T>
-        static AssetRef<T> create_virtual_asset_ref(Ref<Asset> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
+        template<std::derived_from<AssetBase> T>
+        static AssetRef<T> create_virtual_asset_ref(Ref<AssetBase> const& asset, std::string_view name = "(Unnamed) Virtual Asset")
         {
             return AssetRef<T>(s_active->create_virtual_asset(asset, name));
         }
 
-        static AssetHandle create_virtual_asset_with_path(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+        static AssetHandle create_virtual_asset_with_path(Ref<AssetBase> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
         {
             return s_active->create_virtual_asset(asset, name, path);
         }
 
-        template<std::derived_from<Asset> T>
-        static AssetRef<T> create_virtual_asset_ref_with_path(Ref<Asset> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
+        template<std::derived_from<AssetBase> T>
+        static AssetRef<T> create_virtual_asset_ref_with_path(Ref<AssetBase> const& asset, std::filesystem::path const& path, std::string_view name = "(Unnamed) Virtual Asset")
         {
             return AssetRef<T>(s_active->create_virtual_asset(asset, name, path));
         }
@@ -44,7 +44,7 @@ namespace Fussion {
             return s_active->is_asset_virtual(handle);
         }
 
-        static Asset* get_asset(AssetHandle handle, AssetType type)
+        static AssetBase* get_asset(AssetHandle handle, AssetType type)
         {
             return s_active->get_asset(handle, type);
         }
