@@ -29,6 +29,8 @@ namespace Fussion::GPU {
             return WGPUFeatureName_Float32Filterable;
         case Feature::PipelineStatistics:
             return CAST(WGPUFeatureName, WGPUNativeFeature_PipelineStatisticsQuery);
+        case Feature::TextureCompressionBC:
+            return WGPUFeatureName_TextureCompressionBC;
 #ifdef WGPU_LOCAL
         case Feature::SpirVPassthrough:
             return CAST(WGPUFeatureName, WGPUNativeFeature_SpirvShaderPassthrough);

@@ -16,6 +16,7 @@ namespace Fussion::GPU {
         TimestampQuery,
         PipelineStatistics,
         Float32Filterable,
+        TextureCompressionBC,
 
 #ifdef WGPU_LOCAL
         SpirVPassthrough,
