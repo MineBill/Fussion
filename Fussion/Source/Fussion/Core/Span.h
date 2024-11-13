@@ -23,6 +23,18 @@ namespace Fussion {
             , m_length(Size)
         { }
 
+        template<typename U, typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
+        constexpr explicit(false) Span(Span<U> const& other) noexcept
+            : m_ptr(other.data())
+            , m_length(other.size())
+        { }
+
+        template<typename U, typename = std::enable_if_t<std::is_convertible_v<U*, T*>>>
+        constexpr explicit(false) Span(Span<U>&& other) noexcept
+            : m_ptr(other.data())
+            , m_length(other.size())
+        { }
+
         constexpr Span(Span const& other) noexcept
             : m_ptr(other.m_ptr)
             , m_length(other.m_length)
