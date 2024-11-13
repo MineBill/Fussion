@@ -175,6 +175,8 @@ add_library(Fussion STATIC
     Source/Fussion/GPU/glfw3webgpu.h
 
     ${CMAKE_BINARY_DIR}/ReflectionRegistry_Generated.cpp
+    Source/Fussion/Util/ImageTools.cpp
+    Source/Fussion/Util/ImageTools.h
 )
 
 get_target_property(Fussion_SOURCES Fussion SOURCES)
@@ -235,6 +237,7 @@ target_link_libraries(Fussion PUBLIC
     yaml-cpp::yaml-cpp
     meta.hpp::meta.hpp
     stb
+    rgbcx
 )
 
 target_include_directories(Fussion

@@ -31,6 +31,8 @@ add_subdirectory(yaml-cpp SYSTEM)
 
 add_subdirectory(meta.hpp SYSTEM)
 
+add_subdirectory(rgbcx)
+
 function(InstallAngelscriptAddons)
     add_library(angelscript_addons
         STATIC
