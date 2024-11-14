@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28.0)
+cmake_minimum_required(VERSION 3.30)
 project(Fussion
     VERSION 0.1
     LANGUAGES C CXX)
@@ -37,6 +37,6 @@ add_subdirectory(Vendor)
 add_subdirectory(HeaderTool)
 add_subdirectory(Fussion)
 add_subdirectory(Editor)
-if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sandbox")
+if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sandbox")
     add_subdirectory(Sandbox)
-endif()
+endif ()
