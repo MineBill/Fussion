@@ -54,10 +54,10 @@ namespace Fussion {
                 .method_("LengthSquared"s, &Vector3::length_squared);
         }
 
-        meta::class_<Asset>(metadata_()("Name"s, "Asset"s))
-            .method_("GetType"s, &Asset::type)
-            .method_("GetHandle"s, &Asset::handle)
-            .member_("m_Handle"s, &Asset::m_handle);
+        meta::class_<AssetBase>(metadata_()("Name"s, "Asset"s))
+            .method_("GetType"s, &AssetBase::type)
+            .method_("GetHandle"s, &AssetBase::handle)
+            .member_("m_Handle"s, &AssetBase::m_handle);
 
         meta::class_<Entity>(metadata_()("Name"s, "Entity"s))
             .member_("m_Parent", &Entity::m_parent)
