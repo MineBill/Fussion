@@ -79,11 +79,18 @@ namespace Fussion::Mem {
         span.reset();
     }
 
-    template<typename T>
-    void copy(Span<T> const& dst, Span<T> const& src)
+    template<typename T, typename U>
+    void copy(Span<T> dst, Span<U> const& src)
     {
-        VERIFY(dst.size() >= src.size(), "dst: {}, src: {}", dst.size(), src.size());
-        Mem::copy(dst.data(), src.data(), src.size() * sizeof(T));
+        VERIFY(dst.size_in_bytes() >= src.size_in_bytes(), "dst: {}, src: {}", dst.size_in_bytes(), src.size_in_bytes());
+        Mem::copy(dst.data(), src.data(), src.size_in_bytes());
+    }
+
+    template<typename T, typename U>
+    void copy(Span<T> dst, ReadOnlySpan<U> const& src)
+    {
+        VERIFY(dst.size_in_bytes() >= src.size_in_bytes(), "dst: {}, src: {}", dst.size_in_bytes(), src.size_in_bytes());
+        Mem::copy(dst.data(), src.data(), src.size_in_bytes());
     }
 
     template<typename T>
