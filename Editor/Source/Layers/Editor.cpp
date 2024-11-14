@@ -203,15 +203,6 @@ void Editor::on_update(f32 delta)
     ImGui::BeginMainMenuBar();
     {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::BeginMenu("New..")) {
-                if (ImGui::MenuItem("Create Scene")) {
-                    change_scene(Project::asset_manager()->create_asset<Scene>("TestScene.fsn"));
-                }
-                ImGui::EndMenu();
-            }
-
-            ImGui::Separator();
-
             if (!m_active_scene)
                 ImGui::BeginDisabled();
 
