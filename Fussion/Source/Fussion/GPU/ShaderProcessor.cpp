@@ -377,7 +377,7 @@ namespace Fussion::GPU {
 
     // FIXME: Crashes when freed
     struct SlangGlobalState {
-        Slang::ComPtr<slang::IModule> common_module;
+        Slang::ComPtr<slang::IModule> common_module {};
         Slang::ComPtr<slang::IGlobalSession> global_session {};
     } g_state;
 

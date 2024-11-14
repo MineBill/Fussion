@@ -74,6 +74,7 @@ namespace Fussion {
                 GPU::Feature::Float32Filterable,
                 GPU::Feature::TimestampQuery,
                 GPU::Feature::SpirVPassthrough,
+                GPU::Feature::TextureCompressionBC,
             }
         };
 

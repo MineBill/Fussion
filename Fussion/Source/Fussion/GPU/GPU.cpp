@@ -92,7 +92,7 @@ namespace Fussion::GPU {
     private:
         void set_texture(Device const& device, Texture& texture)
         {
-            m_shader = make_ref<ShaderAsset>(m_compiled_shader, std::vector { texture.spec.format });
+            m_shader = make_ref<ShaderAsset>(m_compiled_shader, std::vector { GPU::TextureFormat::RGBA8UnormSrgb });
 
             m_target_texture = texture;
             {
@@ -334,8 +334,9 @@ namespace Fussion::GPU {
     void Texture::generate_mipmaps(Device const& device)
     {
         if (spec.generate_mip_maps && mip_level_count > 1) {
+            (void)device;
             // Utils::RenderDoc::StartCapture();
-            g_mip_map_pipeline.process(device, *this);
+            // g_mip_map_pipeline.process(device, *this);
             // Utils::RenderDoc::EndCapture();
         }
     }

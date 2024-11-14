@@ -7,6 +7,7 @@
 #include "OS/System.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Time.h"
+#include "Util/ImageTools.h"
 
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyC.h>
@@ -39,6 +40,7 @@ namespace Fussion {
     {
         ReflectionRegistry::register_data();
         System::initialize();
+        ImageTools::initialize();
 
         LOG_DEBUG("Initializing application");
         s_instance = this;

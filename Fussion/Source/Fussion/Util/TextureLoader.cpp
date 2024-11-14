@@ -1,4 +1,6 @@
-﻿#include "TextureLoader.h"
+﻿#include "ImageTools.h"
+
+#include "TextureLoader.h"
 
 #include "Fussion/OS/FileSystem.h"
 #include "Fussion/Rendering/Renderer.h"
@@ -44,7 +46,13 @@ namespace Fussion {
         Texture2DMetadata metadata {};
         metadata.width = image->width;
         metadata.height = image->height;
-        metadata.format = GPU::TextureFormat::RGBA8Unorm;
+        // metadata.format = GPU::TextureFormat::RGBA8Unorm;
+        metadata.format = format;
+
+        if (format == GPU::TextureFormat::BC3RGBAUnormSrgb) {
+            auto compressed = ImageTools::compress_bc3(*image);
+            return Texture2D::create(compressed, metadata);
+        }
         return Texture2D::create(image->data, metadata);
     }
 
@@ -58,6 +66,11 @@ namespace Fussion {
         metadata.width = image->width;
         metadata.height = image->height;
         metadata.is_normal_map = is_normal_map;
+        metadata.format = format;
+        if (format == GPU::TextureFormat::BC3RGBAUnorm) {
+            auto compressed = ImageTools::compress_bc3(*image);
+            return Texture2D::create(compressed, metadata);
+        }
         return Texture2D::create(image->data, metadata);
     }
 

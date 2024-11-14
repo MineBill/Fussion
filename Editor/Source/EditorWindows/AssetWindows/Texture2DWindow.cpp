@@ -13,26 +13,8 @@ void Texture2DWindow::on_draw(f32 delta)
 {
     (void)delta;
 
-    auto settings = AssetManager::get_asset_metadata<Texture2DMetadata>(m_asset_handle);
-    VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
-
-    bool flip = true;
-    if (!GPU::is_hdr(settings->format)) {
-        flip = false;
-        ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
-        {
-            auto modified = EUI::property("Is Normal Map", &settings->is_normal_map);
-            modified |= EUI::property("Format", &settings->format);
-            modified |= EUI::property("Generate Mipmaps", &settings->generate_mipmaps);
-            if (modified) {
-                Project::asset_manager()->refresh_asset(m_asset_handle);
-            }
-        }
-        ImGui::EndChild();
-
-        ImGui::SameLine();
-    }
-
+    // auto settings = AssetManager::get_asset_metadata<Texture2DMetadata>(m_asset_handle);
+    // VERIFY(settings != nullptr, "Custom asset metadata should have been created for this texture.");
     auto asset = AssetManager::get_asset<Texture2D>(m_asset_handle);
     if (!asset.is_loaded()) {
         ImGui::TextUnformatted("Texture is null");
@@ -41,6 +23,24 @@ void Texture2DWindow::on_draw(f32 delta)
     }
     auto texture = asset.get();
     auto& metadata = texture->metadata();
+
+    bool flip = true;
+    if (!GPU::is_hdr(metadata.format)) {
+        flip = false;
+        ImGui::BeginChild("texture_properties", Vector2(250, 0), ImGuiChildFlags_ResizeX | ImGuiChildFlags_Border);
+        {
+            auto modified = EUI::property("Is Normal Map", &metadata.is_normal_map);
+            modified |= EUI::property("Format", &metadata.format);
+            modified |= EUI::property("Generate Mipmaps", &metadata.generate_mipmaps);
+            if (modified) {
+                // Project::asset_manager()->refresh_asset(m_asset_handle);
+            }
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+    }
+
     Vector2 availableSize = ImGui::GetContentRegionAvail();
 
     Vector2 textureSize = Vector2(metadata.width, metadata.height);
@@ -72,7 +72,9 @@ void Texture2DWindow::on_draw(f32 delta)
     ImGui::BeginChild("texture_preview", availableSize, 0, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
     {
         ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
-        ImGui::Image(texture->texture().view, viewSize, uv0, uv1);
+        auto& gpu_texture = texture->texture();
+        auto view = gpu_texture.view;
+        ImGui::Image(view, viewSize, uv0, uv1);
         auto& io = ImGui::GetIO();
 
         bool hovered = ImGui::IsWindowHovered();
