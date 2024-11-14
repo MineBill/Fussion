@@ -418,7 +418,7 @@ void EditorAssetManager::register_asset(std::string_view name, std::filesystem::
     save_to_file();
 }
 
-void EditorAssetManager:: save_asset(AssetHandle handle)
+void EditorAssetManager::save_asset(AssetHandle handle)
 {
     ZoneScoped;
     auto meta = m_registry.access([&](Registry& registry) {
