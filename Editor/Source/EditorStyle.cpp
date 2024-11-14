@@ -82,25 +82,29 @@ void EditorStyle::initialize()
     }
 
     using enum EditorIcon;
-    editor_icons[Folder] = TextureLoader::load_texture_from_file("Assets/Icons/Folder.png").unwrap();
-    editor_icons[FolderBack] = TextureLoader::load_texture_from_file("Assets/Icons/FolderBack.png").unwrap();
-    editor_icons[GenericAsset] = TextureLoader::load_texture_from_file("Assets/Icons/GenericAsset.png").unwrap();
-    editor_icons[Scene] = TextureLoader::load_texture_from_file("Assets/Icons/Scene.png").unwrap();
-    editor_icons[Script] = TextureLoader::load_texture_from_file("Assets/Icons/Script.png").unwrap();
-    editor_icons[PbrMaterial] = TextureLoader::load_texture_from_file("Assets/Icons/PbrMaterial.png").unwrap();
-    editor_icons[Dots] = TextureLoader::load_texture_from_file("Assets/Icons/ThreeDots.png").unwrap();
-    editor_icons[Search] = TextureLoader::load_texture_from_file("Assets/Icons/Search.png").unwrap();
+    std::vector<std::pair<EditorIcon, std::string>> icon_paths = {
+        { Folder, "Assets/Icons/Folder.png" },
+        { FolderBack, "Assets/Icons/FolderBack.png" },
+        { GenericAsset, "Assets/Icons/GenericAsset.png" },
+        { Scene, "Assets/Icons/Scene.png" },
+        { Script, "Assets/Icons/Script.png" },
+        { PbrMaterial, "Assets/Icons/PbrMaterial.png" },
+        { Dots, "Assets/Icons/ThreeDots.png" },
+        { Search, "Assets/Icons/Search.png" },
+        { Error, "Assets/Icons/ErrorIcon.png" },
+        { Warning, "Assets/Icons/WarningIcon.png" },
+        { Info, "Assets/Icons/InfoIcon.png" },
+        { CogWheel, "Assets/Icons/CogWheel.png" },
+        { Entity, "Assets/Icons/Entity.png" },
+        { Play, "Assets/Icons/PlayButton.png" },
+        { Stop, "Assets/Icons/StopButton.png" },
+        { Pause, "Assets/Icons/PauseButton.png" },
+        { StepFrame, "Assets/Icons/StepFrame.png" }
+    };
 
-    editor_icons[Error] = TextureLoader::load_texture_from_file("Assets/Icons/ErrorIcon.png").unwrap();
-    editor_icons[Warning] = TextureLoader::load_texture_from_file("Assets/Icons/WarningIcon.png").unwrap();
-    editor_icons[Info] = TextureLoader::load_texture_from_file("Assets/Icons/InfoIcon.png").unwrap();
-    editor_icons[CogWheel] = TextureLoader::load_texture_from_file("Assets/Icons/CogWheel.png").unwrap();
-    editor_icons[Entity] = TextureLoader::load_texture_from_file("Assets/Icons/Entity.png").unwrap();
-
-    editor_icons[Play] = TextureLoader::load_texture_from_file("Assets/Icons/PlayButton.png").unwrap();
-    editor_icons[Stop] = TextureLoader::load_texture_from_file("Assets/Icons/StopButton.png").unwrap();
-    editor_icons[Pause] = TextureLoader::load_texture_from_file("Assets/Icons/PauseButton.png").unwrap();
-    editor_icons[StepFrame] = TextureLoader::load_texture_from_file("Assets/Icons/StepFrame.png").unwrap();
+    for (auto const& [icon_type, path] : icon_paths) {
+        editor_icons[icon_type] = TextureLoader::load_texture_from_file(path, GPU::TextureFormat::RGBA8UnormSrgb).unwrap();
+    }
 }
 
 EditorStyle& EditorStyle::style()

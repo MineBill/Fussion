@@ -216,9 +216,9 @@ namespace Fussion {
         auto g_normal_map_png = b::embed<"Assets/Textures/default_normal_map.png">().vec();
         auto g_white_texture_hdr = b::embed<"Assets/Textures/white_texture.hdr">().vec();
 #endif
-        g_data.white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_white_texture_png).unwrap(), "Default White Texture");
-        g_data.black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_black_texture_png).unwrap(), "Default Black Texture");
-        g_data.normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_normal_map_png, true).unwrap(), "Default Normal Map");
+        g_data.white_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_white_texture_png, GPU::TextureFormat::RGBA8UnormSrgb).unwrap(), "Default White Texture");
+        g_data.black_texture = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_black_texture_png, GPU::TextureFormat::RGBA8UnormSrgb).unwrap(), "Default Black Texture");
+        g_data.normal_map = AssetManager::create_virtual_asset_ref<Texture2D>(TextureLoader::load_texture_from_memory(g_normal_map_png, GPU::TextureFormat::RGBA8Unorm, true).unwrap(), "Default Normal Map");
 
         GPU::TextureSpec texture_spec {
             .label = "CubeTexGen::cube_texture"sv,
