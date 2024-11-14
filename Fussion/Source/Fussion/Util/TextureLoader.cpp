@@ -35,7 +35,7 @@ namespace Fussion {
         return load_image_from_memory(*data);
     }
 
-    auto TextureLoader::load_texture_from_file(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::load_texture_from_file(std::filesystem::path const& path, GPU::TextureFormat format) -> Maybe<Ref<Texture2D>>
     {
         auto image = load_image_from_file(path);
         if (!image) {
@@ -48,7 +48,7 @@ namespace Fussion {
         return Texture2D::create(image->data, metadata);
     }
 
-    auto TextureLoader::load_texture_from_memory(ReadOnlySpan<u8> data, bool is_normal_map) -> Maybe<Ref<Texture2D>>
+    auto TextureLoader::load_texture_from_memory(ReadOnlySpan<u8> data, GPU::TextureFormat format, bool is_normal_map) -> Maybe<Ref<Texture2D>>
     {
         auto image = load_image_from_memory(data);
         if (!image) {

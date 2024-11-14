@@ -9,8 +9,8 @@ namespace Fussion {
     public:
         static auto load_image_from_memory(ReadOnlySpan<u8> data) -> Maybe<Image>;
         static auto load_image_from_file(std::filesystem::path const& path) -> Maybe<Image>;
-        static auto load_texture_from_file(std::filesystem::path const& path) -> Maybe<Ref<Texture2D>>;
-        static auto load_texture_from_memory(ReadOnlySpan<u8> data, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
+        static auto load_texture_from_file(std::filesystem::path const& path, GPU::TextureFormat format = GPU::TextureFormat::RGBA8UnormSrgb) -> Maybe<Ref<Texture2D>>;
+        static auto load_texture_from_memory(ReadOnlySpan<u8> data, GPU::TextureFormat format = GPU::TextureFormat::RGBA8UnormSrgb, bool is_normal_map = false) -> Maybe<Ref<Texture2D>>;
 
         static void save_image_to_file(GPU::Texture const& texture, std::filesystem::path const& path);
 
