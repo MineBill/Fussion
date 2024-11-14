@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <random>
+#include <algorithm>
 
 std::array<u8, 16> uuidv7()
 {

@@ -8,6 +8,7 @@
 #include <thread>
 #include <utility>
 
+#include <unistd.h>
 #include <sys/inotify.h>
 #include <sys/poll.h>
 
