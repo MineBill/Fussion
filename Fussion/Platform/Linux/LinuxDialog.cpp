@@ -40,6 +40,7 @@ namespace Fussion::Dialogs {
     }
 
     using OpenFileFn = DBus::Path(std::string, std::string, std::map<std::string, DBus::Variant>);
+    using SaveFileFn = OpenFileFn;
     using OpenFileResponseFn = void(u32 response, std::map<std::string, DBus::Variant> data);
 
     class LinuxDialog {
@@ -73,13 +74,13 @@ namespace Fussion::Dialogs {
             m_connection = m_dispatcher->create_connection(DBus::BusType::SESSION);
             m_desktop_proxy = m_connection->create_object_proxy("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", DBus::ThreadForCalling::CurrentThread);
             m_open_file_fn = m_desktop_proxy->create_method<OpenFileFn>("org.freedesktop.portal.FileChooser", "OpenFile");
+            m_save_file_fn = m_desktop_proxy->create_method<OpenFileFn>("org.freedesktop.portal.FileChooser", "SaveFile");
         }
 
         virtual ~LinuxDialog() = default;
 
-        auto open_file_picker(std::vector<FilePickerFilter> const& filters, bool allow_multiple, bool directory = false) -> std::vector<std::filesystem::path>
+        auto open_file_picker(std::vector<FilePickerFilter> const& filters, bool allow_multiple, bool directory = false, bool save_dialog = false) -> std::vector<std::filesystem::path>
         {
-            (void)filters;
             std::vector<std::filesystem::path> files {};
 
             std::map<std::string, DBus::Variant> options {};
@@ -89,10 +90,27 @@ namespace Fussion::Dialogs {
             options["multiple"] = allow_multiple;
             options["directory"] = directory;
 
-            auto responsePath = (*m_open_file_fn)("", "Please select a file", options);
+            (void)filters;
+            // std::vector<std::tuple<std::string, std::vector<std::tuple<u32, std::string>>>> portal_filters {};
+            // for (auto const& filter : filters) {
+            //     std::vector<std::tuple<u32, std::string>> pattern_list {};
+            //     // for (auto const& pattern : filter.file_patterns) {
+            //     //     pattern_list.push_back({ 0, pattern });
+            //     // }
+            //     (void)filter;
+            //     pattern_list.emplace_back(1, "image/png");
+            //     portal_filters.emplace_back(filter.name, pattern_list);
+            // }
+            // options["filters"] = portal_filters;
+            DBus::Path response_path;
+            if (save_dialog) {
+                response_path = (*m_save_file_fn)("", "Please select a new file", options);
+            } else {
+                response_path = (*m_open_file_fn)("", "Please select a file", options);
+            }
 
-            auto requestProxy = m_connection->create_object_proxy("org.freedesktop.portal.Desktop", responsePath);
-            auto request = requestProxy->create_signal<OpenFileResponseFn>("org.freedesktop.portal.Request", "Response");
+            auto request_proxy = m_connection->create_object_proxy("org.freedesktop.portal.Desktop", response_path);
+            auto request = request_proxy->create_signal<OpenFileResponseFn>("org.freedesktop.portal.Request", "Response");
             (void)request->connect([this, &files](u32 response, std::map<std::string, DBus::Variant> data) {
                 if (response == 0) {
                     if (data.contains("uris")) {
@@ -134,6 +152,7 @@ namespace Fussion::Dialogs {
         Ref<DBus::Connection> m_connection {};
         Ref<DBus::ObjectProxy> m_desktop_proxy {};
         Ref<DBus::MethodProxy<OpenFileFn>> m_open_file_fn {};
+        Ref<DBus::MethodProxy<SaveFileFn>> m_save_file_fn {};
         std::string m_path;
     };
 
@@ -325,10 +344,10 @@ namespace Fussion::Dialogs {
     auto show_file_picker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple) -> std::vector<std::filesystem::path>
     {
         return show_file_picker(FilePickerFilter {
-                                  .name = std::string(name),
-                                  .file_patterns = supported_files,
-                              },
-                              allow_multiple);
+                                    .name = std::string(name),
+                                    .file_patterns = supported_files,
+                                },
+                                allow_multiple);
     }
 
     auto show_file_picker(FilePickerFilter const& filter, bool allow_multiple) -> std::vector<std::filesystem::path>
@@ -340,6 +359,13 @@ namespace Fussion::Dialogs {
     {
         create_native_dialog();
         return g_native_dialog->open_file_picker(filter, allow_multiple);
+    }
+
+    auto show_save_dialog(std::filesystem::path const& base_path) -> std::filesystem::path
+    {
+        (void)base_path;
+        create_native_dialog();
+        return g_native_dialog->open_file_picker({}, false, false, true)[0];
     }
 
     auto show_directory_picker(std::filesystem::path const& base) -> std::filesystem::path

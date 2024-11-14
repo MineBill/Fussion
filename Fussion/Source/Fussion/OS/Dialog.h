@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <string_view>
 #include <filesystem>
+#include <string_view>
 #include <vector>
 
 #ifdef OS_WINDOWS
@@ -66,6 +66,8 @@ namespace Fussion::Dialogs {
     auto show_file_picker(std::string_view name, FilePatternList const& supported_files, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
     auto show_file_picker(FilePickerFilter const& filter, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
     auto show_file_picker(std::vector<FilePickerFilter> const& filter, bool allow_multiple = false) -> std::vector<std::filesystem::path>;
+
+    auto show_save_dialog(std::filesystem::path const& base_path) -> std::filesystem::path;
 
     auto show_directory_picker(std::filesystem::path const& base = std::filesystem::current_path()) -> std::filesystem::path;
 
